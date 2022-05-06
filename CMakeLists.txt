@@ -18,9 +18,9 @@ macro(set_from_environment VARIABLE)
 	endif()
 endmacro()
 
-set_from_environment(Skyrim64Path)
-if(NOT DEFINED Skyrim64Path)
-	message(FATAL_ERROR "Skyrim64Path is not set")
+set_from_environment(SkyrimOutputPath)
+if(NOT DEFINED SkyrimOutputPath)
+	message(FATAL_ERROR "SkyrimOutputPath is not set")
 endif()
 
 option(COPY_OUTPUT "copy the output of build operations to the game directory" OFF)
