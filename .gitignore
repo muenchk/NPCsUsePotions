@@ -1,5 +1,6 @@
 build/
 src/.vs/
+src/TODO.txt
 
 # Prerequisites
 *.d
