@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.pl": "prolog",
+        "chrono": "cpp",
+        "functional": "cpp",
+        "memory": "cpp",
+        "xutility": "cpp"
+    }
+}
