@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include "ActorManipulation.h"
+#include <limits>
 
 		
 namespace Events
@@ -20,6 +21,201 @@ namespace Events
 	static std::mt19937 rand((unsigned int)(std::chrono::system_clock::now().time_since_epoch().count()));
 	static std::uniform_int_distribution<signed> rand100(1, 100);	
 	static std::uniform_int_distribution<signed> rand3(1, 3);
+
+#define Look(s) RE::TESForm::LookupByEditorID(s)
+
+	static bool initialized = false;
+
+	void InitializeCompatibilityObjects()
+	{
+		// now that the game was loaded we can try to initialize all our variables we conuldn't before
+		{
+			// load our stuff like necessary forms
+			// get VendorItemPotion keyword, if we don't find this, potion detection will be nearly impossible
+			Settings::VendorItemPotion = RE::TESForm::LookupByID<RE::BGSKeyword>(0x0008CDEC);
+			if (Settings::VendorItemPotion == nullptr) {
+				logger::info("[INIT] Couldn't find VendorItemPotion Keyword in game.");
+			}
+
+			// if we are in com mode, try to find the needed items. If we cannot find them, deactivate comp mode
+			if (Settings::_CompatibilityPotionAnimatedFx) {
+				RE::TESForm* tmp = RE::TESForm::LookupByEditorID(std::string_view{ Settings::Compatibility::PAF_NPCDrinkingCoolDownEffect_name });
+				if (tmp)
+					Settings::Compatibility::PAF_NPCDrinkingCoolDownEffect = tmp->As<RE::EffectSetting>();
+				tmp = RE::TESForm::LookupByEditorID(std::string_view{ Settings::Compatibility::PAF_NPCDrinkingCoolDownSpell_name });
+				if (tmp)
+					Settings::Compatibility::PAF_NPCDrinkingCoolDownSpell = tmp->As<RE::SpellItem>();
+				if (!(Settings::Compatibility::PAF_NPCDrinkingCoolDownEffect && Settings::Compatibility::PAF_NPCDrinkingCoolDownSpell)) {
+					Settings::_CompatibilityPotionAnimatedFx = false;
+					Settings::_CompatibilityPotionAnimatedFX_UseAnimations = false;
+					logger::info("[INIT] Some Forms from PotionAnimatedfx.esp seem to be missing. Forcefully deactivated compatibility mode");
+				}
+			}
+		}
+
+		if (Settings::_CompatibilityPotionAnimatedFX_UseAnimations && !initialized) {
+			auto evs = SKSE::GetModCallbackEventSource();
+
+			LOG_1("[LoadGameEvent] Setting variables for compatibility with PotionAnimatedfx.esp");
+			SKSE::ModCallbackEvent* ev = nullptr;
+			// send mod events to fill ALL the missing variables
+			// since there are multiple plugins with the same name
+			// and the same editor ids, but with different form
+			// ids and we may only query FormIDs in papyrus
+
+			LOG_4("[LoadGameEvent] Set 1");
+			// PAF_DrinkSFX
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_DrinkSFX");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_DrinkSFX" })->As<RE::TESGlobal>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 2");
+			// PAF_NPCDrinkingSlowVersion
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingSlowVersion");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingSlowVersion" })->As<RE::TESGlobal>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 3");
+			// PAF_NPCFleeChance
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCFleeChance");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCFleeChance" })->As<RE::TESGlobal>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 6");
+			// PAF_NPCDrinkingCoolDownSpell
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingCoolDownSpell");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingCoolDownSpell" })->As<RE::SpellItem>();
+				evs->SendEvent(ev);
+			}
+			/*LOG_4("[LoadGameEvent] Set 5");
+			// PAF_CustomDrinkPotionSound
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_CustomDrinkPotionSound");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_CustomDrinkPotionSound" })->As<RE::TESSound>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 4");
+			// PAF_OriginalDrinkPotionSound
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_OriginalDrinkPotionSound");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_OriginalDrinkPotionSound" })->As<RE::TESSound>();
+				evs->SendEvent(ev);
+			}*/
+			LOG_4("[LoadGameEvent] Set 7");
+			// PAF_NPCDrinkingInterruptDetectAbility
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptDetectAbility");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptDetectAbility" })->As<RE::SpellItem>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 8");
+			// PAF_NPCDrinkFleeSpell
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkFleeSpell");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkFleeSpell" })->As<RE::SpellItem>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 9");
+			// PAF_NPCDrinkingInterruptSpell
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptSpell");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptSpell" })->As<RE::SpellItem>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 10");
+			// PAF_NPCDrinkingCoolDownEffect
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingCoolDownEffect");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingCoolDownEffect" })->As<RE::EffectSetting>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 11");
+			// PAF_NPCDrinkingInterruptDetectEffect
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptDetectEffect");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptDetectEffect" })->As<RE::EffectSetting>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 12");
+			// PAF_NPCDrinkFleeEffect
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkFleeEffect");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkFleeEffect" })->As<RE::EffectSetting>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 13");
+			// PAF_NPCDrinkingInterruptEffect
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptEffect");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptEffect" })->As<RE::EffectSetting>();
+				evs->SendEvent(ev);
+			}
+			LOG_4("[LoadGameEvent] Set 14");
+			// PAF_MCMQuest
+			{
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_MCMQuest");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 0.0f;
+				ev->sender = Look(std::string_view{ "PAF_MCMQuest" })->As<RE::TESQuest>();
+				evs->SendEvent(ev);
+			}
+
+			// send control event to enable compatibility mode and check the delivered objects
+			ev = new SKSE::ModCallbackEvent();
+			ev->eventName = RE::BSFixedString("NPCsDrinkPotionCompPAFX");
+			ev->strArg = RE::BSFixedString("");
+			ev->numArg = 1.0f;
+			ev->sender = nullptr;
+			evs->SendEvent(ev);
+			LOG_4("[LoadGameEvent] Sent controlevent");
+			initialized = true;
+		}
+	}
+
 
     /// <summary>
     /// Searches the inventory of an Actor for an appropiate potion and applies it.
@@ -341,8 +537,8 @@ namespace Events
 		return EventResult::kContinue;
     }
 
-	// Actor, health cooldown, magicka cooldown, stamina cooldown
-	static std::vector<std::tuple<RE::Actor*, int, int, int, int>> aclist{};
+	// Actor, health cooldown, magicka cooldown, stamina cooldown, other cooldown, reg cooldown
+	static std::vector<std::tuple<RE::Actor*, int, int, int, int, int>> aclist{};
 	static std::binary_semaphore sem(1);
 	// map actorid -> GameDay (reset)
 	static std::map<uint64_t, float> actorresetmap{};
@@ -355,24 +551,25 @@ namespace Events
 				LOG_1("[TesCombatEvent] Trying to register new actor for potion tracking");
 
 				//test section
-				LOG_1("find alchemy items");
-				auto ls = FindDeathAlchemyItems(actor);
-				std::ofstream out(R"(Data\SKSE\testfile.ini)", std::ofstream::app);
-				for (RE::AlchemyItem* it : ls) {
-					out << it->formID << "\t\t" << it->GetName() << "\n";
-				}
+				//LOG_1("find alchemy items");
+				//auto ls = FindDeathAlchemyItems(actor);
+				//std::ofstream out(R"(Data\SKSE\testfile.ini)", std::ofstream::app);
+				//for (RE::AlchemyItem* it : ls) {
+				//	out << it->formID << "\t\t" << it->GetName() << "\n";
+				//}
 
-				RE::ExtraDataList* extra = new RE::ExtraDataList();
+				/*RE::ExtraDataList* extra = new RE::ExtraDataList();
 				if (Settings::_potionsWeak_main.size() > 0) {
 					actor->AddObjectToContainer(std::get<1>(Settings::_potionsWeak_main.front()), extra, 100, nullptr);
-				}
+				}*/
 				/*if (ls.size() == 0)
 					out << "no items found\n";
 				out << "\n\n";
 				out.close();*/
-				auto poisons = GetPoisons(ls);
+				//auto poisons = GetPoisons(ls);
 				
 				sem.acquire();
+				InitializeCompatibilityObjects();
 				auto it = aclist.begin();
 				auto end = aclist.end();
 				bool cont = false;
@@ -384,7 +581,7 @@ namespace Events
 					it++;
 				}
 				if (!cont)
-					aclist.insert(aclist.begin(), { actor, 0, 0, 0, 0 });
+					aclist.insert(aclist.begin(), { actor, 0, 0, 0, 0, 0 });
 				sem.release();
 				LOG_1("[TesCombatEvent] finished registering NPC");
 			} else {
@@ -422,22 +619,45 @@ namespace Events
 
 	void CheckActors()
 	{
+		/// static section
 		RE::UI* ui = RE::UI::GetSingleton();
+		// profile
 		auto begin = std::chrono::steady_clock::now();
-		int durh = 0;
-		int durm = 0;
-		int durs = 0;
-		int durother = 0;
+		// tolerance for potion drinking, to diminish effects of computation times
+		// on cycle time
 		int tolerance = Settings::_cycletime / 5;
+
+		/// player vars
+		int durhp = 0; // duration health player
+		int durmp = 0; // duration magicka player
+		int dursp = 0; // duration stamina player
+		// to get this to 0 you would need to play nearly 600 hours
+		int durotherp = INT_MAX; // duration of buff potions for the player
+		int durregp = INT_MAX; // duration of reg potions for the player
+
+		/// temp section
+		int durh = 0; // duration health
+		int durm = 0; // duration magicka
+		int durs = 0; // duration stamina
+		int durother = 0; // duration other
+		int durreg = 0; // duration of regeneration
 		uint64_t alch = 0;
 		uint64_t alch2 = 0;
 		uint64_t alch3 = 0;
+		bool player = false; // wether player was inserted into list
 		
 		while (!stopactorhandler) {
 			if (!ui->GameIsPaused()) {
+				player = false;
 				begin = std::chrono::steady_clock::now();
 
 				sem.acquire();
+				// checking if player should be handled
+				if (Settings::_playerRestorationEnabled && RE::PlayerCharacter::GetSingleton()->IsInCombat()) {
+					// inject player into the list and remove him later
+					aclist.insert(aclist.end(), { RE::PlayerCharacter::GetSingleton(), durhp, durmp, dursp, durotherp, durregp });
+					player = true;
+				}
 				LOG1_1("[CheckActors] Handling all registered Actors {}", std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch()).count()));
 				for (int i = 0; i < aclist.size(); i++) {
 					if (std::get<0>(aclist[i]) && !(std::get<0>(aclist[i]))->IsDead()) {
@@ -446,29 +666,39 @@ namespace Events
 						durm = std::get<2>(aclist[i]) - Settings::_cycletime;
 						durs = std::get<3>(aclist[i]) - Settings::_cycletime;
 						durother = std::get<4>(aclist[i]) - Settings::_cycletime;
-						alch = 0;
-						alch2 = 0;
-						alch3 = 0;
+						durreg = std::get<5>(aclist[i]) - Settings::_cycletime;
 						// get combined effect for magicka, health, and stamina
 						if (Settings::_featHealthRestoration && durh < tolerance && ACM::GetAVPercentage(std::get<0>(aclist[i]), RE::ActorValue::kHealth) < Settings::_healthThresholdLower)
 							alch = static_cast<uint64_t>(AlchemyEffect::kHealth);
+						else
+							alch = 0;
 						if (Settings::_featMagickaRestoration && durm < tolerance && ACM::GetAVPercentage(std::get<0>(aclist[i]), RE::ActorValue::kMagicka) < Settings::_magickaThresholdLower)
 							alch2 = static_cast<uint64_t>(AlchemyEffect::kMagicka);
+						else
+							alch2 = 0;
 						if (Settings::_featStaminaRestoration && durs < tolerance && ACM::GetAVPercentage(std::get<0>(aclist[i]), RE::ActorValue::kStamina) < Settings::_staminaThresholdLower)
 							alch3 = static_cast<uint64_t>(AlchemyEffect::kStamina);
+						else
+							alch3 = 0;
+						// construct combined effect
+						alch |= alch2 | alch3;
+						LOG4_4("[CheckActors] check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch, durh, durm, durs);
 						// use potions
 						// do the first round
 						if (alch != 0) {
 							auto tup = ACM::ActorUsePotion(std::get<0>(aclist[i]), alch);
 							switch (std::get<1>(tup)) {
 							case AlchemyEffect::kHealth:
-								durh = std::get<0>(tup);
+								durh = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
+								LOG2_4("[CheckActors] use health pot with duration {} and magnitude {}", durh, std::get<0>(tup));
 								break;
 							case AlchemyEffect::kMagicka:
-								durm = std::get<0>(tup);
+								durm = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+								LOG2_4("[CheckActors] use magicka pot with duration {} and magnitude {}", durh, std::get<0>(tup));
 								break;
 							case AlchemyEffect::kStamina:
-								durs = std::get<0>(tup);
+								durs = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+								LOG2_4("[CheckActors] use stamina pot with duration {} and magnitude {}", durh, std::get<0>(tup));
 								break;
 							}
 							// do the rest of the rounds
@@ -486,18 +716,19 @@ namespace Events
 									alch3 = static_cast<uint64_t>(AlchemyEffect::kStamina);
 								else
 									alch3 = 0;
+								// construct combined effect
 								alch |= alch2 | alch3;
 								if (alch != 0) {
-									tup = ACM::ActorUsePotion(std::get<0>(aclist[c]), std::get<2>(tup));
+									tup = ACM::ActorUsePotion(std::get<0>(aclist[i]), std::get<2>(tup));
 									switch (std::get<1>(tup)) {
 									case AlchemyEffect::kHealth:
-										durh = std::get<0>(tup);
+										durh = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
 										break;
 									case AlchemyEffect::kMagicka:
-										durm = std::get<0>(tup);
+										durm = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
 										break;
 									case AlchemyEffect::kStamina:
-										durs = std::get<0>(tup);
+										durs = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
 										break;
 									}
 								} else if (durother < tolerance)
@@ -512,20 +743,24 @@ namespace Events
 
 							// we only want to use at max one other potion at a time.
 						}
-
-						/*ActorUsePotion(
-							*iter,
-							Settings::_featMagickaRestoration && GetAVPercentage(*iter, RE::ActorValue::kMagicka) < Settings::_magickaThresholdLower,
-							Settings::_featStaminaRestoration && GetAVPercentage(*iter, RE::ActorValue::kStamina) < Settings::_staminaThresholdLower,
-							Settings::_featHealthRestoration && GetAVPercentage(*iter, RE::ActorValue::kHealth) < Settings::_healthThresholdLower
-							);*/
+						// update entry in vector
+						aclist[i] = { std::get<0>(aclist[i]), durh, durm, durs, durother, durreg };
 					} else {
 						// actor dead or invalid
 					}
 				}
-				if (Settings::_playerRestorationEnabled && RE::PlayerCharacter::GetSingleton()->IsInCombat())
-					if (Settings::_featHealthRestoration && ACM::GetAVPercentage(RE::PlayerCharacter::GetSingleton(), RE::ActorValue::kHealth) < Settings::_healthThresholdLower)
-						ACM::ActorUsePotion(RE::PlayerCharacter::GetSingleton(), static_cast<uint64_t>(AlchemyEffect::kHealth));
+
+				// if we inserted the player, remove them and get their applied values
+				if (player) {
+					auto tup = aclist.back();
+					aclist.pop_back();
+					durhp = std::get<1>(tup);
+					durmp = std::get<2>(tup);
+					dursp = std::get<3>(tup);
+				}
+				//if (Settings::_playerRestorationEnabled && RE::PlayerCharacter::GetSingleton()->IsInCombat())
+				//	if (Settings::_featHealthRestoration && ACM::GetAVPercentage(RE::PlayerCharacter::GetSingleton(), RE::ActorValue::kHealth) < Settings::_healthThresholdLower)
+				//		ACM::ActorUsePotion(RE::PlayerCharacter::GetSingleton(), static_cast<uint64_t>(AlchemyEffect::kHealth));
 					/* ActorUsePotion(
 						RE::PlayerCharacter::GetSingleton(),
 						Settings::_featMagickaRestoration && GetAVPercentage(RE::PlayerCharacter::GetSingleton(), RE::ActorValue::kMagicka) < Settings::_magickaThresholdLower,
@@ -540,15 +775,15 @@ namespace Events
 		}
 		stopactorhandler = false;
 	}
-	
+
 	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent*, RE::BSTEventSource<RE::TESLoadGameEvent>*)
 	{
 		stopactorhandler = false;
+		initialized = false;
 		if (actorhandler == nullptr) {
 			actorhandler = new std::thread(CheckActors);
 			LOG_1("[LoadGameEvent] Started CheckActors");
 		}
-
 		return EventResult::kContinue;
 	}
 

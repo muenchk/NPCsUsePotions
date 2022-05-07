@@ -1,5 +1,7 @@
 build/
 src/.vs/
+src/.vscode
+src/out
 src/TODO.txt
 
 # Prerequisites

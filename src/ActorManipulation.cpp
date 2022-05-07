@@ -9,11 +9,11 @@ using AlchemyEffect = Settings::AlchemyEffect;
 std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::AlchemyItem* item, uint64_t alchemyEffect)
 {
 	LOG_4("[HasAlchemyEffect] begin");
-	if (item && !(item->IsPoison() && !(item->IsFood()))) {
+	if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
 		RE::EffectSetting* sett = nullptr;
 		LOG_4("[HasAlchemyEffect] found medicine");
 		if ((item->avEffectSetting) == nullptr && item->effects.size() == 0) {
-			LOG_4("[HasAlchemyEffect] end fail");
+			LOG_4("[HasAlchemyEffect] end fail1");
 			return { false, 0.0f, 0, AlchemyEffect::kNone};
 		}
 		uint64_t out = 0;
@@ -23,6 +23,7 @@ std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::
 		if (item->effects.size() > 0) {
 			for (uint32_t i = 0; i < item->effects.size(); i++) {
 				sett = item->effects[i]->baseEffect;
+				//logger::info("[HasAlchemyEffect] effect {} dur {} mag {} name {}", ConvAlchULong(sett->data.primaryAV), item->effects[i]->effectItem.duration, item->effects[i]->effectItem.magnitude, std::to_string(item->GetFormID()));
 				if (sett && (out = ConvAlchULong(sett->data.primaryAV) & alchemyEffect) > 0) {
 					found = true;
 					mag = item->effects[i]->effectItem.magnitude;
@@ -39,13 +40,14 @@ std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::
 			}
 		}
 		if (found) {
+			//logger::info("[HasAlchemyEffect] dur {} mag {}", dur, mag);
 			LOG_4("[HasAlchemyEffect] end success");
 			return { true, mag, dur, static_cast<AlchemyEffect>(out) };
 		}
-		LOG_4("[HasAlchemyEffect] end fail");
+		LOG_4("[HasAlchemyEffect] end fail2");
 		return { false, 0.0f, 0, AlchemyEffect::kNone };
 	}
-	LOG_4("[HasAlchemyEffect] end fail");
+	LOG_4("[HasAlchemyEffect] end fail3");
 	return { false, 0.0f, 0, AlchemyEffect::kNone };
 }
 
@@ -60,10 +62,11 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 	while (iter != end && alchemyEffect!= 0) {
 		item = iter->first->As<RE::AlchemyItem>();
 		LOG_4("[GetMatchingItems] checking item");
-		if (item && !(item->IsPoison() && !(item->IsFood()))) {
+		if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
 			LOG_4("[GetMatchingItems] found medicine");
 			if (auto res = HasAlchemyEffect(item, alchemyEffect); std::get<0>(res)) {
 				ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+				//logger::info("[getMatch] dur {} mag {}", std::get<2>(res), std::get<1>(res));
 			}
 		}
 		iter++;
@@ -138,8 +141,16 @@ std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::Al
 {
 	if (ls.size() > 0) {
 		LOG_2("[ActorUsePotion] Drink Potion");
-		if (Settings::_CompatibilityMode || Settings::_CompatibilityPotionAnimation) {
-			LOG_3("[ActorUsePotion] Compatibility Mode")
+		if (Settings::CompatibilityPotionPapyrus()) {
+
+			LOG_3("[ActorUsePotion] Compatibility Mode");
+			if (!Settings::CompatibilityPotionPlugin(_actor)) {
+				return { -1, AlchemyEffect::kNone, ls };
+				LOG_3("[ActorUsePotion] Cannot use potion due to compatibility");
+			}
+
+			// preliminary, has check built in wether it applies
+			Settings::ApplyCompatibilityPotionAnimatedPapyrus(_actor);
 			SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
 			ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
 			ev->strArg = RE::BSFixedString("");
@@ -153,10 +164,18 @@ std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::Al
 			ev->sender = std::get<2>(ls.front());
 			SKSE::GetModCallbackEventSource()->SendEvent(ev);
 		} else {
+			// apply compatibility stuff before using potion
+			if (!Settings::CompatibilityPotionPlugin(_actor)) {
+				return { -1, AlchemyEffect::kNone, ls };
+				LOG_3("[ActorUsePotion] Cannot use potion due to compatibility");
+			}
 			RE::ExtraDataList* extra = new RE::ExtraDataList();
 			extra->SetOwner(_actor);
-			RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra);
-			//_actor->DrinkPotion(std::get<1>(ls.front()), extra);
+
+			if (Settings::_DisableEquipSounds)
+				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+			else
+				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra);
 		}
 		auto val = ls.front();
 		ls.pop_front();
@@ -183,7 +202,7 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0) {
 		LOG_2("[ActorUseFood] Use Food");
-		if (Settings::_CompatibilityMode) {
+		if (Settings::CompatibilityFoodPapyrus()) {
 			LOG_3("[ActorUseFood] Compatibility Mode");
 			// use same event as for potions, since it takes a TESForm* and works for anything
 			SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
@@ -200,7 +219,11 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 			SKSE::GetModCallbackEventSource()->SendEvent(ev);
 		} else {
 			RE::ExtraDataList* extra = new RE::ExtraDataList();
-			RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra);
+			extra->SetOwner(_actor);
+			if (Settings::_DisableEquipSounds)
+				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+			else
+				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra);
 		}
 		return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 	}
@@ -225,7 +248,7 @@ std::pair<int, AlchemyEffect> ACM::ActorUsePoison(RE::Actor* _actor, uint64_t al
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0) {
 		LOG_2("[ActorUsePoison] Use Poison");
-		if (Settings::_CompatibilityMode) {
+		if (Settings::CompatibilityPoisonPapyrus()) {
 			LOG_3("[ActorUsePoison] Compatibility Mode");
 			// use same events as for potions, since it takes a TESForm* and works for anything
 			SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
@@ -242,7 +265,11 @@ std::pair<int, AlchemyEffect> ACM::ActorUsePoison(RE::Actor* _actor, uint64_t al
 			SKSE::GetModCallbackEventSource()->SendEvent(ev);
 		} else {
 			RE::ExtraDataList* extra = new RE::ExtraDataList();
-			RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra);
+			extra->SetOwner(_actor);
+			if (Settings::_DisableEquipSounds)
+				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+			else
+				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra);
 		}
 		return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 	}

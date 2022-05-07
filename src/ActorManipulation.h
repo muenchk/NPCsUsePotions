@@ -26,7 +26,7 @@ public:
 	static float GetAVMax(RE::Actor* _actor, RE::ActorValue av)
 	{
 		// add base value, permanent modifiers and temporary modifiers (magic effects for instance)
-		return _actor->GetBaseActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av);
+		return _actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av);
 	}
 	/// <summary>
 	/// Returns the current percentage of an actor value (like percentag of health remaining)
@@ -36,7 +36,7 @@ public:
 	/// <returns></returns>
 	static float GetAVPercentage(RE::Actor* _actor, RE::ActorValue av)
 	{
-		return _actor->GetActorValue(av) / (_actor->GetBaseActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+		return _actor->GetActorValue(av) / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 	}
 	/// <summary>
 	/// Returns the actor value percentage of an actor calculated from their base value
@@ -48,7 +48,7 @@ public:
 	/// <returns></returns>
 	static float GetAVPercentageFromValue(RE::Actor* _actor, RE::ActorValue av, float curr)
 	{
-		return curr / (_actor->GetBaseActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+		return curr / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 	}
 	#pragma endregion
 

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <type_traits>
 #include <utility>
+#include <string_view>
 #pragma once
 
 #define LOG_1(s)               \
@@ -37,7 +38,13 @@
 	if (Settings::EnableLog && Settings::LogLevel >= 3) \
 		logger::info(s, t);
 
+#define LOG2_4(s, t, u)                           \
+	if (Settings::EnableLog && Settings::LogLevel >= 3) \
+		logger::info(s, t, u);
 
+#define LOG4_4(s, t, u, v, w)                                    \
+	if (Settings::EnableLog && Settings::LogLevel >= 3) \
+		logger::info(s, t, u, v, w);
 
 #define PROF_1(s)                    \
 	if (Settings::EnableProfiling) \
@@ -66,9 +73,115 @@
 
 struct Settings
 {
+	static inline std::string PluginName = "NPCsUsePotions.esp";
+
+	class Compatibility
+	{
+	public:
+		static inline std::string Plugin_PotionAnimatedfx = "PotionAnimatedfx.esp";
+		static inline RE::EffectSetting* PAF_NPCDrinkingCoolDownEffect = nullptr;
+		static inline RE::SpellItem* PAF_NPCDrinkingCoolDownSpell = nullptr;
+		static inline std::string PAF_NPCDrinkingCoolDownEffect_name = "PAF_NPCDrinkingCoolDownEffect";
+		static inline std::string PAF_NPCDrinkingCoolDownSpell_name = "PAF_NPCDrinkingCoolDownSpell";
+	};
+
+	static inline int _MaxDuration = 10000;
+
+	// threshold variables
+	static inline float _healthThresholdLower = 0.3f;
+	static inline float _healthThresholdUpper = 0.5f;
+	static inline float _magickaThresholdLower = 0.3f;
+	static inline float _magickaThresholdUpper = 0.5f;
+	static inline float _staminaThresholdLower = 0.3f;
+	static inline float _staminaThresholdUpper = 0.5f;
+
+	//general
+	static inline long _maxPotionsPerCycle = 2;
+	static inline long _cycletime = 500;
+	static inline bool _DisableEquipSounds = false;
+
+	// features
+	static inline bool _featMagickaRestoration = true;
+	static inline bool _featStaminaRestoration = true;
+	static inline bool _featHealthRestoration = true;
+	static inline bool _playerRestorationEnabled = false;
+	static inline bool _featDistributePoisons = true;  // player is excluded from distribution options, as well as followers
+	static inline bool _featDistributePotions = true;  // player is excluded from distribution options, as well as followers
+	static inline bool _featDistributeFood = true;     // player is excluded from distribution options, as well as followers
+	static inline bool _featUseDeathItems = true;      // the npc will be given potions that may appear in their deathItems if available
+	//static inline bool _featRemovePotionsOnDeath = false;
+	//static inline bool _featRemovePoisonsOnDeath = false;
+
+	// compatibility
+	static inline bool _CompatibilityMode = false;                         // Use Items with Papyrus, needs the plugin
+	static inline bool _CompatibilityPotionAnimation = false;              // Use Potions with Papyrus
+	static inline bool _CompatibilityDisableAutomaticAdjustments = false;  // Disables most automatic adjustments made to settings for compatibility
+	static inline bool _CompatibilityPotionAnimatedFx = false;             // no settings entry | Compatiblity Mode for Mods
+																		   // 1) Animated Potion Drinking SE
+																		   // 2) Potion Animated fix (SE)
+	static inline bool _CompatibilityPotionAnimatedFX_UseAnimations = false; // if PotionAnimatedfx.esp is loaded, should their animations be used on all potions?
+
+	static inline bool EnableLog = false;
+	static inline int LogLevel = 0;      // 0 - only highest level
+										 // 1 - highest to layer 1 function logging
+										 // 2 - highest to layer 2 function logging
+										 // 3 - highest to layer 3 function logging
+	static inline int ProfileLevel = 0;  // 0 - highest level only
+										 // 1 - highest and layer 1
+										 // 2 - highest and layer 2
+	static inline bool EnableProfiling = false;
+
+	// distribution options
+	static inline int _DistPoisChance1 = 50;  // chance for npcs to receive one poison
+	static inline int _DistPoisChance2 = 20;  // chance for npcs to receive a second poison
+	static inline int _DistPotChance1 = 50;   // chance to distribute one stat potion
+	static inline int _DistPotChance2 = 20;   // chance to distribute a second stat potion
+	static inline int _DistPotChance3 = 10;   // chance to distribute a third stat potion
+	static inline int _DistPotChanceAdd = 5;  // chance to receive additional stat potions
+	static inline int _DistPotMax = 5;        // max number of potions to give
+	static inline int _DistFPotChance1 = 50;
+	static inline int _DistFPotChance2 = 20;
+
+	static inline int _LevelEasy = 20;       // only distribute "weak" potions and poisons
+	static inline int _LevelNormal = 35;     // may distribute "standard" potions and poisons
+	static inline int _LevelDifficult = 50;  // may distribute "potent" potions and poisons
+	static inline int _LevelInsane = 70;     // may have Insane tear potions
+
+	static inline int _MaxMagnitudeWeak = 30;      // max potion / poison magnitude to be considered "weak"
+	static inline int _MaxMagnitudeStandard = 60;  // max potion / poison magnitude to be considered "standard"
+	static inline int _MaxMagnitudePotent = 300;   // max potion / poison magnitude to be considered "potent"
+												   // anything above this won't be distributed
+
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_main{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_main{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsPotent_main{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsPotent_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_main{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak_main{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard_main{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent_main{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodmagicka{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodstamina{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodhealth{};
+
+	static inline std::list<RE::AlchemyItem*> alitems{};
+	static inline std::list<RE::AlchemyItem*> potions{};
+	static inline std::list<RE::AlchemyItem*> food{};
+	static inline std::list<RE::AlchemyItem*> poisons{};
+
+	static inline RE::BGSKeyword* VendorItemPotion;
+
 	static void Load()
 	{
 		constexpr auto path = L"Data/SKSE/Plugins/NPCsUsePotions.ini";
+
+		bool Ultimateoptions = false;
 
 		CSimpleIniA ini;
 
@@ -84,6 +197,27 @@ struct Settings
 		logger::info("[SETTINGS] {} {}", "EnableHealthRestoration", std::to_string(_featHealthRestoration));
 		_playerRestorationEnabled = ini.GetValue("Features", "EnablePlayerRestoration") ? ini.GetBoolValue("Features", "EnablePlayerRestoration") : false;
 		logger::info("[SETTINGS] {} {}", "EnablePlayerRestoration", std::to_string(_playerRestorationEnabled));
+
+
+		// compatibility
+		_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
+		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
+		// get wether zxlice's Ultimate Potion Animation is present
+		auto constexpr folder = R"(Data\SKSE\Plugins\)";
+		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+			if (entry.exists() && !entry.path().empty() && entry.path().filename() == "zxlice's ultimate potion animation.dll") {
+				Ultimateoptions = true;
+				logger::info("[SETTINGS] zxlice's Ultimate Potion Animation has been detected");
+			}
+		}
+		_CompatibilityMode = ini.GetValue("Compatibility", "Compatibility") ? ini.GetBoolValue("Compatibility", "Compatibility") : false;
+		logger::info("[SETTINGS] {} {}", "Compatibility", std::to_string(_CompatibilityMode));
+		_CompatibilityDisableAutomaticAdjustments = ini.GetValue("Compatibility", "DisableAutomaticAdjustments") ? ini.GetBoolValue("Compatibility", "DisableAutomaticAdjustments") : false;
+		logger::info("[SETTINGS] {} {}", "DisableAutomaticAdjustments", std::to_string(_CompatibilityDisableAutomaticAdjustments));
+		_CompatibilityPotionAnimatedFX_UseAnimations = ini.GetValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations") ? ini.GetBoolValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations") : false;
+		logger::info("[SETTINGS] {} {}", "PotionAnimatedfx.esp_UseAnimations", std::to_string(_CompatibilityPotionAnimatedFX_UseAnimations));
+
+
 		// Restoration Thresholds
 		_healthThresholdLower = ini.GetValue("Restoration", "HealthThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdLowerPercent", 0.3f)) : 0.3f;
 		if (_healthThresholdLower > 0.95f)
@@ -110,17 +244,91 @@ struct Settings
 			_staminaThresholdUpper = 0.95f;
 		logger::info("[SETTINGS] {} {}", "StaminaThresholdUpperPercent", std::to_string(_staminaThresholdUpper));
 		
+
 		// general
 		_maxPotionsPerCycle = ini.GetValue("General", "MaxPotionsPerCycle") ? ini.GetLongValue("General", "MaxPotionsPerCycle", 2) : 2;
 		logger::info("[SETTINGS] {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
 		_cycletime = ini.GetValue("General", "CycleWaitTime") ? ini.GetLongValue("General", "CycleWaitTime", 2) : 500;
 		logger::info("[SETTINGS] {} {}", "CycleWaitTime", std::to_string(_cycletime));
+		_DisableEquipSounds = ini.GetValue("General", "DisableEquipSounds") ? ini.GetBoolValue("General", "DisableEquipSounds", false) : false;
+		logger::info("[SETTINGS] {} {}", "DisableEquipSounds", std::to_string(_DisableEquipSounds));
+
 
 		// Debugging
 		EnableLog = ini.GetValue("Debug", "EnableLogging") ? ini.GetBoolValue("Debug", "EnableLogging") : false;
 		logger::info("[SETTINGS] {} {}", "EnableLogging", std::to_string(EnableLog));
+		LogLevel = ini.GetValue("Debug", "LogLevel") ? ini.GetLongValue("Debug", "LogLevel") : 0;
+		logger::info("[SETTINGS] {} {}", "LogLevel", std::to_string(LogLevel));
 		EnableProfiling = ini.GetValue("Debug", "EnableProfiling") ? ini.GetBoolValue("Debug", "EnableProfiling") : false;
 		logger::info("[SETTINGS] {} {}", "EnableProfiling", std::to_string(EnableProfiling));
+		ProfileLevel = ini.GetValue("Debug", "ProfileLevel") ? ini.GetLongValue("Debug", "ProfileLevel") : 0;
+		logger::info("[SETTINGS] {} {}", "ProfileLevel", std::to_string(LogLevel));
+
+		// save user settings, before applying adjustments
+		Save();
+
+		// apply settings for ultimate potions
+		if (Ultimateoptions) {
+			logger::info("[SETTINGS] [OVERRIDE] Adapting Settings for zxlice's Ultimate Potion Animation");
+			_CompatibilityPotionAnimation = true;
+			logger::info("[SETTINGS] [OVERRIDE] Compatibility - {} hase been overwritten and set to true", "UltimatePotionAnimation");
+			if (_cycletime < 2500){
+				if (!_CompatibilityDisableAutomaticAdjustments && _playerRestorationEnabled) {
+					_cycletime = 2500;
+					logger::info(
+						"[SETTINGS] [OVERRIDE] General - {} has been set to 2500, to avoid spamming potions while in animation. (get those nasty soudns off off me)",
+						"CycleWaitTime");
+				} else
+					logger::info("[SETTINGS] [OVERRIDE] General - {} has NOT been adjusted, either due to adjustment policy or player features being disabled.", "CycleWaitTime");
+			}
+			if (_maxPotionsPerCycle > 1) {
+				_maxPotionsPerCycle = 1;
+				logger::info("[SETTINGS] [OVERRIDE] General - {} has been set to 1, since only one potion can be applied at a time.", "MaxPotionsPerCycle");
+			}
+		}
+		auto datahandler = RE::TESDataHandler::GetSingleton();
+		logger::info("[SETTINGS] checking for plugins");
+
+
+		// search for PotionAnimatedFx.esp for compatibility
+		if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ Compatibility::Plugin_PotionAnimatedfx }); plugin) {
+			_CompatibilityPotionAnimatedFx = true;
+			logger::info("[SETTINGS] Found plugin PotionAnimatedfx.esp and activated compatibility mode");
+		} else {
+			// if we cannot find the plugin then we need to disable all related compatibility options, otherwise we WILL get CTDs
+			if (_CompatibilityPotionAnimatedFX_UseAnimations) {
+				_CompatibilityPotionAnimatedFX_UseAnimations = false;
+				logger::info("[SETTINGS] [OVERRIDE] \"PotionAnimatedfx.esp_UseAnimations\" was forcelly set to \"false\" due to the corresponding plugin missing.");
+			}
+		}
+		logger::info("[SETTINGS] checking for plugins2");
+
+		// plugin check
+		if (_CompatibilityMode) {
+			if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ PluginName }); plugin) {
+				logger::info("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
+			} else {
+				logger::info("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, all use of potions, poisons and food is effectively disabled, except you have another sink for the papyrus events. Distribution is not affected");
+			}
+		} else if (_CompatibilityPotionAnimation) {
+			if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ PluginName }); plugin) {
+				logger::info("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
+			} else {
+				logger::info("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, Potion drinking will be effectively disabled, except you have another plugin that listens to the Papyrus Mod Events. Other functionality is not affected");
+			}
+		} else if (_CompatibilityPotionAnimatedFX_UseAnimations) {
+			if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ PluginName }); plugin) {
+				logger::info("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
+			} else {
+				logger::info("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, Potion drinking will be effectively disabled, except you have another plugin that listens to the Papyrus Mod Events. Other functionality is not affected");
+			}
+		}
+		if (_CompatibilityPotionAnimation && _CompatibilityPotionAnimatedFx) {
+			_CompatibilityPotionAnimatedFx = false;
+			_CompatibilityPotionAnimatedFX_UseAnimations = false;
+			logger::info("[SETTINGS] [WARNING] Compatibility modes for zxlice's Ultimate Potion Animation and PotionAnimatedfx.esp have been activated simultaneously. To prevent issues the Compatibility mode for PotionAnimatedfx.esp has been deactivated.");
+		}
+		logger::info("[SETTINGS] checking for plugins end");
 	}
 
 	static void Save()
@@ -132,124 +340,79 @@ struct Settings
 		ini.SetUnicode();
 
 		// features
-		ini.SetBoolValue("Features", "EnableHealthRestoration", _featHealthRestoration);
-		ini.SetBoolValue("Features", "EnableMagickaRestoration", _featMagickaRestoration);
-		ini.SetBoolValue("Features", "EnableStaminaRestoration", _featStaminaRestoration);
-		ini.SetBoolValue("Features", "EnablePlayerRestoration", _playerRestorationEnabled);
-		ini.SetBoolValue("Features", "DistributePotions", _featDistributePotions);
-		ini.SetBoolValue("Features", "DistributePoisons", _featDistributePoisons);
-		ini.SetBoolValue("Features", "DistributeFood", _featDistributeFood);
+		ini.SetBoolValue("Features", "EnableHealthRestoration", _featHealthRestoration, ";NPCs use health potions to restore their missing hp in combat.");
+		ini.SetBoolValue("Features", "EnableMagickaRestoration", _featMagickaRestoration, ";NPCs use magicka potions to restore their missing magicka in combat.");
+		ini.SetBoolValue("Features", "EnableStaminaRestoration", _featStaminaRestoration, ";NPCs use stamina potions to restore their missing stamina in combat.");
+		ini.SetBoolValue("Features", "EnablePlayerRestoration", _playerRestorationEnabled, ";All activated features above are applied to the player, while they are in Combat.");
+		//ini.SetBoolValue("Features", "DistributePotions", _featDistributePotions, "NPCs are given potions when they enter combat according to their traits.");
+		//ini.SetBoolValue("Features", "DistributePoisons", _featDistributePoisons, "NPCs are give poisons when they enter combat according to their traits.");
+		//ini.SetBoolValue("Features", "DistributeFood", _featDistributeFood, "NPCs are given food items when they enter combat, and will use them immediately.");
 		
 		// compatibility
-		ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, "Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. This is automatically enabled if zxlice's mod is detected");
-		ini.SetBoolValue("Compatibility", "Compatibility", _CompatibilityMode, "General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
+		ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. This is automatically enabled if zxlice's mod is detected");
+		ini.SetBoolValue("Compatibility", "Compatibility", _CompatibilityMode, ";General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
+		ini.SetBoolValue("Compatibility", "DisableAutomaticAdjustments", _CompatibilityDisableAutomaticAdjustments, ";Disables automatic changes made to settings, due to compatibility.\n;Not all changes can be disabled.\n;1) Changes to \"MaxPotionsPerCycle\" when using Potion Animation Mods.\n;2) Enabling of \"UltimatePotionAnimation\" if zxlice's dll is found in your plugin folder. Since it would very likely result in a crash with this option enabled.");
+		if (_CompatibilityPotionAnimatedFX_UseAnimations)
+			ini.SetBoolValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations", _CompatibilityPotionAnimatedFX_UseAnimations, ";If you have one of the mods \"Animated Potion Drinking SE\", \"Potion Animated fix (SE)\" and the plugin \"PotionAnimatedfx.eso\" is found you may activate this.\n;This does NOT activate the compatibility mode for that mod, that happens automatically. Instead this determines wether the animations of that mod, are played for any mod that is drunken automatically.");
 
 		// restoration thresholds
-		ini.SetDoubleValue("Restoration", "HealthThresholdLowerPercent", _healthThresholdLower);
-		ini.SetDoubleValue("Restoration", "HealthThresholdUpperPercent", _healthThresholdUpper);
-		ini.SetDoubleValue("Restoration", "MagickaThresholdLowerPercent", _magickaThresholdLower);
-		ini.SetDoubleValue("Restoration", "MagickaThresholdUpperPercent", _magickaThresholdUpper);
-		ini.SetDoubleValue("Restoration", "StaminaThresholdLowerPercent", _staminaThresholdLower);
-		ini.SetDoubleValue("Restoration", "StaminaThresholdUpperPercent", _staminaThresholdUpper);
-
+		ini.SetDoubleValue("Restoration", "HealthThresholdLowerPercent", _healthThresholdLower, ";Upon reaching this lower threshold, NPCs will start to use health potions");
+		ini.SetDoubleValue("Restoration", "HealthThresholdUpperPercent", _healthThresholdUpper, ";Health threshold NPCs want to reach by using potions.");
+		ini.SetDoubleValue("Restoration", "MagickaThresholdLowerPercent", _magickaThresholdLower, ";Upon reaching this lower threshold, NPCs will start to use magicka potions");
+		ini.SetDoubleValue("Restoration", "MagickaThresholdUpperPercent", _magickaThresholdUpper, ";Magicka threshold NPCs want to reach by using potions.");
+		ini.SetDoubleValue("Restoration", "StaminaThresholdLowerPercent", _staminaThresholdLower, ";Upon reaching this lower threshold, NPCs will start to use stamina potions");
+		ini.SetDoubleValue("Restoration", "StaminaThresholdUpperPercent", _staminaThresholdUpper, ";Stamina threshold NPCs want to reach by using potions.");
+		
 		// distribution options
 
 		// general
-		ini.SetLongValue("General", "MaxPotionsPerCycle", _maxPotionsPerCycle);
+		ini.SetLongValue("General", "MaxPotionsPerCycle", _maxPotionsPerCycle, ";Maximum number of potions NPCs can use each Period");
 		//logger::info("[SETTINGS] writing {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
-		ini.SetLongValue("General", "CycleWaitTime", _cycletime);
+		ini.SetLongValue("General", "CycleWaitTime", _cycletime, ";Time between two periods in milliseconds.");
 		//logger::info("[SETTINGS] writing {} {}", "CycleWaitTime", std::to_string(_cycletime));
+		ini.SetLongValue("General", "DisableEquipSounds", _DisableEquipSounds, ";Disable Sounds when equipping Items.");
+		//logger::info("[SETTINGS] writing {} {}", "DisableEquipSounds", std::to_string(_DisableEquipSounds));
 
 		// debugging
-		ini.SetBoolValue("Debug", "EnableLogging", EnableLog);
-		ini.SetLongValue("Debug", "LogLevel", LogLevel, "1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, 4 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions. ");
-		ini.SetBoolValue("Debug", "EnableProfiling", EnableProfiling);
-		ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, "1 - only highest level functions write their executions times to the log, 1 - lower level functions are written, 2 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
+		ini.SetBoolValue("Debug", "EnableLogging", EnableLog, ";Enables logging output. Use with care as log may get very large");
+		ini.SetLongValue("Debug", "LogLevel", LogLevel, ";1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, 4 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions. ");
+		ini.SetBoolValue("Debug", "EnableProfiling", EnableProfiling, ";Enables profiling output.");
+		ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, ";1 - only highest level functions write their executions times to the log, 1 - lower level functions are written, 2 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
 
 		ini.SaveFile(path);
 	}
 
-	// threshold variables
-	static inline float _healthThresholdLower = 0.3f;
-	static inline float _healthThresholdUpper = 0.5f;
-	static inline float _magickaThresholdLower = 0.3f;
-	static inline float _magickaThresholdUpper = 0.5f;
-	static inline float _staminaThresholdLower = 0.3f;
-	static inline float _staminaThresholdUpper = 0.5f;
-
-	static inline long _maxPotionsPerCycle = 2;
-	static inline long _cycletime = 500;
-	
-	// features
-	static inline bool _featMagickaRestoration = true;
-	static inline bool _featStaminaRestoration = true;
-	static inline bool _featHealthRestoration = true;
-	static inline bool _playerRestorationEnabled = false;
-	static inline bool _featDistributePoisons = true; // player is excluded from distribution options, as well as followers
-	static inline bool _featDistributePotions = true; // player is excluded from distribution options, as well as followers
-	static inline bool _featDistributeFood = true; // player is excluded from distribution options, as well as followers
-	static inline bool _featUseDeathItems = true; // the npc will be given potions that may appear in their deathItems if available
-	//static inline bool _featRemovePotionsOnDeath = false;
-	//static inline bool _featRemovePoisonsOnDeath = false;
-
-	// compatibility
-	static inline bool _CompatibilityMode = false; // Use Items with Papyrus, needs the plugin
-	static inline bool _CompatibilityPotionAnimation = false; // Use Potions with Papyrus
-
-	static inline bool EnableLog = false;
-	static inline int LogLevel = 0; // 0 - only highest level
-									// 1 - highest to layer 1 function logging
-									// 2 - highest to layer 2 function logging
-									// 3 - highest to layer 3 function logging
-	static inline int ProfileLevel = 0;	// 0 - highest level only
-										// 1 - highest and layer 1
-										// 2 - highest and layer 2
-	static inline bool EnableProfiling = false;
-
-	// distribution options
-	static inline int _DistPoisChance1 = 50; // chance for npcs to receive one poison
-	static inline int _DistPoisChance2 = 20; // chance for npcs to receive a second poison
-	static inline int _DistPotChance1 = 50; // chance to distribute one stat potion
-	static inline int _DistPotChance2 = 20;	// chance to distribute a second stat potion
-	static inline int _DistPotChance3 = 10; // chance to distribute a third stat potion
-	static inline int _DistPotChanceAdd = 5; // chance to receive additional stat potions
-	static inline int _DistPotMax = 5;  // max number of potions to give
-	static inline int _DistFPotChance1 = 50;
-	static inline int _DistFPotChance2 = 20;
-
-	static inline int _LevelEasy = 20; // only distribute "weak" potions and poisons
-	static inline int _LevelNormal = 35; // may distribute "standard" potions and poisons
-	static inline int _LevelDifficult = 50; // may distribute "potent" potions and poisons
-	static inline int _LevelInsane = 70; // may have Insane tear potions
-
-	static inline int _MaxMagnitudeWeak = 30; // max potion / poison magnitude to be considered "weak"
-	static inline int _MaxMagnitudeStandard = 60; // max potion / poison magnitude to be considered "standard"
-	static inline int _MaxMagnitudePotent = 300; // max potion / poison magnitude to be considered "potent"
-												// anything above this won't be distributed
-
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_main{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_rest{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_main{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_rest{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsPotent_main{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsPotent_rest{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_main{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_rest{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak_main{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak_rest{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard_main{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard_rest{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent_main{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent_rest{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodmagicka{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodstamina{};
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodhealth{};
-
-	static inline std::list<RE::AlchemyItem*> alitems{};
-	static inline std::list<RE::AlchemyItem*> potions{};
-	static inline std::list<RE::AlchemyItem*> food{};
-	static inline std::list<RE::AlchemyItem*> poisons{};
-
+	static bool CompatibilityFoodPapyrus()
+	{
+		return Settings::_CompatibilityMode;
+	}
+	static bool CompatibilityPoisonPapyrus()
+	{
+		return Settings::_CompatibilityMode;
+	}
+	static bool CompatibilityPotionPapyrus()
+	{
+		return Settings::_CompatibilityMode | Settings::_CompatibilityPotionAnimation | Settings::_CompatibilityPotionAnimatedFX_UseAnimations;
+	}
+	static void ApplyCompatibilityPotionAnimatedPapyrus(RE::Actor* actor)
+	{
+		if (Settings::_CompatibilityPotionAnimatedFX_UseAnimations) {
+			actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, Compatibility::PAF_NPCDrinkingCoolDownSpell);
+			LOG_4("[CompatibilityPotionPlugin] cast potion cooldown spell from PotionAnimatedFx");
+		}
+	}
+	static bool CompatibilityPotionPlugin(RE::Actor* actor)
+	{
+		if (Settings::_CompatibilityPotionAnimatedFx) {
+			// compatibility mode for PotionAnimatedfx.esp activated, we may only use a potion if it is not on cooldown
+			// if the actor does not have the cooldown effect we may use a potion
+			if (!(actor->HasMagicEffect(Compatibility::PAF_NPCDrinkingCoolDownEffect))) {
+				return true;
+			} else
+				return false;
+		}
+		return true;
+	}
 
 	enum class AlchemyEffect : unsigned __int64
 	{

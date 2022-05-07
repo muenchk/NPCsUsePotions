@@ -75,8 +75,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 	if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
-		Settings::Load();
-		Settings::Save();
+		Settings::Load(); // also resaves the file
 		Settings::ClassifyItems();
 		logger::info("Settings loaded");
 	}
