@@ -1,5 +1,9 @@
 #pragma once
 
+#include <iostream>
+#include <string>
+#include <sstream>
+
 /// <summary>
 /// Provides generic functions
 /// </summary>
@@ -14,6 +18,13 @@ public:
 		return std::get<0>(first) > std::get<0>(second);
 	}
 	#pragma endregion
+
+	static std::string GetHex(long val)
+	{
+		std::stringstream ss;
+		ss << std::hex << val;
+		return ss.str();
+	}
 
 private:
 

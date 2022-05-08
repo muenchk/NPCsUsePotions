@@ -8,12 +8,12 @@ using AlchemyEffect = Settings::AlchemyEffect;
 //
 std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::AlchemyItem* item, uint64_t alchemyEffect)
 {
-	LOG_4("[HasAlchemyEffect] begin");
+	LOG_4("{}[HasAlchemyEffect] begin");
 	if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
 		RE::EffectSetting* sett = nullptr;
-		LOG_4("[HasAlchemyEffect] found medicine");
+		LOG_4("{}[HasAlchemyEffect] found medicine");
 		if ((item->avEffectSetting) == nullptr && item->effects.size() == 0) {
-			LOG_4("[HasAlchemyEffect] end fail1");
+			LOG_4("{}[HasAlchemyEffect] end fail1");
 			return { false, 0.0f, 0, AlchemyEffect::kNone};
 		}
 		uint64_t out = 0;
@@ -24,7 +24,7 @@ std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::
 			for (uint32_t i = 0; i < item->effects.size(); i++) {
 				sett = item->effects[i]->baseEffect;
 				//logger::info("[HasAlchemyEffect] effect {} dur {} mag {} name {}", ConvAlchULong(sett->data.primaryAV), item->effects[i]->effectItem.duration, item->effects[i]->effectItem.magnitude, std::to_string(item->GetFormID()));
-				if (sett && (out = ConvAlchULong(sett->data.primaryAV) & alchemyEffect) > 0) {
+				if (sett && (out = (ConvAlchULong(sett->data.primaryAV) & alchemyEffect)) > 0) {
 					found = true;
 					mag = item->effects[i]->effectItem.magnitude;
 					dur = item->effects[i]->effectItem.duration;
@@ -41,13 +41,13 @@ std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::
 		}
 		if (found) {
 			//logger::info("[HasAlchemyEffect] dur {} mag {}", dur, mag);
-			LOG_4("[HasAlchemyEffect] end success");
+			LOG_4("{}[HasAlchemyEffect] end success");
 			return { true, mag, dur, static_cast<AlchemyEffect>(out) };
 		}
-		LOG_4("[HasAlchemyEffect] end fail2");
+		LOG_4("{}[HasAlchemyEffect] end fail2");
 		return { false, 0.0f, 0, AlchemyEffect::kNone };
 	}
-	LOG_4("[HasAlchemyEffect] end fail3");
+	LOG_4("{}[HasAlchemyEffect] end fail3");
 	return { false, 0.0f, 0, AlchemyEffect::kNone };
 }
 
@@ -58,12 +58,12 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 	auto iter = itemmap.begin();
 	auto end = itemmap.end();
 	RE::AlchemyItem* item = nullptr;
-	LOG_3("[GetMatchingItems] trying to find potion");
+	LOG_3("{}[GetMatchingItems] trying to find potion");
 	while (iter != end && alchemyEffect!= 0) {
 		item = iter->first->As<RE::AlchemyItem>();
-		LOG_4("[GetMatchingItems] checking item");
+		LOG_4("{}[GetMatchingItems] checking item");
 		if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
-			LOG_4("[GetMatchingItems] found medicine");
+			LOG_4("{}[GetMatchingItems] found medicine");
 			if (auto res = HasAlchemyEffect(item, alchemyEffect); std::get<0>(res)) {
 				ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 				//logger::info("[getMatch] dur {} mag {}", std::get<2>(res), std::get<1>(res));
@@ -81,12 +81,12 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 	auto iter = itemmap.begin();
 	auto end = itemmap.end();
 	RE::AlchemyItem* item = nullptr;
-	LOG_3("[GetMatchingItems] trying to find potion");
+	LOG_3("{}[GetMatchingItems] trying to find potion");
 	while (iter != end && alchemyEffect!= 0) {
 		item = iter->first->As<RE::AlchemyItem>();
-		LOG_4("[GetMatchingItems] checking item");
+		LOG_4("{}[GetMatchingItems] checking item");
 		if (item->IsPoison()) {
-			LOG_4("[GetMatchingItems] found medicine");
+			LOG_4("{}[GetMatchingItems] found medicine");
 			if (auto res = HasAlchemyEffect(item, alchemyEffect); std::get<0>(res)) {
 				ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 			}
@@ -103,12 +103,12 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 	auto iter = itemmap.begin();
 	auto end = itemmap.end();
 	RE::AlchemyItem* item = nullptr;
-	LOG_3("[GetMatchingItems] trying to find potion");
+	LOG_3("{}[GetMatchingItems] trying to find potion");
 	while (iter != end && alchemyEffect!= 0) {
 		item = iter->first->As<RE::AlchemyItem>();
-		LOG_4("[GetMatchingItems] checking item");
+		LOG_4("{}[GetMatchingItems] checking item");
 		if (item->IsFood()) {
-			LOG_4("[GetMatchingItems] found medicine");
+			LOG_4("{}[GetMatchingItems] found medicine");
 			if (auto res = HasAlchemyEffect(item, alchemyEffect); std::get<0>(res)) {
 				ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 			}
@@ -129,7 +129,7 @@ std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::Al
 	auto iter = itemmap.begin();
 	auto end = itemmap.end();
 	//RE::EffectSetting* sett = nullptr;
-	LOG_2("[ActorUsePotion] trying to find potion");
+	LOG_2("{}[ActorUsePotion] trying to find potion");
 	auto ls = GetMatchingPotions(_actor, alchemyEffect);
 	ls.sort(Utility::SortMagnitude);
 	// got all potions the actor has sorted by magnitude.
@@ -140,13 +140,14 @@ std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::Al
 std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ACM::ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls)
 {
 	if (ls.size() > 0) {
-		LOG_2("[ActorUsePotion] Drink Potion");
+		LOG_2("{}[ActorUsePotion] Drink Potion");
+		LOG1_3("{}[ActorUsePotion] use potion on: {}", Utility::GetHex(_actor->GetFormID()));
 		if (Settings::CompatibilityPotionPapyrus()) {
 
-			LOG_3("[ActorUsePotion] Compatibility Mode");
+			LOG_3("{}[ActorUsePotion] Compatibility Mode");
 			if (!Settings::CompatibilityPotionPlugin(_actor)) {
 				return { -1, AlchemyEffect::kNone, ls };
-				LOG_3("[ActorUsePotion] Cannot use potion due to compatibility");
+				LOG_3("{}[ActorUsePotion] Cannot use potion due to compatibility");
 			}
 
 			// preliminary, has check built in wether it applies
@@ -167,7 +168,7 @@ std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::Al
 			// apply compatibility stuff before using potion
 			if (!Settings::CompatibilityPotionPlugin(_actor)) {
 				return { -1, AlchemyEffect::kNone, ls };
-				LOG_3("[ActorUsePotion] Cannot use potion due to compatibility");
+				LOG_3("{}[ActorUsePotion] Cannot use potion due to compatibility");
 			}
 			RE::ExtraDataList* extra = new RE::ExtraDataList();
 			extra->SetOwner(_actor);
@@ -195,15 +196,15 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 	auto iter = itemmap.begin();
 	auto end = itemmap.end();
 	//RE::EffectSetting* sett = nullptr;
-	LOG_2("[ActorUseFood] trying to find food");
+	LOG_2("{}[ActorUseFood] trying to find food");
 	auto ls = GetMatchingFood(_actor, alchemyEffect);
 	ls.sort(Utility::SortMagnitude);
 	// got all potions the actor has sorted by magnitude.
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0) {
-		LOG_2("[ActorUseFood] Use Food");
+		LOG_2("{}[ActorUseFood] Use Food");
 		if (Settings::CompatibilityFoodPapyrus()) {
-			LOG_3("[ActorUseFood] Compatibility Mode");
+			LOG_3("{}[ActorUseFood] Compatibility Mode");
 			// use same event as for potions, since it takes a TESForm* and works for anything
 			SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
 			ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
@@ -241,13 +242,13 @@ std::pair<int, AlchemyEffect> ACM::ActorUsePoison(RE::Actor* _actor, uint64_t al
 	auto iter = itemmap.begin();
 	auto end = itemmap.end();
 	//RE::EffectSetting* sett = nullptr;
-	LOG_2("[ActorUsePoison] trying to find poison");
+	LOG_2("{}[ActorUsePoison] trying to find poison");
 	auto ls = GetMatchingPoisons(_actor, alchemyEffect);
 	ls.sort(Utility::SortMagnitude);
 	// got all potions the actor has sorted by magnitude.
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0) {
-		LOG_2("[ActorUsePoison] Use Poison");
+		LOG_2("{}[ActorUsePoison] Use Poison");
 		if (Settings::CompatibilityPoisonPapyrus()) {
 			LOG_3("[ActorUsePoison] Compatibility Mode");
 			// use same events as for potions, since it takes a TESForm* and works for anything

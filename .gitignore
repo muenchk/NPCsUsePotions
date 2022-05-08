@@ -3,6 +3,7 @@ src/.vs/
 src/.vscode
 src/out
 src/TODO.txt
+srd/Changelog.txt
 
 # Prerequisites
 *.d

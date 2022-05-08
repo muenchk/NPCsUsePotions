@@ -4,76 +4,93 @@
 #include <type_traits>
 #include <utility>
 #include <string_view>
+#include <chrono>
 #pragma once
 
 #define LOG_1(s)               \
 	if (Settings::EnableLog) \
-		logger::info(s);
+		logger::info(s, Settings::TimePassed() + " | ");
 
 #define LOG1_1(s, t)           \
 	if (Settings::EnableLog) \
-		logger::info(s, t);
+		logger::info(s, Settings::TimePassed() + " | ", t);
 
-#define LOG_2(s)             \
+#define LOG_2(s)                                        \
 	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s);
+		logger::info(s, Settings::TimePassed() + " | ");
 
 #define LOG1_2(s, t)         \
 	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, t);
+		logger::info(s, Settings::TimePassed() + " | ", t);
+
+#define LOG2_2(s, t, u)                                    \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s, Settings::TimePassed() + " | ", t, u);
 
 #define LOG_3(s)             \
 	if (Settings::EnableLog && Settings::LogLevel >= 2) \
-		logger::info(s);
+		logger::info(s, Settings::TimePassed() + " | ");
 
 #define LOG1_3(s, t)         \
 	if (Settings::EnableLog && Settings::LogLevel >= 2) \
-		logger::info(s, t);
+		logger::info(s, Settings::TimePassed() + " | ", t);
 
 #define LOG_4(s)             \
 	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s);
+		logger::info(s, Settings::TimePassed() + " | ");
 
 #define LOG1_4(s, t)         \
 	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, t);
+		logger::info(s, Settings::TimePassed() + " | ", t);
 
 #define LOG2_4(s, t, u)                           \
 	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, t, u);
+		logger::info(s, Settings::TimePassed() + " | ", t, u);
+
+#define LOG4_1(s, t)                           \
+	if (Settings::EnableLog && Settings::LogLevel >= 3) \
+		logger::info(s, Settings::TimePassed() + " | ", t);
 
 #define LOG4_4(s, t, u, v, w)                                    \
 	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, t, u, v, w);
+		logger::info(s, Settings::TimePassed() + " | ", t, u, v, w);
 
 #define PROF_1(s)                    \
 	if (Settings::EnableProfiling) \
-		logger::info(s);
+		logger::info(s, Settings::TimePassed() + " | ");
 
 #define PROF1_1(s, t)                \
 	if (Settings::EnableProfiling) \
-		logger::info(s, t);
+		logger::info(s, Settings::TimePassed() + " | ", t);
 
 #define PROF_2(s)                    \
 	if (Settings::EnableProfiling && Settings::ProfileLevel >= 1) \
-		logger::info(s);
+		logger::info(s, Settings::TimePassed() + " | ");
 
 #define PROF1_2(s, t)                \
 	if (Settings::EnableProfiling && Settings::ProfileLevel >= 1) \
-		logger::info(s, t);
+		logger::info(s, Settings::TimePassed() + " | ", t);
 
 #define PROF_3(s)                    \
 	if (Settings::EnableProfiling && Settings::ProfileLevel >= 2) \
-		logger::info(s);
+		logger::info(s, Settings::TimePassed() + " | ");
 
 #define PROF1_3(s, t)                \
 	if (Settings::EnableProfiling && Settings::ProfileLevel >= 2) \
-		logger::info(s, t);
+		logger::info(s, Settings::TimePassed() + " | ", t);
 
 
 struct Settings
 {
 	static inline std::string PluginName = "NPCsUsePotions.esp";
+	static inline std::chrono::time_point<std::chrono::system_clock> execstart = std::chrono::system_clock::now();
+	
+	static std::string TimePassed()
+	{
+		std::stringstream ss;
+		ss << std::setw(12) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - execstart);
+		return ss.str();
+	}
 
 	class Compatibility
 	{

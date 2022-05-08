@@ -21,7 +21,7 @@ Bug reports and suggestions should be posted in the Bug / Forum section of the n
 ```
 git clone https://github.com/muenchk/NPCsUsePotions.git
 cd NPCsUsePotions
-cmake --preset ae 			# for Skyrim Anniversary Edition
-cmake --preset oldversion	# for Skyrim Special Edition
+cmake --preset ae 				# for Skyrim Anniversary Edition
+cmake --preset oldversion		# for Skyrim Special Edition
 cmake --build build --config Release
 ```
