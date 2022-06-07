@@ -24,7 +24,7 @@ std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::
 		if (item->effects.size() > 0) {
 			for (uint32_t i = 0; i < item->effects.size(); i++) {
 				sett = item->effects[i]->baseEffect;
-				logger::info("[HasAlchemyEffect] effect {} dur {} mag {} name {}", ConvAlchULong(sett->data.primaryAV), item->effects[i]->effectItem.duration, item->effects[i]->effectItem.magnitude, std::to_string(item->GetFormID()));
+				//logger::info("[HasAlchemyEffect] effect {} dur {} mag {} name {}", ConvAlchULong(sett->data.primaryAV), item->effects[i]->effectItem.duration, item->effects[i]->effectItem.magnitude, std::to_string(item->GetFormID()));
 				if (sett && (tmp = (ConvAlchULong(sett->data.primaryAV) & alchemyEffect)) > 0) {
 					found = true;
 

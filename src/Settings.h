@@ -28,6 +28,18 @@
 	if (Settings::EnableLog) \
 		logger::info(s, t);
 
+#define LOGE_2(s)            \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s);
+
+#define LOGE1_2(s, t)        \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s, t);
+
+#define LOGE2_2(s, t, u)                                   \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s, t, u);
+
 
 
 #define LOG_1(s)               \
@@ -393,15 +405,7 @@ public:
 	static void LoadDistrConfig();
 
 	static inline int _MaxDuration = 10000;
-	static inline int _MaxFortifyDuration = 30000;
-
-	// threshold variables
-	static inline float _healthThresholdLower = 0.3f;
-	static inline float _healthThresholdUpper = 0.5f;
-	static inline float _magickaThresholdLower = 0.3f;
-	static inline float _magickaThresholdUpper = 0.5f;
-	static inline float _staminaThresholdLower = 0.3f;
-	static inline float _staminaThresholdUpper = 0.5f;
+	static inline int _MaxFortifyDuration = 60000;
 
 	//general
 	static inline long _maxPotionsPerCycle = 2;
@@ -458,13 +462,21 @@ public:
 	static inline int _MaxMagnitudePotent = 150;	// max potion / poison magnitude to be considered "potent"
 													// anything above this won't be distributed
 
+	// potion usage
+	static inline float _healthThreshold = 0.5f;
+	static inline float _magickaThreshold = 0.5f;
+	static inline float _staminaThreshold = 0.5f;
+	static inline int _UsePotionChance = 100;		// Chance that a potion will be used when appropiate
+
 	// poison usage
-	static inline float _EnemyLevelScalePlayerLevel = 0.8f;  // how high the level of an enemy must be for followers to use poisons
-	static inline int _EnemyNumberThreshold = 5;             // how many npcs must be fighting, for followers to use poisons regardless of the enemies level
+	static inline float _EnemyLevelScalePlayerLevel = 0.8f;		// how high the level of an enemy must be for followers to use poisons
+	static inline int _EnemyNumberThreshold = 5;				// how many npcs must be fighting, for followers to use poisons regardless of the enemies level
+	static inline int _UsePoisonChance = 100;					// Chance that a poison will be used when possible
 
 	// fortify potions
 	static inline float _EnemyLevelScalePlayerLevelFortify = 0.8f;  // how high the level of an enemy must be for followers to use fortify potions
 	static inline int _EnemyNumberThresholdFortify = 5;             // how many npcs must be fighting, for followers to use fortify potions regardless of the enemies level
+	static inline int _UseFortifyPotionChance = 100;				// Chance that a fortify potion will be used when possible
 
 	// removal
 	static inline int _ChanceToRemoveItem = 90;		// chance for an item to be removed
@@ -573,33 +585,6 @@ public:
 		logger::info("[SETTINGS] {} {}", "PotionAnimatedfx.esp_UseAnimations", std::to_string(_CompatibilityPotionAnimatedFX_UseAnimations));
 
 
-		// Restoration Thresholds
-		_healthThresholdLower = ini.GetValue("Restoration", "HealthThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdLowerPercent", 0.3f)) : 0.3f;
-		if (_healthThresholdLower > 0.95f)
-			_healthThresholdLower = 0.95f;
-		logger::info("[SETTINGS] {} {}", "HealthThresholdLowerPercent", std::to_string(_healthThresholdLower));
-		_healthThresholdUpper = ini.GetValue("Restoration", "HealthThresholdUpperPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdUpperPercent", 0.3f)) : 0.5f;
-		if (_healthThresholdUpper > 0.95f)
-			_healthThresholdUpper = 0.95f;
-		logger::info("[SETTINGS] {} {}", "HealthThresholdUpperPercent", std::to_string(_healthThresholdUpper));
-		_magickaThresholdLower = ini.GetValue("Restoration", "MagickaThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdLowerPercent", 0.3f)) : 0.3f;
-		if (_magickaThresholdLower > 0.95f)
-			_magickaThresholdLower = 0.95f;
-		logger::info("[SETTINGS] {} {}", "MagickaThresholdLowerPercent", std::to_string(_magickaThresholdLower));
-		_magickaThresholdUpper = ini.GetValue("Restoration", "MagickaThresholdUpperPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdUpperPercent", 0.3f)) : 0.5f;
-		if (_magickaThresholdUpper > 0.95f)
-			_magickaThresholdUpper = 0.95f;
-		logger::info("[SETTINGS] {} {}", "MagickaThresholdUpperPercent", std::to_string(_magickaThresholdUpper));
-		_staminaThresholdLower = ini.GetValue("Restoration", "StaminaThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdLowerPercent", 0.3f)) : 0.3f;
-		if (_staminaThresholdLower > 0.95f)
-			_staminaThresholdLower = 0.95f;
-		logger::info("[SETTINGS] {} {}", "StaminaThresholdLowerPercent", std::to_string(_staminaThresholdLower));
-		_staminaThresholdUpper = ini.GetValue("Restoration", "StaminaThresholdUpperPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdUpperPercent", 0.3f)) : 0.5f;
-		if (_staminaThresholdUpper > 0.95f)
-			_staminaThresholdUpper = 0.95f;
-		logger::info("[SETTINGS] {} {}", "StaminaThresholdUpperPercent", std::to_string(_staminaThresholdUpper));
-		
-
 		// distribution
 		_LevelEasy = ini.GetValue("Distribution", "LevelEasy") ? ini.GetLongValue("Distribution", "LevelEasy") : _LevelEasy;
 		logger::info("[SETTINGS] {} {}", "LevelEasy", std::to_string(_LevelEasy));
@@ -619,17 +604,44 @@ public:
 		logger::info("[SETTINGS] {} {}", "MaxMagnitudeStandard", std::to_string(_MaxMagnitudeStandard));
 		_MaxMagnitudePotent = ini.GetValue("Distribution", "MaxMagnitudePotent") ? ini.GetLongValue("Distribution", "MaxMagnitudePotent") : _MaxMagnitudePotent;
 		logger::info("[SETTINGS] {} {}", "MaxMagnitudePotent", std::to_string(_MaxMagnitudePotent));
-		
+
+
+		// Restoration Thresholds
+		_healthThreshold = ini.GetValue("Restoration", "HealthThresholdPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdPercent")) : _healthThreshold;
+		_healthThreshold = ini.GetValue("Restoration", "HealthThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdLowerPercent")) : _healthThreshold;
+		if (_healthThreshold > 0.95f)
+			_healthThreshold = 0.95f;
+		logger::info("[SETTINGS] {} {}", "HealthThresholdPercent", std::to_string(_healthThreshold));
+		_magickaThreshold = ini.GetValue("Restoration", "MagickaThresholdPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdPercent")) : _magickaThreshold;
+		_magickaThreshold = ini.GetValue("Restoration", "MagickaThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdLowerPercent")) : _magickaThreshold;
+		if (_magickaThreshold > 0.95f)
+			_magickaThreshold = 0.95f;
+		logger::info("[SETTINGS] {} {}", "MagickaThresholdPercent", std::to_string(_magickaThreshold));
+		_staminaThreshold = ini.GetValue("Restoration", "StaminaThresholdPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdPercent")) : _staminaThreshold;
+		_staminaThreshold = ini.GetValue("Restoration", "StaminaThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdLowerPercent")) : _staminaThreshold;
+		if (_staminaThreshold > 0.95f)
+			_staminaThreshold = 0.95f;
+		logger::info("[SETTINGS] {} {}", "StaminaThresholdPercent", std::to_string(_staminaThreshold));
+		_UsePotionChance = ini.GetValue("Restoration", "UsePotionChance") ? static_cast<int>(ini.GetLongValue("Restoration", "UsePotionChance")) : _UsePotionChance;
+		logger::info("[SETTINGS] {} {}", "UsePotionChance", std::to_string(_UsePotionChance));
+
+
 		// Poisonusage options
 		_EnemyLevelScalePlayerLevel = ini.GetValue("Poisons", "EnemyLevelScalePlayerLevel") ? static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel")) : _EnemyLevelScalePlayerLevel;
 		logger::info("[SETTINGS] {} {}", "EnemyLevelScalePlayerLevel", std::to_string(_EnemyLevelScalePlayerLevel));
 		_EnemyNumberThreshold = ini.GetValue("Poisons", "FightingNPCsNumberThreshold") ? ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold") : _EnemyNumberThreshold;
 		logger::info("[SETTINGS] {} {}", "FightingNPCsNumberThreshold", std::to_string(_EnemyNumberThreshold));
+		_UsePoisonChance = ini.GetValue("Poisons", "UsePoisonChance") ? static_cast<int>(ini.GetLongValue("Poisons", "UsePoisonChance")) : _UsePoisonChance;
+		logger::info("[SETTINGS] {} {}", "UsePoisonChance", std::to_string(_UsePoisonChance));
+
+
 		// fortify options
 		_EnemyLevelScalePlayerLevelFortify = ini.GetValue("Fortify", "EnemyLevelScalePlayerLevelFortify") ? static_cast<float>(ini.GetDoubleValue("Fortify", "EnemyLevelScalePlayerLevelFortify")) : _EnemyLevelScalePlayerLevelFortify;
 		logger::info("[SETTINGS] {} {}", "EnemyLevelScalePlayerLevelFortify", std::to_string(_EnemyLevelScalePlayerLevelFortify));
 		_EnemyNumberThresholdFortify = ini.GetValue("Fortify", "FightingNPCsNumberThresholdFortify") ? ini.GetLongValue("Fortify", "FightingNPCsNumberThresholdFortify") : _EnemyNumberThresholdFortify;
 		logger::info("[SETTINGS] {} {}", "FightingNPCsNumberThresholdFortify", std::to_string(_EnemyNumberThresholdFortify));
+		_UseFortifyPotionChance = ini.GetValue("Fortify", "UseFortifyPotionChance") ? static_cast<int>(ini.GetLongValue("Fortify", "UseFortifyPotionChance")) : _UseFortifyPotionChance;
+		logger::info("[SETTINGS] {} {}", "UseFortifyPotionChance", std::to_string(_UseFortifyPotionChance));
 
 
 		// removal options
@@ -781,14 +793,6 @@ public:
 		if (_CompatibilityPotionAnimatedFX_UseAnimations)
 			ini.SetBoolValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations", _CompatibilityPotionAnimatedFX_UseAnimations, ";If you have one of the mods \"Animated Potion Drinking SE\", \"Potion Animated fix (SE)\" and the plugin \"PotionAnimatedfx.eso\" is found you may activate this.\n;This does NOT activate the compatibility mode for that mod, that happens automatically. Instead this determines wether the animations of that mod, are played for any mod that is drunken automatically.");
 
-		// restoration thresholds
-		ini.SetDoubleValue("Restoration", "HealthThresholdLowerPercent", _healthThresholdLower, ";Upon reaching this lower threshold, NPCs will start to use health potions");
-		ini.SetDoubleValue("Restoration", "HealthThresholdUpperPercent", _healthThresholdUpper, ";Health threshold NPCs want to reach by using potions.");
-		ini.SetDoubleValue("Restoration", "MagickaThresholdLowerPercent", _magickaThresholdLower, ";Upon reaching this lower threshold, NPCs will start to use magicka potions");
-		ini.SetDoubleValue("Restoration", "MagickaThresholdUpperPercent", _magickaThresholdUpper, ";Magicka threshold NPCs want to reach by using potions.");
-		ini.SetDoubleValue("Restoration", "StaminaThresholdLowerPercent", _staminaThresholdLower, ";Upon reaching this lower threshold, NPCs will start to use stamina potions");
-		ini.SetDoubleValue("Restoration", "StaminaThresholdUpperPercent", _staminaThresholdUpper, ";Stamina threshold NPCs want to reach by using potions.");
-		
 		// distribution options
 		ini.SetLongValue("Distribution", "LevelEasy", _LevelEasy, ";NPC lower or equal this level are considered weak.");
 		ini.SetLongValue("Distribution", "LevelNormal", _LevelNormal, ";NPC lower or equal this level are considered normal in terms of strength.");
@@ -801,13 +805,21 @@ public:
 		ini.SetLongValue("Distribution", "MaxMagnitudeStandard", _MaxMagnitudeStandard, ";Items with this or lower magnitude*duration are considered normal.");
 		ini.SetLongValue("Distribution", "MaxMagnitudePotent", _MaxMagnitudePotent, ";Items with this or lower magnitude*duration are considered potent. Everything above this is considered Insane tier");
 		
+		// potion options
+		ini.SetDoubleValue("Restoration", "HealthThresholdPercent", _healthThreshold, ";Upon reaching this threshold, NPCs will start to use health potions");
+		ini.SetDoubleValue("Restoration", "MagickaThresholdPercent", _magickaThreshold, ";Upon reaching this threshold, NPCs will start to use magicka potions");
+		ini.SetDoubleValue("Restoration", "StaminaThresholdPercent", _staminaThreshold, ";Upon reaching this threshold, NPCs will start to use stamina potions");
+		ini.SetLongValue("Restoration", "UsePotionChance", _UsePotionChance, ";Chance that an NPC will use a potion if they can. Set to 100 to always take a potion, when appropiate.");
+
 		// Poison usage options
 		ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", _EnemyLevelScalePlayerLevel, ";Scaling factor when NPCs start using poisons on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use poisons.");
 		ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", _EnemyNumberThreshold, ";When the number of NPCs in a fight is at least at this value, followers start to use poisons regardless of the enemies level, to faster help out the player.");
+		ini.SetLongValue("Poisons", "UseFortifyPotionChance", _UseFortifyPotionChance, ";Chance that an NPC will use a fortify potion if they can.");
 
 		// fortify options
 		ini.SetDoubleValue("Fortify", "EnemyLevelScalePlayerLevelFortify", _EnemyLevelScalePlayerLevelFortify, ";Scaling factor when NPCs start using fortify potions on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use fortify potions.");
 		ini.SetLongValue("Fortify", "FightingNPCsNumberThresholdFortify", _EnemyNumberThresholdFortify, ";When the number of NPCs in a fight is at least at this value, followers start to use fortify potions regardless of the enemies level.");
+		ini.SetLongValue("Fortify", "UseFortifyPotionChance", _UsePotionChance, ";Chance that an NPC will use a potion if they can. Set to 100 to always take a potion, when appropiate.");
 
 		// removal options
 		ini.SetLongValue("Removal", "ChanceToRemoveItem", _ChanceToRemoveItem, "Chance to remove items on death of NPC. (range: 0 to 100)");
