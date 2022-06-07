@@ -131,7 +131,7 @@ void Settings::LoadDistrConfig()
 									rule->ruleVersion = ruleVersion;
 									rule->ruleType = ruleType;
 									rule->ruleName = splits->at(splitindex);
-									LOGE1_1("[LoadDistrRules] loading rule: {}", rule->ruleName);
+									LOGE1_2("[Settings] [LoadDistrRules] loading rule: {}", rule->ruleName);
 									splitindex++;
 									// now come the rule priority
 									rule->rulePriority = -1;
@@ -341,27 +341,26 @@ void Settings::LoadDistrConfig()
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
 									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
-									LOGE1_1("size potiondistr: {}", rule->potionDistr.size());
+									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
 									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr);
 									std::vector<std::tuple<uint64_t, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
 									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
-									LOGE1_1("size poisonDistr: {}", rule->poisonDistr.size());
+									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
 									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr);
 									std::vector<std::tuple<uint64_t, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
 									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
-									LOGE1_1("size fortifyDistr: {}", rule->fortifyDistr.size());
+									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
 									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr);
 									std::vector<std::tuple<uint64_t, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
 									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
-									LOGE1_1("size foodDistr: {}", rule->foodDistr.size());
+									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
 									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr);
 
 									// assign rules to search parameters
-									LOGE1_1("[LoadDistrRules] number ob objects associated with the rule: {}", objects.size());
+									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} associated objects", rule->ruleName, objects.size());
 									for (int i = 0; i < objects.size(); i++) {
 										switch (std::get<0>(objects[i])) {
 										case Settings::Distribution::AssocType::kFaction:
-											LOGE_1("[LoadDistrRules] found faction");
 											if (auto item = Settings::Distribution::factionMap.find(std::get<1>(objects[i])); item != Settings::Distribution::factionMap.end()) {
 												if (item->second->rulePriority < rule->rulePriority)
 													Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
@@ -370,7 +369,6 @@ void Settings::LoadDistrConfig()
 											}
 											break;
 										case Settings::Distribution::AssocType::kKeyword:
-											LOGE_1("[LoadDistrRules] found keyword");
 											if (auto item = Settings::Distribution::keywordMap.find(std::get<1>(objects[i])); item != Settings::Distribution::keywordMap.end()) {
 												if (item->second->rulePriority < rule->rulePriority)
 													Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
@@ -380,7 +378,6 @@ void Settings::LoadDistrConfig()
 											break;
 										case Settings::Distribution::AssocType::kNPC:
 										case Settings::Distribution::AssocType::kActor:
-											LOGE_1("[LoadDistrRules] found actor/actorbase");
 											if (auto item = Settings::Distribution::npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::npcMap.end()) {
 												if (item->second->rulePriority < rule->rulePriority)
 													Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
@@ -389,7 +386,6 @@ void Settings::LoadDistrConfig()
 											}
 											break;
 										case Settings::Distribution::AssocType::kRace:
-											LOGE_1("[LoadDistrRules] found race");
 											if (auto item = Settings::Distribution::raceMap.find(std::get<1>(objects[i])); item != Settings::Distribution::raceMap.end()) {
 												if (item->second->rulePriority < rule->rulePriority)
 													Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
@@ -404,7 +400,7 @@ void Settings::LoadDistrConfig()
 									if (rule->ruleName == DefaultRuleName)
 										Settings::Distribution::defaultRule = rule;
 									delete splits;
-									LOGE_1("[LoadDistrRules] successfully loaded rule");
+									LOGE1_2("[Settings] [LoadDistrRules] rule {} successfully loaded.", rule->ruleName);
 								}
 								break;
 							case 2:  // distribution attachement
@@ -446,19 +442,26 @@ void Settings::LoadDistrConfig()
 										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kActor ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kNPC) {
 											Distribution::excludedNPCs.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 										}
 										else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction) {
 											RE::TESFaction* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::TESFaction>();
-											if (temp)
+											if (temp) {
 												Distribution::excludedFactions.insert(temp);
+												LOGE1_2("[Settings] [LoadDistrRules] excluded faction {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
+											}
 										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword) {
 											RE::BGSKeyword* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::BGSKeyword>();
-											if (temp)
+											if (temp) {
 												Distribution::excludedKeywords.insert(temp);
+												LOGE1_2("[Settings] [LoadDistrRules] excluded keyword {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
+											}
 										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem) {
 											Distribution::excludedItems.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
 											Distribution::excludedRaces.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] excluded race {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -476,8 +479,10 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
 									for (int i = 0; i < items.size(); i++) {
-										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem)
+										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem) {
 											Distribution::excludedItems.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+										}
 									}
 									// since we are done delete splits
 									delete splits;
@@ -547,35 +552,47 @@ void Settings::LoadDistrConfig()
 						switch (std::get<0>(objects[i])) {
 						case Settings::Distribution::AssocType::kFaction:
 							if (auto item = Settings::Distribution::factionMap.find(std::get<1>(objects[i])); item != Settings::Distribution::factionMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority)
-								Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								if (item->second->rulePriority < rule->rulePriority) {
+									Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
+									LOGE2_2("[Settings] [LoadDistrRules] updated Faction {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								}
 							} else {
-							Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								LOGE2_2("[Settings] [LoadDistrRules] attached Faction {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
 							}
 							break;
 						case Settings::Distribution::AssocType::kKeyword:
 							if (auto item = Settings::Distribution::keywordMap.find(std::get<1>(objects[i])); item != Settings::Distribution::keywordMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority)
-								Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								if (item->second->rulePriority < rule->rulePriority) {
+									Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
+									LOGE2_2("[Settings] [LoadDistrRules] updated Keyword {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								}
 							} else {
-							Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								LOGE2_2("[Settings] [LoadDistrRules] attached Keyword {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
 							}
 							break;
 						case Settings::Distribution::AssocType::kNPC:
 						case Settings::Distribution::AssocType::kActor:
 							if (auto item = Settings::Distribution::npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::npcMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority)
-								Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								if (item->second->rulePriority < rule->rulePriority) {
+									Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
+									LOGE2_2("[LoadDistrRules] updated Actor {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								}
 							} else {
-							Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								LOGE2_2("[Settings] [LoadDistrRules] attached Actor {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
 							}
 							break;
 						case Settings::Distribution::AssocType::kRace:
 							if (auto item = Settings::Distribution::raceMap.find(std::get<1>(objects[i])); item != Settings::Distribution::raceMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority)
-								Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								if (item->second->rulePriority < rule->rulePriority) {
+									Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
+									LOGE2_2("[Settings] [LoadDistrRules] updated Race {} to rule {}.",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								}
 							} else {
-							Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								LOGE2_2("[Settings] [LoadDistrRules] attached Race {} to rule {}.",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
 							}
 							break;
 						}
