@@ -448,6 +448,41 @@ void Settings::LoadDistrConfig()
 											RE::TESFaction* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::TESFaction>();
 											if (temp) {
 												Distribution::excludedFactions.insert(temp);
+												LOGE1_2("[Settings] [LoadDistrRules] excluded faction {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											}
+										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword) {
+											RE::BGSKeyword* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::BGSKeyword>();
+											if (temp) {
+												Distribution::excludedKeywords.insert(temp);
+												LOGE1_2("[Settings] [LoadDistrRules] excluded keyword {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											}
+										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem) {
+											Distribution::excludedItems.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
+											Distribution::excludedRaces.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 5: // exclude baseline
+								{
+									if (splits->size() != 3) {
+										logger::warn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									for (int i = 0; i < items.size(); i++) {
+										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction) {
+											RE::TESFaction* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::TESFaction>();
+											if (temp) {
+												Distribution::excludedFactions.insert(temp);
 												LOGE1_2("[Settings] [LoadDistrRules] excluded faction {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
 										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword) {
@@ -462,26 +497,6 @@ void Settings::LoadDistrConfig()
 										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
 											Distribution::excludedRaces.insert(std::get<1>(items[i]));
 											LOGE1_2("[Settings] [LoadDistrRules] excluded race {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
-										}
-									}
-									// since we are done delete splits
-									delete splits;
-								}
-								break;
-							case 5: // exclude item
-								{
-									if (splits->size() != 3) {
-										logger::warn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
-										continue;
-									}
-									std::string assoc = splits->at(splitindex);
-									splitindex++;
-									bool error = false;
-									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
-									for (int i = 0; i < items.size(); i++) {
-										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem) {
-											Distribution::excludedItems.insert(std::get<1>(items[i]));
-											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -878,41 +893,95 @@ void Settings::LoadDistrConfig()
 void Settings::CheckActorsForRules()
 {
 	logger::info("[CheckActorsForRules] checking...");
+	std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_NPCs_without_Rule.csv");
+	out << "PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
+	//PluginBase;
+
+	auto datahandler = RE::TESDataHandler::GetSingleton();
+	std::string_view name = std::string_view{ "" };
+
 	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 	auto end = hashtable->end();
 	auto iter = hashtable->begin();
 	std::set<RE::FormID> visited;
 	RE::Actor* act = nullptr;
-	while (iter != end) {
-		if ((*iter).second) {
-			act = (*iter).second->As<RE::Actor>();
-			if (act) {
-				if (!visited.contains(act->GetActorBase()->GetFormID()))
-				{
-					// we didn't consider the current actors base so far
-					visited.insert(act->GetActorBase()->GetFormID());
+	while (iter != hashtable->end()) {
+		try {
+			if ((*iter).second) {
+				act = (*iter).second->As<RE::Actor>();
+				if (act) {
+					if (!visited.contains(act->GetFormID())) {
+						// lookup pluing of the actor base
+						/* name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetActorBase()->GetFormID() >> 24))->GetFilename();
+					if (name.empty())
+						name = datahandler->LookupLoadedLightModByIndex((uint16_t)((act->GetActorBase()->GetFormID() << 8)) >> 20)->GetFilename();
+					if (name.empty() == false)
+						out << name << ";";
+					else
+						out << ";";*/
 
-					// check wether there is a rule that applies
-					if (Utility::ExcludedNPC(act))
-						continue; // the npc is covered by an exclusion
-					// get rule
-					Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(act);
-					//logger::warn("[CheckActorsForRules] got rule");
-					if (rl->ruleName == DefaultRuleName) {
-						//logger::warn("[CheckActorsForRules] default");
-						// we found an actor that does not have a rule, so print that to the output
-						logger::warn("[CheckActorsForRules] Actor: {} {} {} does not have a valid rule", act->GetName(), Utility::GetHex(act->GetActorBase()->GetFormID()), Utility::GetHex(act->GetFormID()));
-						logger::warn("[CheckActorsForRules] Race: {} {}", act->GetRace()->GetFormEditorID(), Utility::GetHex(act->GetRace()->GetFormID()));
-						act->VisitFactions([](RE::TESFaction* a_faction, std::int8_t) {
-							//logger::info("[CalcRule] faction visited: {}", a_faction->GetName());
-							logger::warn("[CheckActorsForRules] Faction: {}", Utility::GetHex(a_faction->GetFormID()));
-							return false;
-						});
+						// we didn't consider the current actors base so far
+						visited.insert(act->GetFormID());
+
+						// check wether there is a rule that applies
+						if (Utility::ExcludedNPC(act))
+							continue;  // the npc is covered by an exclusion
+						// get rule
+						Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(act);
+						//logger::warn("[CheckActorsForRules] got rule");
+						if (rl->ruleName == DefaultRuleName) {
+							// lookup plugin of the actor red
+							name = std::string_view{ "" };
+							if ((act->GetFormID() >> 24) != 0xFE)
+								name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24))->GetFilename();
+							if (name.empty())
+								name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() << 8)) >> 20))->GetFilename();
+							if (name.empty() == false)
+								out << name << ";";
+							else
+								out << ";";
+							// we found an actor that does not have a rule, so print that to the output
+							out << act->GetName() << ";"
+								<< "0x" << Utility::GetHex(act->GetActorBase()->GetFormID()) << ";"
+								<< "0x" << Utility::GetHex(act->GetFormID()) << ";";
+							//logger::warn("[CheckActorsForRules] Actor: {} {} {} does not have a valid rule", act->GetName(), Utility::GetHex(act->GetActorBase()->GetFormID()), Utility::GetHex(act->GetFormID()));
+
+							if (act->GetRace())
+								out << act->GetRace()->GetFormEditorID() << ";"
+									<< "0x" << Utility::GetHex(act->GetRace()->GetFormID()) << ";";
+							else
+								out << ";;";
+							//logger::warn("[CheckActorsForRules] Race: {} {}", act->GetRace()->GetFormEditorID(), Utility::GetHex(act->GetRace()->GetFormID()));
+							if (act->GetSaveParentCell())
+								out << act->GetSaveParentCell()->GetName();
+
+							//logger::warn("[CheckActorsForRules] factions");
+							act->VisitFactions([&out](RE::TESFaction* a_faction, std::int8_t) {
+								if (a_faction)
+									out << ";"
+										<< "0x" << Utility::GetHex(a_faction->GetFormID());
+								//logger::warn("[CheckActorsForRules] Faction: {}", Utility::GetHex(a_faction->GetFormID()));
+								return false;
+							});
+							//logger::warn("[CheckActorsForRules] end");
+							out << "\n";
+							out.flush();
+						}
 					}
 				}
 			}
 		}
-		iter++;
+		catch (std::exception&) {
+			//logger::warn("catch");
+			out << ";";
+		}
+		try {
+			iter++;
+		}
+		catch (std::exception&) {
+			//logger::warn("catch finished");
+			break;
+		}
 	}
 	logger::info("[CheckActorsForRules] finished checking...");
 }
@@ -1590,6 +1659,8 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItems(
 
 Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 {
+	bool baseexcluded = false;
+
 	std::vector<Rule*> rls;
 	// find rule in npc map
 	// npc rules always have the highest priority
@@ -1606,6 +1677,9 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 	it = raceMap.find(base->GetRace()->GetFormID());
 	if (it != raceMap.end())
 		rls.push_back(it->second);
+	else {
+		baseexcluded |= baselineExclusions.contains(base->GetRace()->GetFormID());
+	}
 	// handle keywords
 	for (unsigned int i = 0; i < base->GetNumKeywords(); i++) {
 		auto opt = base->GetKeywordAt(i);
@@ -1613,14 +1687,20 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 			it = keywordMap.find((*opt)->GetFormID());
 			if (it != keywordMap.end())
 				rls.push_back(it->second);
+			else {
+				baseexcluded |= baselineExclusions.contains((*opt)->GetFormID());
+			}
 		}
 	}
 	// handle factions
-	actor->VisitFactions([&rls](RE::TESFaction* a_faction, std::int8_t) {
+	actor->VisitFactions([&rls, &baseexcluded](RE::TESFaction* a_faction, std::int8_t) {
 		//logger::info("[CalcRule] faction visited: {}", a_faction->GetName());
 		auto ite = factionMap.find(a_faction->GetFormID());
 		if (ite != factionMap.end())
 			rls.push_back(ite->second);
+		else {
+			baseexcluded |= baselineExclusions.contains(a_faction->GetFormID());
+		}
 		return false;
 	});
 	// now get the rule with the highest priority
@@ -1638,6 +1718,8 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 		return rls[index];
 	} else {
 		// there are no rules!!!
+		if (baseexcluded)
+			return Settings::Distribution::emptyRule;
 		LOG2_1("{}[CalcRule] default rule found: {}, {}", Settings::Distribution::defaultRule->ruleName, rls.size());
 		return Settings::Distribution::defaultRule;
 	}

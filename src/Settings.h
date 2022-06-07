@@ -362,6 +362,7 @@ public:
 		static inline std::set<RE::BGSKeyword*> excludedKeywords;
 		static inline std::set<RE::FormID> excludedRaces;
 		static inline std::set<RE::FormID> excludedItems;
+		static inline std::set<RE::FormID> baselineExclusions;
 
 		#define RandomRange 1000
 
@@ -838,6 +839,9 @@ public:
 		ini.SetLongValue("Debug", "LogLevel", LogLevel, ";1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, 4 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions. ");
 		ini.SetBoolValue("Debug", "EnableProfiling", EnableProfiling, ";Enables profiling output.");
 		ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, ";1 - only highest level functions write their executions times to the log, 2 - lower level functions are written, 3 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
+
+		if (_CheckActorsWithoutRules)
+			ini.SetBoolValue("Debug", "CheckActorWithoutRules", _CheckActorsWithoutRules);
 
 		ini.SaveFile(path);
 	}
