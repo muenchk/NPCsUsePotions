@@ -9,7 +9,8 @@ namespace Events
     class EventHandler :
 		public RE::BSTEventSink<RE::TESHitEvent>,
 		public RE::BSTEventSink<RE::TESCombatEvent>,
-		public RE::BSTEventSink<RE::TESLoadGameEvent>
+		public RE::BSTEventSink<RE::TESLoadGameEvent>,
+		public RE::BSTEventSink<RE::TESDeathEvent>
 	{
 	public:
 		/// <summary>
@@ -45,6 +46,15 @@ namespace Events
 		/// <param name="">unused</param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::TESLoadGameEvent* a_event, RE::BSTEventSource<RE::TESLoadGameEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for TESDeathEvent
+		/// removed unused potions and poisons from actor, to avoid economy instability
+		/// only registered if itemremoval is activated in the settings
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>* a_eventSource) override;
 
 	private:
 		EventHandler() = default;

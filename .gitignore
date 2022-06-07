@@ -1,9 +1,10 @@
 build/
+buildvr/
 src/.vs/
 src/.vscode
 src/out
 src/TODO.txt
-srd/Changelog.txt
+src/Changelog.txt
 
 # Prerequisites
 *.d

@@ -44,13 +44,6 @@ namespace Events
 	{
 		// now that the game was loaded we can try to initialize all our variables we conuldn't before
 		{
-			// load our stuff like necessary forms
-			// get VendorItemPotion keyword, if we don't find this, potion detection will be nearly impossible
-			Settings::VendorItemPotion = RE::TESForm::LookupByID<RE::BGSKeyword>(0x0008CDEC);
-			if (Settings::VendorItemPotion == nullptr) {
-				logger::info("[INIT] Couldn't find VendorItemPotion Keyword in game.");
-			}
-
 			// if we are in com mode, try to find the needed items. If we cannot find them, deactivate comp mode
 			if (Settings::_CompatibilityPotionAnimatedFx) {
 				RE::TESForm* tmp = RE::TESForm::LookupByEditorID(std::string_view{ Settings::Compatibility::PAF_NPCDrinkingCoolDownEffect_name });
@@ -557,6 +550,55 @@ namespace Events
 	// map actorid -> GameDay (reset)
 	// used to determine which actors may be given potions, and which recently received some
 	static std::map<uint64_t, float> actorresetmap{};
+	// semaphore used ot limit access to the reset map, to avoid problems
+	static std::binary_semaphore sem_actorreset(1);
+
+	// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
+	static std::set<RE::FormID> deads;
+
+	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
+	{
+		auto actor = a_event->actorDying->As<RE::Actor>();
+		if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
+			// as with potion distribution, exlude excluded actors and potential followers
+
+			sem_actorreset.acquire();
+			if (!Utility::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false)
+			{
+				deads.insert(actor->GetFormID());
+				LOG1_1("{}[TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
+				auto items = Settings::Distribution::GetMatchingInventoryItems(actor);
+				LOG1_1("{}[TESDeathEvent] found {} items", items.size());
+				if (items.size() > 0) {
+					// remove items that are too much
+					while (items.size() > Settings::_MaxItemsLeft) {
+						RE::ExtraDataList* extra = new RE::ExtraDataList();
+						extra->SetOwner(actor);
+						actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+						LOG1_1("{}[TESDeathEvent] Removed item {}", items.back()->GetName());
+						items.pop_back();
+					}
+					//logger::info("[TESDeathEvent] 3");
+					// remove the rest of the items per chance
+					if (Settings::_ChanceToRemoveItem < 100) {
+						for (int i = (int)items.size() - 1; i >= 0; i--) {
+							if (rand100(rand) <= Settings::_ChanceToRemoveItem) {
+								RE::ExtraDataList* extra = new RE::ExtraDataList();
+								extra->SetOwner(actor);
+								actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+								LOG1_1("{}[TESDeathEvent] Removed item {}", items[i]->GetName());
+							} else {
+								LOG1_1("{}[TESDeathEvent] Did not remove item {}", items[i]->GetName());
+							}
+						}
+					}
+				}
+			}
+			sem_actorreset.release();
+		}
+
+		return EventResult::kContinue;
+	}
 
     /// <summary>
     /// handles TESCombatEvent
@@ -569,28 +611,45 @@ namespace Events
     EventResult EventHandler::ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>*)
     {
 		auto actor = a_event->actor->As<RE::Actor>();
-		if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton()) {
+		if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				LOG_1("{}[TesCombatEvent] Trying to register new actor for potion tracking");
 
-				//test section
-				//LOG_1("{}find alchemy items");
-				//auto ls = FindDeathAlchemyItems(actor);
-				//std::ofstream out(R"(Data\SKSE\testfile.ini)", std::ofstream::app);
-				//for (RE::AlchemyItem* it : ls) {
-				//	out << it->formID << "\t\t" << it->GetName() << "\n";
-				//}
+				// check wether this charackter maybe a follower
+				sem_actorreset.acquire();
+				auto iterac = actorresetmap.find(actor->GetFormID());
+				if (iterac == actorresetmap.end() || RE::Calendar::GetSingleton()->GetDaysPassed() - iterac->second > 1) {
+					actorresetmap.erase(actor->GetFormID());
+					if (!Utility::ExcludedNPC(actor)) {
+						// if we have characters that should not get items, the function
+						// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
+						auto items = Settings::Distribution::GetDistrItems(actor);
+						if (actor->IsDead()) {
+							sem_actorreset.release();
+							return EventResult::kContinue;
+						}
+						if (items.size() > 0) {
+							for (int i = 0; i < items.size(); i++) {
+								if (items[i] == nullptr) {
+									//logger::info("[TESCombatEvent] Item: null");
+									continue;
+								}
+								std::string name = items[i]->GetName();
+								std::string id = Utility::GetHex(items[i]->GetFormID());
+								//logger::info("[TESCombatEvent] Item: {} {}", id, name);
+								RE::ExtraDataList* extra = new RE::ExtraDataList();
+								extra->SetOwner(actor);
+								actor->AddObjectToContainer(items[i], extra, 1, nullptr);
+							}
+							actorresetmap.insert_or_assign((uint64_t)(actor->GetFormID()), RE::Calendar::GetSingleton()->GetDaysPassed());
+						}
+					}
+				}
+				sem_actorreset.release();
 
-				/*RE::ExtraDataList* extra = new RE::ExtraDataList();
-				if (Settings::_potionsWeak_main.size() > 0) {
-					actor->AddObjectToContainer(std::get<1>(Settings::_potionsWeak_main.front()), extra, 100, nullptr);
-				}*/
-				/*if (ls.size() == 0)
-					out << "no items found\n";
-				out << "\n\n";
-				out.close();*/
-				//auto poisons = GetPoisons(ls);
-				
+				if (actor->IsDead())
+					return EventResult::kContinue;
+
 				sem.acquire();
 				InitializeCompatibilityObjects();
 				auto it = aclist.begin();
@@ -668,8 +727,8 @@ namespace Events
 		int durmp = 0; // duration magicka player
 		int dursp = 0; // duration stamina player
 		// to get this to 0 you would need to play nearly 600 hours
-		int durotherp = INT_MAX; // duration of buff potions for the player
-		int durregp = INT_MAX; // duration of reg potions for the player
+		int durotherp = 0;  //INT_MAX; // duration of buff potions for the player
+		int durregp = 0;    //INT_MAX; // duration of reg potions for the player
 
 		/// temp section
 		int durh = 0; // duration health
@@ -707,6 +766,8 @@ namespace Events
 					LOG4_1("{}[CheckActors] [Actor] {}", Utility::GetHex(std::get<0>(aclist[i])->GetFormID()));
 					// if actor is valid and not dead
 					if (std::get<0>(aclist[i]) && !(std::get<0>(aclist[i]))->IsDead()) {
+						// handle potions
+						
 						// get current duration
 						durh = std::get<1>(aclist[i]) - Settings::_cycletime;
 						durm = std::get<2>(aclist[i]) - Settings::_cycletime;
@@ -733,7 +794,7 @@ namespace Events
 						// do the first round
 						if (alch != 0) {
 							auto tup = ACM::ActorUsePotion(std::get<0>(aclist[i]), alch);
-							LOG1_2("{}[CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<0>(tup)));
+							LOG1_2("{}[CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<1>(tup)));
 							switch (std::get<1>(tup)) {
 							case AlchemyEffect::kHealth:
 								durh = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
@@ -790,6 +851,243 @@ namespace Events
 
 							// we only want to use at max one other potion at a time.
 						}
+
+						uint32_t combatdata = Utility::GetCombatData(std::get<0>(aclist[i]));
+						uint32_t tcombatdata = 0;
+						RE::ActorHandle handle = (std::get<0>(aclist[i]))->currentCombatTarget;
+						
+						if (Settings::_featUsePoisons) {
+							// handle poisons
+							if (std::get<0>(aclist[i])->IsInFaction(Settings::CurrentFollowerFaction) || std::get<0>(aclist[i]) == RE::PlayerCharacter::GetSingleton()) {
+								if ((combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
+									(combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0) {
+									// handle followers
+									// they only use poisons if there are many npcs in the fight, or if the enemies they are targetting
+									// have a high enough level, like starting at PlayerLevel*0.8 or so
+									if (Settings::_EnemyNumberThreshold < aclist.size() || (handle && handle.get() && handle.get().get() && handle.get().get()->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::_EnemyLevelScalePlayerLevel)) {
+										// time to use some potions
+										uint64_t effects = 0;
+										// kResistMagic, kResistFire, kResistFrost, kResistMagic should only be used if the follower is a spellblade
+										if (combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) ||
+											combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword))) {
+											effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistMagic);
+											if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
+												if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire))
+													effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistFire);
+												if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost))
+													effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistFrost);
+												if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock))
+													effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistShock);
+											}
+										}
+										// incorporate enemy specific data
+										if (handle && handle.get() && handle.get().get()) {
+											// we can make the usage dependent on the target
+											RE::Actor* target = handle.get().get();
+											tcombatdata = Utility::GetCombatData(target);
+											// determine main actor value of enemy. That is the one we want to target ideally
+											float tmag = target->GetBaseActorValue(RE::ActorValue::kMagicka);
+											float smag = target->GetBaseActorValue(RE::ActorValue::kStamina);
+											//float shea = target->GetBaseActorValue(RE::ActorValue::kHealth);
+
+											if (tmag > smag) {
+												// the enemy is probably a mage
+												// appropiate potions are:
+												// kParalysis, kHealth, kMagicka, kMagickaRate, kHealRate, kSpeedMult, kDamageResist, kPoisonResist, kFrenzy, kFear
+												effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHealth) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kMagicka) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRate) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRateMult) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kHealRate) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kHealRateMult) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kDamageResist) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kPoisonResist) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kParalysis) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kFrenzy) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kFear);
+											} else {
+												// the enemy is probably a meele charackter
+												// kParalysis, kHealth, kStamina, kHealRate, kStaminaRate, kDamageResist, kPoisonResist, kFrenzy, kFear, kSpeedMult, kWeaponSpeedMult, kAttackDamageMult
+												effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHealth) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kStamina) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kHealRate) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kHealRateMult) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kDamageResist) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kPoisonResist) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kFrenzy) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kFear) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kParalysis) |
+												           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult);
+											}
+										} else {
+											// we dont have a target so just use any poison
+											effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHealth) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kMagicka) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRate) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRateMult) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kHealRate) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kHealRateMult) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kDamageResist) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kPoisonResist) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kFrenzy) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kFear) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kParalysis) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kStamina) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+											           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult);
+										}
+										ACM::ActorUsePoison(std::get<0>(aclist[i]), effects);
+									}
+								}
+								// else Mage of Hand to Hand which cannot use poisons
+
+							} else if ((combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
+									   (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0) {
+								// we dont handle a follower, so just let the enemy use any poison they have
+								uint64_t effects = static_cast<uint64_t>(Settings::AlchemyEffect::kAnyPoison);
+								ACM::ActorUsePoison(std::get<0>(aclist[i]), effects);
+							}
+							// else Mage or Hand to Hand which cannot use poisons
+						}
+
+						if (Settings::_featUseFortifyPotions) {
+							logger::info("fortify potions stuff");
+
+							if ((std::get<0>(aclist[i])->IsInFaction(Settings::CurrentFollowerFaction) || std::get<0>(aclist[i]) == RE::PlayerCharacter::GetSingleton()) && !(Settings::_EnemyNumberThreshold < aclist.size() || (handle && handle.get() && handle.get().get() && handle.get().get()->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::_EnemyLevelScalePlayerLevel))) {
+								goto SkipFortify;
+							}
+							// handle fortify potions
+							if (durother < tolerance) {
+								// general stuff
+								uint64_t effects = static_cast<uint64_t>(Settings::AlchemyEffect::kHealRate) |
+								                   static_cast<uint64_t>(Settings::AlchemyEffect::kHealRateMult) |
+								                   static_cast<uint64_t>(Settings::AlchemyEffect::kDamageResist) |
+								                   static_cast<uint64_t>(Settings::AlchemyEffect::kResistMagic) |
+								                   static_cast<uint64_t>(Settings::AlchemyEffect::kPoisonResist) |
+								                   static_cast<uint64_t>(Settings::AlchemyEffect::kResistDisease);
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kOneHanded) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRateMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kMeleeDamage) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kCriticalChance) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kOneHanded) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kMeleeDamage) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kCriticalChance) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHandedShield)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kOneHanded) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kBlock) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kCriticalChance) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kTwoHanded) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kBlock) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kCriticalChance) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Ranged)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kArchery) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kBowSpeed) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kCriticalChance);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualWield)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kOneHanded) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kCriticalChance) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kStaminaRateMult);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRate) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRateMult);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualStaff)) {
+								}
+								// magic related stuff
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicAlteration)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kAlteration);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicConjuration)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kConjuration);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kDestruction);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicIllusion)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kIllusion);
+								}
+								if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicRestoration)) {
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kRestoration);
+								}
+
+								if (tcombatdata != 0) {
+									if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire)) {
+										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistFire);
+									}
+									if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost)) {
+										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistFrost);
+									}
+									if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock)) {
+										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistShock);
+									}
+								}
+
+								// std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>>
+								logger::info("take fortify with effects: {}", Utility::GetHex(effects));
+								auto tup = ACM::ActorUsePotion(std::get<0>(aclist[i]), effects);
+								switch (std::get<1>(tup)) {
+								case Settings::AlchemyEffect::kHealRate:
+								case Settings::AlchemyEffect::kMagickaRate:
+								case Settings::AlchemyEffect::kStaminaRate:
+								case Settings::AlchemyEffect::kHealRateMult:
+								case Settings::AlchemyEffect::kMagickaRateMult:
+								case Settings::AlchemyEffect::kStaminaRateMult:
+									durreg = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+									break;
+								default:
+									durother = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+									break;
+								}
+							}
+						}
+						SkipFortify:
+
 						// update entry in vector
 						aclist[i] = { std::get<0>(aclist[i]), durh, durm, durs, durother, durreg };
 					} else {
@@ -808,12 +1106,14 @@ namespace Events
 					durhp = std::get<1>(tup);
 					durmp = std::get<2>(tup);
 					dursp = std::get<3>(tup);
+					durother = std::get<3>(tup);
+					durreg = std::get<3>(tup);
 				}
-				// release lock.
-				sem.release();
 				// write execution time of iteration
 				PROF1_1("{}[PROF] [CheckActors] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 				LOG1_1("{}[CheckActors] check {} actors", std::to_string(aclist.size()));
+				// release lock.
+				sem.release();
 			}
 			std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::_cycletime));
 		}
@@ -847,6 +1147,13 @@ namespace Events
 			actorhandler = new std::thread(CheckActors);
 			LOG_1("{}[LoadGameEvent] Started CheckActors");
 		}
+		// delete the current actorresetmap, since we don't know wether its still valid across savegame load
+		sem_actorreset.acquire();
+		actorresetmap.clear();
+		sem_actorreset.release();
+		// reset the list of actors that died
+		deads.clear();
+
 		return EventResult::kContinue;
 	}
 
@@ -872,6 +1179,10 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESLoadGameEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
+		if (Settings::_featRemoveItemsOnDeath) {
+			scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
+			LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
+		}
 	}
 
 	/// <summary>

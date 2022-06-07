@@ -83,7 +83,7 @@ public:
 	/// <param name="actor">actor to search</param>
 	/// <param name="eff">effect to search for</param>
 	/// <returns>list of matching items with magnitude and durations</returns>
-	static std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> GetMatchingFood(RE::Actor* actor, uint64_t alchemyEffect);
+	static std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> GetMatchingFood(RE::Actor* actor, uint64_t alchemyEffect, bool raw);
 
 	/// <summary>
 	/// tries to use a potion with the given effect [eff]
@@ -107,7 +107,7 @@ public:
 	/// <param name="_actor">actor to apply food to</param>
 	/// <param name="eff">effect to apply</param>
 	/// <returns>wether a food was used</returns>
-	static std::pair<int, Settings::AlchemyEffect> ActorUseFood(RE::Actor* _actor, uint64_t alchemyEffect);
+	static std::pair<int, Settings::AlchemyEffect> ActorUseFood(RE::Actor* _actor, uint64_t alchemyEffect, bool raw);
 
 	/// <summary>
 	/// tries to use a poison with the given effect [eff]
@@ -121,14 +121,15 @@ public:
 	/// tries to use any supported food on the actor
 	/// </summary>
 	/// <param name="_actor">actor to use on</param>
+	/// <param name="raw">whether the food should be raw</param>
 	/// <returns>wether any food was used</returns>
-	static bool ActorUseAnyFood(RE::Actor* _actor)
+	static bool ActorUseAnyFood(RE::Actor* _actor, bool raw)
 	{
-		if (std::get<0>(ActorUseFood(_actor, static_cast<uint64_t> (Settings::AlchemyEffect::kMagickaRate))) >= 0)
+		if (std::get<0>(ActorUseFood(_actor, static_cast<uint64_t> (Settings::AlchemyEffect::kMagickaRate), raw)) >= 0)
 			return true;
-		else if (std::get<0>(ActorUseFood(_actor, static_cast<uint64_t> (Settings::AlchemyEffect::kStaminaRate))) >= 0)
+		else if (std::get<0>(ActorUseFood(_actor, static_cast<uint64_t> (Settings::AlchemyEffect::kStaminaRate), raw)) >= 0)
 			return true;
-		else if (std::get<0>(ActorUseFood(_actor, static_cast<uint64_t> (Settings::AlchemyEffect::kHealRate))) >= 0)
+		else if (std::get<0>(ActorUseFood(_actor, static_cast<uint64_t> (Settings::AlchemyEffect::kHealRate), raw)) >= 0)
 			return true;
 		return false;
 	}

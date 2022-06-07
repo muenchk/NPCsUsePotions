@@ -23,7 +23,6 @@ namespace
 #else
 		const auto level = spdlog::level::info;
 #endif
-
 		auto log = std::make_shared<spdlog::logger>("global log"s, std::move(sink));
 		log->set_level(level);
 		log->flush_on(level);
@@ -73,11 +72,19 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
 	if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
+		// load settings
+		Settings::Load(); // also resaves the file
+		logger::info("Settings loaded");
+		// load distribution settings
+		Settings::LoadDistrConfig();
+		logger::info("Distribution configuration loaded");
+		if (Settings::_CheckActorsWithoutRules)
+			Settings::CheckActorsForRules();
+		// classify currently loaded game items
+		Settings::ClassifyItems();
+		logger::info("Items classified");
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
-		Settings::Load(); // also resaves the file
-		Settings::ClassifyItems();
-		logger::info("Settings loaded");
 	}
 }
 

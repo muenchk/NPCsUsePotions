@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SimpleIni.h"
 #include <fstream>
 #include <iostream>
@@ -5,7 +7,28 @@
 #include <utility>
 #include <string_view>
 #include <chrono>
-#pragma once
+#include <set>
+#include <time.h>
+#include <random>
+#include <tuple>
+#include <vector>
+
+#include <string.h>
+#include<thread>
+#include <forward_list>
+#include <semaphore>
+#include <limits>
+
+
+#define LOGE_1(s)             \
+	if (Settings::EnableLog) \
+		logger::info(s);
+
+#define LOGE1_1(s, t)         \
+	if (Settings::EnableLog) \
+		logger::info(s, t);
+
+
 
 #define LOG_1(s)               \
 	if (Settings::EnableLog) \
@@ -14,6 +37,10 @@
 #define LOG1_1(s, t)           \
 	if (Settings::EnableLog) \
 		logger::info(s, Settings::TimePassed() + " | ", t);
+
+#define LOG2_1(s, t, u)         \
+	if (Settings::EnableLog) \
+		logger::info(s, Settings::TimePassed() + " | ", t, u);
 
 #define LOG_2(s)                                        \
 	if (Settings::EnableLog && Settings::LogLevel >= 1) \
@@ -80,8 +107,9 @@
 		logger::info(s, Settings::TimePassed() + " | ", t);
 
 
-struct Settings
+class Settings
 {
+public:
 	static inline std::string PluginName = "NPCsUsePotions.esp";
 	static inline std::chrono::time_point<std::chrono::system_clock> execstart = std::chrono::system_clock::now();
 	
@@ -102,7 +130,270 @@ struct Settings
 		static inline std::string PAF_NPCDrinkingCoolDownSpell_name = "PAF_NPCDrinkingCoolDownSpell";
 	};
 
+	enum class AlchemyEffect : unsigned __int64
+	{
+		kNone = 0,							// 0
+		kHealth = 1 << 0,					// 1
+		kMagicka = 1 << 1,					// 2
+		kStamina = 1 << 2,					// 4
+		kOneHanded = 1 << 3,				// 8
+		kTwoHanded = 1 << 4,				// 10
+		kArchery = 1 << 5,					// 20
+		kBlock = 1 << 6,					// 40
+		kHeavyArmor = 1 << 7,				// 80
+		kLightArmor = 1 << 8,				// 100
+		kAlteration = 1 << 9,				// 200
+		kConjuration = 1 << 10,				// 400
+		kDestruction = 1 << 11,				// 800
+		kIllusion = 1 << 12,				// 1000
+		kRestoration = 1 << 13,				// 2000
+		kHealRate = 1 << 14,				// 4000
+		kMagickaRate = 1 << 15,				// 8000
+		kStaminaRate = 1 << 16,				// 10000
+		kSpeedMult = 1 << 17,				// 20000
+		kCriticalChance = 1 << 18,			// 40000
+		kMeleeDamage = 1 << 19,				// 80000
+		kUnarmedDamage = 1 << 20,			// 100000
+		kDamageResist = 1 << 21,			// 200000
+		kPoisonResist = 1 << 22,			// 400000
+		kResistFire = 1 << 23,				// 800000
+		kResistShock = 1 << 24,				// 1000000
+		kResistFrost = 1 << 25,				// 2000000
+		kResistMagic = 1 << 26,				// 4000000
+		kResistDisease = 1 << 27,			// 8000000
+		kParalysis = 1 << 28,				// 10000000
+		kInvisibility = 1 << 29,			// 20000000
+		kWeaponSpeedMult = 1 << 30,			// 40000000
+		kAttackDamageMult = (unsigned __int64)1 << 31,		// 80000000
+		kHealRateMult = (unsigned __int64)1 << 32,			// 100000000
+		kMagickaRateMult = (unsigned __int64)1 << 33,		// 200000000
+		kStaminaRateMult = (unsigned __int64)1 << 34,		// 400000000
+		kBlood = (unsigned __int64)1 << 35,					// 800000000
+		kPickpocket = (unsigned __int64)1 << 36,			// 1000000000
+		kLockpicking = (unsigned __int64)1 << 37,			// 2000000000
+		kSneak = (unsigned __int64)1 << 38,					// 4000000000
+		kFrenzy = (unsigned __int64)1 << 39,				// 8000000000
+		kFear = (unsigned __int64)1 << 40,					// 10000000000
+		kBowSpeed = (unsigned __int64)1 << 41,              // 20000000000
+		// 2000007
+		kAnyPotion = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kInvisibility),
+		// 180D7E3C007
+		kAnyPoison = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kParalysis) | static_cast<uint64_t>(kSpeedMult) | static_cast<uint64_t>(kDamageResist) | static_cast<uint64_t>(kPoisonResist) | static_cast<uint64_t>(kWeaponSpeedMult) | static_cast<uint64_t>(kAttackDamageMult) | static_cast<uint64_t>(kResistFire) | static_cast<uint64_t>(kResistFrost) | static_cast<uint64_t>(kResistMagic) | static_cast<uint64_t>(kResistShock) | static_cast<uint64_t>(kFrenzy) | static_cast<uint64_t>(kFear),
+		// CBFA3FF8
+		kAnyFortify = static_cast<uint64_t>(kOneHanded) | static_cast<uint64_t>(kTwoHanded) | static_cast<uint64_t>(kArchery) | static_cast<uint64_t>(kBlock) | static_cast<uint64_t>(kHeavyArmor) | static_cast<uint64_t>(kLightArmor) | static_cast<uint64_t>(kAlteration) | static_cast<uint64_t>(kConjuration) | static_cast<uint64_t>(kDestruction) | static_cast<uint64_t>(kIllusion) | static_cast<uint64_t>(kRestoration) | static_cast<uint64_t>(kSpeedMult) | static_cast<uint64_t>(kMeleeDamage) | static_cast<uint64_t>(kUnarmedDamage) | static_cast<uint64_t>(kDamageResist) | static_cast<uint64_t>(kPoisonResist) | static_cast<uint64_t>(kResistFire) | static_cast<uint64_t>(kResistFrost) | static_cast<uint64_t>(kResistShock) | static_cast<uint64_t>(kResistDisease) | static_cast<uint64_t>(kWeaponSpeedMult) | static_cast<uint64_t>(kAttackDamageMult),
+		// 1C007
+		kAnyFood = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate),
+		
+	};
+	enum class ItemStrength
+	{
+		kWeak = 1,
+		kStandard = 2,
+		kPotent = 3,
+		kInsane = 4
+	};
+	enum class ActorStrength
+	{
+		Weak = 0,
+		Normal = 1,
+		Powerful = 2,
+		Insane = 3,
+		Boss = 4,
+	};
+	enum class ItemType
+	{
+		kPoison = 1,
+		kPotion = 2,
+		kFood = 4,
+		kFortifyPotion = 8,
+	};
+
+	static void CheckActorsForRules();
+
+	class Distribution
+	{
+	public:
+		enum class AssocType
+		{
+			kKeyword = 1,
+			kFaction = 2,
+			kRace = 4,
+			kActor = 8,
+			kNPC = 16,
+			kItem = 32,
+		};
+
+		class Rule
+		{
+		public:
+			// if set to false this rule is effectively empty
+			bool				valid = true;
+			///
+			int					ruleVersion;
+			int					ruleType;
+			std::string			ruleName;
+
+			/// TYPE 1 - Rule
+			// general
+			int					rulePriority;
+			std::string			assocObjects;
+			std::string			potionProperties;
+			std::string			fortifyproperties;
+			std::string			poisonProperties;
+			std::string			foodProperties;
+			bool				allowMixed;
+			// chances and options
+			int					maxPotions;
+			int					maxPoisons;
+			std::vector<int>	potion1Chance;
+			std::vector<int>	potion2Chance;
+			std::vector<int>	potion3Chance;
+			std::vector<int>	potionAdditionalChance;
+			std::vector<int>	fortify1Chance;
+			std::vector<int>	fortify2Chance;
+			int					potionTierAdjust;
+			std::vector<int>	poison1Chance;
+			std::vector<int>	poison2Chance;
+			std::vector<int>	poison3Chance;
+			std::vector<int>	poisonAdditionalChance;
+			int					poisonTierAdjust;
+			std::vector<int>	foodChance;
+
+			/// TYPE 2 - Exclusion
+			//std::string			assocRuleName;
+			//std::string			assocExclusions;
+
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> potionDistr;
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> poisonDistr;
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> fortifyDistr;
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> foodDistr;
+
+			uint64_t validPotions;
+			uint64_t validPoisons;
+			uint64_t validFortifyPotions;
+			uint64_t validFood;
+
+			std::vector<RE::AlchemyItem*> GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			std::vector<RE::AlchemyItem*> GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			std::vector<RE::AlchemyItem*> GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+
+			Rule(int _ruleVersion, int _ruleType, std::string _ruleName, int _rulePriority, bool _allowMixed, int _maxPotions,
+				std::vector<int> _potion1Chance, std::vector<int> _potion2Chance, std::vector<int> _potion3Chance,
+				std::vector<int> _potionAdditionalChance, std::vector<int> _fortify1Chance, std::vector<int> _fortify2Chance,
+				int _potionTierAdjust, int _maxPoisons, std::vector<int> _poison1Chance,
+				std::vector<int> _poison2Chance, std::vector<int> _poison3Chance, std::vector<int> _poisonAdditionalChance,
+				int _poisonTierAdjust, std::vector<int> _foodChance, std::vector<std::tuple<int, Settings::AlchemyEffect>> _potionDistr,
+				std::vector<std::tuple<int, Settings::AlchemyEffect>> _poisonDistr,
+				std::vector<std::tuple<int, Settings::AlchemyEffect>> _fortifyDistr,
+				std::vector<std::tuple<int, Settings::AlchemyEffect>> _foodDistr, uint64_t _validPotions, uint64_t _validPoisons,
+				uint64_t _validFortifyPotions, uint64_t _validFood) :
+				ruleVersion{ _ruleVersion },
+				ruleType{ _ruleType },
+				ruleName{ _ruleName },
+				rulePriority{ _rulePriority },
+				allowMixed{ _allowMixed },
+				maxPotions{ _maxPotions },
+				maxPoisons{ _maxPoisons },
+				potion1Chance{ _potion1Chance },
+				potion2Chance{ _potion2Chance },
+				potion3Chance{ _potion3Chance },
+				potionAdditionalChance{ _potionAdditionalChance },
+				poison1Chance{ _poison1Chance },
+				poison2Chance{ _poison2Chance },
+				poison3Chance{ _poison3Chance },
+				poisonAdditionalChance{ _poisonAdditionalChance },
+				fortify1Chance{ _fortify1Chance },
+				fortify2Chance{ _fortify2Chance },
+				potionTierAdjust{ _potionTierAdjust },
+				poisonTierAdjust{ _poisonTierAdjust },
+				foodChance{ _foodChance },
+				potionDistr{ _potionDistr },
+				poisonDistr{ _poisonDistr },
+				fortifyDistr{ _fortifyDistr },
+				foodDistr{ _foodDistr },
+				validPotions{ _validPotions },
+				validPoisons{ _validPoisons },
+				validFortifyPotions{ _validFortifyPotions },
+				validFood{ _validFood }
+			{ }
+			Rule() {}
+			Rule(bool invalid) { valid = invalid; }
+
+		private:
+			RE::AlchemyItem* GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotion(int str);
+			RE::AlchemyItem* GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoison(int str);
+			RE::AlchemyItem* GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomFortifyPotion(int str);
+			RE::AlchemyItem* GetRandomFood_intern(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+
+			Settings::AlchemyEffect GetRandomEffect(Settings::ItemType type);
+			
+		};
+		static inline std::vector<Rule*> rules;
+		static inline std::map<RE::FormID, Rule*> npcMap;
+		static inline std::map<RE::FormID, Rule*> keywordMap;
+		static inline std::map<RE::FormID, Rule*> factionMap;
+		static inline std::map<RE::FormID, Rule*> raceMap;
+		static inline std::set<RE::FormID> bosses;
+		static inline std::set<RE::FormID> excludedNPCs;
+		static inline std::set<RE::TESFaction*> excludedFactions;
+		static inline std::set<RE::BGSKeyword*> excludedKeywords;
+		static inline std::set<RE::FormID> excludedRaces;
+		static inline std::set<RE::FormID> excludedItems;
+
+		#define RandomRange 1000
+
+		static std::vector<std::tuple<int, Settings::AlchemyEffect>> GetVector(int i, Settings::AlchemyEffect alch)
+		{
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> vec;
+			vec.push_back({ i, alch });
+			return vec;
+		}
+
+		#define DefaultRuleName "DefaultRule"
+
+		static inline Rule* defaultRule = nullptr;
+		static inline Rule* emptyRule = new Rule(false);
+
+		static Rule* FindRule(std::string name)
+		{
+			for (Rule* r : rules) {
+				if (r->ruleName == name)
+					return r;
+			}
+			return nullptr;
+		}
+
+		static std::vector<RE::AlchemyItem*> GetDistrItems(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrPotions(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrPoisons(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrFortifyPotions(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrFood(RE::Actor* actor);
+
+		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(RE::Actor* actor);
+
+		friend void Settings::CheckActorsForRules();
+
+	private:
+		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
+		static Rule* CalcRule(RE::Actor* actor);
+	};
+
+	static void LoadDistrConfig();
+
 	static inline int _MaxDuration = 10000;
+	static inline int _MaxFortifyDuration = 30000;
 
 	// threshold variables
 	static inline float _healthThresholdLower = 0.3f;
@@ -118,57 +409,72 @@ struct Settings
 	static inline bool _DisableEquipSounds = false;
 
 	// features
-	static inline bool _featMagickaRestoration = true;
-	static inline bool _featStaminaRestoration = true;
-	static inline bool _featHealthRestoration = true;
-	static inline bool _playerRestorationEnabled = false;
-	static inline bool _featDistributePoisons = true;  // player is excluded from distribution options, as well as followers
-	static inline bool _featDistributePotions = true;  // player is excluded from distribution options, as well as followers
-	static inline bool _featDistributeFood = true;     // player is excluded from distribution options, as well as followers
-	static inline bool _featUseDeathItems = true;      // the npc will be given potions that may appear in their deathItems if available
-	//static inline bool _featRemovePotionsOnDeath = false;
-	//static inline bool _featRemovePoisonsOnDeath = false;
+	static inline bool _featMagickaRestoration = true;			// enables automatic usage of magicka potions
+	static inline bool _featStaminaRestoration = true;			// enables automatic usage of stamina potions
+	static inline bool _featHealthRestoration = true;			// enables automatic usage of health potions
+	static inline bool _playerRestorationEnabled = false;		// enables automatic usage of potions for the player
+	static inline bool _featUsePoisons = true;             // enables automatic usage of poisons for npcs
+	static inline bool _featUseFortifyPotions = true;		// enables automatic usage of fortify potions for npcs
+	static inline bool _featUseFood = true;				// enables automatic usage of food for npcs
+	static inline bool _playerUsePoisons = false;          // enables automatic usage of poisons for player
+	static inline bool _playerUseFortifyPotions = false;   // enables automatic usage of fortify potions for player
+	static inline bool _featDistributePoisons = true;			// player is excluded from distribution options, as well as followers
+	static inline bool _featDistributePotions = true;			// player is excluded from distribution options, as well as followers
+	static inline bool _featDistributeFortifyPotions = true;	// player is excluded from distribution options, as well as followers
+	static inline bool _featDistributeFood = true;				// player is excluded from distribution options, as well as followers
+	static inline bool _featUseDeathItems = true;				// the npc will be given potions that may appear in their deathItems if available
+	static inline bool _featRemoveItemsOnDeath = true;		// remove unused items on death, if activated chances for removal can be set
 
 	// compatibility
-	static inline bool _CompatibilityMode = false;                         // Use Items with Papyrus, needs the plugin
-	static inline bool _CompatibilityPotionAnimation = false;              // Use Potions with Papyrus
-	static inline bool _CompatibilityDisableAutomaticAdjustments = false;  // Disables most automatic adjustments made to settings for compatibility
-	static inline bool _CompatibilityPotionAnimatedFx = false;             // no settings entry | Compatiblity Mode for Mods
-																		   // 1) Animated Potion Drinking SE
-																		   // 2) Potion Animated fix (SE)
-	static inline bool _CompatibilityPotionAnimatedFX_UseAnimations = false; // if PotionAnimatedfx.esp is loaded, should their animations be used on all potions?
+	static inline bool _CompatibilityMode = false;								// Use Items with Papyrus, needs the plugin
+	static inline bool _CompatibilityPotionAnimation = false;					// Use Potions with Papyrus
+	static inline bool _CompatibilityDisableAutomaticAdjustments = false;		// Disables most automatic adjustments made to settings for compatibility
+	static inline bool _CompatibilityPotionAnimatedFx = false;					// no settings entry | Compatiblity Mode for Mods
+																				// 1) Animated Potion Drinking SE
+																				// 2) Potion Animated fix (SE)
+	static inline bool _CompatibilityPotionAnimatedFX_UseAnimations = false;	// if PotionAnimatedfx.esp is loaded, should their animations be used on all potions?
 
+	// debug
 	static inline bool EnableLog = false;
-	static inline int LogLevel = 0;      // 0 - only highest level
-										 // 1 - highest to layer 1 function logging
-										 // 2 - highest to layer 2 function logging
-										 // 3 - highest to layer 3 function logging
-	static inline int ProfileLevel = 0;  // 0 - highest level only
-										 // 1 - highest and layer 1
-										 // 2 - highest and layer 2
+	static inline int LogLevel = 0;					// 0 - only highest level
+													// 1 - highest to layer 1 function logging
+													// 2 - highest to layer 2 function logging
+													// 3 - highest to layer 3 function logging
+	static inline int ProfileLevel = 0;				// 0 - highest level only
+													// 1 - highest and layer 1
+													// 2 - highest and layer 2
 	static inline bool EnableProfiling = false;
 
-	// distribution options
-	static inline int _DistPoisChance1 = 50;  // chance for npcs to receive one poison
-	static inline int _DistPoisChance2 = 20;  // chance for npcs to receive a second poison
-	static inline int _DistPotChance1 = 50;   // chance to distribute one stat potion
-	static inline int _DistPotChance2 = 20;   // chance to distribute a second stat potion
-	static inline int _DistPotChance3 = 10;   // chance to distribute a third stat potion
-	static inline int _DistPotChanceAdd = 5;  // chance to receive additional stat potions
-	static inline int _DistPotMax = 5;        // max number of potions to give
-	static inline int _DistFPotChance1 = 50;
-	static inline int _DistFPotChance2 = 20;
+	// distribution
+	static inline int _LevelEasy = 20;				// only distribute "weak" potions and poisons
+	static inline int _LevelNormal = 35;			// may distribute "standard" potions and poisons
+	static inline int _LevelDifficult = 50;			// may distribute "potent" potions and poisons
+	static inline int _LevelInsane = 70;			// may have Insane tear potions
 
-	static inline int _LevelEasy = 20;       // only distribute "weak" potions and poisons
-	static inline int _LevelNormal = 35;     // may distribute "standard" potions and poisons
-	static inline int _LevelDifficult = 50;  // may distribute "potent" potions and poisons
-	static inline int _LevelInsane = 70;     // may have Insane tear potions
+	static inline bool _GameDifficultyScaling = false; // ties the strength of the actors not to levels, but the game difficulty
 
-	static inline int _MaxMagnitudeWeak = 30;      // max potion / poison magnitude to be considered "weak"
-	static inline int _MaxMagnitudeStandard = 60;  // max potion / poison magnitude to be considered "standard"
-	static inline int _MaxMagnitudePotent = 300;   // max potion / poison magnitude to be considered "potent"
-												   // anything above this won't be distributed
+	static inline int _MaxMagnitudeWeak = 30;		// max potion / poison magnitude to be considered "weak"
+	static inline int _MaxMagnitudeStandard = 60;	// max potion / poison magnitude to be considered "standard"
+	static inline int _MaxMagnitudePotent = 150;	// max potion / poison magnitude to be considered "potent"
+													// anything above this won't be distributed
 
+	// poison usage
+	static inline float _EnemyLevelScalePlayerLevel = 0.8f;  // how high the level of an enemy must be for followers to use poisons
+	static inline int _EnemyNumberThreshold = 5;             // how many npcs must be fighting, for followers to use poisons regardless of the enemies level
+
+	// fortify potions
+	static inline float _EnemyLevelScalePlayerLevelFortify = 0.8f;  // how high the level of an enemy must be for followers to use fortify potions
+	static inline int _EnemyNumberThresholdFortify = 5;             // how many npcs must be fighting, for followers to use fortify potions regardless of the enemies level
+
+	// removal
+	static inline int _ChanceToRemoveItem = 90;		// chance for an item to be removed
+	static inline int _MaxItemsLeft = 2;			// maximum number of items that may remain, from those to be removed
+
+	// intern
+	static inline bool _CheckActorsWithoutRules = false;	// checks for actors which do not have any rules, and prints their information to the, logfile
+
+
+	// intern
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_main{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_rest{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_main{};
@@ -177,12 +483,17 @@ struct Settings
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsPotent_rest{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_main{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsBlood{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak_main{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak_rest{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard_main{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard_rest{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent_main{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent_rest{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsInsane{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodmagicka{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodstamina{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodhealth{};
@@ -193,6 +504,11 @@ struct Settings
 	static inline std::list<RE::AlchemyItem*> poisons{};
 
 	static inline RE::BGSKeyword* VendorItemPotion;
+	static inline RE::BGSKeyword* VendorItemFood;
+	static inline RE::BGSKeyword* VendorItemFoodRaw;
+	static inline RE::BGSKeyword* VendorItemPoison;
+
+	static inline RE::TESFaction* CurrentFollowerFaction;
 
 	static void Load()
 	{
@@ -212,10 +528,32 @@ struct Settings
 		logger::info("[SETTINGS] {} {}", "EnableStaminaRestoration", std::to_string(_featStaminaRestoration));
 		_featHealthRestoration = ini.GetValue("Features", "EnableHealthRestoration") ? ini.GetBoolValue("Features", "EnableHealthRestoration") : true;
 		logger::info("[SETTINGS] {} {}", "EnableHealthRestoration", std::to_string(_featHealthRestoration));
+		_featUsePoisons = ini.GetValue("Features", "EnablePoisonUsage") ? ini.GetBoolValue("Features", "EnablePoisonUsage") : true;
+		logger::info("[SETTINGS] {} {}", "EnablePoisonUsage", std::to_string(_featUsePoisons));
+		_featUseFortifyPotions = ini.GetValue("Features", "EnableFortifyPotionUsage") ? ini.GetBoolValue("Features", "EnableFortifyPotionUsage") : true;
+		logger::info("[SETTINGS] {} {}", "EnableFortifyPotionUsage", std::to_string(_featUseFortifyPotions));
+		_featUseFood = ini.GetValue("Features", "EnableFoodUsage") ? ini.GetBoolValue("Features", "EnableFoodUsage") : true;
+		logger::info("[SETTINGS] {} {}", "EnableFoodUsage", std::to_string(_featUseFood));
+
 		_playerRestorationEnabled = ini.GetValue("Features", "EnablePlayerRestoration") ? ini.GetBoolValue("Features", "EnablePlayerRestoration") : false;
 		logger::info("[SETTINGS] {} {}", "EnablePlayerRestoration", std::to_string(_playerRestorationEnabled));
+		_playerUsePoisons = ini.GetValue("Features", "EnablePlayerPoisonUsage") ? ini.GetBoolValue("Features", "EnablePlayerPoisonUsage") : false;
+		logger::info("[SETTINGS] {} {}", "EnablePlayerPoisonUsage", std::to_string(_playerUsePoisons));
+		_playerUseFortifyPotions = ini.GetValue("Features", "EnablePlayerFortifyPotionUsage") ? ini.GetBoolValue("Features", "EnablePlayerFortifyPotionUsage") : false;
+		logger::info("[SETTINGS] {} {}", "EnablePlayerFortifyPotionUsage", std::to_string(_playerUseFortifyPotions));
 
+		_featDistributePotions = ini.GetValue("Features", "DistributePotions") ? ini.GetBoolValue("Features", "DistributePotions") : true;
+		logger::info("[SETTINGS] {} {}", "DistributePotions", std::to_string(_featDistributePotions));
+		_featDistributePoisons = ini.GetValue("Features", "DistributePoisons") ? ini.GetBoolValue("Features", "DistributePoisons") : true;
+		logger::info("[SETTINGS] {} {}", "DistributePoisons", std::to_string(_featDistributePoisons));
+		_featDistributeFood = ini.GetValue("Features", "DistributeFood") ? ini.GetBoolValue("Features", "DistributeFood") : true;
+		logger::info("[SETTINGS] {} {}", "DistributeFood", std::to_string(_featDistributeFood));
+		_featDistributeFortifyPotions = ini.GetValue("Features", "DistributeFortifyPotions") ? ini.GetBoolValue("Features", "DistributeFortifyPotions") : true;
+		logger::info("[SETTINGS] {} {}", "DistributeFortifyPotions", std::to_string(_featDistributeFortifyPotions));
 
+		_featRemoveItemsOnDeath = ini.GetValue("Features", "RemoveItemsOnDeath") ? ini.GetBoolValue("Features", "RemoveItemsOnDeath") : true;
+		logger::info("[SETTINGS] {} {}", "RemoveItemsOnDeath", std::to_string(_featRemoveItemsOnDeath));
+		
 		// compatibility
 		_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
 		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
@@ -262,6 +600,45 @@ struct Settings
 		logger::info("[SETTINGS] {} {}", "StaminaThresholdUpperPercent", std::to_string(_staminaThresholdUpper));
 		
 
+		// distribution
+		_LevelEasy = ini.GetValue("Distribution", "LevelEasy") ? ini.GetLongValue("Distribution", "LevelEasy") : _LevelEasy;
+		logger::info("[SETTINGS] {} {}", "LevelEasy", std::to_string(_LevelEasy));
+		_LevelNormal = ini.GetValue("Distribution", "LevelNormal") ? ini.GetLongValue("Distribution", "LevelNormal") : _LevelNormal;
+		logger::info("[SETTINGS] {} {}", "LevelNormal", std::to_string(_LevelNormal));
+		_LevelDifficult = ini.GetValue("Distribution", "LevelDifficult") ? ini.GetLongValue("Distribution", "LevelDifficult") : _LevelDifficult;
+		logger::info("[SETTINGS] {} {}", "LevelDifficult", std::to_string(_LevelDifficult));
+		_LevelInsane = ini.GetValue("Distribution", "LevelInsane") ? ini.GetLongValue("Distribution", "LevelInsane") : _LevelInsane;
+		logger::info("[SETTINGS] {} {}", "LevelInsane", std::to_string(_LevelInsane));
+		
+		_GameDifficultyScaling = ini.GetValue("Distribution", "GameDifficultyScaling") ? ini.GetBoolValue("Distribution", "GameDifficultyScaling") : false;
+		logger::info("[SETTINGS] {} {}", "GameDifficultyScaling", std::to_string(_GameDifficultyScaling));
+		
+		_MaxMagnitudeWeak = ini.GetValue("Distribution", "MaxMagnitudeWeak") ? ini.GetLongValue("Distribution", "MaxMagnitudeWeak") : _MaxMagnitudeWeak;
+		logger::info("[SETTINGS] {} {}", "MaxMagnitudeWeak", std::to_string(_MaxMagnitudeWeak));
+		_MaxMagnitudeStandard = ini.GetValue("Distribution", "MaxMagnitudeStandard") ? ini.GetLongValue("Distribution", "MaxMagnitudeStandard") : _MaxMagnitudeStandard;
+		logger::info("[SETTINGS] {} {}", "MaxMagnitudeStandard", std::to_string(_MaxMagnitudeStandard));
+		_MaxMagnitudePotent = ini.GetValue("Distribution", "MaxMagnitudePotent") ? ini.GetLongValue("Distribution", "MaxMagnitudePotent") : _MaxMagnitudePotent;
+		logger::info("[SETTINGS] {} {}", "MaxMagnitudePotent", std::to_string(_MaxMagnitudePotent));
+		
+		// Poisonusage options
+		_EnemyLevelScalePlayerLevel = ini.GetValue("Poisons", "EnemyLevelScalePlayerLevel") ? static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel")) : _EnemyLevelScalePlayerLevel;
+		logger::info("[SETTINGS] {} {}", "EnemyLevelScalePlayerLevel", std::to_string(_EnemyLevelScalePlayerLevel));
+		_EnemyNumberThreshold = ini.GetValue("Poisons", "FightingNPCsNumberThreshold") ? ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold") : _EnemyNumberThreshold;
+		logger::info("[SETTINGS] {} {}", "FightingNPCsNumberThreshold", std::to_string(_EnemyNumberThreshold));
+		// fortify options
+		_EnemyLevelScalePlayerLevelFortify = ini.GetValue("Fortify", "EnemyLevelScalePlayerLevelFortify") ? static_cast<float>(ini.GetDoubleValue("Fortify", "EnemyLevelScalePlayerLevelFortify")) : _EnemyLevelScalePlayerLevelFortify;
+		logger::info("[SETTINGS] {} {}", "EnemyLevelScalePlayerLevelFortify", std::to_string(_EnemyLevelScalePlayerLevelFortify));
+		_EnemyNumberThresholdFortify = ini.GetValue("Fortify", "FightingNPCsNumberThresholdFortify") ? ini.GetLongValue("Fortify", "FightingNPCsNumberThresholdFortify") : _EnemyNumberThresholdFortify;
+		logger::info("[SETTINGS] {} {}", "FightingNPCsNumberThresholdFortify", std::to_string(_EnemyNumberThresholdFortify));
+
+
+		// removal options
+		_ChanceToRemoveItem = ini.GetValue("Removal", "ChanceToRemoveItem") ? ini.GetLongValue("Removal", "ChanceToRemoveItem") : _ChanceToRemoveItem;
+		logger::info("[SETTINGS] {} {}", "ChanceToRemoveItem", std::to_string(_ChanceToRemoveItem));
+		_MaxItemsLeft = ini.GetValue("Removal", "MaxItemsLeftAfterRemoval") ? ini.GetLongValue("Removal", "MaxItemsLeftAfterRemoval") : _MaxItemsLeft;
+		logger::info("[SETTINGS] {} {}", "MaxItemsLeftAfterRemoval", std::to_string(_MaxItemsLeft));
+
+
 		// general
 		_maxPotionsPerCycle = ini.GetValue("General", "MaxPotionsPerCycle") ? ini.GetLongValue("General", "MaxPotionsPerCycle", 2) : 2;
 		logger::info("[SETTINGS] {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
@@ -280,6 +657,9 @@ struct Settings
 		logger::info("[SETTINGS] {} {}", "EnableProfiling", std::to_string(EnableProfiling));
 		ProfileLevel = ini.GetValue("Debug", "ProfileLevel") ? ini.GetLongValue("Debug", "ProfileLevel") : 0;
 		logger::info("[SETTINGS] {} {}", "ProfileLevel", std::to_string(LogLevel));
+
+		_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", false);
+		logger::info("[SETTINGS] {} {}", "CheckActorWithoutRules", std::to_string(_CheckActorsWithoutRules));
 
 		// save user settings, before applying adjustments
 		Save();
@@ -346,6 +726,26 @@ struct Settings
 			logger::info("[SETTINGS] [WARNING] Compatibility modes for zxlice's Ultimate Potion Animation and PotionAnimatedfx.esp have been activated simultaneously. To prevent issues the Compatibility mode for PotionAnimatedfx.esp has been deactivated.");
 		}
 		logger::info("[SETTINGS] checking for plugins end");
+
+		// change potion sound output model to not always play on the player
+		{
+			RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
+			RE::TESForm* SOM_verb = RE::TESForm::LookupByID(0xd78b4);
+			if (SOM_player1st && SOM_verb) {
+				RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
+				RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
+				RE::TESForm* PotionUseF = RE::TESForm::LookupByID(0xB6435);
+				RE::BGSSoundDescriptorForm* PotionUse = nullptr;
+				if (PotionUseF)
+					PotionUse = PotionUseF->As<RE::BGSSoundDescriptorForm>();
+				RE::BGSSoundDescriptor* PotionUseSD = PotionUse->soundDescriptor;
+				RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
+				if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+					PotionUseOM->outputModel = SOMMono01400_verb;
+					logger::info("[SETTINGS] changed output model for potion drink sound effect");
+				}
+			}
+		}
 	}
 
 	static void Save()
@@ -360,11 +760,20 @@ struct Settings
 		ini.SetBoolValue("Features", "EnableHealthRestoration", _featHealthRestoration, ";NPCs use health potions to restore their missing hp in combat.");
 		ini.SetBoolValue("Features", "EnableMagickaRestoration", _featMagickaRestoration, ";NPCs use magicka potions to restore their missing magicka in combat.");
 		ini.SetBoolValue("Features", "EnableStaminaRestoration", _featStaminaRestoration, ";NPCs use stamina potions to restore their missing stamina in combat.");
-		ini.SetBoolValue("Features", "EnablePlayerRestoration", _playerRestorationEnabled, ";All activated features above are applied to the player, while they are in Combat.");
-		//ini.SetBoolValue("Features", "DistributePotions", _featDistributePotions, "NPCs are given potions when they enter combat according to their traits.");
-		//ini.SetBoolValue("Features", "DistributePoisons", _featDistributePoisons, "NPCs are give poisons when they enter combat according to their traits.");
-		//ini.SetBoolValue("Features", "DistributeFood", _featDistributeFood, "NPCs are given food items when they enter combat, and will use them immediately.");
+		ini.SetBoolValue("Features", "EnablePoisonUsage", _featUsePoisons, ";NPCs use poisons in combat.\n;Followers will use poisons only on appropiate enemies.\n;Generic NPCs will randomly use their poisons.");
+		ini.SetBoolValue("Features", "EnableFortifyPotionUsage", _featUseFortifyPotions, ";NPCs use fortify potions in combat.\n;Potions are used based on the equipped weapons and spells.");
+		ini.SetBoolValue("Features", "EnableFoodUsage", _featUseFood, ";Normally one would assume that NPCs eat during the day. This features simulates");
 		
+		ini.SetBoolValue("Features", "EnablePlayerRestoration", _playerRestorationEnabled, ";All activated restoration features are applied to the player, while they are in Combat.");
+		ini.SetBoolValue("Features", "EnablePlayerPoisonUsage", _playerUsePoisons, ";Player will automatically use poisons.");
+		ini.SetBoolValue("Features", "EnablePlayerFortifyPotionUsage", _playerUseFortifyPotions, ";Player will use fortify potions the way followers do.");
+
+		ini.SetBoolValue("Features", "DistributePotions", _featDistributePotions, ";NPCs are given potions when they enter combat.");
+		ini.SetBoolValue("Features", "DistributePoisons", _featDistributePoisons, ";NPCs are give poisons when they enter combat.");
+		ini.SetBoolValue("Features", "DistributeFood", _featDistributeFood, ";NPCs are given food items when they enter combat, and will use them immediately.");
+		ini.SetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions, "NPCs are give fortify potions when they enter combat.");
+		ini.SetBoolValue("Features", "RemoveItemsOnDeath", _featRemoveItemsOnDeath, ";Remove items from NPCs after they died.");
+
 		// compatibility
 		ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. This is automatically enabled if zxlice's mod is detected");
 		ini.SetBoolValue("Compatibility", "Compatibility", _CompatibilityMode, ";General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
@@ -381,7 +790,29 @@ struct Settings
 		ini.SetDoubleValue("Restoration", "StaminaThresholdUpperPercent", _staminaThresholdUpper, ";Stamina threshold NPCs want to reach by using potions.");
 		
 		// distribution options
+		ini.SetLongValue("Distribution", "LevelEasy", _LevelEasy, ";NPC lower or equal this level are considered weak.");
+		ini.SetLongValue("Distribution", "LevelNormal", _LevelNormal, ";NPC lower or equal this level are considered normal in terms of strength.");
+		ini.SetLongValue("Distribution", "LevelDifficult", _LevelDifficult, ";NPC lower or equal this level are considered difficutl.");
+		ini.SetLongValue("Distribution", "LevelInsane", _LevelInsane, ";NPC lower or equal this level are considered insane. Everything above this is always treated as a boss.");
 
+		ini.SetBoolValue("Distribution", "GameDifficultyScaling", _GameDifficultyScaling, ";Disables NPC level scaling, but scales chance according to game difficulty.");
+
+		ini.SetLongValue("Distribution", "MaxMagnitudeWeak", _MaxMagnitudeWeak, ";Items with this or lower magnitude*duration are considered weak.");
+		ini.SetLongValue("Distribution", "MaxMagnitudeStandard", _MaxMagnitudeStandard, ";Items with this or lower magnitude*duration are considered normal.");
+		ini.SetLongValue("Distribution", "MaxMagnitudePotent", _MaxMagnitudePotent, ";Items with this or lower magnitude*duration are considered potent. Everything above this is considered Insane tier");
+		
+		// Poison usage options
+		ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", _EnemyLevelScalePlayerLevel, ";Scaling factor when NPCs start using poisons on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use poisons.");
+		ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", _EnemyNumberThreshold, ";When the number of NPCs in a fight is at least at this value, followers start to use poisons regardless of the enemies level, to faster help out the player.");
+
+		// fortify options
+		ini.SetDoubleValue("Fortify", "EnemyLevelScalePlayerLevelFortify", _EnemyLevelScalePlayerLevelFortify, ";Scaling factor when NPCs start using fortify potions on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use fortify potions.");
+		ini.SetLongValue("Fortify", "FightingNPCsNumberThresholdFortify", _EnemyNumberThresholdFortify, ";When the number of NPCs in a fight is at least at this value, followers start to use fortify potions regardless of the enemies level.");
+
+		// removal options
+		ini.SetLongValue("Removal", "ChanceToRemoveItem", _ChanceToRemoveItem, "Chance to remove items on death of NPC. (range: 0 to 100)");
+		ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", _MaxItemsLeft, "Maximum number of items chances are rolled for during removal. Everything that goes above this value is always removed.");
+		
 		// general
 		ini.SetLongValue("General", "MaxPotionsPerCycle", _maxPotionsPerCycle, ";Maximum number of potions NPCs can use each Period");
 		//logger::info("[SETTINGS] writing {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
@@ -394,10 +825,11 @@ struct Settings
 		ini.SetBoolValue("Debug", "EnableLogging", EnableLog, ";Enables logging output. Use with care as log may get very large");
 		ini.SetLongValue("Debug", "LogLevel", LogLevel, ";1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, 4 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions. ");
 		ini.SetBoolValue("Debug", "EnableProfiling", EnableProfiling, ";Enables profiling output.");
-		ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, ";1 - only highest level functions write their executions times to the log, 1 - lower level functions are written, 2 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
+		ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, ";1 - only highest level functions write their executions times to the log, 2 - lower level functions are written, 3 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
 
 		ini.SaveFile(path);
 	}
+
 
 	static bool CompatibilityFoodPapyrus()
 	{
@@ -431,59 +863,6 @@ struct Settings
 		return true;
 	}
 
-	enum class AlchemyEffect : unsigned __int64
-	{
-		kNone = 0,
-		kHealth = 1 << 0,
-		kMagicka = 1 << 1,
-		kStamina = 1 << 2,
-		kOneHanded = 1 << 3,
-		kTwoHanded = 1 << 4,
-		kArchery = 1 << 5,
-		kBlock = 1 << 6,
-		kHeavyArmor = 1 << 7,
-		kLightArmor = 1 << 8,
-		kAlteration = 1 << 9,
-		kConjuration = 1 << 10,
-		kDestruction = 1 << 11,
-		kIllusion = 1 << 12,
-		kRestoration = 1 << 13,
-		kHealRate = 1 << 14,
-		kMagickaRate = 1 << 15,
-		kStaminaRate = 1 << 16,
-		kSpeedMult = 1 << 17,
-		kCriticalChance = 1 << 18,
-		kMeleeDamage = 1 << 19,
-		kUnarmedDamage = 1 << 20,
-		kDamageResist = 1 << 21,
-		kPoisonResist = 1 << 22,
-		kResistFire = 1 << 23,
-		kResistShock = 1 << 24,
-		kResistFrost = 1 << 25,
-		kResistMagic = 1 << 26,
-		kResistDisease = 1 << 27,
-		kParalysis = 1 << 28,
-		kInvisibility = 1 << 29,
-		kWeaponSpeedMult = 1 << 30,
-		kAttackDamageMult = (unsigned __int64)1 << 31,
-		kHealRateMult = (unsigned __int64)1 << 32,
-		kMagickaRateMult = (unsigned __int64)1 << 33,
-		kStaminaRateMult = (unsigned __int64)1 << 34,
-	};
-	enum class ItemStrength
-	{
-		kWeak = 1,
-		kStandard = 2,
-		kPotent = 4,
-		kInsane = 8
-	};
-	enum class ItemType
-	{
-		kPoison = 1,
-		kPotion = 2,
-		kFood = 4
-	};
-
 	static AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val)
 	{
 		switch (val) {
@@ -497,51 +876,90 @@ struct Settings
 			return (AlchemyEffect::kStamina);
 			break;
 		case RE::ActorValue::kOneHanded:
+		case RE::ActorValue::kOneHandedModifier:
+		case RE::ActorValue::kOneHandedPowerModifier:
 			return (AlchemyEffect::kOneHanded);
 			break;
 		case RE::ActorValue::kTwoHanded:
+		case RE::ActorValue::kTwoHandedModifier:
+		case RE::ActorValue::kTwoHandedPowerModifier:
 			return (AlchemyEffect::kTwoHanded);
 			break;
 		case RE::ActorValue::kArchery:
+		case RE::ActorValue::kMarksmanModifier:
+		case RE::ActorValue::kMarksmanPowerModifier:
 			return (AlchemyEffect::kArchery);
 			break;
 		case RE::ActorValue::kBlock:
+		case RE::ActorValue::kBlockModifier:
+		case RE::ActorValue::kBlockPowerModifier:
 			return (AlchemyEffect::kBlock);
 			break;
 		//case RE::ActorValue::kSmithing:
+		//case RE::ActorValue::kSmithingModifier:
+		//case RE::ActorValue::kSmithingPowerModifier:
 		//	break;
 		case RE::ActorValue::kHeavyArmor:
+		case RE::ActorValue::kHeavyArmorModifier:
+		case RE::ActorValue::kHeavyArmorPowerModifier:
 			return (AlchemyEffect::kHeavyArmor);
 			break;
 		case RE::ActorValue::kLightArmor:
+		case RE::ActorValue::kLightArmorModifier:
+		case RE::ActorValue::kLightArmorSkillAdvance:
 			return (AlchemyEffect::kLightArmor);
 			break;
-		//case RE::ActorValue::kPickpocket:
-		//	break;
-		//case RE::ActorValue::kLockpicking:
-		//	break;
-		//case RE::ActorValue::kSneak:
-		//	break;
+		case RE::ActorValue::kPickpocket:
+		case RE::ActorValue::kPickpocketModifier:
+		case RE::ActorValue::kPickpocketPowerModifier:
+			return (AlchemyEffect::kPickpocket);
+			break;
+		case RE::ActorValue::kLockpicking:
+		case RE::ActorValue::kLockpickingModifier:
+		case RE::ActorValue::kLockpickingPowerModifier:
+			return (AlchemyEffect::kLockpicking);
+			break;
+		case RE::ActorValue::kSneak:
+		case RE::ActorValue::kSneakingModifier:
+		case RE::ActorValue::kSneakingPowerModifier:
+			return (AlchemyEffect::kSneak);
+			break;
 		//case RE::ActorValue::kAlchemy:
+		//case RE::ActorValue::kAlchemyModifier:
+		//case RE::ActorValue::kAlchemyPowerModifier:
 		//	break;
 		//case RE::ActorValue::kSpeech:
+		//case RE::ActorValue::kSpeechcraftModifier:
+		//case RE::ActorValue::kSpeechcraftPowerModifier:
 		//	break;
 		case RE::ActorValue::kAlteration:
+		case RE::ActorValue::kAlterationModifier:
+		case RE::ActorValue::kAlterationPowerModifier:
 			return (AlchemyEffect::kAlteration);
 			break;
 		case RE::ActorValue::kConjuration:
+		case RE::ActorValue::kConjurationModifier:
+		case RE::ActorValue::kConjurationPowerModifier:
 			return (AlchemyEffect::kConjuration);
 			break;
 		case RE::ActorValue::kDestruction:
+		case RE::ActorValue::kDestructionModifier:
+		case RE::ActorValue::kDestructionPowerModifier:
 			return (AlchemyEffect::kDestruction);
 			break;
 		case RE::ActorValue::kIllusion:
+		case RE::ActorValue::kIllusionModifier:
+		case RE::ActorValue::kIllusionPowerModifier:
 			return (AlchemyEffect::kIllusion);
 			break;
 		case RE::ActorValue::kRestoration:
+		case RE::ActorValue::kRestorationModifier:
+		case RE::ActorValue::kRestorationPowerModifier:
 			return (AlchemyEffect::kRestoration);
 			break;
 		//case RE::ActorValue::kEnchanting:
+		//case RE::ActorValue::kEnchantingModifier:
+		//case RE::ActorValue::kEnchantingPowerModifier:
 		//	break;
 		case RE::ActorValue::kHealRate:
 			return (AlchemyEffect::kHealRate);
@@ -596,7 +1014,11 @@ struct Settings
 			return (AlchemyEffect::kInvisibility);
 			break;
 		case RE::ActorValue::kWeaponSpeedMult:
+		case RE::ActorValue::kLeftWeaponSpeedMultiply:
 			return (AlchemyEffect::kWeaponSpeedMult);
+			break;
+		case RE::ActorValue::kBowSpeedBonus:
+			return (AlchemyEffect::kBowSpeed);
 			break;
 		case RE::ActorValue::kAttackDamageMult:
 			return (AlchemyEffect::kAttackDamageMult);
@@ -720,6 +1142,9 @@ struct Settings
 		case AlchemyEffect::kAttackDamageMult:
 			return RE::ActorValue::kAttackDamageMult;
 			break;
+		case AlchemyEffect::kBowSpeed:
+			return RE::ActorValue::kBowSpeedBonus;
+			break;
 		case AlchemyEffect::kHealRateMult:
 			return RE::ActorValue::kHealRateMult;
 			break;
@@ -728,6 +1153,15 @@ struct Settings
 			break;
 		case AlchemyEffect::kStaminaRateMult:
 			return RE::ActorValue::kStaminaRateMult;
+			break;
+		case AlchemyEffect::kPickpocket:
+			return RE::ActorValue::kPickpocket;
+			break;
+		case AlchemyEffect::kLockpicking:
+			return RE::ActorValue::kLockpicking;
+			break;
+		case AlchemyEffect::kSneak:
+			return RE::ActorValue::kSneak;
 			break;
 		default:
 			return RE::ActorValue::kNone;
@@ -759,6 +1193,12 @@ struct Settings
 			0,
 			0
 		};
+		int dur[]{
+			0,
+			0,
+			0,
+			0
+		};
 		// we will not abort the loop, since the number of effects on one item is normally very
 		// limited, so we don't have much iterations
 		if (item->effects.size() > 0) {
@@ -768,6 +1208,11 @@ struct Settings
 				if (sett) {
 					av[i] = sett->data.primaryAV;
 					mag[i] = item->effects[i]->effectItem.magnitude;
+					dur[i] = item->effects[i]->effectItem.duration;
+					// we only need this for magnitude calculations, so its not used as cooldown
+					if (dur[i] == 0)
+						dur[i] = 1; 
+
 				}
 			}
 		} else {
@@ -777,14 +1222,17 @@ struct Settings
 			case RE::ActorValue::kHealth:
 				av[0] = item->avEffectSetting->data.primaryAV;
 				mag[0] = err.magnitude;
+				dur[0] = 1;
 				break;
 			case RE::ActorValue::kMagicka:
 				av[0] = item->avEffectSetting->data.primaryAV;
 				mag[0] = err.magnitude;
+				dur[0] = 1;
 				break;
 			case RE::ActorValue::kStamina:
 				av[0] = item->avEffectSetting->data.primaryAV;
 				mag[0] = err.magnitude;
+				dur[0] = 1;
 				break;
 			}
 		}
@@ -793,38 +1241,48 @@ struct Settings
 		ItemStrength str = ItemStrength::kWeak;
 		float maxmag = 0;
 		for (int i = 0; i < 4; i++) {
+			if (dur[i] > 10)
+				dur[i] = 10;
 			switch (av[i]) {
 			case RE::ActorValue::kHealth:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kHealth);
-				if (mag[i] < maxmag)
-					maxmag = mag[i];
+				if (mag[i] * dur[i] > maxmag)
+					maxmag = mag[i] * dur[i];
 				break;
 			case RE::ActorValue::kMagicka:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kMagicka);
-				if (mag[i] < maxmag)
-					maxmag = mag[i];
+				if (mag[i] * dur[i] > maxmag)
+					maxmag = mag[i] * dur[i];
 				break;
 			case RE::ActorValue::kStamina:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kStamina);
-				if (mag[i] < maxmag)
-					maxmag = mag[i];
+				if (mag[i] * dur[i] > maxmag)
+					maxmag = mag[i] * dur[i];
 				break;
 			case RE::ActorValue::kOneHanded:
+			case RE::ActorValue::kOneHandedModifier:
+			case RE::ActorValue::kOneHandedPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kOneHanded);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kTwoHanded:
+			case RE::ActorValue::kTwoHandedModifier:
+			case RE::ActorValue::kTwoHandedPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kTwoHanded);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kArchery:
+			case RE::ActorValue::kMarksmanModifier:
+			case RE::ActorValue::kMarksmanPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kArchery);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kBlock:
+			case RE::ActorValue::kBlockModifier:
+			case RE::ActorValue::kBlockPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kBlock);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
@@ -832,66 +1290,95 @@ struct Settings
 			//case RE::ActorValue::kSmithing:
 			//	break;
 			case RE::ActorValue::kHeavyArmor:
+			case RE::ActorValue::kHeavyArmorModifier:
+			case RE::ActorValue::kHeavyArmorPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kHeavyArmor);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kLightArmor:
+			case RE::ActorValue::kLightArmorModifier:
+			case RE::ActorValue::kLightArmorSkillAdvance:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kLightArmor);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
-			//case RE::ActorValue::kPickpocket:
-			//	break;
-			//case RE::ActorValue::kLockpicking:
-			//	break;
-			//case RE::ActorValue::kSneak:
-			//	break;
+			case RE::ActorValue::kPickpocket:
+			case RE::ActorValue::kPickpocketModifier:
+			case RE::ActorValue::kPickpocketPowerModifier:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kPickpocket);
+				break;
+			case RE::ActorValue::kLockpicking:
+			case RE::ActorValue::kLockpickingModifier:
+			case RE::ActorValue::kLockpickingPowerModifier:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kLockpicking);
+				break;
+			case RE::ActorValue::kSneak:
+			case RE::ActorValue::kSneakingModifier:
+			case RE::ActorValue::kSneakingPowerModifier:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kSneak);
+				break;
 			//case RE::ActorValue::kAlchemy:
+			//case RE::ActorValue::kAlchemyModifier:
+			//case RE::ActorValue::kAlchemyPowerModifier:
 			//	break;
 			//case RE::ActorValue::kSpeech:
+			//case RE::ActorValue::kSpeechcraftModifier:
+			//case RE::ActorValue::kSpeechcraftPowerModifier:
 			//	break;
 			case RE::ActorValue::kAlteration:
+			case RE::ActorValue::kAlterationModifier:
+			case RE::ActorValue::kAlterationPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kAlteration);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kConjuration:
+			case RE::ActorValue::kConjurationModifier:
+			case RE::ActorValue::kConjurationPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kConjuration);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kDestruction:
+			case RE::ActorValue::kDestructionModifier:
+			case RE::ActorValue::kDestructionPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kDestruction);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kIllusion:
+			case RE::ActorValue::kIllusionModifier:
+			case RE::ActorValue::kIllusionPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kIllusion);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			case RE::ActorValue::kRestoration:
+			case RE::ActorValue::kRestorationModifier:
+			case RE::ActorValue::kRestorationPowerModifier:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kRestoration);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
 			//case RE::ActorValue::kEnchanting:
+		//case RE::ActorValue::kEnchantingModifier:
+		//case RE::ActorValue::kEnchantingPowerModifier:
 			//	break;
 			case RE::ActorValue::kHealRate:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kHealRate);
-				//if (mag[i] < maxmag)
-				//	maxmag = mag[i];
+				if (mag[i] > maxmag)
+					maxmag = mag[i];
 				break;
 			case RE::ActorValue::kMagickaRate:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kMagickaRate);
-				//if (mag[i] < maxmag)
-				//	maxmag = mag[i];
+				if (mag[i] > maxmag)
+					maxmag = mag[i];
 				break;
 			case RE::ActorValue::KStaminaRate:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kStaminaRate);
-				//if (mag[i] < maxmag)
-				//	maxmag = mag[i];
+				if (mag[i] > maxmag)
+					maxmag = mag[i];
 				break;
 			case RE::ActorValue::kSpeedMult:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kSpeedMult);
@@ -971,9 +1458,13 @@ struct Settings
 			//case RE::ActorValue::kWaterWalking:
 			//	break;
 			case RE::ActorValue::kWeaponSpeedMult:
+			case RE::ActorValue::kLeftWeaponSpeedMultiply:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult);
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
+				break;
+			case RE::ActorValue::kBowSpeedBonus:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kBowSpeed);
 				break;
 			case RE::ActorValue::kAttackDamageMult:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult);
@@ -1013,6 +1504,20 @@ struct Settings
 			str = ItemStrength::kPotent;
 		else
 			str = ItemStrength::kInsane;
+
+		// if the potion is a blood potion it should only ever appear on vampires, no the
+		// effects are overriden to AlchemyEffect::kBlood
+		if (std::string(item->GetName()).find(std::string("Blood")) != std::string::npos &&
+			std::string(item->GetName()).find(std::string("Potion")) != std::string::npos) {
+			alch = static_cast<uint64_t>(AlchemyEffect::kBlood);
+		}
+		if (std::string(item->GetName()).find(std::string("Fear")) != std::string::npos) {
+			alch = static_cast<uint64_t>(AlchemyEffect::kFear);
+		}
+		if (std::string(item->GetName()).find(std::string("Frenzy")) != std::string::npos) {
+			alch = static_cast<uint64_t>(AlchemyEffect::kFrenzy);
+		}
+
 		ItemType t = ItemType::kPotion;
 		if (item->IsFood())
 			t = ItemType::kFood;
@@ -1035,7 +1540,17 @@ struct Settings
 			if ((*iter).second && (*iter).second->IsMagicItem()) {
 				item = (*iter).second->As<RE::AlchemyItem>();
 				if (item) {
+					// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
+					if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0) {
+						iter++;
+						continue;
+					}
 					auto clas = ClassifyItem(item);
+					// check wether item is excluded
+					if (Settings::Distribution::excludedItems.contains(item->GetFormID())) {
+						iter++;
+						continue;
+					}
 					// determine the type of item
 					if (std::get<2>(clas) == ItemType::kFood)
 					{
@@ -1051,7 +1566,7 @@ struct Settings
 							_foodstamina.insert(_foodstamina.end(), { std::get<0>(clas), item });
 						}
 					} else if (std::get<2>(clas) == ItemType::kPoison) {
-						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
+						/*if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0 ||
@@ -1084,9 +1599,25 @@ struct Settings
 							case ItemStrength::kInsane:
 								break;
 							}
+						}*/
+						switch (std::get<1>(clas)) {
+						case ItemStrength::kWeak:
+							_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kStandard:
+							_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kPotent:
+							_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kInsane:
+							_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
+							break;
 						}
 					} else if (std::get<2>(clas) == ItemType::kPotion) {
-						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
+						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
+							_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
+						else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0 ||
@@ -1128,5 +1659,43 @@ struct Settings
 			iter++;
 		}
 		PROF1_1("[PROF] [ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		LOG1_1("{}[ClassifyItems] _potionsWeak_main {}", _potionsWeak_main.size());
+		LOG1_1("{}[ClassifyItems] _potionsWeak_rest {}", _potionsWeak_rest.size());
+		LOG1_1("{}[ClassifyItems] _potionsStandard_main {}", _potionsStandard_main.size());
+		LOG1_1("{}[ClassifyItems] _potionsStandard_rest {}", _potionsStandard_rest.size());
+		LOG1_1("{}[ClassifyItems] _potionsPotent_main {}", _potionsPotent_main.size());
+		LOG1_1("{}[ClassifyItems] _potionsPotent_rest {}", _potionsPotent_rest.size());
+		LOG1_1("{}[ClassifyItems] _potionsInsane_main {}", _potionsInsane_main.size());
+		LOG1_1("{}[ClassifyItems] _potionsInsane_rest {}", _potionsInsane_rest.size());
+		LOG1_1("{}[ClassifyItems] _potionsBlood {}", _potionsBlood.size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak_main {}", _poisonsWeak_main.size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak_rest {}", _poisonsWeak_rest.size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard_main {}", _poisonsStandard_main.size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard_rest {}", _poisonsStandard_rest.size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent_main {}", _poisonsPotent_main.size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent_rest {}", _poisonsPotent_rest.size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak {}", _poisonsWeak.size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard {}", _poisonsStandard.size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent {}", _poisonsPotent.size());
+		LOG1_1("{}[ClassifyItems] _poisonsInsane {}", _poisonsInsane.size());
+		LOG1_1("{}[ClassifyItems] _foodmagicka {}", _foodmagicka.size());
+		LOG1_1("{}[ClassifyItems] _foodstamina {}", _foodstamina.size());
+		LOG1_1("{}[ClassifyItems] _foodhealth {}", _foodhealth.size());
+	}
+
+	/// <summary>
+	/// returns all item from [list] with the alchemy effect [effect]
+	/// </summary>
+	/// <param name="list"></param>
+	/// <param name="effect"></param>
+	/// <returns></returns>
+	static std::vector<RE::AlchemyItem*> GetMatchingItems(std::list<std::pair<uint64_t, RE::AlchemyItem*>>& list, uint64_t effect)
+	{
+		std::vector<RE::AlchemyItem*> ret;
+		for (auto entry : list) {
+			if ((std::get<0>(entry) & effect) > 0)
+				ret.push_back(std::get<1>(entry));
+		}
+		return ret;
 	}
 };
