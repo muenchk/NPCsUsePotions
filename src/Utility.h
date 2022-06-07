@@ -74,19 +74,25 @@ public:
 	/// <returns></returns>
 	static bool ExcludedNPC(RE::Actor* actor)
 	{
+		// skip fucking deleted references
+		if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
+			return true;
 		bool ret = actor->IsInFaction(Settings::CurrentFollowerFaction) ||
-			Settings::Distribution::excludedNPCs.contains(actor->GetFormID()) ||
-			Settings::Distribution::excludedNPCs.contains(actor->GetActorBase()->GetFormID()) ||
+		           Settings::Distribution::excludedNPCs.contains(actor->GetFormID()) ||
+		           (Settings::Distribution::excludedNPCs.contains(actor->GetActorBase()->GetFormID())) ||
 		           actor->IsGhost();
-		// if the actor has an exclusive rule then they this goes above Race, Faction and Keyword exclusions
+		// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 		if (!Settings::Distribution::npcMap.contains(actor->GetFormID()) && ret == false)
 		{
-			for (auto i : Settings::Distribution::excludedKeywords) {
-				ret |= actor->HasKeyword(i);
+			auto base = actor->GetActorBase();
+			for (uint32_t i = 0; i < base->numKeywords; i++) {
+				ret |= Settings::Distribution::excludedKeywords.contains(base->keywords[i]);
 			}
-			for (auto it = Settings::Distribution::excludedFactions.begin(); it != Settings::Distribution::excludedFactions.end() && ret == false; it++)
-				ret |= actor->IsInFaction(*it);
-			ret |= Settings::Distribution::excludedRaces.contains(actor->GetRace()->GetFormID());
+			for (uint32_t i = 0; i < base->factions.size(); i++) {
+				ret |= Settings::Distribution::excludedFactions.contains(base->factions[i].faction);
+			}
+			if (actor->GetRace())
+				ret |= Settings::Distribution::excludedRaces.contains(actor->GetRace()->GetFormID());
 		}
 		return ret;
 	}

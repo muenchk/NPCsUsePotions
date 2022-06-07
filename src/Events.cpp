@@ -557,7 +557,7 @@ namespace Events
 				for (int i = 0; i < aclist.size(); i++) {
 					LOG1_1("{}[CheckActors] [Actor] {}", Utility::GetHex(std::get<0>(aclist[i])->GetFormID()));
 					// if actor is valid and not dead
-					if (std::get<0>(aclist[i]) && !(std::get<0>(aclist[i]))->IsDead()) {
+					if (std::get<0>(aclist[i]) && !(std::get<0>(aclist[i]))->IsDead() && (std::get<0>(aclist[i]))->GetActorValue(RE::ActorValue::kHealth) > 0) {
 						// handle potions
 						
 						// get current duration
