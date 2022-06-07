@@ -98,21 +98,12 @@ target_include_directories(
 		"${SOURCE_DIR}"
 )
 
-if (SKYRIM_SUPPORT_VR)
-	add_subdirectory($ENV{CommonLibVRPath} CommonLibVR)
-	target_link_libraries(
-		"${PROJECT_NAME}"
-		PRIVATE
-			CommonLibVR::CommonLibVR
-	)
-else()
-	add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE)
-	target_link_libraries(
-		"${PROJECT_NAME}"
-		PRIVATE
-			CommonLibSSE::CommonLibSSE
-	)
-endif()
+add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE)
+target_link_libraries(
+	"${PROJECT_NAME}"
+	PRIVATE
+		CommonLibSSE::CommonLibSSE
+)
 
 target_precompile_headers(
 	"${PROJECT_NAME}"
