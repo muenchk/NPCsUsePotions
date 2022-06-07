@@ -24,6 +24,7 @@ Bug reports and suggestions should be posted in the Bug / Forum section of the n
 * [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 	* For the Special Edition or Anniversary Edition
 * [VR Address Library for SKSEVR](https://www.nexusmods.com/skyrimspecialedition/mods/58101)
+	* For the VR Edition
 
 ## Building for SSE / AE
 ```
