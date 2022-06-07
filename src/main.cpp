@@ -1,6 +1,7 @@
 #include "Hooks.h"
 #include "Events.h"
 #include "Settings.h"
+#include <SKSE/SKSE.h>
 
 namespace
 {
@@ -33,22 +34,20 @@ namespace
 }
 
 // VR
-extern "C" DLLEXPORT bool SKSEPlugin_Query(const SKSEInterface* skse, PluginInfo* info)
+extern "C" DLLEXPORT bool SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 {
 	InitializeLog();
-	info->infoVersion = SEKSE::PluginInfo::kInfoVersion;
-	info->name = Plugin::NAME.data();
-	info->version = Plugin::VERSION[0];
+	a_info->infoVersion = SKSE::PluginInfo::kVersion;
+	a_info->name = Plugin::NAME.data();
+	a_info->version = Plugin::VERSION[0];
 
-	if (skse->isEditor) {
+	if (a_skse->IsEditor()) {
 		logger::critical("Loaded in editor, marking as incompatible"sv);
 		return false;
 	}
 
 	const auto ver = a_skse->RuntimeVersion();
-	logger::critical(FMT_STRING("Unsupported runtime version {}"), RUNTIME_VR_1_4_15.string());
-	logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
-	if (skse->runtimeVersion < RUNTIME_VR_1_4_15) {
+	if (ver < SKSE::RUNTIME_VR_1_4_15) {
 		logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
 		return false;
 	}
