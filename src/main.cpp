@@ -32,41 +32,28 @@ namespace
 	}
 }
 
-#ifdef SKYRIM_SUPPORT_AE
-// AE
-extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
-	SKSE::PluginVersionData v;
-
-	v.PluginVersion(Plugin::VERSION);
-	v.PluginName(Plugin::NAME);
-
-	v.UsesAddressLibrary(true);
-	v.CompatibleVersions({ SKSE::RUNTIME_LATEST });
-
-	return v;
-}();
-#else
-// SSE
-extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * a_skse, SKSE::PluginInfo * a_info)
+// VR
+extern "C" DLLEXPORT bool SKSEPlugin_Query(const SKSEInterface* skse, PluginInfo* info)
 {
 	InitializeLog();
-	a_info->infoVersion = SKSE::PluginInfo::kVersion;
-	a_info->name = Plugin::NAME.data();
-	a_info->version = Plugin::VERSION[0];
+	info->infoVersion = SEKSE::PluginInfo::kInfoVersion;
+	info->name = Plugin::NAME.data();
+	info->version = Plugin::VERSION[0];
 
-	if (a_skse->IsEditor()) {
+	if (skse->isEditor) {
 		logger::critical("Loaded in editor, marking as incompatible"sv);
 		return false;
 	}
 
 	const auto ver = a_skse->RuntimeVersion();
-	if (ver < SKSE::RUNTIME_1_5_39) {
+	logger::critical(FMT_STRING("Unsupported runtime version {}"), RUNTIME_VR_1_4_15.string());
+	logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
+	if (skse->runtimeVersion < RUNTIME_VR_1_4_15) {
 		logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
 		return false;
 	}
 	return true;
 }
-#endif
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
@@ -90,10 +77,6 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
-#ifdef SKYRIM_SUPPORT_AE
-	InitializeLog();
-#endif
-
 	logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
