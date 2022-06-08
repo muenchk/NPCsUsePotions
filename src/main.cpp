@@ -1,6 +1,7 @@
 #include "Hooks.h"
 #include "Events.h"
 #include "Settings.h"
+#include "Console.h"
 
 namespace
 {
@@ -84,6 +85,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		logger::info("Items classified");
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
+		Console::CalcRule::Register();
 	}
 }
 

@@ -20,6 +20,7 @@
 #include <forward_list>
 #include <semaphore>
 #include <limits>
+#include "Console.h"
 
 
 #define LOGE_1(s)             \
@@ -338,7 +339,11 @@ public:
 				validFood{ _validFood }
 			{ }
 			Rule() {}
-			Rule(bool invalid) { valid = invalid; }
+			Rule(bool invalid)
+			{
+				valid = invalid;
+				ruleName = "empty";
+			}
 
 		private:
 			RE::AlchemyItem* GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
@@ -359,20 +364,42 @@ public:
 			Settings::AlchemyEffect GetRandomEffect(Settings::ItemType type);
 			
 		};
-		static inline std::vector<Rule*> rules;
-		static inline std::unordered_map<RE::FormID, Rule*> npcMap;
-		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> keywordMap;
-		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> factionMap;
-		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> raceMap;
-		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> classMap;
-		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> combatStyleMap;
-		static inline std::unordered_set<RE::FormID> bosses;
-		static inline std::unordered_set<RE::FormID> excludedNPCs;
-		static inline std::unordered_set<RE::TESFaction*> excludedFactions;
-		static inline std::unordered_set<RE::BGSKeyword*> excludedKeywords;
-		static inline std::unordered_set<RE::FormID> excludedRaces;
-		static inline std::unordered_set<RE::FormID> excludedItems;
-		static inline std::unordered_set<RE::FormID> baselineExclusions;
+
+		static inline std::vector<Rule*> _dummyVecR;
+		static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
+		static inline std::unordered_set<RE::FormID> _dummySet1;
+
+		static bool initalised = false;
+
+		static inline std::vector<Rule*> _rules;
+		static std::vector<Rule*>* rules() { initalised ? &_rules : &_dummyVecR; }
+		static inline std::unordered_map<RE::FormID, Rule*> _npcMap;
+		static std::unordered_map<RE::FormID, Rule*>* npcMap() { initialised ? &_npcMap : &_dummyMapN; }
+
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _keywordMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _factionMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _raceMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _classMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _combatStyleMap;
+
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _assocMap;
+		static std::unordered_map<RE::FormID, std::pair<int, Rule*>>* assocMap() { initialised ? &_assocMap : &_dummyMap2 }
+		static inline std::unordered_set<RE::FormID> _bosses;
+		static std::unordered_set<RE::FormID>* bosses() { initialised ? &_bosses : &_dummySet1 }
+		static inline std::unordered_set<RE::FormID> _excludedNPCs;
+		static std::unordered_set<RE::FormID>* excludedNPCs() { initialised ? &_excludedNPCs : &_dummySet1 }
+
+		//static inline std::unordered_set<RE::TESFaction*> _excludedFactions;
+		//static inline std::unordered_set<RE::BGSKeyword*> _excludedKeywords;
+		//static inline std::unordered_set<RE::FormID> _excludedRaces;
+
+		static inline std::unordered_set<RE::FormID> _excludedAssoc;
+		static std::unordered_set<RE::FormID>* excludedAssoc() { initialised ? &_excludedAssoc : &_dummySet1 }
+		static inline std::unordered_set<RE::FormID> _excludedItems;
+		static std::unordered_set<RE::FormID>* excludedItems() { initialised ? &_excludedItems : &_dummySet1 }
+		static inline std::unordered_set<RE::FormID> _baselineExclusions;
+		static std::unordered_set<RE::FormID>* baselineExclusions() { initialised ? &_baselineExclusions : &_dummySet1 }
 
 		#define RandomRange 1000
 
@@ -407,6 +434,7 @@ public:
 		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(RE::Actor* actor);
 
 		friend void Settings::CheckActorsForRules();
+		friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
 
 	private:
 		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
@@ -414,6 +442,7 @@ public:
 		static Rule* CalcRule(RE::TESNPC* npc);
 		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is);
+		static std::vector<Rule*> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 	};
 
 	static void LoadDistrConfig();

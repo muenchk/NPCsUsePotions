@@ -1865,6 +1865,8 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	bool baseexcluded = false;
 	int prio = INT_MIN;
 
+	auto base = actor->GetActorBase();
+
 	Rule* rule = nullptr;
 
 	//std::vector<Rule*> rls;
@@ -1878,27 +1880,25 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	bossoverride |= bosses.contains(actor->GetFormID());
 
 	if (ruleoverride && bossoverride) {
-		acs = ActorStrength::Boss;
-		return rule
+		goto SKIPActor;
 	}
 
 	// now also perform a check on the actor base
 	if (!ruleoverride) {
 		itnpc = npcMap.find(actor->GetActorBase()->GetFormID());
-		if (itnpc != npcMap.end())  // found the right rule!
-			rule = itnpc->second;   // this can be null if the specific npc is excluded
-		ruleoverride = true;
+		if (itnpc != npcMap.end()) {  // found the right rule!
+			rule = itnpc->second;     // this can be null if the specific npc is excluded
+			ruleoverride = true;
+		}
 	}
 	bossoverride |= bosses.contains(actor->GetActorBase()->GetFormID());
 
 	if (ruleoverride && bossoverride) {
-		acs = ActorStrength::Boss;
-		return rule
+		goto SKIPActor;
 	}
 
 	// now that we didnt't find something so far, check the rest
 	// this time all the priorities are the same
-	auto base = actor->GetActorBase();
 	if (!ruleoverride) {
 		auto it = raceMap.find(base->GetRace()->GetFormID());
 		if (it != raceMap.end())
@@ -1913,8 +1913,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	bossoverride |= bosses.contains(base->GetRace()->GetFormID());
 
 	if (ruleoverride && bossoverride) {
-		acs = ActorStrength::Boss;
-		return rule
+		goto SKIPActor;
 	}
 
 	// handle keywords
@@ -1937,8 +1936,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	}
 
 	if (ruleoverride && bossoverride) {
-		acs = ActorStrength::Boss;
-		return rule
+		goto SKIPActor;
 	}
 
 	for (uint32_t i = 0; i < base->factions.size(); i++) {
@@ -1956,11 +1954,8 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		bossoverride |= bosses.contains(base->factions[i].faction->GetFormID());
 	}
 
-	if (bossoverride && ruleoverride) {
-		acs = ActorStrength::Boss;
-		return rule
-	} else if (ruleoverride)
-		return rule;
+	if (bossoverride && ruleoverride || ruleoverride)
+		goto SKIPActor;
 
 	// handle classes
 	if (base->npcClass) {
@@ -1984,6 +1979,8 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		}
 	}
 
+	SKIPActor:
+
 	if (bossoverride)
 		acs = ActorStrength::Boss;
 
@@ -1994,12 +1991,184 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		// there are no rules!!!
 		if (baseexcluded)
 			return Settings::Distribution::emptyRule;
-		LOG1_1("{}[CalcRule] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
+		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
 		return Settings::Distribution::defaultRule;
 	}
 }
 
 Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is)
+{
+	// calc strength section
+	if (_GameDifficultyScaling) {
+		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
+		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
+		if (diff == 0 || diff == 1) {
+			acs = Settings::ActorStrength::Weak;
+			is = Settings::ItemStrength::kWeak;
+		} else if (diff == 2 || diff == 3) {
+			acs = Settings::ActorStrength::Normal;
+			is = Settings::ItemStrength::kStandard;
+		} else if (diff == 4) {
+			acs = Settings::ActorStrength::Powerful;
+			is = Settings::ItemStrength::kPotent;
+		} else {  // diff == 5
+			acs = Settings::ActorStrength::Insane;
+			is = Settings::ItemStrength::kInsane;
+		}
+	} else { 
+		// level not available for BaseActors
+
+		/*
+		// get level dependencies
+		short lvl = actor->GetLevel();
+		if (lvl <= _LevelEasy) {
+			acs = Settings::ActorStrength::Weak;
+			is = Settings::ItemStrength::kWeak;
+			// weak actor
+		} else if (lvl <= _LevelNormal) {
+			acs = ActorStrength::Normal;
+			is = ItemStrength::kStandard;
+			// normal actor
+		} else if (lvl <= _LevelDifficult) {
+			acs = ActorStrength::Powerful;
+			is = ItemStrength::kPotent;
+			// difficult actor
+		} else if (lvl <= _LevelInsane) {
+			acs = ActorStrength::Insane;
+			is = ItemStrength::kInsane;
+			// insane actor
+		} else {
+			acs = ActorStrength::Boss;
+			is = ItemStrength::kInsane;
+			// boss actor
+		}*/
+	}
+
+	// now calculate rule and on top get the boss override
+
+	bool bossoverride = false;
+
+	bool ruleoverride = false;
+	bool baseexcluded = false;
+	int prio = INT_MIN;
+
+	Rule* rule = nullptr;
+
+	//std::vector<Rule*> rls;
+	
+	// find rule in npc map
+	// npc rules always have the highest priority
+	auto itnpc = npcMap.find(npc->GetFormID());
+	if (itnpc != npcMap.end()) {  // found the right rule!
+		rule = itnpc->second;     // this can be null if the specific npc is excluded
+		ruleoverride = true;
+	}
+	bossoverride |= bosses.contains(npc->GetFormID());
+
+	if (ruleoverride && bossoverride) {
+		goto SKIPNPC;
+	}
+
+	// now that we didnt't find something so far, check the rest
+	// this time all the priorities are the same
+	if (!ruleoverride) {
+		auto it = raceMap.find(npc->GetRace()->GetFormID());
+		if (it != raceMap.end())
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+			else {
+				baseexcluded |= baselineExclusions.contains(npc->GetRace()->GetFormID());
+			}
+	}
+	bossoverride |= bosses.contains(npc->GetRace()->GetFormID());
+
+	if (ruleoverride && bossoverride) {
+		goto SKIPNPC;
+	}
+
+	// handle keywords
+	for (unsigned int i = 0; i < npc->numKeywords; i++) {
+		auto key = npc->keywords[i];
+		if (key) {
+			if (!ruleoverride) {
+				auto it = keywordMap.find(key->GetFormID());
+				if (it != keywordMap.end())
+					if (prio < std::get<0>(it->second))
+						rule = std::get<1>(it->second);
+					else if (prio < std::get<1>(it->second)->rulePriority)
+						rule = std::get<1>(it->second);
+					else {
+						baseexcluded |= baselineExclusions.contains(key->GetFormID());
+					}
+			}
+			bossoverride |= bosses.contains(key->GetFormID());
+		}
+	}
+
+	if (ruleoverride && bossoverride) {
+		goto SKIPNPC;
+	}
+
+	// handle factions
+	for (uint32_t i = 0; i < npc->factions.size(); i++) {
+		if (!ruleoverride) {
+			auto it = factionMap.find(npc->factions[i].faction->GetFormID());
+			if (it != factionMap.end()) {
+				if (prio < std::get<0>(it->second))
+					rule = std::get<1>(it->second);
+				else if (prio < std::get<1>(it->second)->rulePriority)
+					rule = std::get<1>(it->second);
+			} else {
+				baseexcluded |= baselineExclusions.contains(npc->factions[i].faction->GetFormID());
+			}
+		}
+		bossoverride |= bosses.contains(npc->factions[i].faction->GetFormID());
+	}
+
+	if (bossoverride && ruleoverride || ruleoverride)
+		goto SKIPNPC;
+
+	// handle classes
+	if (npc->npcClass) {
+		auto it = classMap.find(npc->npcClass->GetFormID());
+		if (it != classMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		}
+	}
+	// handle combat styles
+	if (npc->combatStyle) {
+		auto it = classMap.find(npc->combatStyle->GetFormID());
+		if (it != classMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		}
+	}
+
+SKIPNPC:
+
+	if (bossoverride)
+		acs = ActorStrength::Boss;
+
+	if (rule) {
+		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
+		return rule;
+	} else {
+		// there are no rules!!!
+		if (baseexcluded)
+			return Settings::Distribution::emptyRule;
+		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
+		return Settings::Distribution::defaultRule;
+	}
+}
+
+std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
 {
 	// calc strength section
 	if (_GameDifficultyScaling) {
@@ -2048,55 +2217,59 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 
 	bool bossoverride = false;
 
-	bool ruleoverride = false;
 	bool baseexcluded = false;
 	int prio = INT_MIN;
+	const bool ruleoverride = false;
 
+	auto base = actor->GetActorBase();
+
+	std::vector<Rule*> rls;
 	Rule* rule = nullptr;
 
 	//std::vector<Rule*> rls;
-	
 	// find rule in npc map
 	// npc rules always have the highest priority
-	auto itnpc = npcMap.find(npc->GetFormID());
+	auto itnpc = npcMap.find(actor->GetFormID());
 	if (itnpc != npcMap.end()) {  // found the right rule!
 		rule = itnpc->second;     // this can be null if the specific npc is excluded
-		ruleoverride = true;
+		rls.push_back(itnpc->second);
 	}
 	bossoverride |= bosses.contains(actor->GetFormID());
 
-	if (ruleoverride && bossoverride) {
-		acs = ActorStrength::Boss;
-		return rule
+	// now also perform a check on the actor base
+	if (!ruleoverride) {
+		itnpc = npcMap.find(actor->GetActorBase()->GetFormID());
+		if (itnpc != npcMap.end()) {  // found the right rule!
+			rule = itnpc->second;     // this can be null if the specific npc is excluded
+			rls.push_back(itnpc->second);
+		}
 	}
+	bossoverride |= bosses.contains(actor->GetActorBase()->GetFormID());
 
 	// now that we didnt't find something so far, check the rest
 	// this time all the priorities are the same
 	if (!ruleoverride) {
-		auto it = raceMap.find(npc->GetRace()->GetFormID());
-		if (it != raceMap.end())
+		auto it = raceMap.find(base->GetRace()->GetFormID());
+		if (it != raceMap.end()) {
 			if (prio < std::get<0>(it->second))
 				rule = std::get<1>(it->second);
 			else if (prio < std::get<1>(it->second)->rulePriority)
 				rule = std::get<1>(it->second);
 			else {
-				baseexcluded |= baselineExclusions.contains(npc->GetRace()->GetFormID());
+				baseexcluded |= baselineExclusions.contains(base->GetRace()->GetFormID());
 			}
+			rls.push_back(std::get<1>(it->second));
+		}
 	}
-	bossoverride |= bosses.contains(npc->GetRace()->GetFormID());
-
-	if (ruleoverride && bossoverride) {
-		acs = ActorStrength::Boss;
-		return rule
-	}
+	bossoverride |= bosses.contains(base->GetRace()->GetFormID());
 
 	// handle keywords
-	for (unsigned int i = 0; i < npc->numKeywords; i++) {
-		auto key = npc->keywords[i];
+	for (unsigned int i = 0; i < base->numKeywords; i++) {
+		auto key = base->keywords[i];
 		if (key) {
 			if (!ruleoverride) {
 				auto it = keywordMap.find(key->GetFormID());
-				if (it != keywordMap.end())
+				if (it != keywordMap.end()) {
 					if (prio < std::get<0>(it->second))
 						rule = std::get<1>(it->second);
 					else if (prio < std::get<1>(it->second)->rulePriority)
@@ -2104,56 +2277,50 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 					else {
 						baseexcluded |= baselineExclusions.contains(key->GetFormID());
 					}
+					rls.push_back(std::get<1>(it->second));
+				}
 			}
 			bossoverride |= bosses.contains(key->GetFormID());
 		}
 	}
 
-	if (ruleoverride && bossoverride) {
-		acs = ActorStrength::Boss;
-		return rule
-	}
-
-	// handle factions
-	for (uint32_t i = 0; i < npc->factions.size(); i++) {
+	for (uint32_t i = 0; i < base->factions.size(); i++) {
 		if (!ruleoverride) {
-			auto it = factionMap.find(npc->factions[i].faction->GetFormID());
+			auto it = factionMap.find(base->factions[i].faction->GetFormID());
 			if (it != factionMap.end()) {
 				if (prio < std::get<0>(it->second))
 					rule = std::get<1>(it->second);
 				else if (prio < std::get<1>(it->second)->rulePriority)
 					rule = std::get<1>(it->second);
+				rls.push_back(std::get<1>(it->second));
 			} else {
-				baseexcluded |= baselineExclusions.contains(npc->factions[i].faction->GetFormID());
+				baseexcluded |= baselineExclusions.contains(base->factions[i].faction->GetFormID());
 			}
 		}
 		bossoverride |= bosses.contains(base->factions[i].faction->GetFormID());
 	}
 
-	if (bossoverride && ruleoverride) {
-		acs = ActorStrength::Boss;
-		return rule
-	} else if (ruleoverride)
-		return rule;
-
 	// handle classes
-	if (npc->npcClass) {
-		it = classMap.find(npc->npcClass->GetFormID());
+	if (base->npcClass) {
+		auto it = classMap.find(base->npcClass->GetFormID());
 		if (it != classMap.end()) {
 			if (prio < std::get<0>(it->second))
 				rule = std::get<1>(it->second);
 			else if (prio < std::get<1>(it->second)->rulePriority)
 				rule = std::get<1>(it->second);
+			rls.push_back(std::get<1>(it->second));
 		}
 	}
+
 	// handle combat styles
-	if (npc->combatStyle) {
-		it = classMap.find(npc->combatStyle->GetFormID());
-		if (it != classMap.end()) {
+	if (base->combatStyle) {
+		auto it = combatStyleMap.find(base->combatStyle->GetFormID());
+		if (it != combatStyleMap.end()) {
 			if (prio < std::get<0>(it->second))
 				rule = std::get<1>(it->second);
 			else if (prio < std::get<1>(it->second)->rulePriority)
 				rule = std::get<1>(it->second);
+			rls.push_back(std::get<1>(it->second));
 		}
 	}
 
@@ -2162,13 +2329,14 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 
 	if (rule) {
 		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
-		return rule;
+		rls.insert(rls.begin(), rule);
+		return rls;
 	} else {
 		// there are no rules!!!
 		if (baseexcluded)
-			return Settings::Distribution::emptyRule;
+			return std::vector<Rule*>{ Settings::Distribution::emptyRule };
 		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return Settings::Distribution::defaultRule;
+		return std::vector<Rule*>{ Settings::Distribution::defaultRule };
 	}
 }
 

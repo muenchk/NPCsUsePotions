@@ -67,6 +67,40 @@ public:
 		return ss.str();
 	}
 
+	static std::string ToString(Settings::ActorStrength acs)
+	{
+		switch (acs) {
+		case Settings::ActorStrength::Weak:
+			return "Weak";
+		case Settings::ActorStrength::Normal:
+			return "Normal";
+		case Settings::ActorStrength::Powerful:
+			return "Powerful";
+		case Settings::ActorStrength::Insane:
+			return "Insane";
+		case Settings::ActorStrength::Boss:
+			return "Boss";
+		default:
+			return "Not Applicable";
+		}
+	}
+
+	static std::string ToString(Settings::ItemStrength is)
+	{
+		switch (is) {
+		case Settings::ItemStrength::kWeak:
+			return "Weak";
+		case Settings::ItemStrength::kStandard:
+			return "Standard";
+		case Settings::ItemStrength::kPotent:
+			return "Potent";
+		case Settings::ItemStrength::kInsane:
+			return "Insane";
+		default:
+			return "Not Applicable";
+		}
+	}
+
 	/// <summary>
 	/// returns wether an npc is excluded from item distribution
 	/// </summary>
