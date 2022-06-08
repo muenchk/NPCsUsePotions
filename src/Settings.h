@@ -412,6 +412,8 @@ public:
 		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 		static Rule* CalcRule(RE::Actor* actor);
 		static Rule* CalcRule(RE::TESNPC* npc);
+		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
+		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is);
 	};
 
 	static void LoadDistrConfig();
