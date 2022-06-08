@@ -96,6 +96,28 @@ public:
 		}
 		return ret;
 	}
+	static bool ExcludedNPCBase(RE::TESNPC* actor)
+	{
+		// skip fucking deleted references
+		if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
+			return true;
+		bool ret = actor->IsInFaction(Settings::CurrentFollowerFaction) ||
+		           (Settings::Distribution::excludedNPCs.contains(actor->GetFormID())) ||
+		           actor->IsGhost();
+		// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
+		if (!Settings::Distribution::npcMap.contains(actor->GetFormID()) && ret == false) {
+			auto base = actor;
+			for (uint32_t i = 0; i < base->numKeywords; i++) {
+				ret |= Settings::Distribution::excludedKeywords.contains(base->keywords[i]);
+			}
+			for (uint32_t i = 0; i < base->factions.size(); i++) {
+				ret |= Settings::Distribution::excludedFactions.contains(base->factions[i].faction);
+			}
+			if (actor->GetRace())
+				ret |= Settings::Distribution::excludedRaces.contains(actor->GetRace()->GetFormID());
+		}
+		return ret;
+	}
 
 	enum class CurrentCombatStyle
 	{
@@ -629,6 +651,11 @@ public:
 						} else {
 							logger::warn("[Settings] [LoadDistrRules] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
 						}
+					} else {
+						if (form)
+							logger::warn("[Settings] [LoadDistrRules] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+						else
+							logger::warn("[Settings] [LoadDistrRules] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
 					}
 				} else {
 					// invalid input return what we parsed so far and set error
@@ -665,6 +692,12 @@ public:
 		case RE::FormType::Reference:
 			valid = true;
 			return Settings::Distribution::AssocType::kItem;
+		case RE::FormType::Class:
+			valid = true;
+			return Settings::Distribution::AssocType::kClass;
+		case RE::FormType::CombatStyle:
+			valid = true;
+			return Settings::Distribution::AssocType::kCombatStyle;
 		default:
 			valid = false;
 			return Settings::Distribution::AssocType::kKeyword;

@@ -356,41 +356,59 @@ void Settings::LoadDistrConfig()
 									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
 									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr);
 
+									std::pair<int, Settings::Distribution::Rule*> tmptuple = { rule->rulePriority, rule };
+
 									// assign rules to search parameters
 									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} associated objects", rule->ruleName, objects.size());
 									for (int i = 0; i < objects.size(); i++) {
 										switch (std::get<0>(objects[i])) {
 										case Settings::Distribution::AssocType::kFaction:
 											if (auto item = Settings::Distribution::factionMap.find(std::get<1>(objects[i])); item != Settings::Distribution::factionMap.end()) {
-												if (item->second->rulePriority < rule->rulePriority)
-													Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
+												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
+													Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											} else {
-												Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
+												Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											}
 											break;
 										case Settings::Distribution::AssocType::kKeyword:
 											if (auto item = Settings::Distribution::keywordMap.find(std::get<1>(objects[i])); item != Settings::Distribution::keywordMap.end()) {
-												if (item->second->rulePriority < rule->rulePriority)
-													Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
+												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
+													Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											} else {
-												Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
+												Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											}
 											break;
 										case Settings::Distribution::AssocType::kNPC:
 										case Settings::Distribution::AssocType::kActor:
 											if (auto item = Settings::Distribution::npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::npcMap.end()) {
 												if (item->second->rulePriority < rule->rulePriority)
-													Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
+													Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule );
 											} else {
 												Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
 											}
 											break;
 										case Settings::Distribution::AssocType::kRace:
 											if (auto item = Settings::Distribution::raceMap.find(std::get<1>(objects[i])); item != Settings::Distribution::raceMap.end()) {
-												if (item->second->rulePriority < rule->rulePriority)
-													Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
+												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
+													Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											} else {
-												Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
+												Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+											}
+											break;
+										case Settings::Distribution::AssocType::kClass:
+											if (auto item = Settings::Distribution::classMap.find(std::get<1>(objects[i])); item != Settings::Distribution::classMap.end()) {
+												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
+													Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+											} else {
+												Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+											}
+											break;
+										case Settings::Distribution::AssocType::kCombatStyle:
+											if (auto item = Settings::Distribution::combatStyleMap.find(std::get<1>(objects[i])); item != Settings::Distribution::combatStyleMap.end()) {
+												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
+													Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+											} else {
+												Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											}
 											break;
 										}
@@ -442,7 +460,7 @@ void Settings::LoadDistrConfig()
 										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kActor ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kNPC) {
 											Distribution::excludedNPCs.insert(std::get<1>(items[i]));
-											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											LOGE1_2("[Settings] [LoadDistrRules] excluded actor {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 										}
 										else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction) {
 											RE::TESFaction* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::TESFaction>();
@@ -551,8 +569,8 @@ void Settings::LoadDistrConfig()
 		std::string name;
 		for (auto a : attachments) {
 			// first two splits are version and type which are already confirmed, so just process the last two.
-			// 3rd split is the name of the rule, which the objects in the 4th split are attached to
-			if (std::get<0>(a)->size() == 4) {
+			// 3rd split is the name of the rule, which the objects in the 4th or 5th split are attached to
+			if (std::get<0>(a)->size() == 4 || std::get<0>(a)->size() == 5) {
 				{
 					// valid rule
 					name = (std::get<0>(a))->at(2);
@@ -560,31 +578,51 @@ void Settings::LoadDistrConfig()
 					bool error = false;
 					std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a));
 					Settings::Distribution::Rule* rule = Distribution::FindRule(name);
-					if (rule == nullptr)
+					if (rule == nullptr) {
+						logger::warn("[Settings] [LoadDistrRules] rule not found. file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
 						continue; // rule doesn't exist, evaluate next attachment
+					}
+
+					int prio = INT_MIN;
+					// get priority if we have 5 fields, otherwise use rule priority
+					if (std::get<0>(a)->size() == 4)
+						prio = rule->rulePriority;
+					else {
+						try {
+							prio = std::stoi((std::get<0>(a))->at(3));
+						} catch (std::out_of_range&) {
+							logger::warn("[Settings] [LoadDistrRules] out-of-range expection in field \"RulePrio\". file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
+							continue;
+						} catch (std::invalid_argument&) {
+							logger::warn("[Settings] [LoadDistrRules] invalid-argument expection in field \"RulePrio\". file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
+							continue;
+						}
+					}
+
+					std::pair<int, Settings::Distribution::Rule*> tmptuple = { prio, rule };
 					// assign rules to search parameters
 					for (int i = 0; i < objects.size(); i++) {
 						switch (std::get<0>(objects[i])) {
 						case Settings::Distribution::AssocType::kFaction:
 							if (auto item = Settings::Distribution::factionMap.find(std::get<1>(objects[i])); item != Settings::Distribution::factionMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority) {
-									Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
-									LOGE2_2("[Settings] [LoadDistrRules] updated Faction {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
+									Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+									LOGE3_2("[Settings] [LoadDistrRules] updated Faction {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								}
 							} else {
-								Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), rule);
-								LOGE2_2("[Settings] [LoadDistrRules] attached Faction {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+								LOGE3_2("[Settings] [LoadDistrRules] attached Faction {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 							}
 							break;
 						case Settings::Distribution::AssocType::kKeyword:
 							if (auto item = Settings::Distribution::keywordMap.find(std::get<1>(objects[i])); item != Settings::Distribution::keywordMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority) {
-									Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
-									LOGE2_2("[Settings] [LoadDistrRules] updated Keyword {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
+									Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+									LOGE3_2("[Settings] [LoadDistrRules] updated Keyword {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								}
 							} else {
-								Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), rule);
-								LOGE2_2("[Settings] [LoadDistrRules] attached Keyword {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+								LOGE3_2("[Settings] [LoadDistrRules] attached Keyword {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 							}
 							break;
 						case Settings::Distribution::AssocType::kNPC:
@@ -592,22 +630,44 @@ void Settings::LoadDistrConfig()
 							if (auto item = Settings::Distribution::npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::npcMap.end()) {
 								if (item->second->rulePriority < rule->rulePriority) {
 									Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
-									LOGE2_2("[LoadDistrRules] updated Actor {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+									LOGE3_2("[Settings] [LoadDistrRules] updated Actor {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								}
 							} else {
 								Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
-								LOGE2_2("[Settings] [LoadDistrRules] attached Actor {} to rule {}.", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								LOGE3_2("[Settings] [LoadDistrRules] attached Actor {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 							}
 							break;
 						case Settings::Distribution::AssocType::kRace:
 							if (auto item = Settings::Distribution::raceMap.find(std::get<1>(objects[i])); item != Settings::Distribution::raceMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority) {
-									Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
-									LOGE2_2("[Settings] [LoadDistrRules] updated Race {} to rule {}.",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
+									Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+									LOGE3_2("[Settings] [LoadDistrRules] updated Race {} to rule {}.\t\t\t{}",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								}
 							} else {
-								Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), rule);
-								LOGE2_2("[Settings] [LoadDistrRules] attached Race {} to rule {}.",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName);
+								Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+								LOGE3_2("[Settings] [LoadDistrRules] attached Race {} to rule {}.\t\t\t{}",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+							}
+							break;
+						case Settings::Distribution::AssocType::kClass:
+							if (auto item = Settings::Distribution::classMap.find(std::get<1>(objects[i])); item != Settings::Distribution::classMap.end()) {
+								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
+									Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+									LOGE3_2("[Settings] [LoadDistrRules] updated Class {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								}
+							} else {
+								Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+								LOGE3_2("[Settings] [LoadDistrRules] attached Class {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+							}
+							break;
+						case Settings::Distribution::AssocType::kCombatStyle:
+							if (auto item = Settings::Distribution::combatStyleMap.find(std::get<1>(objects[i])); item != Settings::Distribution::combatStyleMap.end()) {
+								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
+									Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+									LOGE3_2("[Settings] [LoadDistrRules] updated CombatStyle {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								}
+							} else {
+								Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+								LOGE3_2("[Settings] [LoadDistrRules] attached CombatStyle {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 							}
 							break;
 						}
@@ -615,7 +675,7 @@ void Settings::LoadDistrConfig()
 				}
 			} else {
 				// rule invalid
-				logger::warn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 4. file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
+				logger::warn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 4 or 5. file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
 				// delet splits since we don't need it anymore
 				delete std::get<0>(a);
 			}
@@ -888,28 +948,148 @@ void Settings::LoadDistrConfig()
 	// template:
 	//if ((tmp = Utility::GetTESForm(datahandler, 0, "", "")) != nullptr)
 	//	Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+	logger::info("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules.size());
+	logger::info("[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Keywords: {}", Distribution::keywordMap.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Keywords: {}", Distribution::keywordMap.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Factions: {}", Distribution::factionMap.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Factions: {}", Distribution::factionMap.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Races: {}", Distribution::raceMap.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Races: {}", Distribution::raceMap.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Classes: {}", Distribution::classMap.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Classes: {}", Distribution::classMap.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of CombatStyles: {}", Distribution::combatStyleMap.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of CombatStyles: {}", Distribution::combatStyleMap.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Bosses: {}", Distribution::bosses.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Bosses: {}", Distribution::bosses.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded NPCs: {}", Distribution::excludedNPCs.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded NPCs: {}", Distribution::excludedNPCs.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded Factions: {}", Distribution::excludedFactions.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Factions: {}", Distribution::excludedFactions.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded Keywords: {}", Distribution::excludedKeywords.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Keywords: {}", Distribution::excludedKeywords.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded Races: {}", Distribution::excludedRaces.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Races: {}", Distribution::excludedRaces.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded Items: {}", Distribution::excludedItems.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems.bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions.size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions.bucket_count());
 }
 
 void Settings::CheckActorsForRules()
 {
 	logger::info("[CheckActorsForRules] checking...");
 	std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_NPCs_without_Rule.csv");
+	std::ofstream outpris("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_NPCs_without_Rule_Prisoners.txt");
 	out << "PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
 	//PluginBase;
 
 	auto datahandler = RE::TESDataHandler::GetSingleton();
 	std::string_view name = std::string_view{ "" };
+	bool lightplugin = false;
 
 	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 	auto end = hashtable->end();
 	auto iter = hashtable->begin();
 	std::set<RE::FormID> visited;
 	RE::Actor* act = nullptr;
+	RE::TESNPC* npc = nullptr;
 	while (iter != hashtable->end()) {
 		try {
 			if ((*iter).second) {
+				lightplugin = false;
 				act = (*iter).second->As<RE::Actor>();
-				if (act) {
+				npc = (*iter).second->As<RE::TESNPC>();
+				//logger::warn("[CheckActorsForRules] act {}\t\t npc {}", act ? Utility::GetHex(act->GetFormID()) : "", npc ? Utility::GetHex(npc->GetFormID()) : "");
+				if (npc && npc->GetFormID() != 0x07 && (npc->GetFormID() >> 24) != 0xFF) {
+					if (!visited.contains(npc->GetFormID())) {
+						visited.insert(npc->GetFormID());
+						//logger::info("check 1");
+
+						// check wether there is a rule that applies
+						if (Utility::ExcludedNPCBase(npc)) {
+							iter++;
+							continue;  // the npc is covered by an exclusion
+						}
+						//logger::info("check 2");
+						// get rule
+						Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(npc);
+						//logger::info("check 3");
+						//logger::warn("[CheckActorsForRules] got rule");
+						if (rl && rl->ruleName == DefaultRuleName) {
+							// lookup plugin of the actor red
+							//logger::info("check 4");
+							name = std::string_view{ "" };
+
+							if ((npc->GetFormID() >> 24) != 0xFE)
+								name = datahandler->LookupLoadedModByIndex((uint8_t)(npc->GetFormID() >> 24))->GetFilename();
+							if (name.empty()) {
+								//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
+								name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() & 0x00FFF000)) >> 12))->GetFilename();
+								lightplugin = true;
+							}
+							if (lightplugin && (npc->GetFormID() & 0x00000FFF) < 0x800) {
+								iter++;
+								continue;
+							}
+							if (name.empty() == false)
+								out << name << ";";
+							else
+								out << ";";
+							//logger::info("check 5");
+							// we found an actor that does not have a rule, so print that to the output
+							out << npc->GetName() << ";"
+								<< "0x" << Utility::GetHex(npc->GetFormID()) << ";"
+								<< ";";
+							//logger::info("check 6");
+							//logger::warn("[CheckActorsForRules] Actor: {} {} {} does not have a valid rule", act->GetName(), Utility::GetHex(act->GetActorBase()->GetFormID()), Utility::GetHex(act->GetFormID()));
+
+							if (npc->GetRace())
+								out << npc->GetRace()->GetFormEditorID() << ";"
+									<< "0x" << Utility::GetHex(npc->GetRace()->GetFormID()) << ";";
+							else
+								out << ";;";
+
+							//logger::info("check 7");
+
+							for (uint32_t i = 0; i < npc->factions.size(); i++) {
+								out << ";"
+									<< "0x" << Utility::GetHex(npc->factions[i].faction->GetFormID());
+							}
+							//logger::info("check 8");
+							//logger::warn("[CheckActorsForRules] end");
+							out << "\n";
+							out.flush();
+
+							// prisoner check
+							if (std::string(npc->GetName()).find("prisoner") != std::string::npos ||
+								std::string(npc->GetName()).find("Prisoner") != std::string::npos ||
+								std::string(npc->GetName()).find("Slave") != std::string::npos ||
+								std::string(npc->GetName()).find("slave") != std::string::npos) {
+								if (std::string(name).find("Skyrim.esm") != std::string::npos)
+									outpris << "<"
+											<< Utility::GetHex((npc->GetFormID() & 0x00FFFFFF))
+											<< ","
+											<< ">";
+								else if (lightplugin) {
+									outpris << "<"
+											<< Utility::GetHex((npc->GetFormID() & 0x00000FFF))
+											<< ","
+											<< name
+											<< ">";
+								} else {
+									outpris << "<"
+											<< Utility::GetHex((npc->GetFormID() & 0x00FFFFFF))
+											<< ","
+											<< name
+											<< ">";
+								}
+							}
+						}
+					}
+				}
+				else if (act && act->GetFormID() != 0x14 && (act->GetFormID() >> 24) != 0xFF) {
 					if (!visited.contains(act->GetFormID())) {
 						// lookup pluing of the actor base
 						/* name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetActorBase()->GetFormID() >> 24))->GetFilename();
@@ -924,37 +1104,51 @@ void Settings::CheckActorsForRules()
 						visited.insert(act->GetFormID());
 
 						// check wether there is a rule that applies
-						if (Utility::ExcludedNPC(act))
+						if (Utility::ExcludedNPC(act)) {
+							iter++;
 							continue;  // the npc is covered by an exclusion
+						}
 						// get rule
 						Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(act);
+						//logger::info("check 23");
 						//logger::warn("[CheckActorsForRules] got rule");
-						if (rl->ruleName == DefaultRuleName) {
+						if (rl && rl->ruleName == DefaultRuleName) {
 							// lookup plugin of the actor red
+							//logger::info("check 24");
 							name = std::string_view{ "" };
-							if ((act->GetFormID() >> 24) != 0xFE)
+							if ((act->GetFormID() >> 24) != 0xFE && (act->GetFormID() >> 24) != 0xFF)
 								name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24))->GetFilename();
-							if (name.empty())
+							if (name.empty()) {
 								name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() << 8)) >> 20))->GetFilename();
+								lightplugin = true;
+							}
+							if (lightplugin && (act->GetFormID() & 0x00000FFF) < 0x800) {
+								iter++;
+								continue;
+							}
 							if (name.empty() == false)
 								out << name << ";";
 							else
 								out << ";";
+							//logger::info("check 25");
 							// we found an actor that does not have a rule, so print that to the output
 							out << act->GetName() << ";"
 								<< "0x" << Utility::GetHex(act->GetActorBase()->GetFormID()) << ";"
 								<< "0x" << Utility::GetHex(act->GetFormID()) << ";";
 							//logger::warn("[CheckActorsForRules] Actor: {} {} {} does not have a valid rule", act->GetName(), Utility::GetHex(act->GetActorBase()->GetFormID()), Utility::GetHex(act->GetFormID()));
 
+							//logger::info("check 26");
 							if (act->GetRace())
 								out << act->GetRace()->GetFormEditorID() << ";"
 									<< "0x" << Utility::GetHex(act->GetRace()->GetFormID()) << ";";
 							else
 								out << ";;";
+							//logger::info("check 27");
 							//logger::warn("[CheckActorsForRules] Race: {} {}", act->GetRace()->GetFormEditorID(), Utility::GetHex(act->GetRace()->GetFormID()));
 							if (act->GetSaveParentCell())
 								out << act->GetSaveParentCell()->GetName();
 
+							//logger::info("check 28");
 							//logger::warn("[CheckActorsForRules] factions");
 							act->VisitFactions([&out](RE::TESFaction* a_faction, std::int8_t) {
 								if (a_faction)
@@ -963,6 +1157,7 @@ void Settings::CheckActorsForRules()
 								//logger::warn("[CheckActorsForRules] Faction: {}", Utility::GetHex(a_faction->GetFormID()));
 								return false;
 							});
+							//logger::info("check 29");
 							//logger::warn("[CheckActorsForRules] end");
 							out << "\n";
 							out.flush();
@@ -970,15 +1165,14 @@ void Settings::CheckActorsForRules()
 					}
 				}
 			}
-		}
-		catch (std::exception&) {
+		} catch (...) {
 			//logger::warn("catch");
 			out << ";";
 		}
 		try {
 			iter++;
 		}
-		catch (std::exception&) {
+		catch (...) {
 			//logger::warn("catch finished");
 			break;
 		}
@@ -1660,23 +1854,29 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItems(
 Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 {
 	bool baseexcluded = false;
+	int prio = INT_MIN;
 
-	std::vector<Rule*> rls;
+	Rule* rule = nullptr;
+
+	//std::vector<Rule*> rls;
 	// find rule in npc map
 	// npc rules always have the highest priority
-	auto it = npcMap.find(actor->GetFormID());
-	if (it != npcMap.end()) // found the right rule!
-		return it->second; // this can be null if the specific npc is excluded
+	auto itnpc = npcMap.find(actor->GetFormID());
+	if (itnpc != npcMap.end())  // found the right rule!
+		return itnpc->second;   // this can be null if the specific npc is excluded
 	// now also perform a check on the actor base
-	it = npcMap.find(actor->GetActorBase()->GetFormID());
-	if (it != npcMap.end())  // found the right rule!
-		return it->second;   // this can be null if the specific npc is excluded
+	itnpc = npcMap.find(actor->GetActorBase()->GetFormID());
+	if (itnpc != npcMap.end())  // found the right rule!
+		return itnpc->second;   // this can be null if the specific npc is excluded
 	// now that we didnt't find something so far, check the rest
 	// this time all the priorities are the same
 	auto base = actor->GetActorBase();
-	it = raceMap.find(base->GetRace()->GetFormID());
+	auto it = raceMap.find(base->GetRace()->GetFormID());
 	if (it != raceMap.end())
-		rls.push_back(it->second);
+		if (prio < std::get<0>(it->second))
+			rule = std::get<1>(it->second);
+		else if (prio < std::get<1>(it->second)->rulePriority)
+			rule = std::get<1>(it->second);
 	else {
 		baseexcluded |= baselineExclusions.contains(base->GetRace()->GetFormID());
 	}
@@ -1686,41 +1886,181 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 		if (opt.has_value()) {
 			it = keywordMap.find((*opt)->GetFormID());
 			if (it != keywordMap.end())
-				rls.push_back(it->second);
+				if (prio < std::get<0>(it->second))
+					rule = std::get<1>(it->second);
+				else if (prio < std::get<1>(it->second)->rulePriority)
+					rule = std::get<1>(it->second);
 			else {
 				baseexcluded |= baselineExclusions.contains((*opt)->GetFormID());
 			}
 		}
 	}
 	// handle factions
-	actor->VisitFactions([&rls, &baseexcluded](RE::TESFaction* a_faction, std::int8_t) {
+	/*actor->VisitFactions([&prio, &rule, &baseexcluded](RE::TESFaction* a_faction, std::int8_t) {
 		//logger::info("[CalcRule] faction visited: {}", a_faction->GetName());
 		auto ite = factionMap.find(a_faction->GetFormID());
 		if (ite != factionMap.end())
-			rls.push_back(ite->second);
+			if (prio < std::get<0>(ite->second))
+				rule = std::get<1>(ite->second);
+			else if (prio < std::get<1>(ite->second)->rulePriority)
+				rule = std::get<1>(ite->second);
 		else {
 			baseexcluded |= baselineExclusions.contains(a_faction->GetFormID());
 		}
 		return false;
-	});
+	});*/
+	for (uint32_t i = 0; i < base->factions.size(); i++) {
+		it = factionMap.find(base->factions[i].faction->GetFormID());
+		if (it != factionMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		} else {
+			baseexcluded |= baselineExclusions.contains(base->factions[i].faction->GetFormID());
+		}
+	}
+	// handle classes
+	if (base->npcClass) {
+		it = classMap.find(base->npcClass->GetFormID());
+		if (it != classMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		}
+	}
+	// handle combat styles
+	if (base->combatStyle) {
+		it = classMap.find(base->combatStyle->GetFormID());
+		if (it != classMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		}
+	}
+
 	// now get the rule with the highest priority
+	//int prio = INT_MIN;
+	//int index = -1;
+	//for (int i = 0; i < rls.size(); i++) {
+	//	if (rls[i]->rulePriority > prio) {
+	//		prio = rls[i]->rulePriority;
+	//		index = i;
+	//	}
+	//}
+	//if (index > -1) {
+	if (rule) {
+		// return rule
+	//	LOG1_1("{}[CalcRule] rule found: {}", rls[index]->ruleName);
+		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
+	//	return rls[index];
+		return rule;
+	} else {
+		// there are no rules!!!
+		if (baseexcluded)
+			return Settings::Distribution::emptyRule;
+		LOG1_1("{}[CalcRule] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
+		return Settings::Distribution::defaultRule;
+	}
+}
+
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc)
+{
+	bool baseexcluded = false;
 	int prio = INT_MIN;
+
+	Rule* rule = nullptr;
+
+	//std::vector<Rule*> rls;
+	
+	// find rule in npc map
+	// npc rules always have the highest priority
+	auto itnpc = npcMap.find(npc->GetFormID());
+	if (itnpc != npcMap.end())  // found the right rule!
+		return itnpc->second;   // this can be null if the specific npc is excluded
+	// now that we didnt't find something so far, check the rest
+	// this time all the priorities are the same
+	auto it = raceMap.find(npc->GetRace()->GetFormID());
+	if (it != raceMap.end())
+		if (prio < std::get<0>(it->second))
+			rule = std::get<1>(it->second);
+		else if (prio < std::get<1>(it->second)->rulePriority)
+			rule = std::get<1>(it->second);
+	else {
+		baseexcluded |= baselineExclusions.contains(npc->GetRace()->GetFormID());
+	}
+	// handle keywords
+	for (unsigned int i = 0; i < npc->GetNumKeywords(); i++) {
+		auto opt = npc->GetKeywordAt(i);
+		if (opt.has_value()) {
+			it = keywordMap.find((*opt)->GetFormID());
+			if (it != keywordMap.end()) {
+				if (prio < std::get<0>(it->second))
+					rule = std::get<1>(it->second);
+				else if (prio < std::get<1>(it->second)->rulePriority)
+					rule = std::get<1>(it->second);
+			}
+			else {
+				baseexcluded |= baselineExclusions.contains((*opt)->GetFormID());
+			}
+		}
+	}
+	// handle factions
+	for (uint32_t i = 0; i < npc->factions.size(); i++) {
+		it = factionMap.find(npc->factions[i].faction->GetFormID());
+		if (it != factionMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		}
+		else {
+			baseexcluded |= baselineExclusions.contains(npc->factions[i].faction->GetFormID());
+		}
+	}
+	// handle classes
+	if (npc->npcClass) {
+		it = classMap.find(npc->npcClass->GetFormID());
+		if (it != classMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		}
+	}
+	// handle combat styles
+	if (npc->combatStyle) {
+		it = classMap.find(npc->combatStyle->GetFormID());
+		if (it != classMap.end()) {
+			if (prio < std::get<0>(it->second))
+				rule = std::get<1>(it->second);
+			else if (prio < std::get<1>(it->second)->rulePriority)
+				rule = std::get<1>(it->second);
+		}
+	}
+
+	/*
+	// now get the rule with the highest priority
 	int index = -1;
 	for (int i = 0; i < rls.size(); i++) {
 		if (rls[i]->rulePriority > prio) {
 			prio = rls[i]->rulePriority;
 			index = i;
 		}
-	}
-	if (index > -1) {
-		// return rule
-		LOG1_1("{}[CalcRule] rule found: {}", rls[index]->ruleName);
-		return rls[index];
+	}*/
+	//if (index > -1) {
+	if (rule) {
+		//LOG1_1("{}[CalcRuleBase] rule found: {}", rls[index]->ruleName);
+		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
+		//return rls[index];
+		return rule;
 	} else {
 		// there are no rules!!!
 		if (baseexcluded)
 			return Settings::Distribution::emptyRule;
-		LOG2_1("{}[CalcRule] default rule found: {}, {}", Settings::Distribution::defaultRule->ruleName, rls.size());
+		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
 		return Settings::Distribution::defaultRule;
 	}
 }

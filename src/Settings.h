@@ -8,6 +8,8 @@
 #include <string_view>
 #include <chrono>
 #include <set>
+#include <unordered_set>
+#include <unordered_map>
 #include <time.h>
 #include <random>
 #include <tuple>
@@ -39,6 +41,10 @@
 #define LOGE2_2(s, t, u)                                   \
 	if (Settings::EnableLog && Settings::LogLevel >= 1) \
 		logger::info(s, t, u);
+
+#define LOGE3_2(s, t, u, v)                                   \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s, t, u, v);
 
 
 
@@ -233,6 +239,8 @@ public:
 			kActor = 8,
 			kNPC = 16,
 			kItem = 32,
+			kClass = 64,
+			kCombatStyle = 128,
 		};
 
 		class Rule
@@ -352,17 +360,19 @@ public:
 			
 		};
 		static inline std::vector<Rule*> rules;
-		static inline std::map<RE::FormID, Rule*> npcMap;
-		static inline std::map<RE::FormID, Rule*> keywordMap;
-		static inline std::map<RE::FormID, Rule*> factionMap;
-		static inline std::map<RE::FormID, Rule*> raceMap;
-		static inline std::set<RE::FormID> bosses;
-		static inline std::set<RE::FormID> excludedNPCs;
-		static inline std::set<RE::TESFaction*> excludedFactions;
-		static inline std::set<RE::BGSKeyword*> excludedKeywords;
-		static inline std::set<RE::FormID> excludedRaces;
-		static inline std::set<RE::FormID> excludedItems;
-		static inline std::set<RE::FormID> baselineExclusions;
+		static inline std::unordered_map<RE::FormID, Rule*> npcMap;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> keywordMap;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> factionMap;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> raceMap;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> classMap;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> combatStyleMap;
+		static inline std::unordered_set<RE::FormID> bosses;
+		static inline std::unordered_set<RE::FormID> excludedNPCs;
+		static inline std::unordered_set<RE::TESFaction*> excludedFactions;
+		static inline std::unordered_set<RE::BGSKeyword*> excludedKeywords;
+		static inline std::unordered_set<RE::FormID> excludedRaces;
+		static inline std::unordered_set<RE::FormID> excludedItems;
+		static inline std::unordered_set<RE::FormID> baselineExclusions;
 
 		#define RandomRange 1000
 
@@ -401,6 +411,7 @@ public:
 	private:
 		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 		static Rule* CalcRule(RE::Actor* actor);
+		static Rule* CalcRule(RE::TESNPC* npc);
 	};
 
 	static void LoadDistrConfig();
