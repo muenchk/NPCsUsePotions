@@ -101,58 +101,6 @@ public:
 		}
 	}
 
-	/// <summary>
-	/// returns wether an npc is excluded from item distribution
-	/// </summary>
-	/// <param name="actor"></param>
-	/// <returns></returns>
-	static bool ExcludedNPC(RE::Actor* actor)
-	{
-		// skip fucking deleted references
-		if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
-			return true;
-		bool ret = actor->IsInFaction(Settings::CurrentFollowerFaction) ||
-		           Settings::Distribution::excludedNPCs.contains(actor->GetFormID()) ||
-		           (Settings::Distribution::excludedNPCs.contains(actor->GetActorBase()->GetFormID())) ||
-		           actor->IsGhost();
-		// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-		if (!Settings::Distribution::npcMap.contains(actor->GetFormID()) && ret == false)
-		{
-			auto base = actor->GetActorBase();
-			for (uint32_t i = 0; i < base->numKeywords; i++) {
-				ret |= Settings::Distribution::excludedKeywords.contains(base->keywords[i]);
-			}
-			for (uint32_t i = 0; i < base->factions.size(); i++) {
-				ret |= Settings::Distribution::excludedFactions.contains(base->factions[i].faction);
-			}
-			if (actor->GetRace())
-				ret |= Settings::Distribution::excludedRaces.contains(actor->GetRace()->GetFormID());
-		}
-		return ret;
-	}
-	static bool ExcludedNPCBase(RE::TESNPC* actor)
-	{
-		// skip fucking deleted references
-		if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
-			return true;
-		bool ret = actor->IsInFaction(Settings::CurrentFollowerFaction) ||
-		           (Settings::Distribution::excludedNPCs.contains(actor->GetFormID())) ||
-		           actor->IsGhost();
-		// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-		if (!Settings::Distribution::npcMap.contains(actor->GetFormID()) && ret == false) {
-			auto base = actor;
-			for (uint32_t i = 0; i < base->numKeywords; i++) {
-				ret |= Settings::Distribution::excludedKeywords.contains(base->keywords[i]);
-			}
-			for (uint32_t i = 0; i < base->factions.size(); i++) {
-				ret |= Settings::Distribution::excludedFactions.contains(base->factions[i].faction);
-			}
-			if (actor->GetRace())
-				ret |= Settings::Distribution::excludedRaces.contains(actor->GetRace()->GetFormID());
-		}
-		return ret;
-	}
-
 	enum class CurrentCombatStyle
 	{
 		Spellsword = 0x1, // combination spell and onehanded

@@ -6,6 +6,7 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Hooks.cpp"
 	"${SOURCE_DIR}/Events.cpp"
 	"${SOURCE_DIR}/Settings.cpp"
+	"${SOURCE_DIR}/Settings_Distribution.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
 	"${SOURCE_DIR}/Console.cpp"
 	"${SOURCE_DIR}/PCH.h"

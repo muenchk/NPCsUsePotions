@@ -350,7 +350,7 @@ namespace Events
 			// as with potion distribution, exlude excluded actors and potential followers
 
 			sem_actorreset.acquire();
-			if (!Utility::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false)
+			if (!Settings::Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false)
 			{
 				deads.insert(actor->GetFormID());
 				LOG1_1("{}[TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
@@ -407,7 +407,7 @@ namespace Events
 				auto iterac = actorresetmap.find(actor->GetFormID());
 				if (iterac == actorresetmap.end() || RE::Calendar::GetSingleton()->GetDaysPassed() - iterac->second > 1) {
 					actorresetmap.erase(actor->GetFormID());
-					if (!Utility::ExcludedNPC(actor)) {
+					if (!Settings::Distribution::ExcludedNPC(actor)) {
 						// if we have characters that should not get items, the function
 						// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 						auto items = Settings::Distribution::GetDistrItems(actor);

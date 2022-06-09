@@ -47,6 +47,10 @@
 	if (Settings::EnableLog && Settings::LogLevel >= 1) \
 		logger::info(s, t, u, v);
 
+#define LOGE5_2(s, t, u, v, x, y)                             \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s, t, u, v, x, y);
+
 
 
 #define LOG_1(s)               \
@@ -229,6 +233,8 @@ public:
 
 	static void CheckActorsForRules();
 
+	static void LoadDistrConfig();
+
 	class Distribution
 	{
 	public:
@@ -365,41 +371,42 @@ public:
 			
 		};
 
-		static inline std::vector<Rule*> _dummyVecR;
-		static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
-		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
-		static inline std::unordered_set<RE::FormID> _dummySet1;
+	private:
 
-		static bool initalised = false;
+		static inline bool initialised = false;
 
 		static inline std::vector<Rule*> _rules;
-		static std::vector<Rule*>* rules() { initalised ? &_rules : &_dummyVecR; }
 		static inline std::unordered_map<RE::FormID, Rule*> _npcMap;
-		static std::unordered_map<RE::FormID, Rule*>* npcMap() { initialised ? &_npcMap : &_dummyMapN; }
-
 		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _keywordMap;
 		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _factionMap;
 		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _raceMap;
 		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _classMap;
 		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _combatStyleMap;
-
 		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _assocMap;
-		static std::unordered_map<RE::FormID, std::pair<int, Rule*>>* assocMap() { initialised ? &_assocMap : &_dummyMap2 }
 		static inline std::unordered_set<RE::FormID> _bosses;
-		static std::unordered_set<RE::FormID>* bosses() { initialised ? &_bosses : &_dummySet1 }
 		static inline std::unordered_set<RE::FormID> _excludedNPCs;
-		static std::unordered_set<RE::FormID>* excludedNPCs() { initialised ? &_excludedNPCs : &_dummySet1 }
-
 		//static inline std::unordered_set<RE::TESFaction*> _excludedFactions;
 		//static inline std::unordered_set<RE::BGSKeyword*> _excludedKeywords;
 		//static inline std::unordered_set<RE::FormID> _excludedRaces;
-
 		static inline std::unordered_set<RE::FormID> _excludedAssoc;
-		static std::unordered_set<RE::FormID>* excludedAssoc() { initialised ? &_excludedAssoc : &_dummySet1 }
 		static inline std::unordered_set<RE::FormID> _excludedItems;
-		static std::unordered_set<RE::FormID>* excludedItems() { initialised ? &_excludedItems : &_dummySet1 }
 		static inline std::unordered_set<RE::FormID> _baselineExclusions;
-		static std::unordered_set<RE::FormID>* baselineExclusions() { initialised ? &_baselineExclusions : &_dummySet1 }
+
+	public:
+
+		static inline std::vector<Rule*> _dummyVecR;
+		static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
+		static inline std::unordered_set<RE::FormID> _dummySet1;
+
+		static std::vector<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
+		static std::unordered_map<RE::FormID, Rule*>* npcMap() { return initialised ? &_npcMap : &_dummyMapN; }
+		static std::unordered_map<RE::FormID, std::pair<int, Rule*>>* assocMap() { return initialised ? &_assocMap : &_dummyMap2; }
+		static std::unordered_set<RE::FormID>* bosses() { return initialised ? &_bosses : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* excludedNPCs() { return initialised ? &_excludedNPCs : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* excludedAssoc() { return initialised ? &_excludedAssoc : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* baselineExclusions() { return initialised ? &_baselineExclusions : &_dummySet1; }
 
 		#define RandomRange 1000
 
@@ -415,15 +422,6 @@ public:
 		static inline Rule* defaultRule = nullptr;
 		static inline Rule* emptyRule = new Rule(false);
 
-		static Rule* FindRule(std::string name)
-		{
-			for (Rule* r : rules) {
-				if (r->ruleName == name)
-					return r;
-			}
-			return nullptr;
-		}
-
 		static std::vector<RE::AlchemyItem*> GetDistrItems(RE::Actor* actor);
 		static std::vector<RE::AlchemyItem*> GetDistrPotions(RE::Actor* actor);
 		static std::vector<RE::AlchemyItem*> GetDistrPoisons(RE::Actor* actor);
@@ -433,8 +431,12 @@ public:
 		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(RE::Actor* actor);
 		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(RE::Actor* actor);
 
+		static bool ExcludedNPC(RE::Actor* actor);
+		static bool ExcludedNPC(RE::TESNPC* npc);
+
 		friend void Settings::CheckActorsForRules();
 		friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
+		friend void Settings::LoadDistrConfig();
 
 	private:
 		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
@@ -443,9 +445,16 @@ public:
 		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is);
 		static std::vector<Rule*> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
-	};
 
-	static void LoadDistrConfig();
+		static Rule* FindRule(std::string name)
+		{
+			for (Rule* r : _rules) {
+				if (r->ruleName == name)
+					return r;
+			}
+			return nullptr;
+		}
+	};
 
 	static inline int _MaxDuration = 10000;
 	static inline int _MaxFortifyDuration = 60000;
@@ -530,6 +539,8 @@ public:
 
 
 	// intern
+private:
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _dummylist{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_main{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_rest{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_main{};
@@ -553,10 +564,36 @@ public:
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodstamina{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodhealth{};
 
-	static inline std::list<RE::AlchemyItem*> alitems{};
-	static inline std::list<RE::AlchemyItem*> potions{};
-	static inline std::list<RE::AlchemyItem*> food{};
-	static inline std::list<RE::AlchemyItem*> poisons{};
+	static inline bool _itemsInit = false;
+
+public:
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsWeak_main() { return _itemsInit ? &_potionsWeak_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsWeak_rest() { return _itemsInit ? &_potionsWeak_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsStandard_main() { return _itemsInit ? &_potionsStandard_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsStandard_rest() { return _itemsInit ? &_potionsStandard_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsPotent_main() { return _itemsInit ? &_potionsPotent_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsPotent_rest() { return _itemsInit ? &_potionsPotent_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsInsane_main() { return _itemsInit ? &_potionsInsane_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsInsane_rest() { return _itemsInit ? &_potionsInsane_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsBlood() { return _itemsInit ? &_potionsBlood : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsWeak_main() { return _itemsInit ? &_poisonsWeak_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsWeak_rest() { return _itemsInit ? &_poisonsWeak_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsStandard_main() { return _itemsInit ? &_poisonsStandard_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsStandard_rest() { return _itemsInit ? &_poisonsStandard_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsPotent_main() { return _itemsInit ? &_poisonsPotent_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsPotent_rest() { return _itemsInit ? &_poisonsPotent_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsWeak() { return _itemsInit ? &_poisonsWeak : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsStandard() { return _itemsInit ? &_poisonsStandard : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsPotent() { return _itemsInit ? &_poisonsPotent : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsInsane() { return _itemsInit ? &_poisonsInsane : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodmagicka() { return _itemsInit ? &_foodmagicka : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodstamina() { return _itemsInit ? &_foodstamina : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodhealth() { return _itemsInit ? &_foodhealth : &_dummylist; }
+
+	//static inline std::list<RE::AlchemyItem*> alitems{};
+	//static inline std::list<RE::AlchemyItem*> potions{};
+	//static inline std::list<RE::AlchemyItem*> food{};
+	//static inline std::list<RE::AlchemyItem*> poisons{};
 
 	static inline RE::BGSKeyword* VendorItemPotion;
 	static inline RE::BGSKeyword* VendorItemFood;
@@ -1581,6 +1618,7 @@ public:
 			t = ItemType::kFood;
 		else if (item->IsPoison())
 			t = ItemType::kPoison;
+
 		return { alch, str , t};
 	}
 
@@ -1589,6 +1627,34 @@ public:
 	/// </summary>
 	static void ClassifyItems()
 	{
+		// resetting all items
+		_itemsInit = false;
+
+		_potionsWeak_main.clear();
+		_potionsWeak_rest.clear();
+		_potionsStandard_main.clear();
+		_potionsStandard_rest.clear();
+		_potionsPotent_main.clear();
+		_potionsPotent_rest.clear();
+		_potionsInsane_main.clear();
+		_potionsInsane_rest.clear();
+		_potionsBlood.clear();
+		_poisonsWeak_main.clear();
+		_poisonsWeak_rest.clear();
+		_poisonsStandard_main.clear();
+		_poisonsStandard_rest.clear();
+		_poisonsPotent_main.clear();
+		_poisonsPotent_rest.clear();
+		_poisonsWeak.clear();
+		_poisonsStandard.clear();
+		_poisonsPotent.clear();
+		_poisonsInsane.clear();
+		_foodmagicka.clear();
+		_foodstamina.clear();
+		_foodhealth.clear();
+
+		// start sorting items
+
 		auto begin = std::chrono::steady_clock::now();
 		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 		auto end = hashtable->end();
@@ -1605,13 +1671,12 @@ public:
 					}
 					auto clas = ClassifyItem(item);
 					// check wether item is excluded
-					if (Settings::Distribution::excludedItems.contains(item->GetFormID())) {
+					if (Settings::Distribution::excludedItems()->contains(item->GetFormID())) {
 						iter++;
 						continue;
 					}
 					// determine the type of item
-					if (std::get<2>(clas) == ItemType::kFood)
-					{
+					if (std::get<2>(clas) == ItemType::kFood) {
 						// we will only classify food which works on stamina, magicka or health for now
 						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0) {
@@ -1676,11 +1741,8 @@ public:
 						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
 							_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
 						else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagickaRate)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
+								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
+								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
 							switch (std::get<1>(clas)) {
 							case ItemStrength::kWeak:
 								_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
@@ -1717,28 +1779,32 @@ public:
 			iter++;
 		}
 		PROF1_1("[PROF] [ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
-		LOG1_1("{}[ClassifyItems] _potionsWeak_main {}", _potionsWeak_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsWeak_rest {}", _potionsWeak_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsStandard_main {}", _potionsStandard_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsStandard_rest {}", _potionsStandard_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsPotent_main {}", _potionsPotent_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsPotent_rest {}", _potionsPotent_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsInsane_main {}", _potionsInsane_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsInsane_rest {}", _potionsInsane_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsBlood {}", _potionsBlood.size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak_main {}", _poisonsWeak_main.size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak_rest {}", _poisonsWeak_rest.size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard_main {}", _poisonsStandard_main.size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard_rest {}", _poisonsStandard_rest.size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent_main {}", _poisonsPotent_main.size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent_rest {}", _poisonsPotent_rest.size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak {}", _poisonsWeak.size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard {}", _poisonsStandard.size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent {}", _poisonsPotent.size());
-		LOG1_1("{}[ClassifyItems] _poisonsInsane {}", _poisonsInsane.size());
-		LOG1_1("{}[ClassifyItems] _foodmagicka {}", _foodmagicka.size());
-		LOG1_1("{}[ClassifyItems] _foodstamina {}", _foodstamina.size());
-		LOG1_1("{}[ClassifyItems] _foodhealth {}", _foodhealth.size());
+		
+		// items initialised
+		_itemsInit = true;
+		
+		LOG1_1("{}[ClassifyItems] _potionsWeak_main {}", potionsWeak_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsWeak_rest {}", potionsWeak_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsStandard_main {}", potionsStandard_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsStandard_rest {}", potionsStandard_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsPotent_main {}", potionsPotent_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsPotent_rest {}", potionsPotent_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsInsane_main {}", potionsInsane_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsInsane_rest {}", potionsInsane_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsBlood {}", potionsBlood()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak_main {}", poisonsWeak_main()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak_rest {}", poisonsWeak_rest()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard_main {}", poisonsStandard_main()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard_rest {}", poisonsStandard_rest()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent_main {}", poisonsPotent_main()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent_rest {}", poisonsPotent_rest()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak {}", poisonsWeak()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard {}", poisonsStandard()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent {}", poisonsPotent()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsInsane {}", poisonsInsane()->size());
+		LOG1_1("{}[ClassifyItems] _foodmagicka {}", foodmagicka()->size());
+		LOG1_1("{}[ClassifyItems] _foodstamina {}", foodstamina()->size());
+		LOG1_1("{}[ClassifyItems] _foodhealth {}", foodhealth()->size());
 	}
 
 	/// <summary>

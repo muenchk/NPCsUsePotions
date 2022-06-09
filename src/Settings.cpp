@@ -29,6 +29,9 @@ static std::uniform_int_distribution<signed> rand100(1, 100);
 
 void Settings::LoadDistrConfig()
 {
+	// set to false, to avoid other funcions running stuff on our variables
+	Settings::Distribution::initialised = false;
+
 	std::vector<std::string> files;
 	auto constexpr folder = R"(Data\SKSE\Plugins\)";
 	for (const auto& entry : std::filesystem::directory_iterator(folder)) {
@@ -363,58 +366,30 @@ void Settings::LoadDistrConfig()
 									for (int i = 0; i < objects.size(); i++) {
 										switch (std::get<0>(objects[i])) {
 										case Settings::Distribution::AssocType::kFaction:
-											if (auto item = Settings::Distribution::factionMap.find(std::get<1>(objects[i])); item != Settings::Distribution::factionMap.end()) {
-												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
-													Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											} else {
-												Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											}
-											break;
+										case Settings::Distribution::AssocType::kCombatStyle:
+										case Settings::Distribution::AssocType::kClass:
+										case Settings::Distribution::AssocType::kRace:
 										case Settings::Distribution::AssocType::kKeyword:
-											if (auto item = Settings::Distribution::keywordMap.find(std::get<1>(objects[i])); item != Settings::Distribution::keywordMap.end()) {
+											if (auto item = Settings::Distribution::_assocMap.find(std::get<1>(objects[i])); item != Settings::Distribution::_assocMap.end()) {
 												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
-													Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+													Settings::Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											} else {
-												Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+												Settings::Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											}
 											break;
 										case Settings::Distribution::AssocType::kNPC:
 										case Settings::Distribution::AssocType::kActor:
-											if (auto item = Settings::Distribution::npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::npcMap.end()) {
+											if (auto item = Settings::Distribution::_npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::_npcMap.end()) {
 												if (item->second->rulePriority < rule->rulePriority)
-													Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule );
+													Settings::Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule );
 											} else {
-												Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
-											}
-											break;
-										case Settings::Distribution::AssocType::kRace:
-											if (auto item = Settings::Distribution::raceMap.find(std::get<1>(objects[i])); item != Settings::Distribution::raceMap.end()) {
-												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
-													Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											} else {
-												Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											}
-											break;
-										case Settings::Distribution::AssocType::kClass:
-											if (auto item = Settings::Distribution::classMap.find(std::get<1>(objects[i])); item != Settings::Distribution::classMap.end()) {
-												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
-													Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											} else {
-												Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											}
-											break;
-										case Settings::Distribution::AssocType::kCombatStyle:
-											if (auto item = Settings::Distribution::combatStyleMap.find(std::get<1>(objects[i])); item != Settings::Distribution::combatStyleMap.end()) {
-												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
-													Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											} else {
-												Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+												Settings::Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
 											}
 											break;
 										}
 									}
 									// add rule to the list of rules and we are finished! probably.
-									Settings::Distribution::rules.push_back(rule);
+									Settings::Distribution::_rules.push_back(rule);
 									if (rule->ruleName == DefaultRuleName)
 										Settings::Distribution::defaultRule = rule;
 									delete splits;
@@ -443,7 +418,7 @@ void Settings::LoadDistrConfig()
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace)
-											Distribution::bosses.insert(std::get<1>(items[i]));
+											Distribution::_bosses.insert(std::get<1>(items[i]));
 									}
 									// since we are done delete splits
 									delete splits;
@@ -460,29 +435,33 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
 									for (int i = 0; i < items.size(); i++) {
-										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kActor ||
-											std::get<0>(items[i]) == Settings::Distribution::AssocType::kNPC) {
-											Distribution::excludedNPCs.insert(std::get<1>(items[i]));
-											LOGE1_2("[Settings] [LoadDistrRules] excluded actor {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+										switch (std::get<0>(items[i])) {
+										case Settings::Distribution::AssocType::kActor:
+										case Settings::Distribution::AssocType::kNPC:
+											Distribution::_excludedNPCs.insert(std::get<1>(items[i]));
+											break;
+										case Settings::Distribution::AssocType::kFaction:
+										case Settings::Distribution::AssocType::kKeyword:
+										case Settings::Distribution::AssocType::kRace:
+											Distribution::_excludedAssoc.insert(std::get<1>(items[i]));
+											break;
+										case Settings::Distribution::AssocType::kItem:
+											Distribution::_excludedItems.insert(std::get<1>(items[i]));
+											break;
 										}
-										else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction) {
-											RE::TESFaction* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::TESFaction>();
-											if (temp) {
-												Distribution::excludedFactions.insert(temp);
+										if (EnableLog) {
+											if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kActor ||
+												std::get<0>(items[i]) == Settings::Distribution::AssocType::kNPC) {
+												LOGE1_2("[Settings] [LoadDistrRules] excluded actor {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction) {
 												LOGE1_2("[Settings] [LoadDistrRules] excluded faction {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											}
-										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword) {
-											RE::BGSKeyword* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::BGSKeyword>();
-											if (temp) {
-												Distribution::excludedKeywords.insert(temp);
+											} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword) {
 												LOGE1_2("[Settings] [LoadDistrRules] excluded keyword {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem) {
+												LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
+												LOGE1_2("[Settings] [LoadDistrRules] excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
-										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem) {
-											Distribution::excludedItems.insert(std::get<1>(items[i]));
-											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
-											Distribution::excludedRaces.insert(std::get<1>(items[i]));
-											LOGE1_2("[Settings] [LoadDistrRules] excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -500,24 +479,22 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
 									for (int i = 0; i < items.size(); i++) {
-										if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction) {
-											RE::TESFaction* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::TESFaction>();
-											if (temp) {
-												Distribution::excludedFactions.insert(temp);
+										switch (std::get<0>(items[i])) {
+										case Settings::Distribution::AssocType::kFaction:
+										case Settings::Distribution::AssocType::kKeyword:
+										case Settings::Distribution::AssocType::kRace:
+											Distribution::_baselineExclusions.insert(std::get<1>(items[i]));
+											break;
+										}
+
+										if (EnableLog) {
+											if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction) {
 												LOGE1_2("[Settings] [LoadDistrRules] excluded faction {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
-											}
-										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword) {
-											RE::BGSKeyword* temp = Utility::GetTESForm(datahandler, std::get<1>(items[i]), "", "")->As<RE::BGSKeyword>();
-											if (temp) {
-												Distribution::excludedKeywords.insert(temp);
+											} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword) {
 												LOGE1_2("[Settings] [LoadDistrRules] excluded keyword {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
+												LOGE1_2("[Settings] [LoadDistrRules] excluded race {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
-										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kItem) {
-											Distribution::excludedItems.insert(std::get<1>(items[i]));
-											LOGE1_2("[Settings] [LoadDistrRules] excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-										} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
-											Distribution::excludedRaces.insert(std::get<1>(items[i]));
-											LOGE1_2("[Settings] [LoadDistrRules] excluded race {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -604,76 +581,80 @@ void Settings::LoadDistrConfig()
 
 					std::pair<int, Settings::Distribution::Rule*> tmptuple = { prio, rule };
 					// assign rules to search parameters
+					bool attach = false; // loop intern
+					int oldprio = INT_MIN;
 					for (int i = 0; i < objects.size(); i++) {
 						switch (std::get<0>(objects[i])) {
 						case Settings::Distribution::AssocType::kFaction:
-							if (auto item = Settings::Distribution::factionMap.find(std::get<1>(objects[i])); item != Settings::Distribution::factionMap.end()) {
-								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
-									Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-									LOGE3_2("[Settings] [LoadDistrRules] updated Faction {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-								}
-							} else {
-								Settings::Distribution::factionMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-								LOGE3_2("[Settings] [LoadDistrRules] attached Faction {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-							}
-							break;
 						case Settings::Distribution::AssocType::kKeyword:
-							if (auto item = Settings::Distribution::keywordMap.find(std::get<1>(objects[i])); item != Settings::Distribution::keywordMap.end()) {
-								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
-									Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-									LOGE3_2("[Settings] [LoadDistrRules] updated Keyword {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+						case Settings::Distribution::AssocType::kRace:
+						case Settings::Distribution::AssocType::kClass:
+						case Settings::Distribution::AssocType::kCombatStyle:
+							if (auto item = Settings::Distribution::_assocMap.find(std::get<1>(objects[i])); item != Settings::Distribution::_assocMap.end()) {
+								if ((oldprio = std::get<1>(item->second)->rulePriority) < rule->rulePriority) {
+									Settings::Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+									attach = false;
 								}
 							} else {
-								Settings::Distribution::keywordMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-								LOGE3_2("[Settings] [LoadDistrRules] attached Keyword {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								Settings::Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
+								attach = true;
 							}
 							break;
 						case Settings::Distribution::AssocType::kNPC:
 						case Settings::Distribution::AssocType::kActor:
-							if (auto item = Settings::Distribution::npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::npcMap.end()) {
-								if (item->second->rulePriority < rule->rulePriority) {
-									Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
-									LOGE3_2("[Settings] [LoadDistrRules] updated Actor {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+							if (auto item = Settings::Distribution::_npcMap.find(std::get<1>(objects[i])); item != Settings::Distribution::_npcMap.end()) {
+								if ((oldprio = item->second->rulePriority) < rule->rulePriority) {
+									Settings::Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
+									attach = false;
 								}
 							} else {
-								Settings::Distribution::npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
-								LOGE3_2("[Settings] [LoadDistrRules] attached Actor {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-							}
-							break;
-						case Settings::Distribution::AssocType::kRace:
-							if (auto item = Settings::Distribution::raceMap.find(std::get<1>(objects[i])); item != Settings::Distribution::raceMap.end()) {
-								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
-									Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-									LOGE3_2("[Settings] [LoadDistrRules] updated Race {} to rule {}.\t\t\t{}",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-								}
-							} else {
-								Settings::Distribution::raceMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-								LOGE3_2("[Settings] [LoadDistrRules] attached Race {} to rule {}.\t\t\t{}",Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-							}
-							break;
-						case Settings::Distribution::AssocType::kClass:
-							if (auto item = Settings::Distribution::classMap.find(std::get<1>(objects[i])); item != Settings::Distribution::classMap.end()) {
-								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
-									Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-									LOGE3_2("[Settings] [LoadDistrRules] updated Class {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-								}
-							} else {
-								Settings::Distribution::classMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-								LOGE3_2("[Settings] [LoadDistrRules] attached Class {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-							}
-							break;
-						case Settings::Distribution::AssocType::kCombatStyle:
-							if (auto item = Settings::Distribution::combatStyleMap.find(std::get<1>(objects[i])); item != Settings::Distribution::combatStyleMap.end()) {
-								if (std::get<1>(item->second)->rulePriority < rule->rulePriority) {
-									Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-									LOGE3_2("[Settings] [LoadDistrRules] updated CombatStyle {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
-								}
-							} else {
-								Settings::Distribution::combatStyleMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-								LOGE3_2("[Settings] [LoadDistrRules] attached CombatStyle {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								Settings::Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
+								attach = true;
 							}
 							break;
 						}
+						if (EnableLog) {
+							switch (std::get<0>(objects[i])) {
+							case Settings::Distribution::AssocType::kFaction:
+								if (attach) {
+									LOGE3_2("[Settings] [LoadDistrRules] attached Faction {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								} else 
+									LOGE5_2("[Settings] [LoadDistrRules] updated Faction {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, oldprio, prio, std::get<1>(a));
+								break;
+							case Settings::Distribution::AssocType::kKeyword:
+								if (attach) {
+									LOGE3_2("[Settings] [LoadDistrRules] attached Keyword {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								} else
+									LOGE5_2("[Settings] [LoadDistrRules] updated Keyword {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, oldprio, prio, std::get<1>(a));
+								break;
+							case Settings::Distribution::AssocType::kRace:
+								if (attach) {
+									LOGE3_2("[Settings] [LoadDistrRules] attached Race {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								} else
+									LOGE5_2("[Settings] [LoadDistrRules] updated Race {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, oldprio, prio, std::get<1>(a));
+								break;
+							case Settings::Distribution::AssocType::kClass:
+								if (attach) {
+									LOGE3_2("[Settings] [LoadDistrRules] attached Class {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								} else
+									LOGE5_2("[Settings] [LoadDistrRules] updated Class {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, oldprio, prio, std::get<1>(a));
+								break;
+							case Settings::Distribution::AssocType::kCombatStyle:
+								if (attach) {
+									LOGE3_2("[Settings] [LoadDistrRules] attached CombatStyle {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								} else
+									LOGE5_2("[Settings] [LoadDistrRules] updated CombatStyle {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, oldprio, prio, std::get<1>(a));
+								break;
+							case Settings::Distribution::AssocType::kNPC:
+							case Settings::Distribution::AssocType::kActor:
+								if (attach) {
+									LOGE3_2("[Settings] [LoadDistrRules] attached Actor {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
+								} else
+									LOGE5_2("[Settings] [LoadDistrRules] updated Actor {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, oldprio, prio, std::get<1>(a));
+								break;
+							}
+						}
+
 					}
 				}
 			} else {
@@ -717,267 +698,273 @@ void Settings::LoadDistrConfig()
 	
 	// MQ201Drink (don't give quest items out)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00036D53, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// Unknown Potion with unknown effect (in-game type)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0005661F, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// Kordirs skooma: its probably kordirs
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00057A7B, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// Stallion's potion: its probably stallions
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0005566A, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// DB03Poison (quest item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00058CFB, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// DA16TorporPotion (quest item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00005F6DF, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// IVDGhostPotion (special item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000663E1, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// DummyPotion
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0006A07E, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// TG00FalmerBlood - Falmer Blood Elixier
 	// DA14Water - Holy Water
 	// TGTQ02BalmoraBlue (quest item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000DC172, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// CW01BWraithPoison (quest item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000E2D3D, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// Blades Potion: probably esberns
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000E6DF5, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// MS14WineAltoA: probably jessica's 
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000F257E, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00102019, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201A, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201B, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201C, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201D, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201E, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// DA03FoodMammothMeat (quest item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010211A, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// Mq101JuniperMead (quest item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00107A8A, "", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 
 	// DLC1FoodSoulHusk
 	if ((tmp = Utility::GetTESForm(datahandler, 0x014DC4, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 	// DLC1FoodSoulHuskExtract
 	if ((tmp = Utility::GetTESForm(datahandler, 0x015A1E, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedItems.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
 
 
 	/// EXCLUDE SUMMONS
 
 	// DA14Summoned
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0001F3AA, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFlame
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000204C0, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFrost
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000204C1, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachStorm
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000204C2, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFlamePotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0004E940, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFrostPotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0004E943, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachStormPotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0004E944, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// EncSummonFamiliar
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000640B5, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// MGArnielSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0006A152, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonPhantom
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00072310, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// dunSummonedSkeleton01Missile
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0007503C, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFlameThrall
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0007E87D, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFrostThrall
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0007E87E, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachStormThrall
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0007E87F, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonFireStorm
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000877EB, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonFelldir
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000923F9, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonGormlaith
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000923FA, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonHakon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000923FB, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// MGRDremoraSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00099F2F, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonFlamingThrall
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0009CE28, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// dunSummonedCreature
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000CC5A2, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFlameThrallPotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000CDECC, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFrostThrallPotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000CDECD, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachStormThrallPotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000CDECE, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// HowlSummonWolf
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000CF79E, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// dunFortSnowhawkSummonedSkeleton01
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000D8D95, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// dunSummonedSkeleton01Melee1HShield
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000F90BC, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonEncDremoraLord
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010DDEE, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DA14DremoraSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010E38B, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFrostNPC
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010EE43, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachStormNPC
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010EE45, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachFrostNPCPotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010EE46, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// SummonAtronachStormNPCPotent
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010EE47, "", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1SoulCairnWrathmanSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0045B4, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1SoulCairnMistmanSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0045B7, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1SoulCairnBonemanSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0045B9, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1HowlSummonIceWolf
 	if ((tmp = Utility::GetTESForm(datahandler, 0x008A6C, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1HowlSummonWerewolf
 	if ((tmp = Utility::GetTESForm(datahandler, 0x008A6D, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC01SoulCairnHorseSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00BDD0, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1VQ05BonemanSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00BFF0, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1EncUndeadSummon1
 	if ((tmp = Utility::GetTESForm(datahandler, 0x01A16A, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1EncUndeadSummon2
 	if ((tmp = Utility::GetTESForm(datahandler, 0x01A16B, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC1EncUndeadSummon3
 	if ((tmp = Utility::GetTESForm(datahandler, 0x01A16C, "Dawnguard.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2SummonAshGuardian
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0177B6, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2SummonAshSpawn01
 	if ((tmp = Utility::GetTESForm(datahandler, 0x01CDF8, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2SummonAshGuardianNeloth
 	if ((tmp = Utility::GetTESForm(datahandler, 0x01DBDC, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2SummonTrollFrost
 	if ((tmp = Utility::GetTESForm(datahandler, 0x01DFA1, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2SummonSeeker
 	if ((tmp = Utility::GetTESForm(datahandler, 0x01EEC9, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2dunKarstaagSummon
 	if ((tmp = Utility::GetTESForm(datahandler, 0x024811, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2SummonSeekerHigh
 	if ((tmp = Utility::GetTESForm(datahandler, 0x030CDE, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2SummonWerebear
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0322B3, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 	// DLC2dunKarstaagIceWraithSummoned
 	if ((tmp = Utility::GetTESForm(datahandler, 0x034B5A, "Dragonborn.esm", "")) != nullptr)
-		Settings::Distribution::excludedNPCs.insert(tmp->GetFormID());
+		Settings::Distribution::_excludedNPCs.insert(tmp->GetFormID());
 		
 
 
 
 	// template:
 	//if ((tmp = Utility::GetTESForm(datahandler, 0, "", "")) != nullptr)
-	//	Settings::Distribution::excludedItems.insert(tmp->GetFormID());
-	logger::info("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules.size());
-	logger::info("[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Keywords: {}", Distribution::keywordMap.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Keywords: {}", Distribution::keywordMap.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Factions: {}", Distribution::factionMap.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Factions: {}", Distribution::factionMap.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Races: {}", Distribution::raceMap.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Races: {}", Distribution::raceMap.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Classes: {}", Distribution::classMap.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Classes: {}", Distribution::classMap.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of CombatStyles: {}", Distribution::combatStyleMap.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of CombatStyles: {}", Distribution::combatStyleMap.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Bosses: {}", Distribution::bosses.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Bosses: {}", Distribution::bosses.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Excluded NPCs: {}", Distribution::excludedNPCs.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded NPCs: {}", Distribution::excludedNPCs.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Excluded Factions: {}", Distribution::excludedFactions.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Factions: {}", Distribution::excludedFactions.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Excluded Keywords: {}", Distribution::excludedKeywords.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Keywords: {}", Distribution::excludedKeywords.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Excluded Races: {}", Distribution::excludedRaces.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Races: {}", Distribution::excludedRaces.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Excluded Items: {}", Distribution::excludedItems.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems.bucket_count());
-	logger::info("[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions.size());
-	logger::info("[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions.bucket_count());
+	//	Settings::Distribution::_excludedItems.insert(tmp->GetFormID());
+
+	Settings::Distribution::initialised = true;
+
+	logger::info("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules()->size());
+	logger::info("[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap()->size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Associations: {}", Distribution::assocMap()->size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Associations: {}", Distribution::assocMap()->bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Bosses: {}", Distribution::bosses()->size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Bosses: {}", Distribution::bosses()->bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded NPCs: {}", Distribution::excludedNPCs()->size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded NPCs: {}", Distribution::excludedNPCs()->bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded Associations: {}", Distribution::excludedAssoc()->size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Associations: {}", Distribution::excludedAssoc()->bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Excluded Items: {}", Distribution::excludedItems()->size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
+	logger::info("[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
+	logger::info("[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
+	/*logger::info("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::_rules.size());
+	logger::info("[settings] [loaddistrrules] number of npcs: {}", distribution::_npcmap.size());
+	logger::info("[settings] [loaddistrrules] buckets of npcs: {}", distribution::_npcmap.bucket_count());
+	logger::info("[settings] [loaddistrrules] number of associations: {}", distribution::_assocmap.size());
+	logger::info("[settings] [loaddistrrules] buckets of associations: {}", distribution::_assocmap.bucket_count());
+	logger::info("[settings] [loaddistrrules] number of bosses: {}", distribution::_bosses.size());
+	logger::info("[settings] [loaddistrrules] buckets of bosses: {}", distribution::_bosses.bucket_count());
+	logger::info("[settings] [loaddistrrules] number of excluded npcs: {}", distribution::_excludednpcs.size());
+	logger::info("[settings] [loaddistrrules] buckets of excluded npcs: {}", distribution::_excludednpcs.bucket_count());
+	logger::info("[settings] [loaddistrrules] number of excluded associations: {}", distribution::_excludedassoc.size());
+	logger::info("[settings] [loaddistrrules] buckets of excluded associations: {}", distribution::_excludedassoc.bucket_count());
+	logger::info("[settings] [loaddistrrules] number of excluded items: {}", distribution::_excludeditems.size());
+	logger::info("[settings] [loaddistrrules] buckets of excluded items: {}", distribution::_excludeditems.bucket_count());
+	logger::info("[settings] [loaddistrrules] number of baseline exclusions: {}", distribution::_baselineexclusions.size());
+	logger::info("[settings] [loaddistrrules] buckets of baseline exclusions: {}", distribution::_baselineexclusions.bucket_count());*/
 }
 
 void Settings::CheckActorsForRules()
@@ -1011,7 +998,7 @@ void Settings::CheckActorsForRules()
 						//logger::info("check 1");
 
 						// check wether there is a rule that applies
-						if (Utility::ExcludedNPCBase(npc)) {
+						if (Settings::Distribution::ExcludedNPC(npc)) {
 							iter++;
 							continue;  // the npc is covered by an exclusion
 						}
@@ -1107,7 +1094,7 @@ void Settings::CheckActorsForRules()
 						visited.insert(act->GetFormID());
 
 						// check wether there is a rule that applies
-						if (Utility::ExcludedNPC(act)) {
+						if (Settings::Distribution::ExcludedNPC(act)) {
 							iter++;
 							continue;  // the npc is covered by an exclusion
 						}
@@ -1181,1163 +1168,6 @@ void Settings::CheckActorsForRules()
 		}
 	}
 	logger::info("[CheckActorsForRules] finished checking...");
-}
-
-#pragma endregion
-
-#pragma region Rule
-
-// private
-
-Settings::AlchemyEffect Settings::Distribution::Rule::GetRandomEffect(Settings::ItemType type)
-{
-	int random = randRR(randi);
-	switch (type) {
-	case Settings::ItemType::kPotion:
-		for (int i = 0; i < this->potionDistr.size(); i++) {
-			if (random <= std::get<0>(this->potionDistr[i])) {
-				return std::get<1>(this->potionDistr[i]);
-			}
-		}
-		break;
-	case Settings::ItemType::kPoison:
-		for (int i = 0; i < this->poisonDistr.size(); i++) {
-			if (random <= std::get<0>(this->poisonDistr[i])) {
-				return std::get<1>(this->poisonDistr[i]);
-			}
-		}
-		break;
-	case Settings::ItemType::kFortifyPotion:
-		for (int i = 0; i < this->fortifyDistr.size(); i++) {
-			if (random <= std::get<0>(this->fortifyDistr[i])) {
-				return std::get<1>(this->fortifyDistr[i]);
-			}
-		}
-		break;
-	case Settings::ItemType::kFood:
-		for (int i = 0; i < this->foodDistr.size(); i++) {
-			if (random <= std::get<0>(this->foodDistr[i])) {
-				return std::get<1>(this->foodDistr[i]);
-			}
-		}
-		break;
-	}
-	return Settings::AlchemyEffect::kNone;
-}
-
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= potion1Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPotion(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= potion2Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPotion(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= potion3Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPotion(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= potionAdditionalChance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPotion(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion(int str)
-{
-	str += potionTierAdjust;
-	if (str < 1)
-		str = 1;
-	if (str > 4)
-		str = 4;
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-	auto eff = GetRandomEffect(ItemType::kPotion);
-	if (eff == AlchemyEffect::kBlood) {
-		items = Settings::GetMatchingItems(_potionsBlood, static_cast<uint64_t>(eff));
-	} else {
-	RetryPotion:
-		switch (str) {
-		case 1:  // weak
-			items = Settings::GetMatchingItems(Settings::_potionsWeak_main, static_cast<uint64_t>(eff));
-			break;
-		case 2:  // standard
-		items = Settings::GetMatchingItems(Settings::_potionsStandard_main, static_cast<uint64_t>(eff));
-		if (items.size() == 0) {
-				str -= 1;
-				goto RetryPotion;
-		}
-		break;
-	case 3:  // potent
-		items = Settings::GetMatchingItems(Settings::_potionsPotent_main, static_cast<uint64_t>(eff));
-		if (items.size() == 0) {
-				str -= 1;
-				goto RetryPotion;
-		}
-		break;
-	case 4:  // insane
-		items = Settings::GetMatchingItems(Settings::_potionsInsane_main, static_cast<uint64_t>(eff));
-		if (items.size() == 0) {
-				str -= 1;
-				goto RetryPotion;
-		}
-		break;
-		}
-	}
-	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
-		return items[r(randi)];
-	return nullptr;
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= poison1Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPoison(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= poison2Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPoison(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= poison3Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPoison(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= poisonAdditionalChance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomPoison(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison(int str)
-{
-	str += poisonTierAdjust;
-	if (str < 1)
-		str = 1;
-	if (str > 4)
-		str = 4;
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-RetryPoison:
-	switch (str) {
-	case 1:  // weak
-		items = Settings::GetMatchingItems(Settings::_poisonsWeak, static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		break;
-	case 2:  // standard
-		items = Settings::GetMatchingItems(Settings::_poisonsStandard, static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryPoison;
-		}
-		break;
-	case 3:  // potent
-		items = Settings::GetMatchingItems(Settings::_poisonsPotent, static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryPoison;
-		}
-		break;
-	case 4:  // insane
-		items = Settings::GetMatchingItems(Settings::_poisonsInsane, static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryPoison;
-		}
-		break;
-	}
-	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
-		return items[r(randi)];
-	return nullptr;
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= fortify1Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomFortifyPotion(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	int str = static_cast<int>(strength);
-	if (rand100(randi) <= fortify2Chance[astr]) {
-		// we rolled successfully
-	} else {
-		return nullptr;
-	}
-	return GetRandomFortifyPotion(str);
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion(int str)
-{
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-RetryFortify:
-	switch (str) {
-	case 1:  // weak
-		items = Settings::GetMatchingItems(Settings::_potionsWeak_rest, static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		break;
-	case 2:  // standard
-		items = Settings::GetMatchingItems(Settings::_potionsStandard_rest, static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryFortify;
-		}
-		break;
-	case 3:  // potent
-		items = Settings::GetMatchingItems(Settings::_potionsPotent_rest, static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryFortify;
-		}
-		break;
-	case 4:  // insane
-		items = Settings::GetMatchingItems(Settings::_potionsInsane_rest, static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryFortify;
-		}
-		break;
-	}
-	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
-		return items[r(randi)];
-	return nullptr;
-}
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFood_intern(Settings::ItemStrength, Settings::ActorStrength acstrength)
-{
-	// if the rule is invalid (empty) return
-	if (valid == false)
-		return nullptr;
-	int astr = static_cast<int>(acstrength);
-	if (rand100(randi) <= foodChance[astr]) {
-		// we rolled successfully
-	} else
-		return nullptr;
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-	auto reff = GetRandomEffect(ItemType::kFood);
-	switch (reff) {
-	case AlchemyEffect::kMagicka:
-	case AlchemyEffect::kMagickaRate:
-	case AlchemyEffect::kMagickaRateMult:
-		items = Settings::GetMatchingItems(Settings::_foodmagicka, static_cast<uint64_t>(reff));
-		break;
-	case AlchemyEffect::kHealRate:
-	case AlchemyEffect::kHealRateMult:
-	case AlchemyEffect::kHealth :
-		items = Settings::GetMatchingItems(Settings::_foodhealth, static_cast<uint64_t>(reff));
-		break;
-	case AlchemyEffect::kStamina:
-	case AlchemyEffect::kStaminaRate:
-	case AlchemyEffect::kStaminaRateMult:
-		items = Settings::GetMatchingItems(Settings::_foodstamina, static_cast<uint64_t>(reff));
-		break;
-	}
-	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
-		return items[r(randi)];
-	return nullptr;
-}
-
-// public
-
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomPotion1(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPotion2(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPotion3(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	while (ret.size() <= this->maxPotions && (tmp = GetRandomPotionAdditional(strength, acstrength)) != nullptr) {
-		ret.push_back(tmp);
-	}
-	return ret;
-}
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomPoison1(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPoison2(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPoison3(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	while (ret.size() <= this->maxPoisons && (tmp = GetRandomPoisonAdditional(strength, acstrength)) != nullptr) {
-		ret.push_back(tmp);
-	}
-	return ret;
-}
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomFortifyPotion1(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomFortifyPotion2(strength, acstrength);
-	if (tmp)
-		ret.push_back(tmp);
-	return ret;
-}
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
-{
-	return std::vector<RE::AlchemyItem*>{ GetRandomFood_intern(strength, acstrength) };
-}
-
-#pragma endregion
-
-#pragma region Distribution
-
-void Settings::Distribution::CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
-{
-	CalcRule(actor, acs, is);
-}
-
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* actor)
-{
-	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
-	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	std::vector<RE::AlchemyItem*> ret;
-	if (Settings::_featDistributePotions) {
-		auto ritems = rule->GetRandomPotions(is, acs);
-		LOG_4("{}[GetDistrItems] matching potions");
-		auto items = ACM::GetMatchingPotions(actor, rule->validPotions);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] potions size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
-		}
-	}
-	if (Settings::_featDistributePoisons) {
-		auto ritems = rule->GetRandomPoisons(is, acs);
-		LOG_4("{}[GetDistrItems] matching poisons");
-		auto items = ACM::GetMatchingPoisons(actor, rule->validPoisons);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] poisons size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
-		}
-	}
-	if (Settings::_featDistributeFortifyPotions) {
-		auto ritems = rule->GetRandomFortifyPotions(is, acs);
-		LOG_4("{}[GetDistrItems] matching fortify");
-		auto items = ACM::GetMatchingPotions(actor, rule->validFortifyPotions);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] fortify size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
-		}
-	}
-	if (Settings::_featDistributeFood) {
-		auto ritems = rule->GetRandomFood(is, acs);
-		LOG_4("{}[GetDistrItems] matching food");
-		auto items = ACM::GetMatchingFood(actor, rule->validFood, false);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		LOG1_4("{}[GetDistrItems] diff: {}", diff);
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			LOG_4("{}[GetDistrItems] diff greater 0");
-			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] food size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
-		}
-	}
-	if (ret.size() > 0 && ret.back() == nullptr) {
-		LOG_4("{}[GetDistrItems] remove last item");
-		ret.pop_back();
-	}
-	return ret;
-}
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPotions(RE::Actor* actor)
-{
-	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
-	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomPotions(is, acs);
-	auto items = ACM::GetMatchingPotions(actor, rule->validPotions);
-	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-	// if number of items to add is lesser equal the number of already present items
-	// return an empty list
-	if (diff <= 0)
-		return std::vector<RE::AlchemyItem*>{};
-	ritems.resize(diff);
-	return ritems;
-}
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPoisons(RE::Actor* actor)
-{
-	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
-	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomPoisons(is, acs);
-	auto items = ACM::GetMatchingPoisons(actor, rule->validPoisons);
-	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-	// if number of items to add is lesser equal the number of already present items
-	// return an empty list
-	if (diff <= 0)
-		return std::vector<RE::AlchemyItem*>{};
-	ritems.resize(diff);
-	return ritems;
-}
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFortifyPotions(RE::Actor* actor)
-{
-	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
-	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomFortifyPotions(is, acs);
-	auto items = ACM::GetMatchingPotions(actor, rule->validFortifyPotions);
-	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-	// if number of items to add is lesser equal the number of already present items
-	// return an empty list
-	if (diff <= 0)
-		return std::vector<RE::AlchemyItem*>{};
-	ritems.resize(diff);
-	return ritems;
-}
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFood(RE::Actor* actor)
-{
-	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
-	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomFood(is, acs);
-	auto items = ACM::GetMatchingFood(actor, rule->validFood, false);
-	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-	// if number of items to add is lesser equal the number of already present items
-	// return an empty list
-	if (diff <= 0)
-		return std::vector<RE::AlchemyItem*>{};
-	ritems.resize(diff);
-	return ritems;
-}
-
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItemsUnique(RE::Actor* actor)
-{
-	Rule* rule = CalcRule(actor);
-	std::vector<RE::AlchemyItem*> ret;
-	if (Settings::_featDistributePotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingPotions(actor, rule->validPotions);
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (Settings::_featDistributePoisons) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingPoisons(actor, rule->validPoisons);
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (Settings::_featDistributeFortifyPotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingPotions(actor, rule->validFortifyPotions);
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (Settings::_featDistributeFood) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingFood(actor, rule->validFood, false);
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (ret.size() != 0 && ret.back() == nullptr)
-		ret.pop_back();
-	return ret;
-}
-
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItems(RE::Actor* actor)
-{
-	//logger::info("GetMatchingInventoryItems enter");
-	Rule* rule = CalcRule(actor);
-	std::vector<RE::AlchemyItem*> ret;
-	if (Settings::_featDistributePotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingPotions(actor, rule->validPotions);
-		//logger::info("GetMatchingInventoryItems| potions {} | found: {}", Utility::GetHex(rule->validPotions), items.size());
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (Settings::_featDistributePoisons) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingPoisons(actor, rule->validPoisons);
-		//logger::info("GetMatchingInventoryItems| poisons {} | found: {}", Utility::GetHex(rule->validPoisons), items.size());
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (Settings::_featDistributeFortifyPotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingPotions(actor, rule->validFortifyPotions);
-		//logger::info("GetMatchingInventoryItems| fortify {} | found: {}", Utility::GetHex(rule->validFortifyPotions), items.size());
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (Settings::_featDistributeFood) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingFood(actor, rule->validFood, false);
-		//logger::info("GetMatchingInventoryItems| food {} | found: {}", Utility::GetHex(rule->validFood), items.size());
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
-	if (ret.size() != 0) {
-		if (ret.back() == nullptr)
-			ret.pop_back();
-		auto map = actor->GetInventoryCounts();
-		size_t currsize = ret.size();
-		for (int i = 0; i < currsize; i++) {
-			if (auto it = map.find(ret[i]); it != map.end()) {
-				if (it->second > 1)
-					for (int c = 1; c < it->second; c++)
-						ret.push_back(ret[i]);
-			}
-		}
-	}
-	return ret;
-}
-
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
-{
-	ActorStrength acs = ActorStrength::Weak;
-	ItemStrength is = ItemStrength::kWeak;
-	return CalcRule(actor, acs, is);
-}
-
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc)
-{
-	ActorStrength acs = ActorStrength::Weak;
-	ItemStrength is = ItemStrength::kWeak;
-	return CalcRule(npc, acs, is);
-}
-
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
-{
-	// calc strength section
-	if (_GameDifficultyScaling) {
-		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
-		if (diff == 0 || diff == 1) {
-			acs = Settings::ActorStrength::Weak;
-			is = Settings::ItemStrength::kWeak;
-		} else if (diff == 2 || diff == 3) {
-			acs = Settings::ActorStrength::Normal;
-			is = Settings::ItemStrength::kStandard;
-		} else if (diff == 4) {
-			acs = Settings::ActorStrength::Powerful;
-			is = Settings::ItemStrength::kPotent;
-		} else {  // diff == 5
-			acs = Settings::ActorStrength::Insane;
-			is = Settings::ItemStrength::kInsane;
-		}
-	} else {
-		// get level dependencies
-		short lvl = actor->GetLevel();
-		if (lvl <= _LevelEasy) {
-			acs = Settings::ActorStrength::Weak;
-			is = Settings::ItemStrength::kWeak;
-			// weak actor
-		} else if (lvl <= _LevelNormal) {
-			acs = ActorStrength::Normal;
-			is = ItemStrength::kStandard;
-			// normal actor
-		} else if (lvl <= _LevelDifficult) {
-			acs = ActorStrength::Powerful;
-			is = ItemStrength::kPotent;
-			// difficult actor
-		} else if (lvl <= _LevelInsane) {
-			acs = ActorStrength::Insane;
-			is = ItemStrength::kInsane;
-			// insane actor
-		} else {
-			acs = ActorStrength::Boss;
-			is = ItemStrength::kInsane;
-			// boss actor
-		}
-	}
-
-	// now calculate rule and on top get the boss override
-
-	bool bossoverride = false;
-
-	bool ruleoverride = false;
-	bool baseexcluded = false;
-	int prio = INT_MIN;
-
-	auto base = actor->GetActorBase();
-
-	Rule* rule = nullptr;
-
-	//std::vector<Rule*> rls;
-	// find rule in npc map
-	// npc rules always have the highest priority
-	auto itnpc = npcMap.find(actor->GetFormID());
-	if (itnpc != npcMap.end()) {  // found the right rule!
-		rule = itnpc->second;     // this can be null if the specific npc is excluded
-		ruleoverride = true;
-	}
-	bossoverride |= bosses.contains(actor->GetFormID());
-
-	if (ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	// now also perform a check on the actor base
-	if (!ruleoverride) {
-		itnpc = npcMap.find(actor->GetActorBase()->GetFormID());
-		if (itnpc != npcMap.end()) {  // found the right rule!
-			rule = itnpc->second;     // this can be null if the specific npc is excluded
-			ruleoverride = true;
-		}
-	}
-	bossoverride |= bosses.contains(actor->GetActorBase()->GetFormID());
-
-	if (ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	// now that we didnt't find something so far, check the rest
-	// this time all the priorities are the same
-	if (!ruleoverride) {
-		auto it = raceMap.find(base->GetRace()->GetFormID());
-		if (it != raceMap.end())
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-			else {
-				baseexcluded |= baselineExclusions.contains(base->GetRace()->GetFormID());
-			}
-	}
-	bossoverride |= bosses.contains(base->GetRace()->GetFormID());
-
-	if (ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	// handle keywords
-	for (unsigned int i = 0; i < base->numKeywords; i++) {
-		auto key = base->keywords[i];
-		if (key) {
-			if (!ruleoverride) {
-				auto it = keywordMap.find(key->GetFormID());
-				if (it != keywordMap.end())
-					if (prio < std::get<0>(it->second))
-						rule = std::get<1>(it->second);
-					else if (prio < std::get<1>(it->second)->rulePriority)
-						rule = std::get<1>(it->second);
-					else {
-						baseexcluded |= baselineExclusions.contains(key->GetFormID());
-					}
-			}
-			bossoverride |= bosses.contains(key->GetFormID());
-		}
-	}
-
-	if (ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	for (uint32_t i = 0; i < base->factions.size(); i++) {
-		if (!ruleoverride) {
-			auto it = factionMap.find(base->factions[i].faction->GetFormID());
-			if (it != factionMap.end()) {
-				if (prio < std::get<0>(it->second))
-					rule = std::get<1>(it->second);
-				else if (prio < std::get<1>(it->second)->rulePriority)
-					rule = std::get<1>(it->second);
-			} else {
-				baseexcluded |= baselineExclusions.contains(base->factions[i].faction->GetFormID());
-			}
-		}
-		bossoverride |= bosses.contains(base->factions[i].faction->GetFormID());
-	}
-
-	if (bossoverride && ruleoverride || ruleoverride)
-		goto SKIPActor;
-
-	// handle classes
-	if (base->npcClass) {
-		auto it = classMap.find(base->npcClass->GetFormID());
-		if (it != classMap.end()) {
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-		}
-	}
-
-	// handle combat styles
-	if (base->combatStyle) {
-		auto it = classMap.find(base->combatStyle->GetFormID());
-		if (it != classMap.end()) {
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-		}
-	}
-
-	SKIPActor:
-
-	if (bossoverride)
-		acs = ActorStrength::Boss;
-
-	if (rule) {
-		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
-		return rule;
-	} else {
-		// there are no rules!!!
-		if (baseexcluded)
-			return Settings::Distribution::emptyRule;
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return Settings::Distribution::defaultRule;
-	}
-}
-
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is)
-{
-	// calc strength section
-	if (_GameDifficultyScaling) {
-		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
-		if (diff == 0 || diff == 1) {
-			acs = Settings::ActorStrength::Weak;
-			is = Settings::ItemStrength::kWeak;
-		} else if (diff == 2 || diff == 3) {
-			acs = Settings::ActorStrength::Normal;
-			is = Settings::ItemStrength::kStandard;
-		} else if (diff == 4) {
-			acs = Settings::ActorStrength::Powerful;
-			is = Settings::ItemStrength::kPotent;
-		} else {  // diff == 5
-			acs = Settings::ActorStrength::Insane;
-			is = Settings::ItemStrength::kInsane;
-		}
-	} else { 
-		// level not available for BaseActors
-
-		/*
-		// get level dependencies
-		short lvl = actor->GetLevel();
-		if (lvl <= _LevelEasy) {
-			acs = Settings::ActorStrength::Weak;
-			is = Settings::ItemStrength::kWeak;
-			// weak actor
-		} else if (lvl <= _LevelNormal) {
-			acs = ActorStrength::Normal;
-			is = ItemStrength::kStandard;
-			// normal actor
-		} else if (lvl <= _LevelDifficult) {
-			acs = ActorStrength::Powerful;
-			is = ItemStrength::kPotent;
-			// difficult actor
-		} else if (lvl <= _LevelInsane) {
-			acs = ActorStrength::Insane;
-			is = ItemStrength::kInsane;
-			// insane actor
-		} else {
-			acs = ActorStrength::Boss;
-			is = ItemStrength::kInsane;
-			// boss actor
-		}*/
-	}
-
-	// now calculate rule and on top get the boss override
-
-	bool bossoverride = false;
-
-	bool ruleoverride = false;
-	bool baseexcluded = false;
-	int prio = INT_MIN;
-
-	Rule* rule = nullptr;
-
-	//std::vector<Rule*> rls;
-	
-	// find rule in npc map
-	// npc rules always have the highest priority
-	auto itnpc = npcMap.find(npc->GetFormID());
-	if (itnpc != npcMap.end()) {  // found the right rule!
-		rule = itnpc->second;     // this can be null if the specific npc is excluded
-		ruleoverride = true;
-	}
-	bossoverride |= bosses.contains(npc->GetFormID());
-
-	if (ruleoverride && bossoverride) {
-		goto SKIPNPC;
-	}
-
-	// now that we didnt't find something so far, check the rest
-	// this time all the priorities are the same
-	if (!ruleoverride) {
-		auto it = raceMap.find(npc->GetRace()->GetFormID());
-		if (it != raceMap.end())
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-			else {
-				baseexcluded |= baselineExclusions.contains(npc->GetRace()->GetFormID());
-			}
-	}
-	bossoverride |= bosses.contains(npc->GetRace()->GetFormID());
-
-	if (ruleoverride && bossoverride) {
-		goto SKIPNPC;
-	}
-
-	// handle keywords
-	for (unsigned int i = 0; i < npc->numKeywords; i++) {
-		auto key = npc->keywords[i];
-		if (key) {
-			if (!ruleoverride) {
-				auto it = keywordMap.find(key->GetFormID());
-				if (it != keywordMap.end())
-					if (prio < std::get<0>(it->second))
-						rule = std::get<1>(it->second);
-					else if (prio < std::get<1>(it->second)->rulePriority)
-						rule = std::get<1>(it->second);
-					else {
-						baseexcluded |= baselineExclusions.contains(key->GetFormID());
-					}
-			}
-			bossoverride |= bosses.contains(key->GetFormID());
-		}
-	}
-
-	if (ruleoverride && bossoverride) {
-		goto SKIPNPC;
-	}
-
-	// handle factions
-	for (uint32_t i = 0; i < npc->factions.size(); i++) {
-		if (!ruleoverride) {
-			auto it = factionMap.find(npc->factions[i].faction->GetFormID());
-			if (it != factionMap.end()) {
-				if (prio < std::get<0>(it->second))
-					rule = std::get<1>(it->second);
-				else if (prio < std::get<1>(it->second)->rulePriority)
-					rule = std::get<1>(it->second);
-			} else {
-				baseexcluded |= baselineExclusions.contains(npc->factions[i].faction->GetFormID());
-			}
-		}
-		bossoverride |= bosses.contains(npc->factions[i].faction->GetFormID());
-	}
-
-	if (bossoverride && ruleoverride || ruleoverride)
-		goto SKIPNPC;
-
-	// handle classes
-	if (npc->npcClass) {
-		auto it = classMap.find(npc->npcClass->GetFormID());
-		if (it != classMap.end()) {
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-		}
-	}
-	// handle combat styles
-	if (npc->combatStyle) {
-		auto it = classMap.find(npc->combatStyle->GetFormID());
-		if (it != classMap.end()) {
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-		}
-	}
-
-SKIPNPC:
-
-	if (bossoverride)
-		acs = ActorStrength::Boss;
-
-	if (rule) {
-		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
-		return rule;
-	} else {
-		// there are no rules!!!
-		if (baseexcluded)
-			return Settings::Distribution::emptyRule;
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return Settings::Distribution::defaultRule;
-	}
-}
-
-std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
-{
-	// calc strength section
-	if (_GameDifficultyScaling) {
-		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
-		if (diff == 0 || diff == 1) {
-			acs = Settings::ActorStrength::Weak;
-			is = Settings::ItemStrength::kWeak;
-		} else if (diff == 2 || diff == 3) {
-			acs = Settings::ActorStrength::Normal;
-			is = Settings::ItemStrength::kStandard;
-		} else if (diff == 4) {
-			acs = Settings::ActorStrength::Powerful;
-			is = Settings::ItemStrength::kPotent;
-		} else {  // diff == 5
-			acs = Settings::ActorStrength::Insane;
-			is = Settings::ItemStrength::kInsane;
-		}
-	} else {
-		// get level dependencies
-		short lvl = actor->GetLevel();
-		if (lvl <= _LevelEasy) {
-			acs = Settings::ActorStrength::Weak;
-			is = Settings::ItemStrength::kWeak;
-			// weak actor
-		} else if (lvl <= _LevelNormal) {
-			acs = ActorStrength::Normal;
-			is = ItemStrength::kStandard;
-			// normal actor
-		} else if (lvl <= _LevelDifficult) {
-			acs = ActorStrength::Powerful;
-			is = ItemStrength::kPotent;
-			// difficult actor
-		} else if (lvl <= _LevelInsane) {
-			acs = ActorStrength::Insane;
-			is = ItemStrength::kInsane;
-			// insane actor
-		} else {
-			acs = ActorStrength::Boss;
-			is = ItemStrength::kInsane;
-			// boss actor
-		}
-	}
-
-	// now calculate rule and on top get the boss override
-
-	bool bossoverride = false;
-
-	bool baseexcluded = false;
-	int prio = INT_MIN;
-	const bool ruleoverride = false;
-
-	auto base = actor->GetActorBase();
-
-	std::vector<Rule*> rls;
-	Rule* rule = nullptr;
-
-	//std::vector<Rule*> rls;
-	// find rule in npc map
-	// npc rules always have the highest priority
-	auto itnpc = npcMap.find(actor->GetFormID());
-	if (itnpc != npcMap.end()) {  // found the right rule!
-		rule = itnpc->second;     // this can be null if the specific npc is excluded
-		rls.push_back(itnpc->second);
-	}
-	bossoverride |= bosses.contains(actor->GetFormID());
-
-	// now also perform a check on the actor base
-	if (!ruleoverride) {
-		itnpc = npcMap.find(actor->GetActorBase()->GetFormID());
-		if (itnpc != npcMap.end()) {  // found the right rule!
-			rule = itnpc->second;     // this can be null if the specific npc is excluded
-			rls.push_back(itnpc->second);
-		}
-	}
-	bossoverride |= bosses.contains(actor->GetActorBase()->GetFormID());
-
-	// now that we didnt't find something so far, check the rest
-	// this time all the priorities are the same
-	if (!ruleoverride) {
-		auto it = raceMap.find(base->GetRace()->GetFormID());
-		if (it != raceMap.end()) {
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-			else {
-				baseexcluded |= baselineExclusions.contains(base->GetRace()->GetFormID());
-			}
-			rls.push_back(std::get<1>(it->second));
-		}
-	}
-	bossoverride |= bosses.contains(base->GetRace()->GetFormID());
-
-	// handle keywords
-	for (unsigned int i = 0; i < base->numKeywords; i++) {
-		auto key = base->keywords[i];
-		if (key) {
-			if (!ruleoverride) {
-				auto it = keywordMap.find(key->GetFormID());
-				if (it != keywordMap.end()) {
-					if (prio < std::get<0>(it->second))
-						rule = std::get<1>(it->second);
-					else if (prio < std::get<1>(it->second)->rulePriority)
-						rule = std::get<1>(it->second);
-					else {
-						baseexcluded |= baselineExclusions.contains(key->GetFormID());
-					}
-					rls.push_back(std::get<1>(it->second));
-				}
-			}
-			bossoverride |= bosses.contains(key->GetFormID());
-		}
-	}
-
-	for (uint32_t i = 0; i < base->factions.size(); i++) {
-		if (!ruleoverride) {
-			auto it = factionMap.find(base->factions[i].faction->GetFormID());
-			if (it != factionMap.end()) {
-				if (prio < std::get<0>(it->second))
-					rule = std::get<1>(it->second);
-				else if (prio < std::get<1>(it->second)->rulePriority)
-					rule = std::get<1>(it->second);
-				rls.push_back(std::get<1>(it->second));
-			} else {
-				baseexcluded |= baselineExclusions.contains(base->factions[i].faction->GetFormID());
-			}
-		}
-		bossoverride |= bosses.contains(base->factions[i].faction->GetFormID());
-	}
-
-	// handle classes
-	if (base->npcClass) {
-		auto it = classMap.find(base->npcClass->GetFormID());
-		if (it != classMap.end()) {
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-			rls.push_back(std::get<1>(it->second));
-		}
-	}
-
-	// handle combat styles
-	if (base->combatStyle) {
-		auto it = combatStyleMap.find(base->combatStyle->GetFormID());
-		if (it != combatStyleMap.end()) {
-			if (prio < std::get<0>(it->second))
-				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
-				rule = std::get<1>(it->second);
-			rls.push_back(std::get<1>(it->second));
-		}
-	}
-
-	if (bossoverride)
-		acs = ActorStrength::Boss;
-
-	if (rule) {
-		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
-		rls.insert(rls.begin(), rule);
-		return rls;
-	} else {
-		// there are no rules!!!
-		if (baseexcluded)
-			return std::vector<Rule*>{ Settings::Distribution::emptyRule };
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return std::vector<Rule*>{ Settings::Distribution::defaultRule };
-	}
 }
 
 #pragma endregion
