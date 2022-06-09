@@ -22,7 +22,7 @@ namespace Console
 		static bool Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
 		static void Register()
 		{
-			auto info = RE::SCRIPT_FUNCTION::LocateConsoleCommand("DumpNiUpdates");  // unused
+			auto info = RE::SCRIPT_FUNCTION::LocateConsoleCommand("AcceptLegalDoc");  // unused
 			if (info) {
 				info->functionName = LONG_NAME;
 				info->shortName = SHORT_NAME;
@@ -42,4 +42,42 @@ namespace Console
 			}
 		}
 	};
+
+	class ReloadDist
+	{
+	private:
+		static constexpr char LONG_NAME[] = "NPCsUsePotionsReset";
+		static constexpr char SHORT_NAME[] = "nupreset";
+
+		ReloadDist() = default;
+		ReloadDist(const ReloadDist&) = delete;
+		ReloadDist(ReloadDist&&) = delete;
+		virtual ~ReloadDist() = default;
+
+		ReloadDist& operator=(const ReloadDist&) = delete;
+		ReloadDist& operator=(ReloadDist&&) = delete;
+
+	public:
+		static bool Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
+		static void Register()
+		{
+			auto info = RE::SCRIPT_FUNCTION::LocateConsoleCommand("GetLegalDocs");  // unused
+			if (info) {
+				info->functionName = LONG_NAME;
+				info->shortName = SHORT_NAME;
+				info->helpString = "Reloads all distribution rules from settings files";
+				info->referenceFunction = false;
+				info->params = nullptr;
+				info->numParams = 0;
+				info->executeFunction = &Process;
+				info->conditionFunction = nullptr;
+
+				logger::info("Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
+			} else {
+				logger::critical("Failed to register console command: {} ({})", LONG_NAME, SHORT_NAME);
+			}
+		}
+	};
+
+	void RegisterConsoleCommands();
 }
