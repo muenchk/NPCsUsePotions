@@ -74,6 +74,28 @@ namespace Events
 	/// sets the main threads to stop on the next iteration
 	/// </summary>
 	void DisableThreads();
+
+	class ActorInfo
+	{
+	public:
+		RE::Actor* actor;
+		int durHealth = 0;
+		int durMagicka = 0;
+		int durStamina = 0;
+		int durFortify = 0;
+		int durRegeneration = 0;
+
+
+		ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
+		{
+			actor = _actor;
+			durHealth = _durHealth;
+			durMagicka = _durMagicka;
+			durStamina = _durStamina;
+			durFortify = _durFortify;
+			durRegeneration = _durRegeneration;
+		}
+	};
 }
 
 

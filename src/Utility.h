@@ -114,14 +114,59 @@ public:
 		OneHanded = 0x100,
 		Ranged = 0x200,
 		DualWield = 0x400,
-		Staffsword = 0x800, // combination staff and onehanded
+		Staffsword = 0x800,  // combination staff and onehanded
 		HandToHand = 0x1000,
 		Mage = 0x2000,
 		DualStaff = 0x4000,
+		Staff = 0x8000,
 		MagicDamageFire = 0x100000,
 		MagicDamageShock = 0x200000,
 		MagicDamageFrost = 0x400000,
 	};
+
+	static std::string ToStringCombatStyle(uint32_t style)
+	{
+		std::string flags = "|";
+		if (style & static_cast<int>(CurrentCombatStyle::Spellsword))
+			flags += "Spellsword|";
+		if (style & static_cast<int>(CurrentCombatStyle::OneHandedShield))
+			flags += "OneHandedShield|";
+		if (style & static_cast<int>(CurrentCombatStyle::TwoHanded))
+			flags += "TwoHanded|";
+		if (style & static_cast<int>(CurrentCombatStyle::OneHanded))
+			flags += "OneHanded|";
+		if (style & static_cast<int>(CurrentCombatStyle::Ranged))
+			flags += "Ranged|";
+		if (style & static_cast<int>(CurrentCombatStyle::DualWield))
+			flags += "DualWield|";
+		if (style & static_cast<int>(CurrentCombatStyle::HandToHand))
+			flags += "HandToHand|";
+		if (style & static_cast<int>(CurrentCombatStyle::Staffsword))
+			flags += "Staffsword|";
+		if (style & static_cast<int>(CurrentCombatStyle::DualStaff))
+			flags += "DualStaff|";
+		if (style & static_cast<int>(CurrentCombatStyle::Staff))
+			flags += "Staff|";
+		if (style & static_cast<int>(CurrentCombatStyle::Mage))
+			flags += "Mage|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDestruction))
+			flags += "MagicDestruction|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicConjuration))
+			flags += "MagicConjuration|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicAlteration))
+			flags += "MagicAlteration|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicIllusion))
+			flags += "MagicIllusion|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicRestoration))
+			flags += "MagicRestoration|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFire))
+			flags += "MagicDamageFire|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageShock))
+			flags += "MagicDamageShock|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFrost))
+			flags += "MagicDamageFrost|";
+		return flags;
+	}
 
 	static uint32_t GetCombatData(RE::Actor* actor)
 	{
@@ -155,12 +200,14 @@ public:
 			} else if ((rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
 						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
 						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
-						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) &&
 						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff ||
 					   (leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
 						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
 						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
-						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) &&
 						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff) {
 				// spellstaff
 				if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff) {
@@ -242,12 +289,19 @@ public:
 					} else {
 						combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
 					}
+					if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee ||
+						leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) {
+						// if one hand is not a sword, but a hand to hand weapon fix that shit
+						if (combatdata & static_cast<uint32_t>(CurrentCombatStyle::OneHanded))
+							combatdata = (combatdata & (0xffffffff ^ static_cast<uint32_t>(CurrentCombatStyle::OneHanded))) | static_cast<uint32_t>(CurrentCombatStyle::Staff);
+						else if (combatdata & static_cast<uint32_t>(CurrentCombatStyle::Staffsword))
+							combatdata = (combatdata & (0xffffffff ^ static_cast<uint32_t>(CurrentCombatStyle::Staffsword))) | static_cast<uint32_t>(CurrentCombatStyle::Staff);
+					}
 				}
 			} else if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff &&
 					   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff) {
 				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::DualStaff);
 				if (leftweap->amountofEnchantment > 0) {
-					combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Staffsword);
 					RE::EnchantmentItem* ench = leftweap->formEnchanting;
 					if (ench) {
 						for (uint32_t i = 0; i < ench->effects.size(); i++) {
@@ -281,7 +335,6 @@ public:
 					}
 				}
 				if (rightweap->amountofEnchantment > 0) {
-					combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Staffsword);
 					RE::EnchantmentItem* ench = rightweap->formEnchanting;
 					if (ench) {
 						for (uint32_t i = 0; i < ench->effects.size(); i++) {
@@ -314,6 +367,21 @@ public:
 						}
 					}
 				}
+			} else if (leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee &&
+					   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) {
+				// fix for weapons that use hand to hand animations
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
+			} else if ((rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee ||
+					   (leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) {
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
 			}
 		} else if (rightweap && leftspell &&
 				   (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
@@ -386,9 +454,11 @@ public:
 				}
 			}
 		} else if (rightweap && lefthand && lefthand->As<RE::TESObjectARMO>()) {
-			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHandedShield);
-		} else if (leftweap || rightweap) {
-			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
+			if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee)
+				// fix for weapons that use hand to hand animations
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
+			else
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHandedShield);
 		} else if (leftspell && rightspell) {
 			for (uint32_t i = 0; i < rightspell->effects.size(); i++) {
 				try {
@@ -507,8 +577,17 @@ public:
 				}
 			}
 			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Mage);
-		}
-		else {
+		} else if (leftweap || rightweap) {
+			if (leftweap && leftweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff ||
+				rightweap && rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff)
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Mage);
+			else if (leftweap && leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee ||
+					 rightweap && rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee)
+				// fix for weapons that use hand to hand animations
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
+			else
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
+		} else {
 			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
 		}
 
@@ -778,6 +857,25 @@ public:
 		return ret;
 	}
 
+	static bool CanApplyPoison(RE::Actor* actor)
+	{
+		auto ied = actor->GetEquippedEntryData(false);
+		if (ied == nullptr)
+			return false;
+		RE::ExtraPoison* pois = nullptr;
+		if (ied->extraLists) {
+			for (const auto& extraL : *(ied->extraLists)) {
+				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+				if (pois)
+					break;
+			}
+		}
+		logger::info("poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", actor->GetName(), pois && pois->poison ? pois->poison->GetName() : "not found", pois ? pois->count :  -1);
+
+		if (pois && pois->count > 0)
+			return false;
+		return true;
+	}
 	#pragma endregion
 
 };

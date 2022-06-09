@@ -447,6 +447,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] potions size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
+		logger::info("potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributePoisons) {
 		auto ritems = rule->GetRandomPoisons(is, acs);
@@ -460,6 +461,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] poisons size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
+		logger::info("poisons to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFortifyPotions) {
 		auto ritems = rule->GetRandomFortifyPotions(is, acs);
@@ -473,6 +475,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] fortify size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
+		logger::info("fortify potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFood) {
 		auto ritems = rule->GetRandomFood(is, acs);
@@ -488,6 +491,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] food size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
+		logger::info("food to give:\t{}", ritems.size());
 	}
 	if (ret.size() > 0 && ret.back() == nullptr) {
 		LOG_4("{}[GetDistrItems] remove last item");

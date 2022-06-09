@@ -30,8 +30,10 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	//logger::info("console 7");
 	console->Print(tmp.c_str());
 	//logger::info("console 8");
-	tmp = "Strength of given Items:\t" + Utility::ToString(is);
+	tmp = "Strength of given Items:\t\t" + Utility::ToString(is);
 	//logger::info("console 9");
+	console->Print(tmp.c_str());
+	tmp = "Combat data:\t\t\t\t" + Utility::ToStringCombatStyle(Utility::GetCombatData(actor));
 	console->Print(tmp.c_str());
 	//logger::info("console 10");
 	tmp = "Applied Rule:\t\t\t\t" + (rls[0] ? std::string(rls[0]->ruleName) : "");

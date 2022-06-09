@@ -554,22 +554,22 @@ void Settings::LoadDistrConfig()
 				{
 					// valid rule
 					name = (std::get<0>(a))->at(2);
-					// parse the associated objects
-					bool error = false;
-					std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a));
 					Settings::Distribution::Rule* rule = Distribution::FindRule(name);
 					if (rule == nullptr) {
 						logger::warn("[Settings] [LoadDistrRules] rule not found. file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
-						continue; // rule doesn't exist, evaluate next attachment
+						continue;  // rule doesn't exist, evaluate next attachment
 					}
 
+					// get rule priority and index for assoc objects
 					int prio = INT_MIN;
+					int associdx = 3;
 					// get priority if we have 5 fields, otherwise use rule priority
 					if (std::get<0>(a)->size() == 4)
 						prio = rule->rulePriority;
 					else {
 						try {
 							prio = std::stoi((std::get<0>(a))->at(3));
+							associdx = 4;
 						} catch (std::out_of_range&) {
 							logger::warn("[Settings] [LoadDistrRules] out-of-range expection in field \"RulePrio\". file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
 							continue;
@@ -578,6 +578,11 @@ void Settings::LoadDistrConfig()
 							continue;
 						}
 					}
+
+
+					// parse the associated objects
+					bool error = false;
+					std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a));
 
 					std::pair<int, Settings::Distribution::Rule*> tmptuple = { prio, rule };
 					// assign rules to search parameters

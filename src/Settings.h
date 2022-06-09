@@ -826,15 +826,74 @@ public:
 			if (SOM_player1st && SOM_verb) {
 				RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
 				RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
+				// ITMPotionUse
 				RE::TESForm* PotionUseF = RE::TESForm::LookupByID(0xB6435);
 				RE::BGSSoundDescriptorForm* PotionUse = nullptr;
 				if (PotionUseF)
 					PotionUse = PotionUseF->As<RE::BGSSoundDescriptorForm>();
-				RE::BGSSoundDescriptor* PotionUseSD = PotionUse->soundDescriptor;
-				RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
-				if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-					PotionUseOM->outputModel = SOMMono01400_verb;
-					logger::info("[SETTINGS] changed output model for potion drink sound effect");
+				if (PotionUse) {
+					RE::BGSSoundDescriptor* PotionUseSD = PotionUse->soundDescriptor;
+					RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
+					if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+						PotionUseOM->outputModel = SOMMono01400_verb;
+						logger::info("[SETTINGS] changed output model for ITMPotionUse sound effect");
+					}
+				}
+
+				//----Pickup Sounds only----
+				//// ITMPotionDownSD
+				//RE::TESForm* PotionDownF = RE::TESForm::LookupByID(0x3EDC0);
+				//RE::BGSSoundDescriptorForm* PotionDown = nullptr;
+				//if (PotionDownF)
+				//	PotionDown = PotionDownF->As<RE::BGSSoundDescriptorForm>();
+				//if (PotionDown) {
+				//	RE::BGSSoundDescriptor* PotionDownSD = PotionDown->soundDescriptor;
+				//	RE::BGSStandardSoundDef* PotionDownOM = (RE::BGSStandardSoundDef*)PotionDownSD;
+				//	if (PotionDownOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+				//		PotionDownOM->outputModel = SOMMono01400_verb;
+				//		logger::info("[SETTINGS] changed output model for ITMPotionDownSD sound effect");
+				//	}
+				//}
+				//// ITMPotionUpSD
+				//RE::TESForm* PotionUpF = RE::TESForm::LookupByID(0x3EDBD);
+				//RE::BGSSoundDescriptorForm* PotionUp = nullptr;
+				//if (PotionUpF)
+				//	PotionUp = PotionUpF->As<RE::BGSSoundDescriptorForm>();
+				//if (PotionUp) {
+				//	RE::BGSSoundDescriptor* PotionUpSD = PotionUp->soundDescriptor;
+				//	RE::BGSStandardSoundDef* PotionUpOM = (RE::BGSStandardSoundDef*)PotionUpSD;
+				//	if (PotionUpOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+				//		PotionUpOM->outputModel = SOMMono01400_verb;
+				//		logger::info("[SETTINGS] changed output model for ITMPotionUpSD sound effect");
+				//	}
+				//}
+				// -------------------------
+				
+				// ITMPoisonUse
+				RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x3EDBD);
+				RE::BGSSoundDescriptorForm* PoisonUse = nullptr;
+				if (PoisonUseF)
+					PoisonUse = PoisonUseF->As<RE::BGSSoundDescriptorForm>();
+				if (PoisonUse) {
+					RE::BGSSoundDescriptor* PoisonUseSD = PoisonUse->soundDescriptor;
+					RE::BGSStandardSoundDef* PoisonUseOM = (RE::BGSStandardSoundDef*)PoisonUseSD;
+					if (PoisonUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+						PoisonUseOM->outputModel = SOMMono01400_verb;
+						logger::info("[SETTINGS] changed output model for ITMPoisonUse sound effect");
+					}
+				}
+				// ITMFoodEat
+				RE::TESForm* FoodEatF = RE::TESForm::LookupByID(0xCAF94);
+				RE::BGSSoundDescriptorForm* FoodEat = nullptr;
+				if (FoodEatF)
+					FoodEat = FoodEatF->As<RE::BGSSoundDescriptorForm>();
+				if (FoodEat) {
+					RE::BGSSoundDescriptor* FoodEatSD = FoodEat->soundDescriptor;
+					RE::BGSStandardSoundDef* FoodEatOM = (RE::BGSStandardSoundDef*)FoodEatSD;
+					if (FoodEatOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+						FoodEatOM->outputModel = SOMMono01400_verb;
+						logger::info("[SETTINGS] changed output model for ITMFoodEat sound effect");
+					}
 				}
 			}
 		}
@@ -876,7 +935,7 @@ public:
 		// distribution options
 		ini.SetLongValue("Distribution", "LevelEasy", _LevelEasy, ";NPC lower or equal this level are considered weak.");
 		ini.SetLongValue("Distribution", "LevelNormal", _LevelNormal, ";NPC lower or equal this level are considered normal in terms of strength.");
-		ini.SetLongValue("Distribution", "LevelDifficult", _LevelDifficult, ";NPC lower or equal this level are considered difficutl.");
+		ini.SetLongValue("Distribution", "LevelDifficult", _LevelDifficult, ";NPC lower or equal this level are considered difficult.");
 		ini.SetLongValue("Distribution", "LevelInsane", _LevelInsane, ";NPC lower or equal this level are considered insane. Everything above this is always treated as a boss.");
 
 		ini.SetBoolValue("Distribution", "GameDifficultyScaling", _GameDifficultyScaling, ";Disables NPC level scaling, but scales chance according to game difficulty.");
