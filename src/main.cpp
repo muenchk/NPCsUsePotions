@@ -1,7 +1,8 @@
 #include "Hooks.h"
 #include "Events.h"
 #include "Settings.h"
-#include <SKSE/SKSE.h>
+#include "Console.h"
+
 
 namespace
 {
@@ -29,7 +30,8 @@ namespace
 		log->flush_on(level);
 
 		spdlog::set_default_logger(std::move(log));
-		spdlog::set_pattern("%g(%#): [%^%l%$] %v"s);
+		//spdlog::set_pattern("%g(%#): [%^%l%$] %v"s);
+		spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
 	}
 }
 
@@ -70,6 +72,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		logger::info("Items classified");
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
+		Console::RegisterConsoleCommands();
+		logger::info("Registered Console Commands");
+		
 	}
 }
 

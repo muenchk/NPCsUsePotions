@@ -10,7 +10,8 @@ namespace Events
 		public RE::BSTEventSink<RE::TESHitEvent>,
 		public RE::BSTEventSink<RE::TESCombatEvent>,
 		public RE::BSTEventSink<RE::TESLoadGameEvent>,
-		public RE::BSTEventSink<RE::TESDeathEvent>
+		public RE::BSTEventSink<RE::TESDeathEvent>,
+		public RE::BSTEventSink<RE::BGSActorCellEvent>
 	{
 	public:
 		/// <summary>
@@ -55,6 +56,13 @@ namespace Events
 		/// <param name="a_eventSource"></param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for Debug purposes. It calculates the distribution rules for all npcs in the cell
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>* a_eventSource) override;
 
 	private:
 		EventHandler() = default;
@@ -74,6 +82,28 @@ namespace Events
 	/// sets the main threads to stop on the next iteration
 	/// </summary>
 	void DisableThreads();
+
+	class ActorInfo
+	{
+	public:
+		RE::Actor* actor;
+		int durHealth = 0;
+		int durMagicka = 0;
+		int durStamina = 0;
+		int durFortify = 0;
+		int durRegeneration = 0;
+
+
+		ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
+		{
+			actor = _actor;
+			durHealth = _durHealth;
+			durMagicka = _durMagicka;
+			durStamina = _durStamina;
+			durFortify = _durFortify;
+			durRegeneration = _durRegeneration;
+		}
+	};
 }
 
 

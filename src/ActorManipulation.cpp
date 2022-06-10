@@ -204,9 +204,9 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 	//RE::EffectSetting* sett = nullptr;
 	LOG_2("{}[ActorUseFood] trying to find food");
 	auto ls = GetMatchingFood(_actor, alchemyEffect, raw);
-	LOG_2("{}[ActorUseFood] step1");
+	//LOG_2("{}[ActorUseFood] step1");
 	ls.sort(Utility::SortMagnitude);
-	LOG_2("{}[ActorUseFood] step2");
+	//LOG_2("{}[ActorUseFood] step2");
 	// got all potions the actor has sorted by magnitude.
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0) {
@@ -258,29 +258,11 @@ std::pair<int, AlchemyEffect> ACM::ActorUsePoison(RE::Actor* _actor, uint64_t al
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0) {
 		LOG_2("{}[ActorUsePoison] Use Poison");
-		if (Settings::CompatibilityPoisonPapyrus()) {
-			LOG_3("[ActorUsePoison] Compatibility Mode");
-			// use same events as for potions, since it takes a TESForm* and works for anything
-			SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-			ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
-			ev->strArg = RE::BSFixedString("");
-			ev->numArg = 0.0f;
-			ev->sender = _actor;
-			SKSE::GetModCallbackEventSource()->SendEvent(ev);
-			ev = new SKSE::ModCallbackEvent();
-			ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
-			ev->strArg = RE::BSFixedString("");
-			ev->numArg = 0.0f;
-			ev->sender = std::get<2>(ls.front());
-			SKSE::GetModCallbackEventSource()->SendEvent(ev);
-		} else {
-			RE::ExtraDataList* extra = new RE::ExtraDataList();
-			extra->SetOwner(_actor);
-			if (Settings::_DisableEquipSounds)
-				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
-			else
-				RE::ActorEquipManager::GetSingleton()->EquipObject(_actor, std::get<2>(ls.front()), extra);
-		}
+		RE::ExtraDataList* extra = new RE::ExtraDataList();
+		extra->Add(new RE::ExtraPoison(std::get<2>(ls.front()), 1));
+		auto ied = _actor->GetEquippedEntryData(false);
+		ied->AddExtraList(extra);
+		_actor->RemoveItem(std::get<2>(ls.front()), 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 		return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 	}
 	return { -1, AlchemyEffect::kNone };

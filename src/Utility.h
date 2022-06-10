@@ -67,28 +67,46 @@ public:
 		return ss.str();
 	}
 
-	/// <summary>
-	/// returns wether an npc is excluded from item distribution
-	/// </summary>
-	/// <param name="actor"></param>
-	/// <returns></returns>
-	static bool ExcludedNPC(RE::Actor* actor)
+	static std::string ToLower(std::string s)
 	{
-		bool ret = actor->IsInFaction(Settings::CurrentFollowerFaction) ||
-			Settings::Distribution::excludedNPCs.contains(actor->GetFormID()) ||
-			Settings::Distribution::excludedNPCs.contains(actor->GetActorBase()->GetFormID()) ||
-		           actor->IsGhost();
-		// if the actor has an exclusive rule then they this goes above Race, Faction and Keyword exclusions
-		if (!Settings::Distribution::npcMap.contains(actor->GetFormID()) && ret == false)
-		{
-			for (auto i : Settings::Distribution::excludedKeywords) {
-				ret |= actor->HasKeyword(i);
-			}
-			for (auto it = Settings::Distribution::excludedFactions.begin(); it != Settings::Distribution::excludedFactions.end() && ret == false; it++)
-				ret |= actor->IsInFaction(*it);
-			ret |= Settings::Distribution::excludedRaces.contains(actor->GetRace()->GetFormID());
+		std::transform(s.begin(), s.end(), s.begin(),
+			[](unsigned char c) { return (unsigned char)std::tolower(c); }  // correct
+		);
+		return s;
+	}
+
+	static std::string ToString(Settings::ActorStrength acs)
+	{
+		switch (acs) {
+		case Settings::ActorStrength::Weak:
+			return "Weak";
+		case Settings::ActorStrength::Normal:
+			return "Normal";
+		case Settings::ActorStrength::Powerful:
+			return "Powerful";
+		case Settings::ActorStrength::Insane:
+			return "Insane";
+		case Settings::ActorStrength::Boss:
+			return "Boss";
+		default:
+			return "Not Applicable";
 		}
-		return ret;
+	}
+
+	static std::string ToString(Settings::ItemStrength is)
+	{
+		switch (is) {
+		case Settings::ItemStrength::kWeak:
+			return "Weak";
+		case Settings::ItemStrength::kStandard:
+			return "Standard";
+		case Settings::ItemStrength::kPotent:
+			return "Potent";
+		case Settings::ItemStrength::kInsane:
+			return "Insane";
+		default:
+			return "Not Applicable";
+		}
 	}
 
 	enum class CurrentCombatStyle
@@ -104,14 +122,59 @@ public:
 		OneHanded = 0x100,
 		Ranged = 0x200,
 		DualWield = 0x400,
-		Staffsword = 0x800, // combination staff and onehanded
+		Staffsword = 0x800,  // combination staff and onehanded
 		HandToHand = 0x1000,
 		Mage = 0x2000,
 		DualStaff = 0x4000,
+		Staff = 0x8000,
 		MagicDamageFire = 0x100000,
 		MagicDamageShock = 0x200000,
 		MagicDamageFrost = 0x400000,
 	};
+
+	static std::string ToStringCombatStyle(uint32_t style)
+	{
+		std::string flags = "|";
+		if (style & static_cast<int>(CurrentCombatStyle::Spellsword))
+			flags += "Spellsword|";
+		if (style & static_cast<int>(CurrentCombatStyle::OneHandedShield))
+			flags += "OneHandedShield|";
+		if (style & static_cast<int>(CurrentCombatStyle::TwoHanded))
+			flags += "TwoHanded|";
+		if (style & static_cast<int>(CurrentCombatStyle::OneHanded))
+			flags += "OneHanded|";
+		if (style & static_cast<int>(CurrentCombatStyle::Ranged))
+			flags += "Ranged|";
+		if (style & static_cast<int>(CurrentCombatStyle::DualWield))
+			flags += "DualWield|";
+		if (style & static_cast<int>(CurrentCombatStyle::HandToHand))
+			flags += "HandToHand|";
+		if (style & static_cast<int>(CurrentCombatStyle::Staffsword))
+			flags += "Staffsword|";
+		if (style & static_cast<int>(CurrentCombatStyle::DualStaff))
+			flags += "DualStaff|";
+		if (style & static_cast<int>(CurrentCombatStyle::Staff))
+			flags += "Staff|";
+		if (style & static_cast<int>(CurrentCombatStyle::Mage))
+			flags += "Mage|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDestruction))
+			flags += "MagicDestruction|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicConjuration))
+			flags += "MagicConjuration|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicAlteration))
+			flags += "MagicAlteration|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicIllusion))
+			flags += "MagicIllusion|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicRestoration))
+			flags += "MagicRestoration|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFire))
+			flags += "MagicDamageFire|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageShock))
+			flags += "MagicDamageShock|";
+		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFrost))
+			flags += "MagicDamageFrost|";
+		return flags;
+	}
 
 	static uint32_t GetCombatData(RE::Actor* actor)
 	{
@@ -145,12 +208,14 @@ public:
 			} else if ((rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
 						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
 						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
-						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) &&
 						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff ||
 					   (leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
 						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
 						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
-						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) &&
 						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff) {
 				// spellstaff
 				if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff) {
@@ -232,12 +297,19 @@ public:
 					} else {
 						combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
 					}
+					if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee ||
+						leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) {
+						// if one hand is not a sword, but a hand to hand weapon fix that shit
+						if (combatdata & static_cast<uint32_t>(CurrentCombatStyle::OneHanded))
+							combatdata = (combatdata & (0xffffffff ^ static_cast<uint32_t>(CurrentCombatStyle::OneHanded))) | static_cast<uint32_t>(CurrentCombatStyle::Staff);
+						else if (combatdata & static_cast<uint32_t>(CurrentCombatStyle::Staffsword))
+							combatdata = (combatdata & (0xffffffff ^ static_cast<uint32_t>(CurrentCombatStyle::Staffsword))) | static_cast<uint32_t>(CurrentCombatStyle::Staff);
+					}
 				}
 			} else if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff &&
 					   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff) {
 				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::DualStaff);
 				if (leftweap->amountofEnchantment > 0) {
-					combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Staffsword);
 					RE::EnchantmentItem* ench = leftweap->formEnchanting;
 					if (ench) {
 						for (uint32_t i = 0; i < ench->effects.size(); i++) {
@@ -271,7 +343,6 @@ public:
 					}
 				}
 				if (rightweap->amountofEnchantment > 0) {
-					combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Staffsword);
 					RE::EnchantmentItem* ench = rightweap->formEnchanting;
 					if (ench) {
 						for (uint32_t i = 0; i < ench->effects.size(); i++) {
@@ -304,6 +375,21 @@ public:
 						}
 					}
 				}
+			} else if (leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee &&
+					   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) {
+				// fix for weapons that use hand to hand animations
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
+			} else if ((rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee ||
+					   (leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe ||
+						   leftweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace) &&
+						   rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee) {
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
 			}
 		} else if (rightweap && leftspell &&
 				   (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword ||
@@ -376,9 +462,11 @@ public:
 				}
 			}
 		} else if (rightweap && lefthand && lefthand->As<RE::TESObjectARMO>()) {
-			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHandedShield);
-		} else if (leftweap || rightweap) {
-			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
+			if (rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee)
+				// fix for weapons that use hand to hand animations
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
+			else
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHandedShield);
 		} else if (leftspell && rightspell) {
 			for (uint32_t i = 0; i < rightspell->effects.size(); i++) {
 				try {
@@ -497,8 +585,17 @@ public:
 				}
 			}
 			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Mage);
-		}
-		else {
+		} else if (leftweap || rightweap) {
+			if (leftweap && leftweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff ||
+				rightweap && rightweap->GetWeaponType() == RE::WEAPON_TYPE::kStaff)
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::Mage);
+			else if (leftweap && leftweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee ||
+					 rightweap && rightweap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee)
+				// fix for weapons that use hand to hand animations
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
+			else
+				combatdata |= static_cast<uint32_t>(CurrentCombatStyle::OneHanded);
+		} else {
 			combatdata |= static_cast<uint32_t>(CurrentCombatStyle::HandToHand);
 		}
 
@@ -623,6 +720,11 @@ public:
 						} else {
 							logger::warn("[Settings] [LoadDistrRules] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
 						}
+					} else {
+						if (form)
+							logger::warn("[Settings] [LoadDistrRules] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+						else
+							logger::warn("[Settings] [LoadDistrRules] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
 					}
 				} else {
 					// invalid input return what we parsed so far and set error
@@ -659,6 +761,12 @@ public:
 		case RE::FormType::Reference:
 			valid = true;
 			return Settings::Distribution::AssocType::kItem;
+		case RE::FormType::Class:
+			valid = true;
+			return Settings::Distribution::AssocType::kClass;
+		case RE::FormType::CombatStyle:
+			valid = true;
+			return Settings::Distribution::AssocType::kCombatStyle;
 		default:
 			valid = false;
 			return Settings::Distribution::AssocType::kKeyword;
@@ -757,6 +865,25 @@ public:
 		return ret;
 	}
 
+	static bool CanApplyPoison(RE::Actor* actor)
+	{
+		auto ied = actor->GetEquippedEntryData(false);
+		if (ied == nullptr)
+			return false;
+		RE::ExtraPoison* pois = nullptr;
+		if (ied->extraLists) {
+			for (const auto& extraL : *(ied->extraLists)) {
+				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+				if (pois)
+					break;
+			}
+		}
+		//logger::info("poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", actor->GetName(), pois && pois->poison ? pois->poison->GetName() : "not found", pois ? pois->count :  -1);
+
+		if (pois && pois->count > 0)
+			return false;
+		return true;
+	}
 	#pragma endregion
 
 };

@@ -8,6 +8,8 @@
 #include <string_view>
 #include <chrono>
 #include <set>
+#include <unordered_set>
+#include <unordered_map>
 #include <time.h>
 #include <random>
 #include <tuple>
@@ -18,6 +20,7 @@
 #include <forward_list>
 #include <semaphore>
 #include <limits>
+#include "Console.h"
 
 
 #define LOGE_1(s)             \
@@ -39,6 +42,14 @@
 #define LOGE2_2(s, t, u)                                   \
 	if (Settings::EnableLog && Settings::LogLevel >= 1) \
 		logger::info(s, t, u);
+
+#define LOGE3_2(s, t, u, v)                                   \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s, t, u, v);
+
+#define LOGE5_2(s, t, u, v, x, y)                             \
+	if (Settings::EnableLog && Settings::LogLevel >= 1) \
+		logger::info(s, t, u, v, x, y);
 
 
 
@@ -222,6 +233,12 @@ public:
 
 	static void CheckActorsForRules();
 
+	static void LoadDistrConfig();
+
+	static void CheckCellForActors(RE::FormID cellid);
+
+	static void ApplySkillBoostPerks();
+
 	class Distribution
 	{
 	public:
@@ -233,6 +250,8 @@ public:
 			kActor = 8,
 			kNPC = 16,
 			kItem = 32,
+			kClass = 64,
+			kCombatStyle = 128,
 		};
 
 		class Rule
@@ -290,6 +309,42 @@ public:
 			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
 			std::vector<RE::AlchemyItem*> GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
 
+#define COPY(vec1, vec2)       \
+	vec2.reserve(vec1.size()); \
+	std::copy(vec1.begin(), vec1.end(), vec2.begin());
+
+			Rule* Clone()
+			{
+				Rule* rl = new Rule();
+				rl->ruleVersion = ruleVersion;
+				rl->valid = valid;
+				rl->ruleType = ruleType;
+				rl->ruleName = ruleName;
+				rl->rulePriority = rulePriority;
+				rl->assocObjects = assocObjects;
+				rl->potionProperties = potionProperties;
+				rl->fortifyproperties = fortifyproperties;
+				rl->poisonProperties = poisonProperties;
+				rl->foodProperties = foodProperties;
+				rl->allowMixed = allowMixed;
+				rl->maxPotions = maxPotions;
+				rl->maxPoisons = maxPoisons;
+				rl->potionTierAdjust = potionTierAdjust;
+				rl->poisonTierAdjust = poisonTierAdjust;
+				COPY(potion1Chance, rl->potion1Chance);
+				COPY(potion2Chance, rl->potion2Chance);
+				COPY(potion3Chance, rl->potion3Chance);
+				COPY(potionAdditionalChance, rl->potionAdditionalChance);
+				COPY(fortify1Chance, rl->fortify1Chance);
+				COPY(fortify2Chance, rl->fortify2Chance);
+				COPY(poison1Chance, rl->poison1Chance);
+				COPY(poison2Chance, rl->poison2Chance);
+				COPY(poison3Chance, rl->poison3Chance);
+				COPY(poisonAdditionalChance, rl->poisonAdditionalChance);
+				COPY(foodChance, rl->foodChance);
+				return rl;
+			}
+
 			Rule(int _ruleVersion, int _ruleType, std::string _ruleName, int _rulePriority, bool _allowMixed, int _maxPotions,
 				std::vector<int> _potion1Chance, std::vector<int> _potion2Chance, std::vector<int> _potion3Chance,
 				std::vector<int> _potionAdditionalChance, std::vector<int> _fortify1Chance, std::vector<int> _fortify2Chance,
@@ -330,7 +385,11 @@ public:
 				validFood{ _validFood }
 			{ }
 			Rule() {}
-			Rule(bool invalid) { valid = invalid; }
+			Rule(bool invalid)
+			{
+				valid = invalid;
+				ruleName = "empty";
+			}
 
 		private:
 			RE::AlchemyItem* GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
@@ -351,17 +410,53 @@ public:
 			Settings::AlchemyEffect GetRandomEffect(Settings::ItemType type);
 			
 		};
-		static inline std::vector<Rule*> rules;
-		static inline std::map<RE::FormID, Rule*> npcMap;
-		static inline std::map<RE::FormID, Rule*> keywordMap;
-		static inline std::map<RE::FormID, Rule*> factionMap;
-		static inline std::map<RE::FormID, Rule*> raceMap;
-		static inline std::set<RE::FormID> bosses;
-		static inline std::set<RE::FormID> excludedNPCs;
-		static inline std::set<RE::TESFaction*> excludedFactions;
-		static inline std::set<RE::BGSKeyword*> excludedKeywords;
-		static inline std::set<RE::FormID> excludedRaces;
-		static inline std::set<RE::FormID> excludedItems;
+
+		class NPCTPLTInfo
+		{
+		public:
+			std::vector<RE::TESFaction*> tpltfactions;
+			std::vector<RE::BGSKeyword*> tpltkeywords;
+			RE::TESRace* tpltrace = nullptr;
+			RE::TESCombatStyle* tpltstyle = nullptr;
+			RE::TESClass* tpltclass = nullptr;
+		};
+
+	private:
+
+		static inline bool initialised = false;
+
+		static inline std::vector<Rule*> _rules;
+		static inline std::unordered_map<RE::FormID, Rule*> _npcMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _keywordMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _factionMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _raceMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _classMap;
+		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _combatStyleMap;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _assocMap;
+		static inline std::unordered_set<RE::FormID> _bosses;
+		static inline std::unordered_set<RE::FormID> _excludedNPCs;
+		//static inline std::unordered_set<RE::TESFaction*> _excludedFactions;
+		//static inline std::unordered_set<RE::BGSKeyword*> _excludedKeywords;
+		//static inline std::unordered_set<RE::FormID> _excludedRaces;
+		static inline std::unordered_set<RE::FormID> _excludedAssoc;
+		static inline std::unordered_set<RE::FormID> _excludedItems;
+		static inline std::unordered_set<RE::FormID> _baselineExclusions;
+
+	public:
+
+		static inline std::vector<Rule*> _dummyVecR;
+		static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
+		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
+		static inline std::unordered_set<RE::FormID> _dummySet1;
+
+		static std::vector<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
+		static std::unordered_map<RE::FormID, Rule*>* npcMap() { return initialised ? &_npcMap : &_dummyMapN; }
+		static std::unordered_map<RE::FormID, std::pair<int, Rule*>>* assocMap() { return initialised ? &_assocMap : &_dummyMap2; }
+		static std::unordered_set<RE::FormID>* bosses() { return initialised ? &_bosses : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* excludedNPCs() { return initialised ? &_excludedNPCs : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* excludedAssoc() { return initialised ? &_excludedAssoc : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
+		static std::unordered_set<RE::FormID>* baselineExclusions() { return initialised ? &_baselineExclusions : &_dummySet1; }
 
 		#define RandomRange 1000
 
@@ -377,15 +472,6 @@ public:
 		static inline Rule* defaultRule = nullptr;
 		static inline Rule* emptyRule = new Rule(false);
 
-		static Rule* FindRule(std::string name)
-		{
-			for (Rule* r : rules) {
-				if (r->ruleName == name)
-					return r;
-			}
-			return nullptr;
-		}
-
 		static std::vector<RE::AlchemyItem*> GetDistrItems(RE::Actor* actor);
 		static std::vector<RE::AlchemyItem*> GetDistrPotions(RE::Actor* actor);
 		static std::vector<RE::AlchemyItem*> GetDistrPoisons(RE::Actor* actor);
@@ -395,14 +481,35 @@ public:
 		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(RE::Actor* actor);
 		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(RE::Actor* actor);
 
+		static bool ExcludedNPC(RE::Actor* actor);
+		static bool ExcludedNPC(RE::TESNPC* npc);
+
 		friend void Settings::CheckActorsForRules();
+		friend void Settings::CheckCellForActors(RE::FormID cellid);
+		friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
+		friend void Settings::LoadDistrConfig();
 
 	private:
 		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 		static Rule* CalcRule(RE::Actor* actor);
-	};
+		static Rule* CalcRule(RE::TESNPC* npc);
+		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
+		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo);
+		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo = nullptr);
+		static std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
-	static void LoadDistrConfig();
+		static Rule* FindRule(std::string name)
+		{
+			for (Rule* r : _rules) {
+				if (r->ruleName == name)
+					return r;
+			}
+			return nullptr;
+		}
+
+		static NPCTPLTInfo ExtractTemplateInfo(RE::TESNPC* npc);
+		static NPCTPLTInfo ExtractTemplateInfo(RE::TESLevCharacter* lvl);
+	};
 
 	static inline int _MaxDuration = 10000;
 	static inline int _MaxFortifyDuration = 60000;
@@ -437,6 +544,7 @@ public:
 																				// 1) Animated Potion Drinking SE
 																				// 2) Potion Animated fix (SE)
 	static inline bool _CompatibilityPotionAnimatedFX_UseAnimations = false;	// if PotionAnimatedfx.esp is loaded, should their animations be used on all potions?
+	static inline bool _ApplySkillBoostPerks = true;							// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
 
 	// debug
 	static inline bool EnableLog = false;
@@ -448,6 +556,7 @@ public:
 													// 1 - highest and layer 1
 													// 2 - highest and layer 2
 	static inline bool EnableProfiling = false;
+	static inline bool _CalculateCellRules = false;
 
 	// distribution
 	static inline int _LevelEasy = 20;				// only distribute "weak" potions and poisons
@@ -484,9 +593,11 @@ public:
 
 	// intern
 	static inline bool _CheckActorsWithoutRules = false;	// checks for actors which do not have any rules, and prints their information to the, logfile
-
+	static inline bool _Test = false;
 
 	// intern
+private:
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _dummylist{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_main{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_rest{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_main{};
@@ -510,10 +621,36 @@ public:
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodstamina{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodhealth{};
 
-	static inline std::list<RE::AlchemyItem*> alitems{};
-	static inline std::list<RE::AlchemyItem*> potions{};
-	static inline std::list<RE::AlchemyItem*> food{};
-	static inline std::list<RE::AlchemyItem*> poisons{};
+	static inline bool _itemsInit = false;
+
+public:
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsWeak_main() { return _itemsInit ? &_potionsWeak_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsWeak_rest() { return _itemsInit ? &_potionsWeak_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsStandard_main() { return _itemsInit ? &_potionsStandard_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsStandard_rest() { return _itemsInit ? &_potionsStandard_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsPotent_main() { return _itemsInit ? &_potionsPotent_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsPotent_rest() { return _itemsInit ? &_potionsPotent_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsInsane_main() { return _itemsInit ? &_potionsInsane_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsInsane_rest() { return _itemsInit ? &_potionsInsane_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsBlood() { return _itemsInit ? &_potionsBlood : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsWeak_main() { return _itemsInit ? &_poisonsWeak_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsWeak_rest() { return _itemsInit ? &_poisonsWeak_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsStandard_main() { return _itemsInit ? &_poisonsStandard_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsStandard_rest() { return _itemsInit ? &_poisonsStandard_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsPotent_main() { return _itemsInit ? &_poisonsPotent_main : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsPotent_rest() { return _itemsInit ? &_poisonsPotent_rest : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsWeak() { return _itemsInit ? &_poisonsWeak : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsStandard() { return _itemsInit ? &_poisonsStandard : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsPotent() { return _itemsInit ? &_poisonsPotent : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsInsane() { return _itemsInit ? &_poisonsInsane : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodmagicka() { return _itemsInit ? &_foodmagicka : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodstamina() { return _itemsInit ? &_foodstamina : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodhealth() { return _itemsInit ? &_foodhealth : &_dummylist; }
+
+	//static inline std::list<RE::AlchemyItem*> alitems{};
+	//static inline std::list<RE::AlchemyItem*> potions{};
+	//static inline std::list<RE::AlchemyItem*> food{};
+	//static inline std::list<RE::AlchemyItem*> poisons{};
 
 	static inline RE::BGSKeyword* VendorItemPotion;
 	static inline RE::BGSKeyword* VendorItemFood;
@@ -521,6 +658,10 @@ public:
 	static inline RE::BGSKeyword* VendorItemPoison;
 
 	static inline RE::TESFaction* CurrentFollowerFaction;
+	static inline RE::TESFaction* CurrentHirelingFaction;
+
+	static inline RE::BGSPerk* AlchemySkillBoosts;
+	static inline RE::BGSPerk* PerkSkillBoosts;
 
 	static void Load()
 	{
@@ -566,6 +707,12 @@ public:
 		_featRemoveItemsOnDeath = ini.GetValue("Features", "RemoveItemsOnDeath") ? ini.GetBoolValue("Features", "RemoveItemsOnDeath") : true;
 		logger::info("[SETTINGS] {} {}", "RemoveItemsOnDeath", std::to_string(_featRemoveItemsOnDeath));
 		
+
+		// fixes
+		_ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", true);
+		logger::info("[SETTINGS] {} {}", "ApplySkillBoostPerks", std::to_string(_ApplySkillBoostPerks));
+
+
 		// compatibility
 		_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
 		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
@@ -673,6 +820,16 @@ public:
 		_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", false);
 		logger::info("[SETTINGS] {} {}", "CheckActorWithoutRules", std::to_string(_CheckActorsWithoutRules));
 
+		_CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", false);
+		logger::info("[SETTINGS] {} {}", "CalculateCellRules", std::to_string(_CalculateCellRules));
+		_Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", false);
+		logger::info("[SETTINGS] {} {}", "CalculateAllCellOnStartup", std::to_string(_Test));
+		if (_CalculateCellRules && _Test == false)
+		{
+			std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv", std::ofstream::out);
+			out << "CellName;RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
+		}
+
 		// save user settings, before applying adjustments
 		Save();
 
@@ -746,15 +903,74 @@ public:
 			if (SOM_player1st && SOM_verb) {
 				RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
 				RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
+				// ITMPotionUse
 				RE::TESForm* PotionUseF = RE::TESForm::LookupByID(0xB6435);
 				RE::BGSSoundDescriptorForm* PotionUse = nullptr;
 				if (PotionUseF)
 					PotionUse = PotionUseF->As<RE::BGSSoundDescriptorForm>();
-				RE::BGSSoundDescriptor* PotionUseSD = PotionUse->soundDescriptor;
-				RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
-				if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-					PotionUseOM->outputModel = SOMMono01400_verb;
-					logger::info("[SETTINGS] changed output model for potion drink sound effect");
+				if (PotionUse) {
+					RE::BGSSoundDescriptor* PotionUseSD = PotionUse->soundDescriptor;
+					RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
+					if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+						PotionUseOM->outputModel = SOMMono01400_verb;
+						logger::info("[SETTINGS] changed output model for ITMPotionUse sound effect");
+					}
+				}
+
+				//----Pickup Sounds only----
+				//// ITMPotionDownSD
+				//RE::TESForm* PotionDownF = RE::TESForm::LookupByID(0x3EDC0);
+				//RE::BGSSoundDescriptorForm* PotionDown = nullptr;
+				//if (PotionDownF)
+				//	PotionDown = PotionDownF->As<RE::BGSSoundDescriptorForm>();
+				//if (PotionDown) {
+				//	RE::BGSSoundDescriptor* PotionDownSD = PotionDown->soundDescriptor;
+				//	RE::BGSStandardSoundDef* PotionDownOM = (RE::BGSStandardSoundDef*)PotionDownSD;
+				//	if (PotionDownOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+				//		PotionDownOM->outputModel = SOMMono01400_verb;
+				//		logger::info("[SETTINGS] changed output model for ITMPotionDownSD sound effect");
+				//	}
+				//}
+				//// ITMPotionUpSD
+				//RE::TESForm* PotionUpF = RE::TESForm::LookupByID(0x3EDBD);
+				//RE::BGSSoundDescriptorForm* PotionUp = nullptr;
+				//if (PotionUpF)
+				//	PotionUp = PotionUpF->As<RE::BGSSoundDescriptorForm>();
+				//if (PotionUp) {
+				//	RE::BGSSoundDescriptor* PotionUpSD = PotionUp->soundDescriptor;
+				//	RE::BGSStandardSoundDef* PotionUpOM = (RE::BGSStandardSoundDef*)PotionUpSD;
+				//	if (PotionUpOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+				//		PotionUpOM->outputModel = SOMMono01400_verb;
+				//		logger::info("[SETTINGS] changed output model for ITMPotionUpSD sound effect");
+				//	}
+				//}
+				// -------------------------
+				
+				// ITMPoisonUse
+				RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x3EDBD);
+				RE::BGSSoundDescriptorForm* PoisonUse = nullptr;
+				if (PoisonUseF)
+					PoisonUse = PoisonUseF->As<RE::BGSSoundDescriptorForm>();
+				if (PoisonUse) {
+					RE::BGSSoundDescriptor* PoisonUseSD = PoisonUse->soundDescriptor;
+					RE::BGSStandardSoundDef* PoisonUseOM = (RE::BGSStandardSoundDef*)PoisonUseSD;
+					if (PoisonUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+						PoisonUseOM->outputModel = SOMMono01400_verb;
+						logger::info("[SETTINGS] changed output model for ITMPoisonUse sound effect");
+					}
+				}
+				// ITMFoodEat
+				RE::TESForm* FoodEatF = RE::TESForm::LookupByID(0xCAF94);
+				RE::BGSSoundDescriptorForm* FoodEat = nullptr;
+				if (FoodEatF)
+					FoodEat = FoodEatF->As<RE::BGSSoundDescriptorForm>();
+				if (FoodEat) {
+					RE::BGSSoundDescriptor* FoodEatSD = FoodEat->soundDescriptor;
+					RE::BGSStandardSoundDef* FoodEatOM = (RE::BGSStandardSoundDef*)FoodEatSD;
+					if (FoodEatOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+						FoodEatOM->outputModel = SOMMono01400_verb;
+						logger::info("[SETTINGS] changed output model for ITMFoodEat sound effect");
+					}
 				}
 			}
 		}
@@ -786,6 +1002,9 @@ public:
 		ini.SetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions, "NPCs are give fortify potions when they enter combat.");
 		ini.SetBoolValue("Features", "RemoveItemsOnDeath", _featRemoveItemsOnDeath, ";Remove items from NPCs after they died.");
 
+		// fixes
+		ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", _ApplySkillBoostPerks, ";Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply.");
+
 		// compatibility
 		ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. This is automatically enabled if zxlice's mod is detected");
 		ini.SetBoolValue("Compatibility", "Compatibility", _CompatibilityMode, ";General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
@@ -796,7 +1015,7 @@ public:
 		// distribution options
 		ini.SetLongValue("Distribution", "LevelEasy", _LevelEasy, ";NPC lower or equal this level are considered weak.");
 		ini.SetLongValue("Distribution", "LevelNormal", _LevelNormal, ";NPC lower or equal this level are considered normal in terms of strength.");
-		ini.SetLongValue("Distribution", "LevelDifficult", _LevelDifficult, ";NPC lower or equal this level are considered difficutl.");
+		ini.SetLongValue("Distribution", "LevelDifficult", _LevelDifficult, ";NPC lower or equal this level are considered difficult.");
 		ini.SetLongValue("Distribution", "LevelInsane", _LevelInsane, ";NPC lower or equal this level are considered insane. Everything above this is always treated as a boss.");
 
 		ini.SetBoolValue("Distribution", "GameDifficultyScaling", _GameDifficultyScaling, ";Disables NPC level scaling, but scales chance according to game difficulty.");
@@ -838,6 +1057,10 @@ public:
 		ini.SetLongValue("Debug", "LogLevel", LogLevel, ";1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, 4 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions. ");
 		ini.SetBoolValue("Debug", "EnableProfiling", EnableProfiling, ";Enables profiling output.");
 		ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, ";1 - only highest level functions write their executions times to the log, 2 - lower level functions are written, 3 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
+
+		ini.SetBoolValue("Debug", "CheckActorWithoutRules", _CheckActorsWithoutRules, ";Checks all actors in the game on game start whether they are applied the default distribution rule.");
+		ini.SetBoolValue("Debug", "CalculateCellRules", _CalculateCellRules, ";When entering a new cell in game, all distribution rules are calculatet once.\n;The result of the evaluation is written to a csv file, for rule debugging");
+		ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", _Test, ";10 seconds after loading a save game the function for \"CalculateAllCellRules\" is applied to all cells in the game");
 
 		ini.SaveFile(path);
 	}
@@ -1535,6 +1758,7 @@ public:
 			t = ItemType::kFood;
 		else if (item->IsPoison())
 			t = ItemType::kPoison;
+
 		return { alch, str , t};
 	}
 
@@ -1543,6 +1767,34 @@ public:
 	/// </summary>
 	static void ClassifyItems()
 	{
+		// resetting all items
+		_itemsInit = false;
+
+		_potionsWeak_main.clear();
+		_potionsWeak_rest.clear();
+		_potionsStandard_main.clear();
+		_potionsStandard_rest.clear();
+		_potionsPotent_main.clear();
+		_potionsPotent_rest.clear();
+		_potionsInsane_main.clear();
+		_potionsInsane_rest.clear();
+		_potionsBlood.clear();
+		_poisonsWeak_main.clear();
+		_poisonsWeak_rest.clear();
+		_poisonsStandard_main.clear();
+		_poisonsStandard_rest.clear();
+		_poisonsPotent_main.clear();
+		_poisonsPotent_rest.clear();
+		_poisonsWeak.clear();
+		_poisonsStandard.clear();
+		_poisonsPotent.clear();
+		_poisonsInsane.clear();
+		_foodmagicka.clear();
+		_foodstamina.clear();
+		_foodhealth.clear();
+
+		// start sorting items
+
 		auto begin = std::chrono::steady_clock::now();
 		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 		auto end = hashtable->end();
@@ -1559,13 +1811,12 @@ public:
 					}
 					auto clas = ClassifyItem(item);
 					// check wether item is excluded
-					if (Settings::Distribution::excludedItems.contains(item->GetFormID())) {
+					if (Settings::Distribution::excludedItems()->contains(item->GetFormID())) {
 						iter++;
 						continue;
 					}
 					// determine the type of item
-					if (std::get<2>(clas) == ItemType::kFood)
-					{
+					if (std::get<2>(clas) == ItemType::kFood) {
 						// we will only classify food which works on stamina, magicka or health for now
 						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0) {
@@ -1630,11 +1881,8 @@ public:
 						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
 							_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
 						else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagickaRate)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
+								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
+								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
 							switch (std::get<1>(clas)) {
 							case ItemStrength::kWeak:
 								_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
@@ -1671,28 +1919,32 @@ public:
 			iter++;
 		}
 		PROF1_1("[PROF] [ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
-		LOG1_1("{}[ClassifyItems] _potionsWeak_main {}", _potionsWeak_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsWeak_rest {}", _potionsWeak_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsStandard_main {}", _potionsStandard_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsStandard_rest {}", _potionsStandard_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsPotent_main {}", _potionsPotent_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsPotent_rest {}", _potionsPotent_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsInsane_main {}", _potionsInsane_main.size());
-		LOG1_1("{}[ClassifyItems] _potionsInsane_rest {}", _potionsInsane_rest.size());
-		LOG1_1("{}[ClassifyItems] _potionsBlood {}", _potionsBlood.size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak_main {}", _poisonsWeak_main.size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak_rest {}", _poisonsWeak_rest.size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard_main {}", _poisonsStandard_main.size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard_rest {}", _poisonsStandard_rest.size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent_main {}", _poisonsPotent_main.size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent_rest {}", _poisonsPotent_rest.size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak {}", _poisonsWeak.size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard {}", _poisonsStandard.size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent {}", _poisonsPotent.size());
-		LOG1_1("{}[ClassifyItems] _poisonsInsane {}", _poisonsInsane.size());
-		LOG1_1("{}[ClassifyItems] _foodmagicka {}", _foodmagicka.size());
-		LOG1_1("{}[ClassifyItems] _foodstamina {}", _foodstamina.size());
-		LOG1_1("{}[ClassifyItems] _foodhealth {}", _foodhealth.size());
+		
+		// items initialised
+		_itemsInit = true;
+		
+		LOG1_1("{}[ClassifyItems] _potionsWeak_main {}", potionsWeak_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsWeak_rest {}", potionsWeak_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsStandard_main {}", potionsStandard_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsStandard_rest {}", potionsStandard_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsPotent_main {}", potionsPotent_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsPotent_rest {}", potionsPotent_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsInsane_main {}", potionsInsane_main()->size());
+		LOG1_1("{}[ClassifyItems] _potionsInsane_rest {}", potionsInsane_rest()->size());
+		LOG1_1("{}[ClassifyItems] _potionsBlood {}", potionsBlood()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak_main {}", poisonsWeak_main()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak_rest {}", poisonsWeak_rest()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard_main {}", poisonsStandard_main()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard_rest {}", poisonsStandard_rest()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent_main {}", poisonsPotent_main()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent_rest {}", poisonsPotent_rest()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsWeak {}", poisonsWeak()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsStandard {}", poisonsStandard()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsPotent {}", poisonsPotent()->size());
+		LOG1_1("{}[ClassifyItems] _poisonsInsane {}", poisonsInsane()->size());
+		LOG1_1("{}[ClassifyItems] _foodmagicka {}", foodmagicka()->size());
+		LOG1_1("{}[ClassifyItems] _foodstamina {}", foodstamina()->size());
+		LOG1_1("{}[ClassifyItems] _foodhealth {}", foodhealth()->size());
 	}
 
 	/// <summary>

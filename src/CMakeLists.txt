@@ -6,7 +6,9 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Hooks.cpp"
 	"${SOURCE_DIR}/Events.cpp"
 	"${SOURCE_DIR}/Settings.cpp"
+	"${SOURCE_DIR}/Settings_Distribution.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
+	"${SOURCE_DIR}/Console.cpp"
 	"${SOURCE_DIR}/PCH.h"
 )
 
@@ -78,6 +80,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 			"/wd5053" # support for 'explicit(<expr>)' in C++17 and earlier is a vendor extension
 			"/wd5204" # 'type-name': class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly
 			"/wd5220" # 'member': a non-static data member with a volatile qualified type no longer implies that compiler generated copy / move constructors and copy / move assignment operators are not trivial
+			#"/wd4333" # to large right shift -> data loss
 
 			"$<$<CONFIG:DEBUG>:>"
 			"$<$<CONFIG:RELEASE>:/Zc:inline;/JMC-;/Ob3>"
