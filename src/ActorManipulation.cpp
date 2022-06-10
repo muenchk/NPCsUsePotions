@@ -204,9 +204,9 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 	//RE::EffectSetting* sett = nullptr;
 	LOG_2("{}[ActorUseFood] trying to find food");
 	auto ls = GetMatchingFood(_actor, alchemyEffect, raw);
-	LOG_2("{}[ActorUseFood] step1");
+	//LOG_2("{}[ActorUseFood] step1");
 	ls.sort(Utility::SortMagnitude);
-	LOG_2("{}[ActorUseFood] step2");
+	//LOG_2("{}[ActorUseFood] step2");
 	// got all potions the actor has sorted by magnitude.
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0) {

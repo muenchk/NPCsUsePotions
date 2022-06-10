@@ -12,6 +12,7 @@
 #include <iostream>
 #include "ActorManipulation.h"
 #include <limits>
+#include <filesystem>
 
 		
 namespace Events
@@ -436,13 +437,13 @@ namespace Events
 				}
 				sem_actorreset.release();
 
+				if (actor->IsDead())
+					return EventResult::kContinue;
+
 				if (Settings::_featUseFood) {
 					// use food at the beginning of the fight to simulate the npc having eaten
 					ACM::ActorUseAnyFood(actor, false);
 				}
-
-				if (actor->IsDead())
-					return EventResult::kContinue;
 
 				sem.acquire();
 				InitializeCompatibilityObjects();
@@ -467,7 +468,7 @@ namespace Events
 				auto end = aclist.end();
 				while (it != end) {
 					if ((*it)->actor == actor) {
-						logger::info("CombatEvent deleting list entry");
+						//logger::info("CombatEvent deleting list entry");
 						delete (*it);
 						aclist.erase(it);
 						break;
@@ -548,7 +549,7 @@ namespace Events
 
 				sem.acquire();
 				// checking if player should be handled
-				if (Settings::_playerRestorationEnabled && RE::PlayerCharacter::GetSingleton()->IsInCombat()) {
+				if ((Settings::_playerRestorationEnabled || Settings::_playerUseFortifyPotions || Settings::_playerUsePoisons) && RE::PlayerCharacter::GetSingleton()->IsInCombat()) {
 					// inject player into the list and remove him later
 					aclist.insert(aclist.end(), playerinfo);
 					LOG_3("{}[CheckActors] Adding player to the list");
@@ -560,93 +561,93 @@ namespace Events
 				for (int i = 0; i < aclist.size(); i++) {
 					curr = aclist[i];
 					if (curr == nullptr) {
-						aclist.erase(aclist.begin() + i);
-						// repeat current value, since the size has changed
-						i--;
+						continue;
 					}
 					LOG1_1("{}[CheckActors] [Actor] {}", Utility::GetHex((curr->actor)->GetFormID()));
 					// if actor is valid and not dead
 					if (curr->actor && !(curr->actor->IsDead()) && curr->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
 						// handle potions
-						
 						// get current duration
 						curr->durHealth -= Settings::_cycletime;
 						curr->durMagicka -= Settings::_cycletime;
 						curr->durStamina -= Settings::_cycletime;
 						curr->durFortify -= Settings::_cycletime;
 						curr->durRegeneration -= Settings::_cycletime;
-						// get combined effect for magicka, health, and stamina
-						if (Settings::_featHealthRestoration && curr->durHealth < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kHealth) < Settings::_healthThreshold)
-							alch = static_cast<uint64_t>(AlchemyEffect::kHealth);
-						else
-							alch = 0;
-						if (Settings::_featMagickaRestoration && curr->durMagicka < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kMagicka) < Settings::_magickaThreshold)
-							alch2 = static_cast<uint64_t>(AlchemyEffect::kMagicka);
-						else
-							alch2 = 0;
-						if (Settings::_featStaminaRestoration && curr->durStamina < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kStamina) < Settings::_staminaThreshold)
-							alch3 = static_cast<uint64_t>(AlchemyEffect::kStamina);
-						else
-							alch3 = 0;
-						// construct combined effect
-						alch |= alch2 | alch3;
-						LOG4_4("{}[CheckActors] check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch, curr->durHealth, curr->durMagicka, curr->durStamina);
+
 						int counter = 0;
-						// use potions
-						// do the first round
-						if (alch != 0 && (Settings::_UsePotionChance == 100 || rand100(rand) < Settings::_UsePotionChance)) {
-							auto tup = ACM::ActorUsePotion(curr->actor, alch);
-							LOG1_2("{}[CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<1>(tup)));
-							switch (std::get<1>(tup)) {
-							case AlchemyEffect::kHealth:
-								curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
-								LOG2_4("{}[CheckActors] use health pot with duration {} and magnitude {}", curr->durHealth, std::get<0>(tup));
-								break;
-							case AlchemyEffect::kMagicka:
-								curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
-								LOG2_4("{}[CheckActors] use magicka pot with duration {} and magnitude {}", curr->durMagicka, std::get<0>(tup));
-								break;
-							case AlchemyEffect::kStamina:
-								curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
-								LOG2_4("{}[CheckActors] use stamina pot with duration {} and magnitude {}", curr->durStamina, std::get<0>(tup));
-								break;
-							}
-							// do the rest of the rounds
-							for (int c = 1; c < Settings::_maxPotionsPerCycle; c++) {
-								// get combined effect for magicka, health, and stamina
-								if (Settings::_featHealthRestoration && curr->durHealth < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kHealth) < Settings::_healthThreshold)
-									alch = static_cast<uint64_t>(AlchemyEffect::kHealth);
-								else
-									alch = 0;
-								if (Settings::_featMagickaRestoration && curr->durMagicka < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kMagicka) < Settings::_magickaThreshold)
-									alch2 = static_cast<uint64_t>(AlchemyEffect::kMagicka);
-								else
-									alch2 = 0;
-								if (Settings::_featStaminaRestoration && curr->durStamina < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kStamina) < Settings::_staminaThreshold)
-									alch3 = static_cast<uint64_t>(AlchemyEffect::kStamina);
-								else
-									alch3 = 0;
-								// construct combined effect
-								alch |= alch2 | alch3;
-								if (alch != 0) {
-									tup = ACM::ActorUsePotion(curr->actor, std::get<2>(tup));
-									switch (std::get<1>(tup)) {
-									case AlchemyEffect::kHealth:
-										curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
-										counter++;
-										break;
-									case AlchemyEffect::kMagicka:
-										curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
-										counter++;
-										break;
-									case AlchemyEffect::kStamina:
-										curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
-										counter++;
-										break;
-									}
-								}
-								else
+
+						if (!curr->actor->IsPlayerRef() || Settings::_playerRestorationEnabled) {
+							// get combined effect for magicka, health, and stamina
+							if (Settings::_featHealthRestoration && curr->durHealth < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kHealth) < Settings::_healthThreshold)
+								alch = static_cast<uint64_t>(AlchemyEffect::kHealth);
+							else
+								alch = 0;
+							if (Settings::_featMagickaRestoration && curr->durMagicka < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kMagicka) < Settings::_magickaThreshold)
+								alch2 = static_cast<uint64_t>(AlchemyEffect::kMagicka);
+							else
+								alch2 = 0;
+							if (Settings::_featStaminaRestoration && curr->durStamina < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kStamina) < Settings::_staminaThreshold)
+								alch3 = static_cast<uint64_t>(AlchemyEffect::kStamina);
+							else
+								alch3 = 0;
+							// construct combined effect
+							alch |= alch2 | alch3;
+							LOG4_4("{}[CheckActors] check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch, curr->durHealth, curr->durMagicka, curr->durStamina);
+							// use potions
+							// do the first round
+							if (alch != 0 && (Settings::_UsePotionChance == 100 || rand100(rand) < Settings::_UsePotionChance)) {
+								auto tup = ACM::ActorUsePotion(curr->actor, alch);
+								LOG1_2("{}[CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<1>(tup)));
+								switch (std::get<1>(tup)) {
+								case AlchemyEffect::kHealth:
+									curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
+									LOG2_4("{}[CheckActors] use health pot with duration {} and magnitude {}", curr->durHealth, std::get<0>(tup));
 									break;
+								case AlchemyEffect::kMagicka:
+									curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+									LOG2_4("{}[CheckActors] use magicka pot with duration {} and magnitude {}", curr->durMagicka, std::get<0>(tup));
+									break;
+								case AlchemyEffect::kStamina:
+									curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+									LOG2_4("{}[CheckActors] use stamina pot with duration {} and magnitude {}", curr->durStamina, std::get<0>(tup));
+									break;
+								}
+								// do the rest of the rounds
+								for (int c = 1; c < Settings::_maxPotionsPerCycle; c++) {
+									// get combined effect for magicka, health, and stamina
+									if (Settings::_featHealthRestoration && curr->durHealth < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kHealth) < Settings::_healthThreshold)
+										alch = static_cast<uint64_t>(AlchemyEffect::kHealth);
+									else
+										alch = 0;
+									if (Settings::_featMagickaRestoration && curr->durMagicka < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kMagicka) < Settings::_magickaThreshold)
+										alch2 = static_cast<uint64_t>(AlchemyEffect::kMagicka);
+									else
+										alch2 = 0;
+									if (Settings::_featStaminaRestoration && curr->durStamina < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kStamina) < Settings::_staminaThreshold)
+										alch3 = static_cast<uint64_t>(AlchemyEffect::kStamina);
+									else
+										alch3 = 0;
+									// construct combined effect
+									alch |= alch2 | alch3;
+									if (alch != 0) {
+										tup = ACM::ActorUsePotion(curr->actor, std::get<2>(tup));
+										switch (std::get<1>(tup)) {
+										case AlchemyEffect::kHealth:
+											curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											counter++;
+											break;
+										case AlchemyEffect::kMagicka:
+											curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											counter++;
+											break;
+										case AlchemyEffect::kStamina:
+											curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											counter++;
+											break;
+										}
+									} else
+										break;
+								}
 							}
 						}
 
@@ -654,7 +655,7 @@ namespace Events
 						uint32_t tcombatdata = 0;
 						RE::ActorHandle handle = curr->actor->currentCombatTarget;
 						
-						if (Settings::_featUsePoisons && (Settings::_UsePoisonChance == 100 || rand100(rand) < Settings::_UsePoisonChance)) {
+						if (Settings::_featUsePoisons && (Settings::_UsePoisonChance == 100 || rand100(rand) < Settings::_UsePoisonChance) && (!curr->actor->IsPlayerRef() || Settings::_playerUsePoisons)) {
 							// handle poisons
 							if (curr->actor->IsInFaction(Settings::CurrentFollowerFaction) || curr->actor->IsPlayerRef()) {
 								if (combatdata != 0 && (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
@@ -744,8 +745,8 @@ namespace Events
 										}
 										LOG1_4("{}[CheckActors] check for poison with effect {}", effects);
 										auto tup = ACM::ActorUsePoison(curr->actor, effects);
-										if (std::get<1>(tup) != Settings::AlchemyEffect::kNone)
-											logger::info("Used poison on actor:\t{}", curr->actor->GetName());
+										//if (std::get<1>(tup) != Settings::AlchemyEffect::kNone)
+										//	logger::info("Used poison on actor:\t{}", curr->actor->GetName());
 									}
 								}
 								if (combatdata == 0)
@@ -762,7 +763,7 @@ namespace Events
 							// else Mage or Hand to Hand which cannot use poisons
 						}
 
-						if (Settings::_featUseFortifyPotions && counter < Settings::_maxPotionsPerCycle) {
+						if (Settings::_featUseFortifyPotions && counter < Settings::_maxPotionsPerCycle && (!(curr->actor->IsPlayerRef()) || Settings::_playerUseFortifyPotions)) {
 							//logger::info("fortify potions stuff");
 
 							if (curr->actor->IsInFaction(Settings::CurrentFollowerFaction) || curr->actor->IsPlayerRef() && !(Settings::_EnemyNumberThreshold < aclist.size() || (handle && handle.get() && handle.get().get() && handle.get().get()->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::_EnemyLevelScalePlayerLevel))) {
@@ -934,6 +935,144 @@ namespace Events
 		actorhandlerrunning = false;
 	}
 
+	std::thread* testhandler = nullptr;
+
+	void TestHandler() {
+		std::this_thread::sleep_for(10s);
+		RE::UI* ui = RE::UI::GetSingleton();
+		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrder.csv";
+		std::string pathid = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrderID.csv";
+		std::string pathfail = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellFail.csv";
+		std::string pathfailid = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellFailID.csv";
+		std::unordered_set<uint32_t> done;
+		std::unordered_set<std::string> excluded;
+		std::unordered_set<uint32_t> excludedid;
+		if (std::filesystem::exists(path)) {
+			std::ifstream inp(path);
+			std::ifstream inpid(pathid);
+			std::ifstream dones("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv");
+			std::string lineinp;
+			std::string lastdone;
+			std::string tmp;
+			std::string id;
+			uint32_t formid = 0;
+			while (std::getline(dones, tmp))
+				lastdone = tmp;
+			size_t pos = lastdone.find(';');
+			if (pos != std::string::npos) {
+				lastdone = lastdone.substr(0, pos);
+			}
+			bool flag = false;
+			while (std::getline(inp, lineinp) && std::getline(inpid, id)) {
+				if (flag == true) {
+					break;
+				}
+				if (lastdone == lineinp && lineinp != "Wilderness")
+					flag = true;
+				try {
+					formid = static_cast<uint32_t>(std::stol(id, nullptr, 16));
+					done.insert(formid);
+				} catch (std::exception&) {
+					//logger::info("tryna fail");
+				}
+			}
+			excluded.insert(lineinp);
+			if (std::filesystem::exists(pathfail)) {
+				std::ifstream fail(pathfail);
+				std::ifstream failid(pathfailid);
+				while (std::getline(fail, tmp)) {
+					excluded.insert(tmp);
+				}
+				while (std::getline(failid, tmp)) {
+					try {
+						formid = static_cast<uint32_t>(std::stol(tmp, nullptr, 16));
+						excludedid.insert(formid);
+					} catch (std::exception&) {
+						//logger::info("tryna fail fail");
+					}
+				}
+				fail.close();
+				failid.close();
+			}
+			inp.close();
+			dones.close();
+			std::ofstream failout(pathfail);
+			std::ofstream failoutid(pathfailid);
+			auto it = excluded.begin();
+			while (it != excluded.end()) {
+				failout << *it << "\n";
+				it++;
+			}
+			auto itr = excludedid.begin();
+			while (itr != excludedid.end()) {
+				failoutid << Utility::GetHex(*itr) << "\n";
+				itr++;
+			}
+		}
+		std::ofstream out = std::ofstream(path, std::ofstream::out);
+		std::ofstream outid = std::ofstream(pathid, std::ofstream::out);
+
+
+		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
+		auto iter = hashtable->begin();
+
+		//logger::info("tryna start");
+		RE::TESObjectCELL * cell = nullptr;
+		while (iter != hashtable->end()) {
+			if ((*iter).second) {
+				cell = ((*iter).second)->As<RE::TESObjectCELL>();
+				if (cell) {
+					out << cell->GetFormEditorID() << "\n";
+					outid << Utility::GetHex(cell->GetFormID()) << "\n";
+				}
+			}
+			iter++;
+		}
+		out.close();
+		outid.close();
+		iter = hashtable->begin();
+		while (iter != hashtable->end()) {
+			if ((*iter).second) {
+				cell = ((*iter).second)->As<RE::TESObjectCELL>();
+				if (cell) {
+					if (excludedid.contains(cell->GetFormID()) || done.contains(cell->GetFormID()) || std::string(cell->GetFormEditorID()) == "Wilderness") {
+						iter++;
+						continue;
+					}
+					while (ui->GameIsPaused()) {
+						std::this_thread::sleep_for(100ms);
+					}
+					if (cell->references.size() > 0) {
+						RE::PlayerCharacter::GetSingleton()->MoveTo((*(cell->references.begin())).get());
+					}
+					std::this_thread::sleep_for(7s);
+				}
+			}
+			iter++;
+		}
+		//logger::info("tryna end");
+	}
+
+	void TestAllCells()
+	{
+		std::this_thread::sleep_for(10s);
+		RE::UI* ui = RE::UI::GetSingleton();
+		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
+		auto iter = hashtable->begin();
+		while (iter != hashtable->end()) {
+			if ((*iter).second) {
+				auto cell = ((*iter).second)->As<RE::TESObjectCELL>();
+				if (cell) {
+					while (ui->GameIsPaused()) {
+						std::this_thread::sleep_for(100ms);
+					}
+					Settings::CheckCellForActors(cell->GetFormID());
+				}
+			}
+			iter++;
+		}
+	}
+
 	/// <summary>
 	/// EventHandler for TESLoadGameEvent. Loads main thread
 	/// </summary>
@@ -967,6 +1106,29 @@ namespace Events
 		// reset the list of actors that died
 		deads.clear();
 
+		if (testhandler == nullptr) {
+			testhandler = new std::thread(TestAllCells);
+			LOG_1("{}[LoadGameEvent] Started TestHandler");
+		}
+
+		return EventResult::kContinue;
+	}
+
+
+	std::unordered_set<RE::FormID> cells;
+	/// <summary>
+	/// EventHandler for Debug purposes. It calculates the distribution rules for all npcs in the cell
+	/// </summary>
+	/// <param name="a_event"></param>
+	/// <param name="a_eventSource"></param>
+	/// <returns></returns>
+	EventResult EventHandler::ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>*) {
+		//logger::info("[CELLEVENT]");
+		if (cells.contains(a_event->cellID) == false) {
+			cells.insert(a_event->cellID);
+			Settings::CheckCellForActors(a_event->cellID);
+		}
+
 		return EventResult::kContinue;
 	}
 
@@ -983,10 +1145,10 @@ namespace Events
     /// <summary>
     /// Registers us for all Events we want to receive
     /// </summary>
-    void EventHandler::Register()
-    {
+	void EventHandler::Register()
+	{
 		auto scriptEventSourceHolder = RE::ScriptEventSourceHolder::GetSingleton();
-        scriptEventSourceHolder->GetEventSource<RE::TESHitEvent>()->AddEventSink(EventHandler::GetSingleton());
+		scriptEventSourceHolder->GetEventSource<RE::TESHitEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESHitEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESCombatEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
@@ -995,6 +1157,10 @@ namespace Events
 		if (Settings::_featRemoveItemsOnDeath) {
 			scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 			LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
+		}
+		if (Settings::_CalculateCellRules) {
+			RE::PlayerCharacter::GetSingleton()->GetEventSource<RE::BGSActorCellEvent>()->AddEventSink(EventHandler::GetSingleton());
+			LOG1_1("{}Registered {}", typeid(RE::BGSActorCellEvent).name());
 		}
 	}
 

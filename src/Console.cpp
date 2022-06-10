@@ -19,11 +19,17 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	//logger::info("console 3");
 	Settings::ActorStrength acs = Settings::ActorStrength::Weak;
 	Settings::ItemStrength is = Settings::ItemStrength::kWeak;
-	std::vector<Settings::Distribution::Rule*> rls = Settings::Distribution::CalcAllRules(actor, acs, is);
+	std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> rls = Settings::Distribution::CalcAllRules(actor, acs, is);
 	//logger::info("console 4");
 
 	std::string tmp = "Displaying stats for Actor:\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::GetHex(actor->GetFormID());
 	//logger::info("console 5");
+	console->Print(tmp.c_str());
+	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetRace()->GetFormID()) + "\t" + std::string(actor->GetRace()->GetFormEditorID());
+	console->Print(tmp.c_str());
+	tmp = "ActorBase:\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetName());
+	console->Print(tmp.c_str());
+	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetRace()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
 	//logger::info("console 6");
 	tmp = "Strength of Actor:\t\t\t" + Utility::ToString(acs);
@@ -36,7 +42,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	tmp = "Combat data:\t\t\t\t" + Utility::ToStringCombatStyle(Utility::GetCombatData(actor));
 	console->Print(tmp.c_str());
 	//logger::info("console 10");
-	tmp = "Applied Rule:\t\t\t\t" + (rls[0] ? std::string(rls[0]->ruleName) : "");
+	tmp = "Applied Rule:\t\t\t\t" + (std::get<1>(rls[0]) ? std::string(std::get<1>(rls[0])->ruleName) : "");
 	//logger::info("console 11");
 	console->Print(tmp.c_str());
 	//logger::info("console 12");
@@ -45,9 +51,13 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	for (int i = 1; i < rls.size(); i++) {
 		//logger::info("console 13");
-		if (rls[i]) {
+		if (std::get<1>(rls[i])) {
 			//logger::info("console 14.0");
-			tmp = "Found Rule:\t\t\t\t" + (rls[i] ? rls[i]->ruleName : "");
+			tmp = "Found Rule:\t\t\t\t" + (std::get<1>(rls[i]) ? std::get<1>(rls[i])->ruleName : "") 
+				+ "\tPrio:\t" 
+				+ std::to_string(std::get<0>(rls[i])) 
+				+ "\tInfo:\t" 
+				+ std::get<2>(rls[i]);
 		} else {
 			//logger::info("console 14.1");
 			tmp = "ERROR";

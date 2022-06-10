@@ -235,6 +235,10 @@ public:
 
 	static void LoadDistrConfig();
 
+	static void CheckCellForActors(RE::FormID cellid);
+
+	static void ApplySkillBoostPerks();
+
 	class Distribution
 	{
 	public:
@@ -305,6 +309,42 @@ public:
 			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
 			std::vector<RE::AlchemyItem*> GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
 
+#define COPY(vec1, vec2)       \
+	vec2.reserve(vec1.size()); \
+	std::copy(vec1.begin(), vec1.end(), vec2.begin());
+
+			Rule* Clone()
+			{
+				Rule* rl = new Rule();
+				rl->ruleVersion = ruleVersion;
+				rl->valid = valid;
+				rl->ruleType = ruleType;
+				rl->ruleName = ruleName;
+				rl->rulePriority = rulePriority;
+				rl->assocObjects = assocObjects;
+				rl->potionProperties = potionProperties;
+				rl->fortifyproperties = fortifyproperties;
+				rl->poisonProperties = poisonProperties;
+				rl->foodProperties = foodProperties;
+				rl->allowMixed = allowMixed;
+				rl->maxPotions = maxPotions;
+				rl->maxPoisons = maxPoisons;
+				rl->potionTierAdjust = potionTierAdjust;
+				rl->poisonTierAdjust = poisonTierAdjust;
+				COPY(potion1Chance, rl->potion1Chance);
+				COPY(potion2Chance, rl->potion2Chance);
+				COPY(potion3Chance, rl->potion3Chance);
+				COPY(potionAdditionalChance, rl->potionAdditionalChance);
+				COPY(fortify1Chance, rl->fortify1Chance);
+				COPY(fortify2Chance, rl->fortify2Chance);
+				COPY(poison1Chance, rl->poison1Chance);
+				COPY(poison2Chance, rl->poison2Chance);
+				COPY(poison3Chance, rl->poison3Chance);
+				COPY(poisonAdditionalChance, rl->poisonAdditionalChance);
+				COPY(foodChance, rl->foodChance);
+				return rl;
+			}
+
 			Rule(int _ruleVersion, int _ruleType, std::string _ruleName, int _rulePriority, bool _allowMixed, int _maxPotions,
 				std::vector<int> _potion1Chance, std::vector<int> _potion2Chance, std::vector<int> _potion3Chance,
 				std::vector<int> _potionAdditionalChance, std::vector<int> _fortify1Chance, std::vector<int> _fortify2Chance,
@@ -371,6 +411,16 @@ public:
 			
 		};
 
+		class NPCTPLTInfo
+		{
+		public:
+			std::vector<RE::TESFaction*> tpltfactions;
+			std::vector<RE::BGSKeyword*> tpltkeywords;
+			RE::TESRace* tpltrace = nullptr;
+			RE::TESCombatStyle* tpltstyle = nullptr;
+			RE::TESClass* tpltclass = nullptr;
+		};
+
 	private:
 
 		static inline bool initialised = false;
@@ -435,6 +485,7 @@ public:
 		static bool ExcludedNPC(RE::TESNPC* npc);
 
 		friend void Settings::CheckActorsForRules();
+		friend void Settings::CheckCellForActors(RE::FormID cellid);
 		friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
 		friend void Settings::LoadDistrConfig();
 
@@ -443,8 +494,9 @@ public:
 		static Rule* CalcRule(RE::Actor* actor);
 		static Rule* CalcRule(RE::TESNPC* npc);
 		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
-		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is);
-		static std::vector<Rule*> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
+		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo);
+		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo = nullptr);
+		static std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
 		static Rule* FindRule(std::string name)
 		{
@@ -454,6 +506,9 @@ public:
 			}
 			return nullptr;
 		}
+
+		static NPCTPLTInfo ExtractTemplateInfo(RE::TESNPC* npc);
+		static NPCTPLTInfo ExtractTemplateInfo(RE::TESLevCharacter* lvl);
 	};
 
 	static inline int _MaxDuration = 10000;
@@ -489,6 +544,7 @@ public:
 																				// 1) Animated Potion Drinking SE
 																				// 2) Potion Animated fix (SE)
 	static inline bool _CompatibilityPotionAnimatedFX_UseAnimations = false;	// if PotionAnimatedfx.esp is loaded, should their animations be used on all potions?
+	static inline bool _ApplySkillBoostPerks = true;							// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
 
 	// debug
 	static inline bool EnableLog = false;
@@ -500,6 +556,7 @@ public:
 													// 1 - highest and layer 1
 													// 2 - highest and layer 2
 	static inline bool EnableProfiling = false;
+	static inline bool _CalculateCellRules = false;
 
 	// distribution
 	static inline int _LevelEasy = 20;				// only distribute "weak" potions and poisons
@@ -536,7 +593,7 @@ public:
 
 	// intern
 	static inline bool _CheckActorsWithoutRules = false;	// checks for actors which do not have any rules, and prints their information to the, logfile
-
+	static inline bool _Test = false;
 
 	// intern
 private:
@@ -601,6 +658,10 @@ public:
 	static inline RE::BGSKeyword* VendorItemPoison;
 
 	static inline RE::TESFaction* CurrentFollowerFaction;
+	static inline RE::TESFaction* CurrentHirelingFaction;
+
+	static inline RE::BGSPerk* AlchemySkillBoosts;
+	static inline RE::BGSPerk* PerkSkillBoosts;
 
 	static void Load()
 	{
@@ -646,6 +707,12 @@ public:
 		_featRemoveItemsOnDeath = ini.GetValue("Features", "RemoveItemsOnDeath") ? ini.GetBoolValue("Features", "RemoveItemsOnDeath") : true;
 		logger::info("[SETTINGS] {} {}", "RemoveItemsOnDeath", std::to_string(_featRemoveItemsOnDeath));
 		
+
+		// fixes
+		_ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", true);
+		logger::info("[SETTINGS] {} {}", "ApplySkillBoostPerks", std::to_string(_ApplySkillBoostPerks));
+
+
 		// compatibility
 		_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
 		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
@@ -752,6 +819,16 @@ public:
 
 		_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", false);
 		logger::info("[SETTINGS] {} {}", "CheckActorWithoutRules", std::to_string(_CheckActorsWithoutRules));
+
+		_CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", false);
+		logger::info("[SETTINGS] {} {}", "CalculateCellRules", std::to_string(_CalculateCellRules));
+		_Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", false);
+		logger::info("[SETTINGS] {} {}", "CalculateAllCellOnStartup", std::to_string(_Test));
+		if (_CalculateCellRules && _Test == false)
+		{
+			std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv", std::ofstream::out);
+			out << "CellName;RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
+		}
 
 		// save user settings, before applying adjustments
 		Save();
@@ -925,6 +1002,9 @@ public:
 		ini.SetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions, "NPCs are give fortify potions when they enter combat.");
 		ini.SetBoolValue("Features", "RemoveItemsOnDeath", _featRemoveItemsOnDeath, ";Remove items from NPCs after they died.");
 
+		// fixes
+		ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", _ApplySkillBoostPerks, ";Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply.");
+
 		// compatibility
 		ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. This is automatically enabled if zxlice's mod is detected");
 		ini.SetBoolValue("Compatibility", "Compatibility", _CompatibilityMode, ";General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
@@ -978,8 +1058,9 @@ public:
 		ini.SetBoolValue("Debug", "EnableProfiling", EnableProfiling, ";Enables profiling output.");
 		ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, ";1 - only highest level functions write their executions times to the log, 2 - lower level functions are written, 3 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
 
-		if (_CheckActorsWithoutRules)
-			ini.SetBoolValue("Debug", "CheckActorWithoutRules", _CheckActorsWithoutRules);
+		ini.SetBoolValue("Debug", "CheckActorWithoutRules", _CheckActorsWithoutRules, ";Checks all actors in the game on game start whether they are applied the default distribution rule.");
+		ini.SetBoolValue("Debug", "CalculateCellRules", _CalculateCellRules, ";When entering a new cell in game, all distribution rules are calculatet once.\n;The result of the evaluation is written to a csv file, for rule debugging");
+		ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", _Test, ";10 seconds after loading a save game the function for \"CalculateAllCellRules\" is applied to all cells in the game");
 
 		ini.SaveFile(path);
 	}

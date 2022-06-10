@@ -67,6 +67,14 @@ public:
 		return ss.str();
 	}
 
+	static std::string ToLower(std::string s)
+	{
+		std::transform(s.begin(), s.end(), s.begin(),
+			[](unsigned char c) { return (unsigned char)std::tolower(c); }  // correct
+		);
+		return s;
+	}
+
 	static std::string ToString(Settings::ActorStrength acs)
 	{
 		switch (acs) {
@@ -870,7 +878,7 @@ public:
 					break;
 			}
 		}
-		logger::info("poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", actor->GetName(), pois && pois->poison ? pois->poison->GetName() : "not found", pois ? pois->count :  -1);
+		//logger::info("poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", actor->GetName(), pois && pois->poison ? pois->poison->GetName() : "not found", pois ? pois->count :  -1);
 
 		if (pois && pois->count > 0)
 			return false;

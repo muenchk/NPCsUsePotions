@@ -447,7 +447,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] potions size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
-		logger::info("potions to give:\t{}", ritems.size());
+		//logger::info("potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributePoisons) {
 		auto ritems = rule->GetRandomPoisons(is, acs);
@@ -461,7 +461,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] poisons size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
-		logger::info("poisons to give:\t{}", ritems.size());
+		//logger::info("poisons to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFortifyPotions) {
 		auto ritems = rule->GetRandomFortifyPotions(is, acs);
@@ -475,7 +475,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] fortify size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
-		logger::info("fortify potions to give:\t{}", ritems.size());
+		//logger::info("fortify potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFood) {
 		auto ritems = rule->GetRandomFood(is, acs);
@@ -491,7 +491,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 			LOG1_4("{}[GetDistrItems] food size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
-		logger::info("food to give:\t{}", ritems.size());
+		//logger::info("food to give:\t{}", ritems.size());
 	}
 	if (ret.size() > 0 && ret.back() == nullptr) {
 		LOG_4("{}[GetDistrItems] remove last item");
@@ -646,7 +646,11 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 {
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
-	return CalcRule(actor, acs, is);
+	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
+		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		return CalcRule(actor, acs, is, &info);
+	} else
+		return CalcRule(actor, acs, is, nullptr);
 }
 
 Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc)
@@ -654,6 +658,17 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc)
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	return CalcRule(npc, acs, is);
+}
+
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
+{
+	//logger::info("fire 1");
+	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
+		//logger::info("fire 2");
+		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		return CalcRule(actor, acs, is, &info);
+	} else
+		return CalcRule(actor, acs, is, nullptr);
 }
 
 /// <summary>
@@ -666,8 +681,9 @@ bool Settings::Distribution::ExcludedNPC(RE::Actor* actor)
 	// skip fucking deleted references
 	if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
-	bool ret = actor->IsInFaction(Settings::CurrentFollowerFaction) ||
-	           Settings::Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
+	bool ret = Settings::Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
+	           actor->IsInFaction(Settings::CurrentFollowerFaction) ||
+	           actor->IsInFaction(Settings::CurrentHirelingFaction) ||
 	           (Settings::Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID())) ||
 	           actor->IsGhost();
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
@@ -681,8 +697,13 @@ bool Settings::Distribution::ExcludedNPC(RE::Actor* actor)
 			if (base->factions[i].faction)
 				ret |= Settings::Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID());
 		}
-		if (actor->GetRace())
-			ret |= Settings::Distribution::excludedAssoc()->contains(actor->GetRace()->GetFormID());
+		auto race = actor->GetRace();
+		if (race) {
+			ret |= Settings::Distribution::excludedAssoc()->contains(race->GetFormID());
+			for (uint32_t i = 0; i < race->numKeywords; i++) {
+				ret |= Settings::Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+			}
+		}
 	}
 	return ret;
 }
@@ -696,8 +717,9 @@ bool Settings::Distribution::ExcludedNPC(RE::TESNPC* npc)
 	// skip fucking deleted references
 	if (npc->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
-	bool ret = npc->IsInFaction(Settings::CurrentFollowerFaction) ||
-	           (Settings::Distribution::excludedNPCs()->contains(npc->GetFormID())) ||
+	bool ret = (Settings::Distribution::excludedNPCs()->contains(npc->GetFormID())) ||
+	           npc->IsInFaction(Settings::CurrentFollowerFaction) ||
+	           npc->IsInFaction(Settings::CurrentHirelingFaction) ||
 	           npc->IsGhost();
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 	if (!Settings::Distribution::npcMap()->contains(npc->GetFormID()) && ret == false) {
@@ -709,13 +731,18 @@ bool Settings::Distribution::ExcludedNPC(RE::TESNPC* npc)
 			if (npc->factions[i].faction)
 				ret |= Settings::Distribution::excludedAssoc()->contains(npc->factions[i].faction->GetFormID());
 		}
-		if (npc->GetRace())
-			ret |= Settings::Distribution::excludedAssoc()->contains(npc->GetRace()->GetFormID());
+		auto race = npc->GetRace();
+		if (race) {
+			ret |= Settings::Distribution::excludedAssoc()->contains(race->GetFormID());
+			for (uint32_t i = 0; i < race->numKeywords; i++) {
+				ret |= Settings::Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+			}
+		}
 	}
 	return ret;
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo)
 {
 	// calc strength section
 	if (_GameDifficultyScaling) {
@@ -771,6 +798,8 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	auto base = actor->GetActorBase();
 
 	Rule* rule = nullptr;
+	// define general stuff
+	auto race = actor->GetRace();
 
 	//std::vector<Rule*> rls;
 	// find rule in npc map
@@ -779,6 +808,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	if (itnpc != npcMap()->end()) {  // found the right rule!
 		rule = itnpc->second;     // this can be null if the specific npc is excluded
 		ruleoverride = true;
+		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(actor->GetFormID());
 
@@ -792,6 +822,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		if (itnpc != npcMap()->end()) {  // found the right rule!
 			rule = itnpc->second;     // this can be null if the specific npc is excluded
 			ruleoverride = true;
+			prio = INT_MAX;
 		}
 	}
 	bossoverride |= bosses()->contains(actor->GetActorBase()->GetFormID());
@@ -800,18 +831,35 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		goto SKIPActor;
 	}
 
+	if (tpltinfo && tpltinfo->tpltrace)
+		race = tpltinfo->tpltrace;
 	// now that we didnt't find something so far, check the rest
 	// this time all the priorities are the same
 	if (!ruleoverride) {
-		auto it = assocMap()->find(base->GetRace()->GetFormID());
+		auto it = assocMap()->find(race->GetFormID());
 		if (it != assocMap()->end())
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
-			else {
-				baseexcluded |= baselineExclusions()->contains(base->GetRace()->GetFormID());
+				prio = std::get<1>(it->second)->rulePriority;
 			}
+		baseexcluded |= baselineExclusions()->contains(race->GetFormID());
+		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
+			if (itr != assocMap()->end())
+			{
+				if (prio < std::get<0>(it->second)) {
+					rule = std::get<1>(it->second);
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
+					rule = std::get<1>(it->second);
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
+			}
+		}
 	}
 	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
 
@@ -826,48 +874,90 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 			if (!ruleoverride) {
 				auto it = assocMap()->find(key->GetFormID());
 				if (it != assocMap()->end())
-					if (prio < std::get<0>(it->second))
+					if (prio < std::get<0>(it->second)) {
 						rule = std::get<1>(it->second);
-					else if (prio < std::get<1>(it->second)->rulePriority)
+						prio = std::get<0>(it->second);
+					} else if (prio < std::get<1>(it->second)->rulePriority) {
 						rule = std::get<1>(it->second);
-					else {
-						baseexcluded |= baselineExclusions()->contains(key->GetFormID());
+						prio = std::get<1>(it->second)->rulePriority;
 					}
+				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
 		}
 	}
-
+	if (tpltinfo) {
+		for (int i = 0; i < tpltinfo->tpltkeywords.size(); i++) {
+			if (tpltinfo->tpltkeywords[i]) {
+				auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
+				if (it != assocMap()->end())
+					if (prio < std::get<0>(it->second)) {
+						rule = std::get<1>(it->second);
+						prio = std::get<0>(it->second);
+					} else if (prio < std::get<1>(it->second)->rulePriority) {
+						rule = std::get<1>(it->second);
+						prio = std::get<1>(it->second)->rulePriority;
+					}
+				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+			}
+		}
+	}
 	if (ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
 
+	// handle factions
 	for (uint32_t i = 0; i < base->factions.size(); i++) {
 		if (!ruleoverride) {
 			auto it = assocMap()->find(base->factions[i].faction->GetFormID());
 			if (it != assocMap()->end()) {
-				if (prio < std::get<0>(it->second))
+				if (prio < std::get<0>(it->second)) {
 					rule = std::get<1>(it->second);
-				else if (prio < std::get<1>(it->second)->rulePriority)
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
 					rule = std::get<1>(it->second);
-			} else {
-				baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
+					prio = std::get<1>(it->second)->rulePriority;
+				}
 			}
+			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
 	}
-
+	if (tpltinfo) {
+		for (int i = 0; i < tpltinfo->tpltfactions.size(); i++) {
+			if (tpltinfo->tpltfactions[i]) {
+				auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
+				if (it != assocMap()->end()) {
+					if (prio < std::get<0>(it->second)) {
+						rule = std::get<1>(it->second);
+						prio = std::get<0>(it->second);
+					} else if (prio < std::get<1>(it->second)->rulePriority) {
+						rule = std::get<1>(it->second);
+						prio = std::get<1>(it->second)->rulePriority;
+					}
+				}
+				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+			}
+		}
+	}
 	if (bossoverride && ruleoverride || ruleoverride)
 		goto SKIPActor;
+
+	// dont use tplt for class and combatstyle, since they may have been modified during runtime
 
 	// handle classes
 	if (base->npcClass) {
 		auto it = assocMap()->find(base->npcClass->GetFormID());
 		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
+				prio = std::get<1>(it->second)->rulePriority;
+			}
 		}
 	}
 
@@ -875,10 +965,13 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	if (base->combatStyle) {
 		auto it = assocMap()->find(base->combatStyle->GetFormID());
 		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
+				prio = std::get<1>(it->second)->rulePriority;
+			}
 		}
 	}
 
@@ -899,7 +992,7 @@ SKIPActor:
 	}
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is)
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo)
 {
 	// calc strength section
 	if (_GameDifficultyScaling) {
@@ -956,8 +1049,10 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 	int prio = INT_MIN;
 
 	Rule* rule = nullptr;
-
-	//std::vector<Rule*> rls;
+	// define general stuff
+	auto style = npc->combatStyle;
+	auto cls = npc->npcClass;
+	auto race = npc->GetRace();
 
 	// find rule in npc map
 	// npc rules always have the highest priority
@@ -965,6 +1060,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 	if (itnpc != npcMap()->end()) {  // found the right rule!
 		rule = itnpc->second;     // this can be null if the specific npc is excluded
 		ruleoverride = true;
+		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(npc->GetFormID());
 
@@ -972,18 +1068,35 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 		goto SKIPNPC;
 	}
 
+	if (tpltinfo && tpltinfo->tpltrace)
+		race = tpltinfo->tpltrace;
 	// now that we didnt't find something so far, check the rest
 	// this time all the priorities are the same
 	if (!ruleoverride) {
-		auto it = assocMap()->find(npc->GetRace()->GetFormID());
+		auto it = assocMap()->find(race->GetFormID());
 		if (it != assocMap()->end())
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
-			else {
-				baseexcluded |= baselineExclusions()->contains(npc->GetRace()->GetFormID());
+				prio = std::get<1>(it->second)->rulePriority;
 			}
+		baseexcluded |= baselineExclusions()->contains(race->GetFormID());
+		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
+			if (itr != assocMap()->end())
+			{
+				if (prio < std::get<0>(it->second)) {
+					rule = std::get<1>(it->second);
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
+					rule = std::get<1>(it->second);
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
+			}
+		}
 	}
 	bossoverride |= bosses()->contains(npc->GetRace()->GetFormID());
 
@@ -998,18 +1111,35 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 			if (!ruleoverride) {
 				auto it = assocMap()->find(key->GetFormID());
 				if (it != assocMap()->end())
-					if (prio < std::get<0>(it->second))
+					if (prio < std::get<0>(it->second)) {
 						rule = std::get<1>(it->second);
-					else if (prio < std::get<1>(it->second)->rulePriority)
+						prio = std::get<0>(it->second);
+					} else if (prio < std::get<1>(it->second)->rulePriority) {
 						rule = std::get<1>(it->second);
-					else {
-						baseexcluded |= baselineExclusions()->contains(key->GetFormID());
+						prio = std::get<1>(it->second)->rulePriority;
 					}
+				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
 		}
 	}
-
+	if (tpltinfo) {
+		for (int i = 0; i < tpltinfo->tpltkeywords.size(); i++) {
+			if (tpltinfo->tpltkeywords[i]) {
+				auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
+				if (it != assocMap()->end())
+					if (prio < std::get<0>(it->second)) {
+						rule = std::get<1>(it->second);
+						prio = std::get<0>(it->second);
+					} else if (prio < std::get<1>(it->second)->rulePriority) {
+						rule = std::get<1>(it->second);
+						prio = std::get<1>(it->second)->rulePriority;
+					}
+				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+			}
+		}
+	}
 	if (ruleoverride && bossoverride) {
 		goto SKIPNPC;
 	}
@@ -1019,38 +1149,68 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 		if (!ruleoverride) {
 			auto it = assocMap()->find(npc->factions[i].faction->GetFormID());
 			if (it != assocMap()->end()) {
-				if (prio < std::get<0>(it->second))
+				if (prio < std::get<0>(it->second)) {
 					rule = std::get<1>(it->second);
-				else if (prio < std::get<1>(it->second)->rulePriority)
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
 					rule = std::get<1>(it->second);
-			} else {
-				baseexcluded |= baselineExclusions()->contains(npc->factions[i].faction->GetFormID());
+					prio = std::get<1>(it->second)->rulePriority;
+				}
 			}
+			baseexcluded |= baselineExclusions()->contains(npc->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(npc->factions[i].faction->GetFormID());
+	}
+	if (tpltinfo) {
+		for (int i = 0; i < tpltinfo->tpltfactions.size(); i++) {
+			if (tpltinfo->tpltfactions[i]) {
+				auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
+				if (it != assocMap()->end()) {
+					if (prio < std::get<0>(it->second)) {
+						rule = std::get<1>(it->second);
+						prio = std::get<0>(it->second);
+					} else if (prio < std::get<1>(it->second)->rulePriority) {
+						rule = std::get<1>(it->second);
+						prio = std::get<1>(it->second)->rulePriority;
+					}
+				}
+				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+			}
+		}
 	}
 
 	if (bossoverride && ruleoverride || ruleoverride)
 		goto SKIPNPC;
 
 	// handle classes
-	if (npc->npcClass) {
-		auto it = assocMap()->find(npc->npcClass->GetFormID());
+	if (tpltinfo && tpltinfo->tpltclass)
+		cls = tpltinfo->tpltclass;
+	if (cls) {
+		auto it = assocMap()->find(cls->GetFormID());
 		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
+				prio = std::get<1>(it->second)->rulePriority;
+			}
 		}
 	}
 	// handle combat styles
-	if (npc->combatStyle) {
-		auto it = assocMap()->find(npc->combatStyle->GetFormID());
+	if (tpltinfo && tpltinfo->tpltstyle)
+		style = tpltinfo->tpltstyle;
+	if (style) {
+		auto it = assocMap()->find(style->GetFormID());
 		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
+				prio = std::get<1>(it->second)->rulePriority;
+			}
 		}
 	}
 
@@ -1071,7 +1231,26 @@ SKIPNPC:
 	}
 }
 
-std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
+static std::string GetFormEditorID(RE::TESFaction* fid)
+{
+	const auto& [map, lock] = RE::TESForm::GetAllFormsByEditorID();
+	const RE::BSReadLockGuard locker{ lock };
+	if (map) {
+		for (auto& [id, form] : *map) {
+			auto editorID = id.c_str();
+			RE::FormID formID = form->GetFormID();
+			if (formID == fid->GetFormID())
+				return std::string(editorID);
+		}
+	}
+	auto fullName = fid ? fid->As<RE::TESFullName>() : nullptr;
+	if (fullName) {
+		return std::string(fullName->fullName.c_str());
+	}
+	return "ERROR";
+}
+
+std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> Settings::Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
 {
 	// calc strength section
 	if (_GameDifficultyScaling) {
@@ -1126,7 +1305,7 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 
 	auto base = actor->GetActorBase();
 
-	std::vector<Rule*> rls;
+	std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> rls;
 	Rule* rule = nullptr;
 
 	//std::vector<Rule*> rls;
@@ -1135,7 +1314,8 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 	auto itnpc = npcMap()->find(actor->GetFormID());
 	if (itnpc != npcMap()->end()) {  // found the right rule!
 		rule = itnpc->second;     // this can be null if the specific npc is excluded
-		rls.push_back(itnpc->second);
+		rls.push_back({ INT_MAX, itnpc->second, "NPC Exclusive" });
+		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(actor->GetFormID());
 
@@ -1144,7 +1324,8 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 		itnpc = npcMap()->find(actor->GetActorBase()->GetFormID());
 		if (itnpc != npcMap()->end()) {  // found the right rule!
 			rule = itnpc->second;     // this can be null if the specific npc is excluded
-			rls.push_back(itnpc->second);
+			rls.push_back({ INT_MAX, itnpc->second, "NPC Exclusive" });
+			prio = INT_MAX;
 		}
 	}
 	bossoverride |= bosses()->contains(actor->GetActorBase()->GetFormID());
@@ -1154,14 +1335,31 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 	if (!ruleoverride) {
 		auto it = assocMap()->find(base->GetRace()->GetFormID());
 		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
-			else {
-				baseexcluded |= baselineExclusions()->contains(base->GetRace()->GetFormID());
+				prio = std::get<1>(it->second)->rulePriority;
 			}
-			rls.push_back(std::get<1>(it->second));
+			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Race\t" + Utility::GetHex(base->GetRace()->GetFormID()) + "\t" + std::string(base->GetRace()->GetName()) });
+		}
+		baseexcluded |= baselineExclusions()->contains(base->GetRace()->GetFormID());
+		auto race = base->GetRace();
+		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
+			if (itr != assocMap()->end())
+			{
+				if (prio < std::get<0>(it->second)) {
+					rule = std::get<1>(it->second);
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
+					rule = std::get<1>(it->second);
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Racekwd\t" + Utility::GetHex(race->keywords[i]->GetFormID()) + "\t" + std::string(race->keywords[i]->GetFormEditorID()) });
+			}
+			baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
 		}
 	}
 	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
@@ -1173,15 +1371,16 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 			if (!ruleoverride) {
 				auto it = assocMap()->find(key->GetFormID());
 				if (it != assocMap()->end()) {
-					if (prio < std::get<0>(it->second))
+					if (prio < std::get<0>(it->second)) {
 						rule = std::get<1>(it->second);
-					else if (prio < std::get<1>(it->second)->rulePriority)
+						prio = std::get<0>(it->second);
+					} else if (prio < std::get<1>(it->second)->rulePriority) {
 						rule = std::get<1>(it->second);
-					else {
-						baseexcluded |= baselineExclusions()->contains(key->GetFormID());
+						prio = std::get<1>(it->second)->rulePriority;
 					}
-					rls.push_back(std::get<1>(it->second));
+					rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Keyword\t" + Utility::GetHex(key->GetFormID()) + "\t" + std::string(key->GetFormEditorID()) });
 				}
+				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
 		}
@@ -1191,14 +1390,16 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 		if (!ruleoverride) {
 			auto it = assocMap()->find(base->factions[i].faction->GetFormID());
 			if (it != assocMap()->end()) {
-				if (prio < std::get<0>(it->second))
+				if (prio < std::get<0>(it->second)) {
 					rule = std::get<1>(it->second);
-				else if (prio < std::get<1>(it->second)->rulePriority)
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
 					rule = std::get<1>(it->second);
-				rls.push_back(std::get<1>(it->second));
-			} else {
-				baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Faction\t" + Utility::GetHex(base->factions[i].faction->GetFormID()) + "\t" + GetFormEditorID(base->factions[i].faction) });
 			}
+			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
 	}
@@ -1207,11 +1408,14 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 	if (base->npcClass) {
 		auto it = assocMap()->find(base->npcClass->GetFormID());
 		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
-			rls.push_back(std::get<1>(it->second));
+				prio = std::get<1>(it->second)->rulePriority;
+			}
+			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Class\t" + Utility::GetHex(base->npcClass->GetFormID()) + "\t" + std::string(base->npcClass->GetFormEditorID()) });
 		}
 	}
 
@@ -1219,11 +1423,14 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 	if (base->combatStyle) {
 		auto it = assocMap()->find(base->combatStyle->GetFormID());
 		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second))
+			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
-			else if (prio < std::get<1>(it->second)->rulePriority)
+				prio = std::get<0>(it->second);
+			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
-			rls.push_back(std::get<1>(it->second));
+				prio = std::get<1>(it->second)->rulePriority;
+			}
+			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "CombatStyle\t" + Utility::GetHex(base->combatStyle->GetFormID()) + "\t" + std::string(base->combatStyle->GetFormEditorID()) });
 		}
 	}
 
@@ -1232,15 +1439,15 @@ std::vector<Settings::Distribution::Rule*> Settings::Distribution::CalcAllRules(
 
 	if (rule) {
 		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
-		rls.insert(rls.begin(), rule);
+		rls.insert(rls.begin(), { INT_MIN, rule, "Chosen" });
 		return rls;
 	} else {
 		// there are no rules!!!
-		if (baseexcluded)
-			return std::vector<Rule*>{ Settings::Distribution::emptyRule };
+		if (baseexcluded) {
+			return std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>>{ { INT_MIN, Settings::Distribution::emptyRule, "Empty" } };
+		}
 		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return std::vector<Rule*>{ Settings::Distribution::defaultRule };
+		return std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>>{ { INT_MIN, Settings::Distribution::defaultRule, "Default" } };
 	}
 }
-
 #pragma endregion
