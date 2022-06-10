@@ -101,11 +101,11 @@ target_include_directories(
 		"${SOURCE_DIR}"
 )
 
-add_subdirectory($ENV{CommonLibVRPath} CommonLibVR)
+add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE)
 target_link_libraries(
 	"${PROJECT_NAME}"
 	PRIVATE
-		CommonLibVR::CommonLibVR
+		CommonLibSSE::CommonLibSSE
 )
 
 target_precompile_headers(

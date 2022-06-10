@@ -60,35 +60,18 @@
       "toolset": "v143"
     },
     {
-      "binaryDir": "${sourceDir}/buildvr",
       "cacheVariables": {
-        "BUILD_SKYRIMVR": true
+        "SKYRIM_SUPPORT_AE": "OFF"
       },
-      "hidden": true,
-      "name": "libvr"
+      "inherits": "vs2022-windows",
+      "name": "se"
     },
     {
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "/EHsc /MP /W4 /WX /external:anglebrackets /external:W0 $penv{CXXFLAGS}"
+        "SKYRIM_SUPPORT_AE": "ON"
       },
-      "generator": "Visual Studio 17 2022",
-      "inherits": [
-        "libvr",
-        "cmake-dev",
-        "vcpkg",
-        "windows"
-      ],
-      "name": "vs2022-windows-vcpkg-vr",
-      "toolset": "v143"
-    },
-    {
-      "cacheVariables": {
-        "SKYRIM_SUPPORT_AE": "OFF",
-        "SKYRIM_SUPPORT_SE": "OFF",
-        "SKYRIM_SUPPORT_VR": "ON"
-      },
-      "inherits": "vs2022-windows-vcpkg-vr",
-      "name": "vr"
+      "inherits": "vs2022-windows",
+      "name": "ae"
     }
   ],
   "version": 3
