@@ -1371,7 +1371,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 					//npc = arr[coun];
 					//act = nullptr;
 					act = (*iter)->As<RE::Actor>();
-					if (act && act->GetFormID() != 0x14) {
+					if (act && !act->IsDeleted() && act->GetFormID() != 0x14) {
 						if (!visited.contains(act->GetFormID())) {
 							// lookup pluing of the actor base
 							/* name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetActorBase()->GetFormID() >> 24))->GetFilename();

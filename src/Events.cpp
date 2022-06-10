@@ -1055,13 +1055,31 @@ namespace Events
 
 	void TestAllCells()
 	{
-		std::this_thread::sleep_for(10s);
-		RE::UI* ui = RE::UI::GetSingleton();
+		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrder.csv";
+		std::string pathid = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrderID.csv";
+		std::ofstream out = std::ofstream(path, std::ofstream::out);
+		std::ofstream outid = std::ofstream(pathid, std::ofstream::out);
+		//logger::info("tryna start");
 		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 		auto iter = hashtable->begin();
+		RE::TESObjectCELL* cell = nullptr;
 		while (iter != hashtable->end()) {
 			if ((*iter).second) {
-				auto cell = ((*iter).second)->As<RE::TESObjectCELL>();
+				cell = ((*iter).second)->As<RE::TESObjectCELL>();
+				if (cell) {
+					out << cell->GetFormEditorID() << "\n";
+					outid << Utility::GetHex(cell->GetFormID()) << "\n";
+				}
+			}
+			iter++;
+		}
+
+		std::this_thread::sleep_for(10s);
+		RE::UI* ui = RE::UI::GetSingleton();
+		iter = hashtable->begin();
+		while (iter != hashtable->end()) {
+			if ((*iter).second) {
+				cell = ((*iter).second)->As<RE::TESObjectCELL>();
 				if (cell) {
 					while (ui->GameIsPaused()) {
 						std::this_thread::sleep_for(100ms);
