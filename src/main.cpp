@@ -72,8 +72,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		logger::info("Items classified");
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
-		Console::RegisterConsoleCommands();
-		logger::info("Registered Console Commands");
+		//Console::RegisterConsoleCommands();
+		//logger::info("Registered Console Commands");
 		
 	}
 }
