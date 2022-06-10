@@ -236,7 +236,7 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 		}
 		return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 	}
-	LOG_2("{}[ActorUseFood] step3");
+	//LOG_2("{}[ActorUseFood] step3");
 	return { -1, AlchemyEffect::kNone };
 }
 
