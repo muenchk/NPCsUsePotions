@@ -717,13 +717,13 @@ public:
 		_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
 		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
 		// get wether zxlice's Ultimate Potion Animation is present
-		auto constexpr folder = R"(Data\SKSE\Plugins\)";
-		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-			if (entry.exists() && !entry.path().empty() && entry.path().filename() == "zxlice's ultimate potion animation.dll") {
-				Ultimateoptions = true;
-				logger::info("[SETTINGS] zxlice's Ultimate Potion Animation has been detected");
-			}
-		}
+		//auto constexpr folder = R"(Data\SKSE\Plugins\)";
+		//for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+		//	if (entry.exists() && !entry.path().empty() && entry.path().filename() == "zxlice's ultimate potion animation.dll") {
+		//		Ultimateoptions = true;
+		//		logger::info("[SETTINGS] zxlice's Ultimate Potion Animation has been detected");
+		//	}
+		//}
 		_CompatibilityMode = ini.GetValue("Compatibility", "Compatibility") ? ini.GetBoolValue("Compatibility", "Compatibility") : false;
 		logger::info("[SETTINGS] {} {}", "Compatibility", std::to_string(_CompatibilityMode));
 		_CompatibilityDisableAutomaticAdjustments = ini.GetValue("Compatibility", "DisableAutomaticAdjustments") ? ini.GetBoolValue("Compatibility", "DisableAutomaticAdjustments") : false;
@@ -799,9 +799,9 @@ public:
 
 
 		// general
-		_maxPotionsPerCycle = ini.GetValue("General", "MaxPotionsPerCycle") ? ini.GetLongValue("General", "MaxPotionsPerCycle", 2) : 2;
+		_maxPotionsPerCycle = ini.GetValue("General", "MaxPotionsPerCycle") ? ini.GetLongValue("General", "MaxPotionsPerCycle", 1) : 1;
 		logger::info("[SETTINGS] {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
-		_cycletime = ini.GetValue("General", "CycleWaitTime") ? ini.GetLongValue("General", "CycleWaitTime", 2) : 500;
+		_cycletime = ini.GetValue("General", "CycleWaitTime") ? ini.GetLongValue("General", "CycleWaitTime", 1000) : 1000;
 		logger::info("[SETTINGS] {} {}", "CycleWaitTime", std::to_string(_cycletime));
 		_DisableEquipSounds = ini.GetValue("General", "DisableEquipSounds") ? ini.GetBoolValue("General", "DisableEquipSounds", false) : false;
 		logger::info("[SETTINGS] {} {}", "DisableEquipSounds", std::to_string(_DisableEquipSounds));

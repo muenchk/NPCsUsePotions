@@ -38,7 +38,7 @@ public:
 	// comparator used to sort magnitude - duration - AlchemyItem* lists for maximum magnitude descending
 	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect> first, std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect> second)
 	{
-		return std::get<0>(first) > std::get<0>(second);
+		return (std::get<0>(first) * std::get<1>(first)) > (std::get<0>(second) * std::get<1>(second));
 	}
 	#pragma endregion
 

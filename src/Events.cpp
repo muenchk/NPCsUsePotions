@@ -1124,9 +1124,11 @@ namespace Events
 		// reset the list of actors that died
 		deads.clear();
 
-		if (testhandler == nullptr) {
-			testhandler = new std::thread(TestAllCells);
-			LOG_1("{}[LoadGameEvent] Started TestHandler");
+		if (Settings::_Test) {
+			if (testhandler == nullptr) {
+				testhandler = new std::thread(TestAllCells);
+				LOG_1("{}[LoadGameEvent] Started TestHandler");
+			}
 		}
 
 		return EventResult::kContinue;
