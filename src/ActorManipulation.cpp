@@ -85,16 +85,19 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 	RE::AlchemyItem* item = nullptr;
 	LOG_3("{}[GetMatchingItemsPoisons] trying to find poison");
 	while (iter != itemmap.end() && alchemyEffect != 0) {
-		item = iter->first->As<RE::AlchemyItem>();
-		LOG_4("{}[GetMatchingItemsPoisons] checking item");
-		if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
-			LOG_4("{}[GetMatchingItemsPoisons] found poison");
-			if (auto res = HasAlchemyEffect(item, alchemyEffect); std::get<0>(res)) {
-				ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+		if (iter->first) {
+			item = iter->first->As<RE::AlchemyItem>();
+			LOG_4("{}[GetMatchingItemsPoisons] checking item");
+			if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
+				LOG_4("{}[GetMatchingItemsPoisons] found poison");
+				if (auto res = HasAlchemyEffect(item, alchemyEffect); std::get<0>(res)) {
+					ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+				}
 			}
 		}
 		iter++;
 	}
+	LOG1_3("{}[GetMatchingItemsPoisons] finished. found: {} poisons", ret.size());
 	return ret;
 }
 
@@ -236,7 +239,7 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 		}
 		return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 	}
-	LOG_2("{}[ActorUseFood] step3");
+	//LOG_2("{}[ActorUseFood] step3");
 	return { -1, AlchemyEffect::kNone };
 }
 

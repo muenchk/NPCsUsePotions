@@ -757,7 +757,7 @@ namespace Events
 									   (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0) {
 								// we dont handle a follower, so just let the enemy use any poison they have
 								uint64_t effects = static_cast<uint64_t>(Settings::AlchemyEffect::kAnyPoison);
-								LOG1_4("{}[CheckActors] check for poison with effect {}", effects);
+								LOG1_4("{}[CheckActors] check for poison with effect {}", Utility::GetHex(effects));
 								ACM::ActorUsePoison(curr->actor, effects);
 							}
 							// else Mage or Hand to Hand which cannot use poisons
@@ -832,6 +832,7 @@ namespace Events
 									if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded)) {
 										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kTwoHanded) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kBlock) |
+										           static_cast<uint64_t>(Settings::AlchemyEffect::kMeleeDamage) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
@@ -885,9 +886,16 @@ namespace Events
 									}
 								}
 
+								// light and heavy armor
+								uint32_t armordata = Utility::GetArmorData(curr->actor);
+								if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::LightArmor))
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kLightArmor);
+								if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHeavyArmor);
+
 								// std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>>
 								//logger::info("take fortify with effects: {}", Utility::GetHex(effects));
-								LOG1_4("{}[CheckActors] check for fortify potion with effect {}", effects);
+								LOG1_4("{}[CheckActors] check for fortify potion with effect {}", Utility::GetHex(effects));
 								auto tup = ACM::ActorUsePotion(curr->actor, effects);
 								switch (std::get<1>(tup)) {
 								case Settings::AlchemyEffect::kHealRate:
@@ -1055,13 +1063,31 @@ namespace Events
 
 	void TestAllCells()
 	{
-		std::this_thread::sleep_for(10s);
-		RE::UI* ui = RE::UI::GetSingleton();
+		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrder.csv";
+		std::string pathid = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrderID.csv";
+		std::ofstream out = std::ofstream(path, std::ofstream::out);
+		std::ofstream outid = std::ofstream(pathid, std::ofstream::out);
+		//logger::info("tryna start");
 		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 		auto iter = hashtable->begin();
+		RE::TESObjectCELL* cell = nullptr;
 		while (iter != hashtable->end()) {
 			if ((*iter).second) {
-				auto cell = ((*iter).second)->As<RE::TESObjectCELL>();
+				cell = ((*iter).second)->As<RE::TESObjectCELL>();
+				if (cell) {
+					out << cell->GetFormEditorID() << "\n";
+					outid << Utility::GetHex(cell->GetFormID()) << "\n";
+				}
+			}
+			iter++;
+		}
+
+		std::this_thread::sleep_for(10s);
+		RE::UI* ui = RE::UI::GetSingleton();
+		iter = hashtable->begin();
+		while (iter != hashtable->end()) {
+			if ((*iter).second) {
+				cell = ((*iter).second)->As<RE::TESObjectCELL>();
 				if (cell) {
 					while (ui->GameIsPaused()) {
 						std::this_thread::sleep_for(100ms);
@@ -1106,9 +1132,11 @@ namespace Events
 		// reset the list of actors that died
 		deads.clear();
 
-		if (testhandler == nullptr) {
-			testhandler = new std::thread(TestAllCells);
-			LOG_1("{}[LoadGameEvent] Started TestHandler");
+		if (Settings::_Test) {
+			if (testhandler == nullptr) {
+				testhandler = new std::thread(TestAllCells);
+				LOG_1("{}[LoadGameEvent] Started TestHandler");
+			}
 		}
 
 		return EventResult::kContinue;

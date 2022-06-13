@@ -418,8 +418,10 @@ void Settings::LoadDistrConfig()
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kNPC ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword ||
-											std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace)
+											std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
 											Distribution::_bosses.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] declared {} as boss.", Utility::GetHex(std::get<1>(items[i])));
+										}
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1371,7 +1373,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 					//npc = arr[coun];
 					//act = nullptr;
 					act = (*iter)->As<RE::Actor>();
-					if (act && act->GetFormID() != 0x14) {
+					if (act && !act->IsDeleted() && act->GetFormID() != 0x14) {
 						if (!visited.contains(act->GetFormID())) {
 							// lookup pluing of the actor base
 							/* name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetActorBase()->GetFormID() >> 24))->GetFilename();

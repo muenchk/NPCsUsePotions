@@ -717,13 +717,13 @@ public:
 		_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
 		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
 		// get wether zxlice's Ultimate Potion Animation is present
-		auto constexpr folder = R"(Data\SKSE\Plugins\)";
-		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-			if (entry.exists() && !entry.path().empty() && entry.path().filename() == "zxlice's ultimate potion animation.dll") {
-				Ultimateoptions = true;
-				logger::info("[SETTINGS] zxlice's Ultimate Potion Animation has been detected");
-			}
-		}
+		//auto constexpr folder = R"(Data\SKSE\Plugins\)";
+		//for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+		//	if (entry.exists() && !entry.path().empty() && entry.path().filename() == "zxlice's ultimate potion animation.dll") {
+		//		Ultimateoptions = true;
+		//		logger::info("[SETTINGS] zxlice's Ultimate Potion Animation has been detected");
+		//	}
+		//}
 		_CompatibilityMode = ini.GetValue("Compatibility", "Compatibility") ? ini.GetBoolValue("Compatibility", "Compatibility") : false;
 		logger::info("[SETTINGS] {} {}", "Compatibility", std::to_string(_CompatibilityMode));
 		_CompatibilityDisableAutomaticAdjustments = ini.GetValue("Compatibility", "DisableAutomaticAdjustments") ? ini.GetBoolValue("Compatibility", "DisableAutomaticAdjustments") : false;
@@ -799,9 +799,9 @@ public:
 
 
 		// general
-		_maxPotionsPerCycle = ini.GetValue("General", "MaxPotionsPerCycle") ? ini.GetLongValue("General", "MaxPotionsPerCycle", 2) : 2;
+		_maxPotionsPerCycle = ini.GetValue("General", "MaxPotionsPerCycle") ? ini.GetLongValue("General", "MaxPotionsPerCycle", 1) : 1;
 		logger::info("[SETTINGS] {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
-		_cycletime = ini.GetValue("General", "CycleWaitTime") ? ini.GetLongValue("General", "CycleWaitTime", 2) : 500;
+		_cycletime = ini.GetValue("General", "CycleWaitTime") ? ini.GetLongValue("General", "CycleWaitTime", 1000) : 1000;
 		logger::info("[SETTINGS] {} {}", "CycleWaitTime", std::to_string(_cycletime));
 		_DisableEquipSounds = ini.GetValue("General", "DisableEquipSounds") ? ini.GetBoolValue("General", "DisableEquipSounds", false) : false;
 		logger::info("[SETTINGS] {} {}", "DisableEquipSounds", std::to_string(_DisableEquipSounds));
@@ -1267,6 +1267,12 @@ public:
 		case RE::ActorValue::kStaminaRateMult:
 			return (AlchemyEffect::kStaminaRateMult);
 			break;
+		case RE::ActorValue::kAggresion:
+			return (AlchemyEffect::kFrenzy);
+			break;
+		case RE::ActorValue::kConfidence:
+			return (AlchemyEffect::kFear);
+			break;
 		default:
 			return AlchemyEffect::kNone;
 			break;
@@ -1397,6 +1403,12 @@ public:
 			break;
 		case AlchemyEffect::kSneak:
 			return RE::ActorValue::kSneak;
+			break;
+		case AlchemyEffect::kFear:
+			return RE::ActorValue::kConfidence;
+			break;
+		case AlchemyEffect::kFrenzy:
+			return RE::ActorValue::kAggresion;
 			break;
 		default:
 			return RE::ActorValue::kNone;
@@ -1721,6 +1733,12 @@ public:
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
+			case RE::ActorValue::kAggresion:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kFrenzy);
+				break;
+			case RE::ActorValue::kConfidence:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kFear);
+				break;
 			}
 		}
 		if (std::string(item->GetName()).find(std::string("Weak")) != std::string::npos)
@@ -1745,12 +1763,6 @@ public:
 		if (std::string(item->GetName()).find(std::string("Blood")) != std::string::npos &&
 			std::string(item->GetName()).find(std::string("Potion")) != std::string::npos) {
 			alch = static_cast<uint64_t>(AlchemyEffect::kBlood);
-		}
-		if (std::string(item->GetName()).find(std::string("Fear")) != std::string::npos) {
-			alch = static_cast<uint64_t>(AlchemyEffect::kFear);
-		}
-		if (std::string(item->GetName()).find(std::string("Frenzy")) != std::string::npos) {
-			alch = static_cast<uint64_t>(AlchemyEffect::kFrenzy);
 		}
 
 		ItemType t = ItemType::kPotion;
