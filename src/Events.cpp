@@ -803,7 +803,8 @@ namespace Events
 									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kDamageResist) |
 									           static_cast<uint64_t>(Settings::AlchemyEffect::kResistMagic) |
 									           static_cast<uint64_t>(Settings::AlchemyEffect::kPoisonResist) |
-									           static_cast<uint64_t>(Settings::AlchemyEffect::kResistDisease);
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kResistDisease) |
+									           static_cast<uint64_t>(Settings::AlchemyEffect::kReflectDamage);
 
 									if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) {
 										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kOneHanded) |
@@ -1181,7 +1182,7 @@ namespace Events
 		scriptEventSourceHolder->GetEventSource<RE::TESCombatEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESLoadGameEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
+		LOG1_1("{}Registered {}", typeid(RE::TESLoadGameEvent).name());
 		if (Settings::_featRemoveItemsOnDeath) {
 			scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 			LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
