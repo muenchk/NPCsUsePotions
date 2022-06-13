@@ -198,6 +198,7 @@ public:
 		kFrenzy = (unsigned __int64)1 << 39,				// 8000000000
 		kFear = (unsigned __int64)1 << 40,					// 10000000000
 		kBowSpeed = (unsigned __int64)1 << 41,              // 20000000000
+		kReflectDamage = (unsigned __int64)1 << 42,			// 40000000000
 		// 2000007
 		kAnyPotion = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kInvisibility),
 		// 180D7E3C007
@@ -545,6 +546,8 @@ public:
 																				// 2) Potion Animated fix (SE)
 	static inline bool _CompatibilityPotionAnimatedFX_UseAnimations = false;	// if PotionAnimatedfx.esp is loaded, should their animations be used on all potions?
 	static inline bool _ApplySkillBoostPerks = true;							// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
+	static inline bool _CompatibilityCACO = false;	// automatic
+	static inline bool _CompatibilityApothecary = false; // automatic
 
 	// debug
 	static inline bool EnableLog = false;
@@ -893,6 +896,20 @@ public:
 			_CompatibilityPotionAnimatedFx = false;
 			_CompatibilityPotionAnimatedFX_UseAnimations = false;
 			logger::info("[SETTINGS] [WARNING] Compatibility modes for zxlice's Ultimate Potion Animation and PotionAnimatedfx.esp have been activated simultaneously. To prevent issues the Compatibility mode for PotionAnimatedfx.esp has been deactivated.");
+		}
+		// Check for CACO
+		{
+			if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ "Complete Alchemy & Cooking Overhaul.esp" }); plugin) {
+				logger::info("[SETTINGS] Complete Alchemy & Cooking Overhaul.esp is loaded, activating compatibility mode!");
+				_CompatibilityCACO = true;
+			}
+		}
+		// Check for Apothecary
+		{
+			if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ "Apothecary.esp" }); plugin) {
+				logger::info("[SETTINGS] Apothecary.esp is loaded, activating compatibility mode!");
+				_CompatibilityApothecary = true;
+			}
 		}
 		logger::info("[SETTINGS] checking for plugins end");
 
@@ -1273,6 +1290,9 @@ public:
 		case RE::ActorValue::kConfidence:
 			return (AlchemyEffect::kFear);
 			break;
+		case RE::ActorValue::kReflectDamage:
+			return (AlchemyEffect::kReflectDamage);
+			break;
 		default:
 			return AlchemyEffect::kNone;
 			break;
@@ -1409,6 +1429,9 @@ public:
 			break;
 		case AlchemyEffect::kFrenzy:
 			return RE::ActorValue::kAggresion;
+			break;
+		case AlchemyEffect::kReflectDamage:
+			return RE::ActorValue::kReflectDamage;
 			break;
 		default:
 			return RE::ActorValue::kNone;
@@ -1738,6 +1761,9 @@ public:
 				break;
 			case RE::ActorValue::kConfidence:
 				alch |= static_cast<uint64_t>(AlchemyEffect::kFear);
+				break;
+			case RE::ActorValue::kReflectDamage:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kReflectDamage);
 				break;
 			}
 		}

@@ -24,15 +24,75 @@ std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::
 		if (item->effects.size() > 0) {
 			for (uint32_t i = 0; i < item->effects.size(); i++) {
 				sett = item->effects[i]->baseEffect;
-				//logger::info("[HasAlchemyEffect] effect {} dur {} mag {} name {}", ConvAlchULong(sett->data.primaryAV), item->effects[i]->effectItem.duration, item->effects[i]->effectItem.magnitude, std::to_string(item->GetFormID()));
-				if (sett && (tmp = (ConvAlchULong(sett->data.primaryAV) & alchemyEffect)) > 0) {
-					found = true;
+				//logger::info("[HasAlchemyEffect] base effect {} effect {} dur {} mag {} name {}", sett->data.primaryAV, ConvAlchULong(sett->data.primaryAV), item->effects[i]->effectItem.duration, item->effects[i]->effectItem.magnitude, std::to_string(item->GetFormID()));
+				if (sett) {
+					uint32_t formid = sett->GetFormID();
+					// Paralysis
+					// Just straight up detect this using the formid, since literally everyone seems to like
+					// to mess with this.
+					if (formid == 0x73F30) {
+						out = static_cast<uint64_t>(Settings::AlchemyEffect::kParalysis);
+						mag = item->effects[i]->effectItem.magnitude;
+						dur = item->effects[i]->effectItem.duration;
+						found = true;
+						break;
+					}
+					if ((tmp = (ConvAlchULong(sett->data.primaryAV) & alchemyEffect)) > 0) {
+						found = true;
 
-					//logger::info("alch effect id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.primaryAV));
-					out = tmp;
-					mag = item->effects[i]->effectItem.magnitude;
-					dur = item->effects[i]->effectItem.duration;
-					break;
+						//logger::info("alch effect id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.primaryAV));
+						out = tmp;
+						mag = item->effects[i]->effectItem.magnitude;
+						dur = item->effects[i]->effectItem.duration;
+						break;
+					}
+					if (sett->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (tmp = (ConvAlchULong(sett->data.secondaryAV) & alchemyEffect)) > 0) {
+						found = true;
+
+						//logger::info("alch effect2 id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.secondaryAV));
+						out = tmp;
+						mag = item->effects[i]->effectItem.magnitude;
+						dur = item->effects[i]->effectItem.duration;
+						break;
+					}
+					// COMPATIBILITY FOR CACO
+					if (Settings::_CompatibilityCACO) {
+						//logger::info("caco comp");
+						// DamageStaminaRavage
+						if (formid == 0x73F23) {
+							out = static_cast<uint64_t>(Settings::AlchemyEffect::kStamina);
+							mag = item->effects[i]->effectItem.magnitude;
+							dur = item->effects[i]->effectItem.duration;
+							found = true;
+							break;
+						}
+						// DamageMagickaRavage
+						else if (formid == 0x73F27) {
+							out = static_cast<uint64_t>(Settings::AlchemyEffect::kMagicka);
+							mag = item->effects[i]->effectItem.magnitude;
+							dur = item->effects[i]->effectItem.duration;
+							found = true;
+							break;
+						}
+					}
+					if (Settings::_CompatibilityApothecary) {
+						// DamageWeapon
+						if (formid == 0x73F26) {
+							out = static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult);
+							mag = item->effects[i]->effectItem.magnitude;
+							dur = item->effects[i]->effectItem.duration;
+							found = true;
+							break;
+						}
+						// Silence
+						else if (formid == 0x73F2B) {
+							out = static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRate);
+							mag = item->effects[i]->effectItem.magnitude;
+							dur = item->effects[i]->effectItem.duration;
+							found = true;
+							break;
+						}
+					}
 				}
 			}
 		} else {
