@@ -38,28 +38,51 @@ public:
 	// comparator used to sort magnitude - duration - AlchemyItem* lists for maximum magnitude descending
 	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect> first, std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect> second)
 	{
-		return (std::get<0>(first) * std::get<1>(first)) > (std::get<0>(second) * std::get<1>(second));
+		logger::info("sort 1");
+		auto ret = (std::get<0>(first) * std::get<1>(first)) > (std::get<0>(second) * std::get<1>(second));
+		logger::info("sort 2");
+		return ret;
 	}
 	#pragma endregion
 
+	/// <summary>
+	/// Returns a string showing [val] as Hexadecimal number
+	/// </summary>
+	/// <param name="val"></param>
+	/// <returns></returns>
 	static std::string GetHex(long val)
 	{
 		std::stringstream ss;
 		ss << std::hex << val;
 		return ss.str();
 	}
+	/// <summary>
+	/// Returns a string showing [val] as Hexadecimal number
+	/// </summary>
+	/// <param name="val"></param>
+	/// <returns></returns>
 	static std::string GetHex(uint64_t val)
 	{
 		std::stringstream ss;
 		ss << std::hex << val;
 		return ss.str();
 	}
+	/// <summary>
+	/// Returns a string showing [val] as Hexadecimal number
+	/// </summary>
+	/// <param name="val"></param>
+	/// <returns></returns>
 	static std::string GetHex(uint32_t val)
 	{
 		std::stringstream ss;
 		ss << std::hex << val;
 		return ss.str();
 	}
+	/// <summary>
+	/// Returns a string showing [val] as Hexadecimal number
+	/// </summary>
+	/// <param name="val"></param>
+	/// <returns></returns>
 	static std::string GetHex(int val)
 	{
 		std::stringstream ss;
@@ -67,6 +90,11 @@ public:
 		return ss.str();
 	}
 
+	/// <summary>
+	/// Converts all symbols in a string into lower case.
+	/// </summary>
+	/// <param name="s"></param>
+	/// <returns></returns>
 	static std::string ToLower(std::string s)
 	{
 		std::transform(s.begin(), s.end(), s.begin(),
@@ -75,6 +103,11 @@ public:
 		return s;
 	}
 
+	/// <summary>
+	/// converts an ActorStrength into a string
+	/// </summary>
+	/// <param name="acs"></param>
+	/// <returns></returns>
 	static std::string ToString(Settings::ActorStrength acs)
 	{
 		switch (acs) {
@@ -93,6 +126,11 @@ public:
 		}
 	}
 
+	/// <summary>
+	/// Converts an ItemStrength into a string
+	/// </summary>
+	/// <param name="is"></param>
+	/// <returns></returns>
 	static std::string ToString(Settings::ItemStrength is)
 	{
 		switch (is) {
@@ -132,6 +170,11 @@ public:
 		MagicDamageFrost = 0x400000,
 	};
 
+	/// <summary>
+	/// converts a CurrentCombatStyle value into a string
+	/// </summary>
+	/// <param name="style">CurrentCombatStyle value to convert</param>
+	/// <returns>String representing [style]</returns>
 	static std::string ToStringCombatStyle(uint32_t style)
 	{
 		std::string flags = "|";
@@ -176,6 +219,11 @@ public:
 		return flags;
 	}
 
+	/// <summary>
+	/// Retrieves data about the current equiped items and spells of an actor
+	/// </summary>
+	/// <param name="actor">the actor to check</param>
+	/// <returns>A linear combination of CurrentCombatStyle, representing the combat data of an actor</returns>
 	static uint32_t GetCombatData(RE::Actor* actor)
 	{
 		uint32_t combatdata = 0;
@@ -602,8 +650,88 @@ public:
 		return combatdata;
 	}
 
+	enum class CurrentArmor
+	{
+		None = 0,
+		HeavyArmor = 1 << 0,
+		LightArmor = 1 << 1,
+		Clothing = 1 << 2,
+	};
+
+	/// <summary>
+	/// Returns which armor types are worn by a given npc.
+	/// </summary>
+	/// <param name="actor">The NPC to check.</param>
+	/// <returns>Linear combination of values of CurrentArmor</returns>
+	static uint32_t GetArmorData(RE::Actor* actor)
+	{
+		static std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> armorSlots{
+			RE::BGSBipedObjectForm::BipedObjectSlot::kHead,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kHands,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kForearms,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kCalves,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kShield,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModChestPrimary,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModBack,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModPelvisPrimary,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModPelvisSecondary,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModLegRight,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModLegLeft,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModChestSecondary,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModShoulder,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModArmLeft,
+			RE::BGSBipedObjectForm::BipedObjectSlot::kModArmRight
+		};
+
+		std::set<RE::FormID> visited{};
+		unsigned char armorHeavy = 0;
+		unsigned char armorLight = 0;
+		unsigned char clothing = 0;
+		RE::TESObjectARMO* item = nullptr;
+		for (int i = 0; i < armorSlots.size(); i++) {
+			item = actor->GetWornArmor(armorSlots[i]);
+			if (item) {
+				if (visited.contains(item->GetFormID()))
+					continue;
+				visited.insert(item->GetFormID());
+				for (uint32_t c = 0; c < item->numKeywords; c++) {
+					if (item->keywords[c]) {
+						if (item->keywords[c]->GetFormID() == 0x6BBE8) {  // ArmorClothing
+							clothing++;
+							// every item may only be either clothing, light or heavy armor
+							continue;
+						} else if (item->keywords[c]->GetFormID() == 0x6BBD2) {  // ArmorHeavy
+							armorHeavy++;
+							continue;
+						} else if (item->keywords[c]->GetFormID() == 0x6BBD3) {  // ArmorLight
+							armorLight++;
+							continue;
+						}
+					}
+				}
+			}
+		}
+		// we finished every word item in the possible armor slots.
+		// armor is recognised as worn, if two or more pieces of the same type are worn.
+		uint32_t ret = 0; // also CurrentArmor::Nothing in case nothing below fires
+		if (armorHeavy >= 2)
+			ret |= static_cast<uint32_t>(CurrentArmor::HeavyArmor);
+		if (armorLight >= 2)
+			ret |= static_cast<uint32_t>(CurrentArmor::LightArmor);
+		if (clothing >= 2)
+			ret |= static_cast<uint32_t>(CurrentArmor::Clothing);
+		return ret;
+	}
+
 	#pragma region Parsing
 
+	/// <summary>
+	/// Parses a string into a vector of int (array of int)
+	/// </summary>
+	/// <param name="line">string to parse</param>
+	/// <returns>vector of int (array of int)</returns>
 	static std::vector<int> ParseIntArray(std::string line)
 	{
 		std::vector<int> ret;
@@ -661,6 +789,14 @@ public:
 		return tmp;
 	}
 
+	/// <summary>
+	/// Parses objects for distribution rules from a string input
+	/// </summary>
+	/// <param name="input">the string to parse</param>
+	/// <param name="error">will be overwritten with [true] if an error occurs</param>
+	/// <param name="file">the relative path of the file that contains the string</param>
+	/// <param name="line">the line in the file that contains the string</param>
+	/// <returns>a vector of parsed and validated objects</returns>
 	static std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> ParseAssocObjects(std::string input, bool &error, std::string file, std::string line)
 	{
 		LOG_4("{}[ParseAssocObjects]");

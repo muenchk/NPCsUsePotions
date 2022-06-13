@@ -1267,6 +1267,12 @@ public:
 		case RE::ActorValue::kStaminaRateMult:
 			return (AlchemyEffect::kStaminaRateMult);
 			break;
+		case RE::ActorValue::kAggresion:
+			return (AlchemyEffect::kFrenzy);
+			break;
+		case RE::ActorValue::kConfidence:
+			return (AlchemyEffect::kFear);
+			break;
 		default:
 			return AlchemyEffect::kNone;
 			break;
@@ -1397,6 +1403,12 @@ public:
 			break;
 		case AlchemyEffect::kSneak:
 			return RE::ActorValue::kSneak;
+			break;
+		case AlchemyEffect::kFear:
+			return RE::ActorValue::kConfidence;
+			break;
+		case AlchemyEffect::kFrenzy:
+			return RE::ActorValue::kAggresion;
 			break;
 		default:
 			return RE::ActorValue::kNone;
@@ -1721,6 +1733,12 @@ public:
 				//if (mag[i] < maxmag)
 				//	maxmag = mag[i];
 				break;
+			case RE::ActorValue::kAggresion:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kFrenzy);
+				break;
+			case RE::ActorValue::kConfidence:
+				alch |= static_cast<uint64_t>(AlchemyEffect::kFear);
+				break;
 			}
 		}
 		if (std::string(item->GetName()).find(std::string("Weak")) != std::string::npos)
@@ -1745,12 +1763,6 @@ public:
 		if (std::string(item->GetName()).find(std::string("Blood")) != std::string::npos &&
 			std::string(item->GetName()).find(std::string("Potion")) != std::string::npos) {
 			alch = static_cast<uint64_t>(AlchemyEffect::kBlood);
-		}
-		if (std::string(item->GetName()).find(std::string("Fear")) != std::string::npos) {
-			alch = static_cast<uint64_t>(AlchemyEffect::kFear);
-		}
-		if (std::string(item->GetName()).find(std::string("Frenzy")) != std::string::npos) {
-			alch = static_cast<uint64_t>(AlchemyEffect::kFrenzy);
 		}
 
 		ItemType t = ItemType::kPotion;

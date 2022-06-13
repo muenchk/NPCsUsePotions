@@ -757,7 +757,7 @@ namespace Events
 									   (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0) {
 								// we dont handle a follower, so just let the enemy use any poison they have
 								uint64_t effects = static_cast<uint64_t>(Settings::AlchemyEffect::kAnyPoison);
-								LOG1_4("{}[CheckActors] check for poison with effect {}", effects);
+								LOG1_4("{}[CheckActors] check for poison with effect {}", Utility::GetHex(effects));
 								ACM::ActorUsePoison(curr->actor, effects);
 							}
 							// else Mage or Hand to Hand which cannot use poisons
@@ -832,6 +832,7 @@ namespace Events
 									if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded)) {
 										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kTwoHanded) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kBlock) |
+										           static_cast<uint64_t>(Settings::AlchemyEffect::kMeleeDamage) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kSpeedMult) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kWeaponSpeedMult) |
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kAttackDamageMult) |
@@ -885,9 +886,16 @@ namespace Events
 									}
 								}
 
+								// light and heavy armor
+								uint32_t armordata = Utility::GetArmorData(curr->actor);
+								if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::LightArmor))
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kLightArmor);
+								if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
+									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHeavyArmor);
+
 								// std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>>
 								//logger::info("take fortify with effects: {}", Utility::GetHex(effects));
-								LOG1_4("{}[CheckActors] check for fortify potion with effect {}", effects);
+								LOG1_4("{}[CheckActors] check for fortify potion with effect {}", Utility::GetHex(effects));
 								auto tup = ACM::ActorUsePotion(curr->actor, effects);
 								switch (std::get<1>(tup)) {
 								case Settings::AlchemyEffect::kHealRate:

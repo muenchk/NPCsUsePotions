@@ -418,8 +418,10 @@ void Settings::LoadDistrConfig()
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kNPC ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kFaction ||
 											std::get<0>(items[i]) == Settings::Distribution::AssocType::kKeyword ||
-											std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace)
+											std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
 											Distribution::_bosses.insert(std::get<1>(items[i]));
+											LOGE1_2("[Settings] [LoadDistrRules] declared {} as boss.", Utility::GetHex(std::get<1>(items[i])));
+										}
 									}
 									// since we are done delete splits
 									delete splits;
