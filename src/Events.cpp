@@ -596,7 +596,7 @@ namespace Events
 							// use potions
 							// do the first round
 							if (alch != 0 && (Settings::_UsePotionChance == 100 || rand100(rand) < Settings::_UsePotionChance)) {
-								auto tup = ACM::ActorUsePotion(curr->actor, alch);
+								auto tup = ACM::ActorUsePotion(curr->actor, alch, Settings::_CompatibilityPotionAnimation);
 								LOG1_2("{}[CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<1>(tup)));
 								switch (std::get<1>(tup)) {
 								case AlchemyEffect::kHealth:
@@ -630,7 +630,7 @@ namespace Events
 									// construct combined effect
 									alch |= alch2 | alch3;
 									if (alch != 0) {
-										tup = ACM::ActorUsePotion(curr->actor, std::get<2>(tup));
+										tup = ACM::ActorUsePotion(curr->actor, std::get<2>(tup),  Settings::_CompatibilityPotionAnimation);
 										switch (std::get<1>(tup)) {
 										case AlchemyEffect::kHealth:
 											curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
@@ -897,7 +897,7 @@ namespace Events
 								// std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>>
 								//logger::info("take fortify with effects: {}", Utility::GetHex(effects));
 								LOG1_4("{}[CheckActors] check for fortify potion with effect {}", Utility::GetHex(effects));
-								auto tup = ACM::ActorUsePotion(curr->actor, effects);
+								auto tup = ACM::ActorUsePotion(curr->actor, effects, Settings::_CompatibilityPotionAnimationFortify);
 								switch (std::get<1>(tup)) {
 								case Settings::AlchemyEffect::kHealRate:
 								case Settings::AlchemyEffect::kMagickaRate:
@@ -1146,16 +1146,58 @@ namespace Events
 
 	std::unordered_set<RE::FormID> cells;
 	/// <summary>
-	/// EventHandler for Debug purposes. It calculates the distribution rules for all npcs in the cell
+		/// EventHandler to fix not playing potion, poison, food sound
 	/// </summary>
 	/// <param name="a_event"></param>
 	/// <param name="a_eventSource"></param>
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>*) {
+		
 		//logger::info("[CELLEVENT]");
 		if (cells.contains(a_event->cellID) == false) {
 			cells.insert(a_event->cellID);
 			Settings::CheckCellForActors(a_event->cellID);
+		}
+
+		return EventResult::kContinue;
+	}
+
+	
+	/// <summary>
+	/// EventHandler for Debug purposes. It calculates the distribution rules for all npcs in the cell
+	/// </summary>
+	/// <param name="a_event"></param>
+	/// <param name="a_eventSource"></param>
+	/// <returns></returns>
+	EventResult EventHandler::ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>*)
+	{
+		if (a_event->actor.get()) {
+			if (a_event->actor->IsPlayerRef()) {
+				auto audiomanager = RE::BSAudioManager::GetSingleton();
+
+				RE::AlchemyItem* obj = RE::TESForm::LookupByID<RE::AlchemyItem>(a_event->baseObject);
+				if (obj) {
+					if ((obj->IsFood() || obj->HasKeyword(Settings::VendorItemFood)) && Settings::FoodEat && Settings::FoodEat->soundDescriptor) {
+						RE::BSSoundHandle handle;
+						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::FoodEat->soundDescriptor);
+						handle.SetObjectToFollow(a_event->actor->Get3D());
+						handle.SetVolume(1.0);
+						handle.Play();
+					} else if ((obj->IsPoison() || obj->HasKeyword(Settings::VendorItemPoison)) && Settings::PoisonUse && Settings::PoisonUse->soundDescriptor) {
+						RE::BSSoundHandle handle;
+						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+						handle.SetObjectToFollow(a_event->actor->Get3D());
+						handle.SetVolume(1.0);
+						handle.Play();
+					} else if ((obj->IsMedicine() || obj->HasKeyword(Settings::VendorItemPotion)) && Settings::PotionUse && Settings::PotionUse->soundDescriptor) {
+						RE::BSSoundHandle handle;
+						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PotionUse->soundDescriptor);
+						handle.SetObjectToFollow(a_event->actor->Get3D());
+						handle.SetVolume(1.0);
+						handle.Play();
+					}
+				}
+			}
 		}
 
 		return EventResult::kContinue;
@@ -1183,6 +1225,8 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESLoadGameEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESLoadGameEvent).name());
+		scriptEventSourceHolder->GetEventSource<RE::TESEquipEvent>()->AddEventSink(EventHandler::GetSingleton());
+		LOG1_1("{}Registered {}", typeid(RE::TESEquipEvent).name());
 		if (Settings::_featRemoveItemsOnDeath) {
 			scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 			LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
