@@ -670,6 +670,9 @@ public:
 	static inline RE::BGSSoundDescriptorForm* PotionUse;
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
 	static inline RE::BGSSoundDescriptorForm* FoodEat;
+	static inline bool FixedPotionUse = false;
+	static inline bool FixedPoisonUse = false;
+	static inline bool FixedFoodEat = false;
 
 	static void Load()
 	{
@@ -937,6 +940,7 @@ public:
 					RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
 					if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						PotionUseOM->outputModel = SOMMono01400_verb;
+						FixedPotionUse = true;
 						logger::info("[SETTINGS] changed output model for ITMPotionUse sound effect");
 					}
 				}
@@ -980,6 +984,7 @@ public:
 					RE::BGSStandardSoundDef* PoisonUseOM = (RE::BGSStandardSoundDef*)PoisonUseSD;
 					if (PoisonUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						PoisonUseOM->outputModel = SOMMono01400_verb;
+						FixedPoisonUse = true;
 						logger::info("[SETTINGS] changed output model for ITMPoisonUse sound effect");
 					}
 				}
@@ -993,6 +998,7 @@ public:
 					RE::BGSStandardSoundDef* FoodEatOM = (RE::BGSStandardSoundDef*)FoodEatSD;
 					if (FoodEatOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						FoodEatOM->outputModel = SOMMono01400_verb;
+						FixedFoodEat = true;
 						logger::info("[SETTINGS] changed output model for ITMFoodEat sound effect");
 					}
 				}
@@ -1015,7 +1021,7 @@ public:
 		ini.SetBoolValue("Features", "EnablePoisonUsage", _featUsePoisons, ";NPCs use poisons in combat.\n;Followers will use poisons only on appropiate enemies.\n;Generic NPCs will randomly use their poisons.");
 		ini.SetBoolValue("Features", "EnableFortifyPotionUsage", _featUseFortifyPotions, ";NPCs use fortify potions in combat.\n;Potions are used based on the equipped weapons and spells.");
 		ini.SetBoolValue("Features", "EnableFoodUsage", _featUseFood, ";Normally one would assume that NPCs eat during the day. This features simulates");
-		
+
 		ini.SetBoolValue("Features", "EnablePlayerRestoration", _playerRestorationEnabled, ";All activated restoration features are applied to the player, while they are in Combat.");
 		ini.SetBoolValue("Features", "EnablePlayerPoisonUsage", _playerUsePoisons, ";Player will automatically use poisons.");
 		ini.SetBoolValue("Features", "EnablePlayerFortifyPotionUsage", _playerUseFortifyPotions, ";Player will use fortify potions the way followers do.");
@@ -1048,7 +1054,7 @@ public:
 		ini.SetLongValue("Distribution", "MaxMagnitudeWeak", _MaxMagnitudeWeak, ";Items with this or lower magnitude*duration are considered weak.");
 		ini.SetLongValue("Distribution", "MaxMagnitudeStandard", _MaxMagnitudeStandard, ";Items with this or lower magnitude*duration are considered normal.");
 		ini.SetLongValue("Distribution", "MaxMagnitudePotent", _MaxMagnitudePotent, ";Items with this or lower magnitude*duration are considered potent. Everything above this is considered Insane tier");
-		
+
 		// potion options
 		ini.SetDoubleValue("Restoration", "HealthThresholdPercent", _healthThreshold, ";Upon reaching this threshold, NPCs will start to use health potions");
 		ini.SetDoubleValue("Restoration", "MagickaThresholdPercent", _magickaThreshold, ";Upon reaching this threshold, NPCs will start to use magicka potions");
@@ -1068,7 +1074,7 @@ public:
 		// removal options
 		ini.SetLongValue("Removal", "ChanceToRemoveItem", _ChanceToRemoveItem, ";Chance to remove items on death of NPC. (range: 0 to 100)");
 		ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", _MaxItemsLeft, ";Maximum number of items chances are rolled for during removal. Everything that goes above this value is always removed.");
-		
+
 		// general
 		ini.SetLongValue("General", "MaxPotionsPerCycle", _maxPotionsPerCycle, ";Maximum number of potions NPCs can use each Period");
 		//logger::info("[SETTINGS] writing {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
