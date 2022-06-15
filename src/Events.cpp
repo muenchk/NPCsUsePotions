@@ -1177,21 +1177,30 @@ namespace Events
 
 				RE::AlchemyItem* obj = RE::TESForm::LookupByID<RE::AlchemyItem>(a_event->baseObject);
 				if (obj) {
-					if ((obj->IsFood() || obj->HasKeyword(Settings::VendorItemFood)) && Settings::FoodEat && Settings::FoodEat->soundDescriptor) {
+					if ((obj->IsFood() || obj->HasKeyword(Settings::VendorItemFood)) && Settings::FixedFoodEat) {
 						RE::BSSoundHandle handle;
-						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::FoodEat->soundDescriptor);
+						if (obj->data.consumptionSound)
+							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+						else
+							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::FoodEat->soundDescriptor);
 						handle.SetObjectToFollow(a_event->actor->Get3D());
 						handle.SetVolume(1.0);
 						handle.Play();
-					} else if ((obj->IsPoison() || obj->HasKeyword(Settings::VendorItemPoison)) && Settings::PoisonUse && Settings::PoisonUse->soundDescriptor) {
+					} else if ((obj->IsPoison() || obj->HasKeyword(Settings::VendorItemPoison)) && Settings::FixedPoisonUse) {
 						RE::BSSoundHandle handle;
-						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+						if (obj->data.consumptionSound)
+							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+						else
+							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
 						handle.SetObjectToFollow(a_event->actor->Get3D());
 						handle.SetVolume(1.0);
 						handle.Play();
-					} else if ((obj->IsMedicine() || obj->HasKeyword(Settings::VendorItemPotion)) && Settings::PotionUse && Settings::PotionUse->soundDescriptor) {
+					} else if ((obj->IsMedicine() || obj->HasKeyword(Settings::VendorItemPotion)) && Settings::FixedPotionUse) {
 						RE::BSSoundHandle handle;
-						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PotionUse->soundDescriptor);
+						if (obj->data.consumptionSound)
+							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+						else
+							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PotionUse->soundDescriptor);
 						handle.SetObjectToFollow(a_event->actor->Get3D());
 						handle.SetVolume(1.0);
 						handle.Play();

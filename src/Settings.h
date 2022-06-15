@@ -670,6 +670,9 @@ public:
 	static inline RE::BGSSoundDescriptorForm* PotionUse;
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
 	static inline RE::BGSSoundDescriptorForm* FoodEat;
+	static inline bool FixedPotionUse = false;
+	static inline bool FixedPoisonUse = false;
+	static inline bool FixedFoodEat = false;
 
 	static void Load()
 	{
@@ -937,6 +940,7 @@ public:
 					RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
 					if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						PotionUseOM->outputModel = SOMMono01400_verb;
+						FixedPotionUse = true;
 						logger::info("[SETTINGS] changed output model for ITMPotionUse sound effect");
 					}
 				}
@@ -980,6 +984,7 @@ public:
 					RE::BGSStandardSoundDef* PoisonUseOM = (RE::BGSStandardSoundDef*)PoisonUseSD;
 					if (PoisonUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						PoisonUseOM->outputModel = SOMMono01400_verb;
+						FixedPoisonUse = true;
 						logger::info("[SETTINGS] changed output model for ITMPoisonUse sound effect");
 					}
 				}
@@ -993,6 +998,7 @@ public:
 					RE::BGSStandardSoundDef* FoodEatOM = (RE::BGSStandardSoundDef*)FoodEatSD;
 					if (FoodEatOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						FoodEatOM->outputModel = SOMMono01400_verb;
+						FixedFoodEat = true;
 						logger::info("[SETTINGS] changed output model for ITMFoodEat sound effect");
 					}
 				}
@@ -1000,7 +1006,7 @@ public:
 		}
 	}
 
-		static void Save()
+	static void Save()
 	{
 		constexpr auto path = L"Data/SKSE/Plugins/NPCsUsePotions.ini";
 

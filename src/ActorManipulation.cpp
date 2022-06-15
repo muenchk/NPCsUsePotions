@@ -209,7 +209,7 @@ std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::Al
 
 std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ACM::ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls, bool compatibility)
 {
-	if (ls.size() > 0) {
+	if (ls.size() > 0 && std::get<2>(ls.front())) {
 		LOG_2("{}[ActorUsePotion] Drink Potion");
 		LOG1_3("{}[ActorUsePotion] use potion on: {}", Utility::GetHex(_actor->GetFormID()));
 		if (Settings::CompatibilityPotionPapyrus() || compatibility) {
@@ -272,7 +272,7 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 	//LOG_2("{}[ActorUseFood] step2");
 	// got all potions the actor has sorted by magnitude.
 	// now use the one with the highest magnitude;
-	if (ls.size() > 0) {
+	if (ls.size() > 0 && std::get<2>(ls.front())) {
 		LOG_2("{}[ActorUseFood] Use Food");
 		if (Settings::CompatibilityFoodPapyrus()) {
 			LOG_3("{}[ActorUseFood] Compatibility Mode");
@@ -319,14 +319,23 @@ std::pair<int, AlchemyEffect> ACM::ActorUsePoison(RE::Actor* _actor, uint64_t al
 	ls.sort(Utility::SortMagnitude);
 	// got all potions the actor has sorted by magnitude.
 	// now use the one with the highest magnitude;
-	if (ls.size() > 0) {
+	if (ls.size() > 0 && std::get<2>(ls.front())) {
 		LOG_2("{}[ActorUsePoison] Use Poison");
 		RE::ExtraDataList* extra = new RE::ExtraDataList();
 		extra->Add(new RE::ExtraPoison(std::get<2>(ls.front()), 1));
 		auto ied = _actor->GetEquippedEntryData(false);
-		ied->AddExtraList(extra);
-		_actor->RemoveItem(std::get<2>(ls.front()), 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-		return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+		if (ied) {
+			ied->AddExtraList(extra);
+			_actor->RemoveItem(std::get<2>(ls.front()), 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+			return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+		} else {
+			ied = _actor->GetEquippedEntryData(true);
+			if (ied) {
+				ied->AddExtraList(extra);
+				_actor->RemoveItem(std::get<2>(ls.front()), 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+				return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+			}
+		}
 	}
 	return { -1, AlchemyEffect::kNone };
 }
