@@ -56,6 +56,9 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 			"/permissive-"	# Standards conformance
 			"/Zc:preprocessor"	# Enable preprocessor conformance mode
 
+			"/D_CRT_SECURE_NO_WARNINGS"
+			"/D_CRT_SECURE_NO_WARNINGS_GLOBALS"
+			
 			"/wd5105"
 			# disable warnings
 			"/wd4189"
