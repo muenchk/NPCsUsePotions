@@ -91,7 +91,7 @@ public:
 	/// <param name="_actor">actor to apply potion on</param>
 	/// <param name="eff">effect to apply</param>
 	/// <returns>Wether a potion was consumed</returns>
-	static std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, uint64_t alchemyEffect);
+	static std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, uint64_t alchemyEffect, bool compatiblity = false);
 
 	/// <summary>
 	/// takes an already computed list and uses the first item in the list
@@ -99,7 +99,7 @@ public:
 	/// <param name="_actor"></param>
 	/// <param name="ls"></param>
 	/// <returns></returns>
-	static std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls);
+	static std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls, bool compatibility = false);
 	
 	/// <summary>
 	/// tries to use a food with the given effect [eff]

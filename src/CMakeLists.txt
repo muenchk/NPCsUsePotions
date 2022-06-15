@@ -58,6 +58,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
 			"/wd5105"
 			# disable warnings
+			"/wd4189"
 			"/wd4005" # macro redefinition
 			"/wd4061" # enumerator 'identifier' in switch of enum 'enumeration' is not explicitly handled by a case label
 			"/wd4200" # nonstandard extension used : zero-sized array in struct/union

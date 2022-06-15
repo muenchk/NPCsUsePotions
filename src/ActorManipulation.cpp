@@ -188,7 +188,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 	return ret;
 }
 
-std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ACM::ActorUsePotion(RE::Actor* _actor, uint64_t alchemyEffect)
+std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ACM::ActorUsePotion(RE::Actor* _actor, uint64_t alchemyEffect, bool compatibility)
 {
 	auto begin = std::chrono::steady_clock::now();
 	// if no effect is specified, return
@@ -204,15 +204,15 @@ std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::Al
 	ls.sort(Utility::SortMagnitude);
 	// got all potions the actor has sorted by magnitude.
 	// now use the one with the highest magnitude;
-	return ActorUsePotion(_actor, ls);
+	return ActorUsePotion(_actor, ls, compatibility);
 }
 
-std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ACM::ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls)
+std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ACM::ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls, bool compatibility)
 {
 	if (ls.size() > 0) {
 		LOG_2("{}[ActorUsePotion] Drink Potion");
 		LOG1_3("{}[ActorUsePotion] use potion on: {}", Utility::GetHex(_actor->GetFormID()));
-		if (Settings::CompatibilityPotionPapyrus()) {
+		if (Settings::CompatibilityPotionPapyrus() || compatibility) {
 
 			LOG_3("{}[ActorUsePotion] Compatibility Mode");
 			if (!Settings::CompatibilityPotionPlugin(_actor)) {

@@ -540,6 +540,7 @@ public:
 	// compatibility
 	static inline bool _CompatibilityMode = false;								// Use Items with Papyrus, needs the plugin
 	static inline bool _CompatibilityPotionAnimation = false;					// Use Potions with Papyrus
+	static inline bool _CompatibilityPotionAnimationFortify = false;                   // Use Potions with Papyrus
 	static inline bool _CompatibilityDisableAutomaticAdjustments = false;		// Disables most automatic adjustments made to settings for compatibility
 	static inline bool _CompatibilityPotionAnimatedFx = false;					// no settings entry | Compatiblity Mode for Mods
 																				// 1) Animated Potion Drinking SE
@@ -666,6 +667,10 @@ public:
 	static inline RE::BGSPerk* AlchemySkillBoosts;
 	static inline RE::BGSPerk* PerkSkillBoosts;
 
+	static inline RE::BGSSoundDescriptorForm* PotionUse;
+	static inline RE::BGSSoundDescriptorForm* PoisonUse;
+	static inline RE::BGSSoundDescriptorForm* FoodEat;
+
 	static void Load()
 	{
 		constexpr auto path = L"Data/SKSE/Plugins/NPCsUsePotions.ini";
@@ -719,6 +724,8 @@ public:
 		// compatibility
 		_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
 		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
+		_CompatibilityPotionAnimationFortify = ini.GetValue("Compatibility", "UltimatePotionAnimationFortify") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimationFortify") : false;
+		logger::info("[SETTINGS] {} {}", "UltimatePotionAnimationFortify", std::to_string(_CompatibilityPotionAnimationFortify));
 		// get wether zxlice's Ultimate Potion Animation is present
 		//auto constexpr folder = R"(Data\SKSE\Plugins\)";
 		//for (const auto& entry : std::filesystem::directory_iterator(folder)) {
@@ -922,7 +929,7 @@ public:
 				RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
 				// ITMPotionUse
 				RE::TESForm* PotionUseF = RE::TESForm::LookupByID(0xB6435);
-				RE::BGSSoundDescriptorForm* PotionUse = nullptr;
+				PotionUse = nullptr;
 				if (PotionUseF)
 					PotionUse = PotionUseF->As<RE::BGSSoundDescriptorForm>();
 				if (PotionUse) {
@@ -965,7 +972,7 @@ public:
 				
 				// ITMPoisonUse
 				RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x3EDBD);
-				RE::BGSSoundDescriptorForm* PoisonUse = nullptr;
+				PoisonUse = nullptr;
 				if (PoisonUseF)
 					PoisonUse = PoisonUseF->As<RE::BGSSoundDescriptorForm>();
 				if (PoisonUse) {
@@ -978,7 +985,7 @@ public:
 				}
 				// ITMFoodEat
 				RE::TESForm* FoodEatF = RE::TESForm::LookupByID(0xCAF94);
-				RE::BGSSoundDescriptorForm* FoodEat = nullptr;
+				FoodEat = nullptr;
 				if (FoodEatF)
 					FoodEat = FoodEatF->As<RE::BGSSoundDescriptorForm>();
 				if (FoodEat) {
@@ -1016,14 +1023,15 @@ public:
 		ini.SetBoolValue("Features", "DistributePotions", _featDistributePotions, ";NPCs are given potions when they enter combat.");
 		ini.SetBoolValue("Features", "DistributePoisons", _featDistributePoisons, ";NPCs are give poisons when they enter combat.");
 		ini.SetBoolValue("Features", "DistributeFood", _featDistributeFood, ";NPCs are given food items when they enter combat, and will use them immediately.");
-		ini.SetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions, "NPCs are give fortify potions when they enter combat.");
+		ini.SetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions, ";NPCs are give fortify potions when they enter combat.");
 		ini.SetBoolValue("Features", "RemoveItemsOnDeath", _featRemoveItemsOnDeath, ";Remove items from NPCs after they died.");
 
 		// fixes
 		ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", _ApplySkillBoostPerks, ";Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply.");
 
 		// compatibility
-		ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. This is automatically enabled if zxlice's mod is detected");
+		ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. Only uses compatibility mode for Health, Stamina and Magicka Potions");
+		ini.SetBoolValue("Compatibility", "UltimatePotionAnimationFortify", _CompatibilityPotionAnimationFortify, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. Uses compatibility mode for Fortify Potions");
 		ini.SetBoolValue("Compatibility", "Compatibility", _CompatibilityMode, ";General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
 		ini.SetBoolValue("Compatibility", "DisableAutomaticAdjustments", _CompatibilityDisableAutomaticAdjustments, ";Disables automatic changes made to settings, due to compatibility.\n;Not all changes can be disabled.\n;1) Changes to \"MaxPotionsPerCycle\" when using Potion Animation Mods.\n;2) Enabling of \"UltimatePotionAnimation\" if zxlice's dll is found in your plugin folder. Since it would very likely result in a crash with this option enabled.");
 		if (_CompatibilityPotionAnimatedFX_UseAnimations)
@@ -1058,8 +1066,8 @@ public:
 		ini.SetLongValue("Fortify", "UseFortifyPotionChance", _UsePotionChance, ";Chance that an NPC will use a potion if they can. Set to 100 to always take a potion, when appropiate.");
 
 		// removal options
-		ini.SetLongValue("Removal", "ChanceToRemoveItem", _ChanceToRemoveItem, "Chance to remove items on death of NPC. (range: 0 to 100)");
-		ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", _MaxItemsLeft, "Maximum number of items chances are rolled for during removal. Everything that goes above this value is always removed.");
+		ini.SetLongValue("Removal", "ChanceToRemoveItem", _ChanceToRemoveItem, ";Chance to remove items on death of NPC. (range: 0 to 100)");
+		ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", _MaxItemsLeft, ";Maximum number of items chances are rolled for during removal. Everything that goes above this value is always removed.");
 		
 		// general
 		ini.SetLongValue("General", "MaxPotionsPerCycle", _maxPotionsPerCycle, ";Maximum number of potions NPCs can use each Period");
@@ -1093,7 +1101,7 @@ public:
 	}
 	static bool CompatibilityPotionPapyrus()
 	{
-		return Settings::_CompatibilityMode | Settings::_CompatibilityPotionAnimation | Settings::_CompatibilityPotionAnimatedFX_UseAnimations;
+		return Settings::_CompatibilityMode | Settings::_CompatibilityPotionAnimatedFX_UseAnimations;
 	}
 	static void ApplyCompatibilityPotionAnimatedPapyrus(RE::Actor* actor)
 	{

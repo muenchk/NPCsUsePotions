@@ -11,7 +11,8 @@ namespace Events
 		public RE::BSTEventSink<RE::TESCombatEvent>,
 		public RE::BSTEventSink<RE::TESLoadGameEvent>,
 		public RE::BSTEventSink<RE::TESDeathEvent>,
-		public RE::BSTEventSink<RE::BGSActorCellEvent>
+		public RE::BSTEventSink<RE::BGSActorCellEvent>,
+		public RE::BSTEventSink<RE::TESEquipEvent>
 	{
 	public:
 		/// <summary>
@@ -63,6 +64,13 @@ namespace Events
 		/// <param name="a_eventSource"></param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for Debug purposes. It calculates the distribution rules for all npcs in the cell
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>* a_eventSource) override;
 
 	private:
 		EventHandler() = default;
