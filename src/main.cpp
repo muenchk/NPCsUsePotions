@@ -79,13 +79,16 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// load distribution settings
 		Settings::LoadDistrConfig();
 		logger::info("Distribution configuration loaded");
+		// Debug stuff
 		if (Settings::_CheckActorsWithoutRules)
 			Settings::CheckActorsForRules();
 		// classify currently loaded game items
 		Settings::ClassifyItems();
 		logger::info("Items classified");
+		// register eventhandlers
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
+		// register console commands
 		Console::RegisterConsoleCommands();
 		logger::info("Registered Console Commands");
 		

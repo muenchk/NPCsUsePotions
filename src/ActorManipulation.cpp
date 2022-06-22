@@ -75,6 +75,7 @@ std::tuple<bool, float, int, Settings::AlchemyEffect> ACM::HasAlchemyEffect(RE::
 							break;
 						}
 					}
+					// COMPATIBILITY FOR APOTHECARY
 					if (Settings::_CompatibilityApothecary) {
 						// DamageWeapon
 						if (formid == 0x73F26) {
@@ -303,6 +304,8 @@ std::pair<int, Settings::AlchemyEffect> ACM::ActorUseFood(RE::Actor* _actor, uin
 	return { -1, AlchemyEffect::kNone };
 }
 
+static RE::BSAudioManager* audiomanager;
+
 std::pair<int, AlchemyEffect> ACM::ActorUsePoison(RE::Actor* _actor, uint64_t alchemyEffect)
 {
 	auto begin = std::chrono::steady_clock::now();
@@ -321,18 +324,42 @@ std::pair<int, AlchemyEffect> ACM::ActorUsePoison(RE::Actor* _actor, uint64_t al
 	// now use the one with the highest magnitude;
 	if (ls.size() > 0 && std::get<2>(ls.front())) {
 		LOG_2("{}[ActorUsePoison] Use Poison");
+		if (!audiomanager)
+			audiomanager = RE::BSAudioManager::GetSingleton();
 		RE::ExtraDataList* extra = new RE::ExtraDataList();
 		extra->Add(new RE::ExtraPoison(std::get<2>(ls.front()), 1));
 		auto ied = _actor->GetEquippedEntryData(false);
 		if (ied) {
 			ied->AddExtraList(extra);
 			_actor->RemoveItem(std::get<2>(ls.front()), 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+			{
+				// play poison sound
+				RE::BSSoundHandle handle;
+				if (std::get<2>(ls.front())->data.consumptionSound)
+					audiomanager->BuildSoundDataFromDescriptor(handle, std::get<2>(ls.front())->data.consumptionSound->soundDescriptor);
+				else
+					audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+				handle.SetObjectToFollow(_actor->Get3D());
+				handle.SetVolume(1.0);
+				handle.Play();
+			}
 			return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 		} else {
 			ied = _actor->GetEquippedEntryData(true);
 			if (ied) {
 				ied->AddExtraList(extra);
 				_actor->RemoveItem(std::get<2>(ls.front()), 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+				{
+					// play poison sound
+					RE::BSSoundHandle handle;
+					if (std::get<2>(ls.front())->data.consumptionSound)
+						audiomanager->BuildSoundDataFromDescriptor(handle, std::get<2>(ls.front())->data.consumptionSound->soundDescriptor);
+					else
+						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+					handle.SetObjectToFollow(_actor->Get3D());
+					handle.SetVolume(1.0);
+					handle.Play();
+				}
 				return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 			}
 		}

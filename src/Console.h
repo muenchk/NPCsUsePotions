@@ -19,7 +19,22 @@ namespace Console
 		CalcRule& operator=(CalcRule&&) = delete;
 
 	public:
+		/// <summary>
+		/// Processes the nupstats console command. Prints information about rules and combatdata about an actor.
+		/// </summary>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name="a_thisObj"></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <returns></returns>
 		static bool Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
+		/// <summary>
+		/// Registers the nupstats console command
+		/// </summary>
 		static void Register()
 		{
 			auto info = RE::SCRIPT_FUNCTION::LocateConsoleCommand("AcceptLegalDoc");  // unused
@@ -58,7 +73,22 @@ namespace Console
 		ReloadDist& operator=(ReloadDist&&) = delete;
 
 	public:
+		/// <summary>
+		/// Processes the nupreset console command. Reloads entire plugin configuration.
+		/// </summary>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name="a_thisObj"></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <param name=""></param>
+		/// <returns></returns>
 		static bool Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
+		/// <summary>
+		/// Registers the nupstats console command
+		/// </summary>
 		static void Register()
 		{
 			auto info = RE::SCRIPT_FUNCTION::LocateConsoleCommand("GetLegalDocs");  // unused
@@ -79,5 +109,8 @@ namespace Console
 		}
 	};
 
+	/// <summary>
+	/// Registers all console commands
+	/// </summary>
 	void RegisterConsoleCommands();
 }

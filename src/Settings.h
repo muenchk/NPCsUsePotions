@@ -670,9 +670,9 @@ public:
 	static inline RE::BGSSoundDescriptorForm* PotionUse;
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
 	static inline RE::BGSSoundDescriptorForm* FoodEat;
-	static inline bool FixedPotionUse = false;
-	static inline bool FixedPoisonUse = false;
-	static inline bool FixedFoodEat = false;
+	static inline bool FixedPotionUse = true;
+	static inline bool FixedPoisonUse = true;
+	static inline bool FixedFoodEat = true;
 
 	static void Load()
 	{
@@ -973,9 +973,12 @@ public:
 				//	}
 				//}
 				// -------------------------
+
+				// remove poisons, since they aren't "used", but applied and then removed from inventory, so no sounds would play anyway
+
 				
 				// ITMPoisonUse
-				RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x3EDBD);
+				RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x106614);
 				PoisonUse = nullptr;
 				if (PoisonUseF)
 					PoisonUse = PoisonUseF->As<RE::BGSSoundDescriptorForm>();

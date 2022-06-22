@@ -13,6 +13,7 @@
 #include "ActorManipulation.h"
 #include <limits>
 #include <filesystem>
+#include <deque>
 
 		
 namespace Events
@@ -346,45 +347,182 @@ namespace Events
 	// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
 	static std::unordered_set<RE::FormID> deads;
 
+	static std::thread* eventhandler = nullptr;
+	static std::deque<EventData*> eventQueue;
+	static std::binary_semaphore sem_eventQueue(1);
+	static std::counting_semaphore sem_EventCounter(0);
+	static bool killEventHandler = false;
+
+	#define CheckExitEvent if (killEventHandler) goto SkipEvent;
+
+	static void HandleEvents()
+	{
+		RE::UI* ui = RE::UI::GetSingleton();
+		EventData* data = nullptr;
+		while (killEventHandler == false) {
+			// this one locks this threads execution until an event is ready to be handled.
+			// this results in this thread only waking when an EventHandler calls sem_EventCounter.release() and
+			// thus increases the count on the semaphore and this thread aqcuires a lock.
+			// the count on sem_EventCounter increases as long as there are more events incoming than can be handled
+			while (ui->GameIsPaused())
+				std::this_thread::sleep_for(10ms);
+			CheckExitEvent;
+			sem_EventCounter.acquire();
+			// get an event from the queue
+			sem_eventQueue.acquire();
+			data = eventQueue.front();
+			eventQueue.pop_front();
+			sem_eventQueue.release();
+			// check whether the event is correct
+			if (data == nullptr || data->actor == nullptr || data->evn == EventType::None) {
+				// skip this event
+				continue;
+			}
+			CheckExitEvent;
+			switch (data->evn) {
+				// handle the death of an actor
+			case EventType::TESDeathEvent:
+				{
+					LOG1_1("{}[HandleEvents] [TESDeathEvent] Removing items from actor {}", std::to_string(data->actor->GetFormID()));
+					auto items = Settings::Distribution::GetMatchingInventoryItems(data->actor);
+					LOG1_1("{}[HandleEvents] [TESDeathEvent] found {} items", items.size());
+					if (items.size() > 0) {
+						// remove items that are too much
+						while (items.size() > Settings::_MaxItemsLeft) {
+							RE::ExtraDataList* extra = new RE::ExtraDataList();
+							extra->SetOwner(data->actor);
+							data->actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							LOG1_1("{}[HandleEvents] [TESDeathEvent] Removed item {}", items.back()->GetName());
+							items.pop_back();
+						}
+						CheckExitEvent;
+						//logger::info("[TESDeathEvent] 3");
+						// remove the rest of the items per chance
+						if (Settings::_ChanceToRemoveItem < 100) {
+							for (int i = (int)items.size() - 1; i >= 0; i--) {
+								if (rand100(rand) <= Settings::_ChanceToRemoveItem) {
+									RE::ExtraDataList* extra = new RE::ExtraDataList();
+									extra->SetOwner(data->actor);
+									data->actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+									LOG1_1("{}[HandleEvents] [TESDeathEvent] Removed item {}", items[i]->GetName());
+								} else {
+									LOG1_1("{}[HandleEvents] [TESDeathEvent] Did not remove item {}", items[i]->GetName());
+								}
+							}
+						}
+					}
+				}
+				break;
+			case EventType::TESCombatEnterEvent:
+				if (!data->actor->IsDead())
+				{
+					LOG_1("{}[HandleEvents] [TesCombatEnterEvent] Trying to register new actor for potion tracking");
+
+					// check wether this charackter maybe a follower
+					auto iterac = actorresetmap.find(data->actor->GetFormID());
+					if (iterac == actorresetmap.end() || RE::Calendar::GetSingleton()->GetDaysPassed() - iterac->second > 1) {
+						actorresetmap.erase(data->actor->GetFormID());
+						if (!Settings::Distribution::ExcludedNPC(data->actor)) {
+							// if we have characters that should not get items, the function
+							// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
+							auto items = Settings::Distribution::GetDistrItems(data->actor);
+							if (data->actor->IsDead()) {
+								goto SkipEvent;
+							}
+							CheckExitEvent;
+							if (items.size() > 0) {
+								for (int i = 0; i < items.size(); i++) {
+									if (items[i] == nullptr) {
+										//logger::info("[TESCombatEvent] Item: null");
+										continue;
+									}
+									std::string name = items[i]->GetName();
+									std::string id = Utility::GetHex(items[i]->GetFormID());
+									//logger::info("[TESCombatEvent] Item: {} {}", id, name);
+									RE::ExtraDataList* extra = new RE::ExtraDataList();
+									extra->SetOwner(data->actor);
+									data->actor->AddObjectToContainer(items[i], extra, 1, nullptr);
+								}
+								actorresetmap.insert_or_assign((uint64_t)(data->actor->GetFormID()), RE::Calendar::GetSingleton()->GetDaysPassed());
+							}
+						}
+					}
+					CheckExitEvent;
+
+					if (data->actor->IsDead())
+						goto SkipEvent;
+
+					if (Settings::_featUseFood) {
+						// use food at the beginning of the fight to simulate the npc having eaten
+						ACM::ActorUseAnyFood(data->actor, false);
+					}
+
+					CheckExitEvent;
+
+					sem.acquire();
+					InitializeCompatibilityObjects();
+					auto it = aclist.begin();
+					auto end = aclist.end();
+					bool cont = false;
+					while (it != end) {
+						if ((*it)->actor == data->actor) {
+							cont = true;
+							break;
+						}
+						it++;
+					}
+					if (!cont)
+						aclist.insert(aclist.begin(), new Events::ActorInfo(data->actor, 0, 0, 0, 0, 0));
+					sem.release();
+					LOG_1("{}[HandleEvents] [TesCombatEnterEvent] finished registering NPC");
+				}
+				break;
+				// handle actor leaving combat
+			case EventType::TESCombatLeaveEvent:
+				if (!data->actor->IsDead())
+				{
+					LOG_1("{}[HandleEvents] [TesCombatLeaveEvent] Unregister NPC from potion tracking")
+					sem.acquire();
+					auto it = aclist.begin();
+					auto end = aclist.end();
+					while (it != end) {
+						if ((*it)->actor == data->actor) {
+							//logger::info("CombatEvent deleting list entry");
+							delete (*it);
+							aclist.erase(it);
+							break;
+						}
+						it++;
+					}
+					sem.release();
+					LOG_1("{}[HandleEvents] [TesCombatLeaveEvent] Unregistered NPC");
+				}
+				break;
+			}
+
+			SkipEvent:
+			delete data;
+		}
+	}
+
 	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
 	{
 		auto actor = a_event->actorDying->As<RE::Actor>();
 		if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
 			// as with potion distribution, exlude excluded actors and potential followers
-
-			sem_actorreset.acquire();
 			if (!Settings::Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false)
 			{
 				deads.insert(actor->GetFormID());
-				LOG1_1("{}[TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
-				auto items = Settings::Distribution::GetMatchingInventoryItems(actor);
-				LOG1_1("{}[TESDeathEvent] found {} items", items.size());
-				if (items.size() > 0) {
-					// remove items that are too much
-					while (items.size() > Settings::_MaxItemsLeft) {
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(actor);
-						actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-						LOG1_1("{}[TESDeathEvent] Removed item {}", items.back()->GetName());
-						items.pop_back();
-					}
-					//logger::info("[TESDeathEvent] 3");
-					// remove the rest of the items per chance
-					if (Settings::_ChanceToRemoveItem < 100) {
-						for (int i = (int)items.size() - 1; i >= 0; i--) {
-							if (rand100(rand) <= Settings::_ChanceToRemoveItem) {
-								RE::ExtraDataList* extra = new RE::ExtraDataList();
-								extra->SetOwner(actor);
-								actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-								LOG1_1("{}[TESDeathEvent] Removed item {}", items[i]->GetName());
-							} else {
-								LOG1_1("{}[TESDeathEvent] Did not remove item {}", items[i]->GetName());
-							}
-						}
-					}
-				}
+				EventData* data = new EventData();
+				data->actor = actor;
+				data->evn = EventType::TESDeathEvent;
+				// insert into event queue
+				sem_eventQueue.acquire();
+				eventQueue.push_back(data);
+				sem_eventQueue.release();
+				// tell handler that there is one more event
+				sem_EventCounter.release();
 			}
-			sem_actorreset.release();
 		}
 
 		return EventResult::kContinue;
@@ -403,80 +541,23 @@ namespace Events
 		auto actor = a_event->actor->As<RE::Actor>();
 		if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
-				LOG_1("{}[TesCombatEvent] Trying to register new actor for potion tracking");
-
-				// check wether this charackter maybe a follower
-				sem_actorreset.acquire();
-				auto iterac = actorresetmap.find(actor->GetFormID());
-				if (iterac == actorresetmap.end() || RE::Calendar::GetSingleton()->GetDaysPassed() - iterac->second > 1) {
-					actorresetmap.erase(actor->GetFormID());
-					if (!Settings::Distribution::ExcludedNPC(actor)) {
-						// if we have characters that should not get items, the function
-						// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
-						auto items = Settings::Distribution::GetDistrItems(actor);
-						if (actor->IsDead()) {
-							sem_actorreset.release();
-							return EventResult::kContinue;
-						}
-						if (items.size() > 0) {
-							for (int i = 0; i < items.size(); i++) {
-								if (items[i] == nullptr) {
-									//logger::info("[TESCombatEvent] Item: null");
-									continue;
-								}
-								std::string name = items[i]->GetName();
-								std::string id = Utility::GetHex(items[i]->GetFormID());
-								//logger::info("[TESCombatEvent] Item: {} {}", id, name);
-								RE::ExtraDataList* extra = new RE::ExtraDataList();
-								extra->SetOwner(actor);
-								actor->AddObjectToContainer(items[i], extra, 1, nullptr);
-							}
-							actorresetmap.insert_or_assign((uint64_t)(actor->GetFormID()), RE::Calendar::GetSingleton()->GetDaysPassed());
-						}
-					}
-				}
-				sem_actorreset.release();
-
-				if (actor->IsDead())
-					return EventResult::kContinue;
-
-				if (Settings::_featUseFood) {
-					// use food at the beginning of the fight to simulate the npc having eaten
-					ACM::ActorUseAnyFood(actor, false);
-				}
-
-				sem.acquire();
-				InitializeCompatibilityObjects();
-				auto it = aclist.begin();
-				auto end = aclist.end();
-				bool cont = false;
-				while (it != end) {
-					if ((*it)->actor == actor) {
-						cont = true;
-						break;
-					}
-					it++;
-				}
-				if (!cont)
-					aclist.insert(aclist.begin(), new Events::ActorInfo(actor, 0, 0, 0, 0, 0));
-				sem.release();
-				LOG_1("{}[TesCombatEvent] finished registering NPC");
+				EventData* data = new EventData();
+				data->actor = actor;
+				data->evn = EventType::TESCombatEnterEvent;
+				sem_eventQueue.acquire();
+				eventQueue.push_back(data);
+				sem_eventQueue.release();
+				sem_EventCounter.release();
+				LOG_1("{}[TesCombatEvent] Registered TesCombatEnterEvent");
 			} else {
-				LOG_1("{}[TesCombatEvent] Unregister NPC from potion tracking")
-				sem.acquire();
-				auto it = aclist.begin();
-				auto end = aclist.end();
-				while (it != end) {
-					if ((*it)->actor == actor) {
-						//logger::info("CombatEvent deleting list entry");
-						delete (*it);
-						aclist.erase(it);
-						break;
-					}
-					it++;
-				}
-				sem.release();
-				LOG_1("{}[TesCombatEvent] Unregistered NPC");
+				EventData* data = new EventData;
+				data->actor = actor;
+				data->evn = EventType::TESCombatLeaveEvent;
+				sem_eventQueue.acquire();
+				eventQueue.push_back(data);
+				sem_eventQueue.release();
+				sem_EventCounter.release();
+				LOG_1("{}[TesCombatEvent] Registered TesCombatLeaveEvent");
 			}
 		}
 
@@ -1110,6 +1191,21 @@ namespace Events
 	{
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
+		// if we cancel the event handle, reset that, additional delete all events that remain to be handled
+		killEventHandler = true;
+		sem_eventQueue.acquire();
+		EventData* tmpdata = nullptr;
+		while (!eventQueue.empty()) {
+			tmpdata = eventQueue.front();
+			if (tmpdata)
+				delete tmpdata;
+			eventQueue.pop_front();
+		}
+		eventQueue.clear(); // make completely sure its empty
+		sem_eventQueue.release();
+		// skip all events
+		while (sem_EventCounter.try_acquire())
+			;
 		// set initialized to false, since we did load or reload the game
 		initialized = false;
 		if (actorhandlerrunning == false) {
@@ -1126,6 +1222,17 @@ namespace Events
 			actorhandler = new std::thread(CheckActors);
 			LOG_1("{}[LoadGameEvent] Started CheckActors");
 		}
+		// reset eventhandler
+		if (eventhandler != nullptr) {
+			if (eventhandler->joinable())
+				eventhandler->join();
+			eventhandler->~thread();
+			delete eventhandler;
+			eventhandler = nullptr;
+		}
+		killEventHandler = false;
+		eventhandler = new std::thread(HandleEvents);
+
 		// delete the current actorresetmap, since we don't know wether its still valid across savegame load
 		sem_actorreset.acquire();
 		actorresetmap.clear();
@@ -1261,5 +1368,6 @@ namespace Events
 	void DisableThreads()
 	{
 		stopactorhandler = true;
+		killEventHandler = true;
 	}
 }

@@ -91,14 +91,35 @@ namespace Events
 	/// </summary>
 	void DisableThreads();
 
+	/// <summary>
+	/// Stores information about an actor.
+	/// </summary>
 	class ActorInfo
 	{
 	public:
+		/// <summary>
+		/// The actor
+		/// </summary>
 		RE::Actor* actor;
+		/// <summary>
+		/// Current remaining cooldown on health potions
+		/// </summary>
 		int durHealth = 0;
+		/// <summary>
+		/// Current remaining cooldown on magicka potions
+		/// </summary>
 		int durMagicka = 0;
+		/// <summary>
+		/// Current remaining cooldown on stamina potions
+		/// </summary>
 		int durStamina = 0;
+		/// <summary>
+		/// Current remaining cooldown on fortify potions
+		/// </summary>
 		int durFortify = 0;
+		/// <summary>
+		/// Current remaining cooldown on regeneration potions
+		/// </summary>
 		int durRegeneration = 0;
 
 
@@ -111,6 +132,26 @@ namespace Events
 			durFortify = _durFortify;
 			durRegeneration = _durRegeneration;
 		}
+	};
+
+	/// <summary>
+	/// The type of event
+	/// </summary>
+	enum EventType
+	{
+		None = 0,
+		TESDeathEvent = 1 << 0,
+		TESCombatEnterEvent = 1 << 1,
+		TESCombatLeaveEvent = 1 << 2
+	};
+	/// <summary>
+	/// stores data about an event to process
+	/// </summary>
+	class EventData
+	{
+	public:
+		RE::Actor* actor;
+		EventType evn;
 	};
 }
 
