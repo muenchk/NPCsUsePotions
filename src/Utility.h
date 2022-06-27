@@ -873,6 +873,12 @@ public:
 		return ret;
 	}
 
+	/// <summary>
+	/// Returns an AssocType for the given RE::FormType. If the RE::FormType is not supported, [valid] is set to true
+	/// </summary>
+	/// <param name="type">RE::FormType to convert</param>
+	/// <param name="valid">Overridable value, which is set to true if [type] is not supported.</param>
+	/// <returns>AssocType associated with [type]</returns>
 	static Settings::Distribution::AssocType MatchValidFormType(RE::FormType type, bool &valid)
 	{
 		switch (type) {
@@ -906,6 +912,12 @@ public:
 		}
 	}
 
+	/// <summary>
+	/// Parses AlchemyEffects from an input string.
+	/// </summary>
+	/// <param name="input">string to parse</param>
+	/// <param name="error">Overrisable value, which is set to true if there is an error during parsing.</param>
+	/// <returns>A vector of AlchemyEffects and Weights</returns>
 	static std::vector<std::tuple<uint64_t, float>> ParseAlchemyEffects(std::string input, bool& error)
 	{
 		std::vector<std::tuple<uint64_t, float>> ret;
@@ -954,6 +966,12 @@ public:
 		return ret;
 	}
 
+	/// <summary>
+	/// Computes a distribution from an effectmap.
+	/// </summary>
+	/// <param name="effectmap">effectmap containing effects and weights which will be translated into the distribution</param>
+	/// <param name="range">range the distribution chances are computed for</param>
+	/// <returns>Weighted Distribution</returns>
 	static std::vector<std::tuple<int, Settings::AlchemyEffect>> GetDistribution(std::vector<std::tuple<uint64_t, float>> effectmap, int range)
 	{
 		std::vector<std::tuple<int, Settings::AlchemyEffect>> ret;
@@ -987,6 +1005,11 @@ public:
 		return ret;
 	}
 
+	/// <summary>
+	/// Sums the Alchemyeffects in [list]
+	/// </summary>
+	/// <param name="list">list with AlchemyEffects to sum</param>
+	/// <returns>Combined value with all Alchemyeffects</returns>
 	static uint64_t SumAlchemyEffects(std::vector<std::tuple<int, Settings::AlchemyEffect>> list)
 	{
 		uint64_t ret = 0;
@@ -998,17 +1021,32 @@ public:
 		return ret;
 	}
 
+	/// <summary>
+	/// Checks whether poison can be applied to the weapons of an actor
+	/// </summary>
+	/// <param name="actor">Actor to check</param>
+	/// <returns>Whether poison can be applied to the actors weapons</returns>
 	static bool CanApplyPoison(RE::Actor* actor)
 	{
 		auto ied = actor->GetEquippedEntryData(false);
-		if (ied == nullptr)
-			return false;
 		RE::ExtraPoison* pois = nullptr;
-		if (ied->extraLists) {
-			for (const auto& extraL : *(ied->extraLists)) {
-				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-				if (pois)
-					break;
+		if (ied) {
+			if (ied->extraLists) {
+				for (const auto& extraL : *(ied->extraLists)) {
+					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+					if (pois)
+						break;
+				}
+			}
+		}
+		if (pois == nullptr) {
+			ied = actor->GetEquippedEntryData(true);
+			if (ied && ied->extraLists) {
+				for (const auto& extraL : *(ied->extraLists)) {
+					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+					if (pois)
+						break;
+				}
 			}
 		}
 		//logger::info("poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", actor->GetName(), pois && pois->poison ? pois->poison->GetName() : "not found", pois ? pois->count :  -1);

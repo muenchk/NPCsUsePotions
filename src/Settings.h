@@ -65,6 +65,14 @@
 	if (Settings::EnableLog) \
 		logger::info(s, Settings::TimePassed() + " | ", t, u);
 
+#define LOG3_1(s, t, u, v)      \
+	if (Settings::EnableLog) \
+		logger::info(s, Settings::TimePassed() + " | ", t, u, v);
+
+#define LOG5_1(s, t, u, v, w, x)      \
+	if (Settings::EnableLog) \
+		logger::info(s, Settings::TimePassed() + " | ", t, u, v, w, x);
+
 #define LOG_2(s)                                        \
 	if (Settings::EnableLog && Settings::LogLevel >= 1) \
 		logger::info(s, Settings::TimePassed() + " | ");
@@ -133,9 +141,19 @@
 class Settings
 {
 public:
+	/// <summary>
+	/// Name of this plugin
+	/// </summary>
 	static inline std::string PluginName = "NPCsUsePotions.esp";
+	/// <summary>
+	/// time the game was started
+	/// </summary>
 	static inline std::chrono::time_point<std::chrono::system_clock> execstart = std::chrono::system_clock::now();
 	
+	/// <summary>
+	/// calculates and returns the time passed sinve programstart
+	/// </summary>
+	/// <returns></returns>
 	static std::string TimePassed()
 	{
 		std::stringstream ss;
@@ -143,6 +161,9 @@ public:
 		return ss.str();
 	}
 
+	/// <summary>
+	/// Contains values used for compatibility
+	/// </summary>
 	class Compatibility
 	{
 	public:
@@ -153,6 +174,9 @@ public:
 		static inline std::string PAF_NPCDrinkingCoolDownSpell_name = "PAF_NPCDrinkingCoolDownSpell";
 	};
 
+	/// <summary>
+	/// Supported AlchemyEffects
+	/// </summary>
 	enum class AlchemyEffect : unsigned __int64
 	{
 		kNone = 0,							// 0
@@ -209,6 +233,9 @@ public:
 		kAnyFood = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate),
 		
 	};
+	/// <summary>
+	/// Determines the strength of an Item
+	/// </summary>
 	enum class ItemStrength
 	{
 		kWeak = 1,
@@ -216,6 +243,9 @@ public:
 		kPotent = 3,
 		kInsane = 4
 	};
+	/// <summary>
+	/// Determines the strength of an Actor
+	/// </summary>
 	enum class ActorStrength
 	{
 		Weak = 0,
@@ -224,6 +254,9 @@ public:
 		Insane = 3,
 		Boss = 4,
 	};
+	/// <summary>
+	/// Supported types of Items
+	/// </summary>
 	enum class ItemType
 	{
 		kPoison = 1,
@@ -232,17 +265,36 @@ public:
 		kFortifyPotion = 8,
 	};
 
+	/// <summary>
+	/// Calculated the distribution rules for all actors in the game
+	/// </summary>
 	static void CheckActorsForRules();
 
+	/// <summary>
+	/// Loads the distribution configuration
+	/// </summary>
 	static void LoadDistrConfig();
 
+	/// <summary>
+	/// Calculates the distribution rules of all actors in the cell with [cellid]
+	/// </summary>
+	/// <param name="cellid">id of the cell the check</param>
 	static void CheckCellForActors(RE::FormID cellid);
 
+	/// <summary>
+	/// Applies the SkillBoost perks to all npcs in the game
+	/// </summary>
 	static void ApplySkillBoostPerks();
 
+	/// <summary>
+	/// Class handling all functions related to item distribution
+	/// </summary>
 	class Distribution
 	{
 	public:
+		/// <summary>
+		/// Supported Association types for distribution rules
+		/// </summary>
 		enum class AssocType
 		{
 			kKeyword = 1,
@@ -255,6 +307,9 @@ public:
 			kCombatStyle = 128,
 		};
 
+		/// <summary>
+		/// A distribution rule
+		/// </summary>
 		class Rule
 		{
 		public:
@@ -305,15 +360,43 @@ public:
 			uint64_t validFortifyPotions;
 			uint64_t validFood;
 
+			/// <summary>
+			/// returns a random potion according to [strength] and [acsstrength]
+			/// </summary>
+			/// <param name="strength">strength of the item to give</param>
+			/// <param name="acstrength">strength of the actor the potion will be given to</param>
+			/// <returns>A randomly chosen potion according to the rule</returns>
 			std::vector<RE::AlchemyItem*> GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// returns a random popoisontion according to [strength] and [acsstrength]
+			/// </summary>
+			/// <param name="strength">strength of the item to give</param>
+			/// <param name="acstrength">strength of the actor the poison will be given to</param>
+			/// <returns>A randomly chosen poison according to the rule</returns>
 			std::vector<RE::AlchemyItem*> GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// returns a random fortify potion according to [strength] and [acsstrength]
+			/// </summary>
+			/// <param name="strength">strength of the item to give</param>
+			/// <param name="acstrength">strength of the actor the fortify potion will be given to</param>
+			/// <returns>A randomly chosen fortify potion according to the rule</returns>
 			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// returns a random food according to [strength] and [acsstrength]
+			/// </summary>
+			/// <param name="strength">strength of the item to give</param>
+			/// <param name="acstrength">strength of the actor the food will be given to</param>
+			/// <returns>A randomly chosen food according to the rule</returns>
 			std::vector<RE::AlchemyItem*> GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
 
 #define COPY(vec1, vec2)       \
 	vec2.reserve(vec1.size()); \
 	std::copy(vec1.begin(), vec1.end(), vec2.begin());
 
+			/// <summary>
+			/// Creates a deep copy of this rule
+			/// </summary>
+			/// <returns>A deep copy of this rule</returns>
 			Rule* Clone()
 			{
 				Rule* rl = new Rule();
@@ -386,6 +469,10 @@ public:
 				validFood{ _validFood }
 			{ }
 			Rule() {}
+			/// <summary>
+			/// initializes an empty rule
+			/// </summary>
+			/// <param name="invalid"></param>
 			Rule(bool invalid)
 			{
 				valid = invalid;
@@ -393,54 +480,179 @@ public:
 			}
 
 		private:
+			/// <summary>
+			/// Calculates and returns the first random potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Calculates and returns the second random potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Calculates and returns the third random potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Calculates and returns an additional random potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Returns an according to potion properties randomly chosen potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPotion(int str);
+			/// <summary>
+			/// Calculates and returns the first random poison
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Calculates and returns the second random poison
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Calculates and returns the third random poison
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Calculates and returns addtional random poison
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Returns an according to poison properties randomly chosen poison
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomPoison(int str);
+			/// <summary>
+			/// Calculates and returns the first random fortify potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Calculates and returns the second random fortify potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			/// <summary>
+			/// Returns an according to fortify properties randomly chosen fortify potion
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomFortifyPotion(int str);
+			/// <summary>
+			/// Calculates and returns a random food item
+			/// </summary>
+			/// <param name="strength"></param>
+			/// <param name="acstrength"></param>
+			/// <returns></returns>
 			RE::AlchemyItem* GetRandomFood_intern(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
 
+			/// <summary>
+			/// Returns a random effect accoring to the rules item effect properties
+			/// </summary>
+			/// <param name="type">Determines which items effect property is consulted</param>
+			/// <returns></returns>
 			Settings::AlchemyEffect GetRandomEffect(Settings::ItemType type);
 			
 		};
 
+		/// <summary>
+		/// Stores information about a template npc
+		/// </summary>
 		class NPCTPLTInfo
 		{
 		public:
+			/// <summary>
+			/// factions associated with the template npc
+			/// </summary>
 			std::vector<RE::TESFaction*> tpltfactions;
+			/// <summary>
+			/// keywords associated with the template npc
+			/// </summary>
 			std::vector<RE::BGSKeyword*> tpltkeywords;
+			/// <summary>
+			/// race of the template npc
+			/// </summary>
 			RE::TESRace* tpltrace = nullptr;
+			/// <summary>
+			/// combat style of the template npc
+			/// </summary>
 			RE::TESCombatStyle* tpltstyle = nullptr;
+			/// <summary>
+			/// class of the template npc
+			/// </summary>
 			RE::TESClass* tpltclass = nullptr;
 		};
 
 	private:
-
+		/// <summary>
+		/// Wether the distribution rules are loaded
+		/// </summary>
 		static inline bool initialised = false;
 
+		/// <summary>
+		/// internal vector holding all distribution rules
+		/// </summary>
 		static inline std::vector<Rule*> _rules;
+		/// <summary>
+		/// internal map which maps npc -> Rules 
+		/// </summary>
 		static inline std::unordered_map<RE::FormID, Rule*> _npcMap;
-		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _keywordMap;
-		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _factionMap;
-		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _raceMap;
-		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _classMap;
-		//static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _combatStyleMap;
+		/// <summary>
+		/// internal map which maps association objects -> Rules
+		/// </summary>
 		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _assocMap;
+		/// <summary>
+		/// set that contains assoc objects declared as bosses
+		/// </summary>
 		static inline std::unordered_set<RE::FormID> _bosses;
+		/// <summary>
+		/// set that contains npcs excluded from distribution
+		/// </summary>
 		static inline std::unordered_set<RE::FormID> _excludedNPCs;
-		//static inline std::unordered_set<RE::TESFaction*> _excludedFactions;
-		//static inline std::unordered_set<RE::BGSKeyword*> _excludedKeywords;
-		//static inline std::unordered_set<RE::FormID> _excludedRaces;
+		/// <summary>
+		/// set that contains association objects excluded from distribution
+		/// </summary>
 		static inline std::unordered_set<RE::FormID> _excludedAssoc;
+		/// <summary>
+		/// set that contains items that may not be distributed
+		/// </summary>
 		static inline std::unordered_set<RE::FormID> _excludedItems;
+		/// <summary>
+		/// set that contains association objects excluded from baseline distribution
+		/// </summary>
 		static inline std::unordered_set<RE::FormID> _baselineExclusions;
 
 	public:
@@ -450,14 +662,46 @@ public:
 		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
 		static inline std::unordered_set<RE::FormID> _dummySet1;
 
-		static std::vector<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
-		static std::unordered_map<RE::FormID, Rule*>* npcMap() { return initialised ? &_npcMap : &_dummyMapN; }
-		static std::unordered_map<RE::FormID, std::pair<int, Rule*>>* assocMap() { return initialised ? &_assocMap : &_dummyMap2; }
-		static std::unordered_set<RE::FormID>* bosses() { return initialised ? &_bosses : &_dummySet1; }
-		static std::unordered_set<RE::FormID>* excludedNPCs() { return initialised ? &_excludedNPCs : &_dummySet1; }
-		static std::unordered_set<RE::FormID>* excludedAssoc() { return initialised ? &_excludedAssoc : &_dummySet1; }
-		static std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
-		static std::unordered_set<RE::FormID>* baselineExclusions() { return initialised ? &_baselineExclusions : &_dummySet1; }
+		/// <summary>
+		/// Returns the vector containing all rules
+		/// </summary>
+		/// <returns></returns>
+		static const std::vector<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
+		/// <summary>
+		/// Returns the map mapping npcs -> Rules
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_map<RE::FormID, Rule*>* npcMap() { return initialised ? &_npcMap : &_dummyMapN; }
+		/// <summary>
+		/// Returns the map mapping association objects -> Rules
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_map<RE::FormID, std::pair<int, Rule*>>* assocMap() { return initialised ? &_assocMap : &_dummyMap2; }
+		/// <summary>
+		/// Returns the set that contains assoc objects declared as bosses
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_set<RE::FormID>* bosses() { return initialised ? &_bosses : &_dummySet1; }
+		/// <summary>
+		/// returns the set containing from distribution excluded npcs
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_set<RE::FormID>* excludedNPCs() { return initialised ? &_excludedNPCs : &_dummySet1; }
+		/// <summary>
+		/// returns the set containing from distribution excluded assoc objects
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_set<RE::FormID>* excludedAssoc() { return initialised ? &_excludedAssoc : &_dummySet1; }
+		/// <summary>
+		/// returns the set of items excluded from distribution
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
+		/// <summary>
+		/// returns the set of assoc objects excluded from baseline distribution
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_set<RE::FormID>* baselineExclusions() { return initialised ? &_baselineExclusions : &_dummySet1; }
 
 		#define RandomRange 1000
 
@@ -470,16 +714,57 @@ public:
 
 		#define DefaultRuleName "DefaultRule"
 
+		/// <summary>
+		/// Active default distribution rule
+		/// </summary>
 		static inline Rule* defaultRule = nullptr;
+		/// <summary>
+		/// Generic empty rule
+		/// </summary>
 		static inline Rule* emptyRule = new Rule(false);
 
+		/// <summary>
+		/// Returns items that shall be distributed to [actor]
+		/// </summary>
+		/// <param name="actor">actor to calculate items for</param>
+		/// <returns></returns>
 		static std::vector<RE::AlchemyItem*> GetDistrItems(RE::Actor* actor);
+		/// <summary>
+		/// Returns potions that shall be distributed to [actor]
+		/// </summary>
+		/// <param name="actor">actor to calculate items for</param>
+		/// <returns></returns>
 		static std::vector<RE::AlchemyItem*> GetDistrPotions(RE::Actor* actor);
+		/// <summary>
+		/// Returns poisons that shall be distributed to [actor]
+		/// </summary>
+		/// <param name="actor">actor to calculate items for</param>
+		/// <returns></returns>
 		static std::vector<RE::AlchemyItem*> GetDistrPoisons(RE::Actor* actor);
+		/// <summary>
+		/// Returns fortify potions that shall be distributed to [actor]
+		/// </summary>
+		/// <param name="actor">actor to calculate items for</param>
+		/// <returns></returns>
 		static std::vector<RE::AlchemyItem*> GetDistrFortifyPotions(RE::Actor* actor);
+		/// <summary>
+		/// Returns food that shall be distributed to [actor]
+		/// </summary>
+		/// <param name="actor">actor to calculate items for</param>
+		/// <returns></returns>
 		static std::vector<RE::AlchemyItem*> GetDistrFood(RE::Actor* actor);
 
+		/// <summary>
+		/// Returns all unique inventory items matching the distribution rule 
+		/// </summary>
+		/// <param name="actor"></param>
+		/// <returns></returns>
 		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(RE::Actor* actor);
+		/// <summary>
+		/// Returns all inventory items (duplicates as extra vector entries) matching the distribution rule
+		/// </summary>
+		/// <param name="actor"></param>
+		/// <returns></returns>
 		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(RE::Actor* actor);
 
 		static bool ExcludedNPC(RE::Actor* actor);
@@ -674,6 +959,9 @@ public:
 	static inline bool FixedPoisonUse = true;
 	static inline bool FixedFoodEat = true;
 
+	/// <summary>
+	/// Loads the plugin configuration
+	/// </summary>
 	static void Load()
 	{
 		constexpr auto path = L"Data/SKSE/Plugins/NPCsUsePotions.ini";
@@ -1008,7 +1296,10 @@ public:
 			}
 		}
 	}
-
+	
+	/// <summary>
+	/// Saves the plugin configuration
+	/// </summary>
 	static void Save()
 	{
 		constexpr auto path = L"Data/SKSE/Plugins/NPCsUsePotions.ini";
@@ -1099,15 +1390,18 @@ public:
 		ini.SaveFile(path);
 	}
 
-
+	/// <summary>
+	/// returns whether food items should be used in compatibility mode
+	/// </summary>
+	/// <returns></returns>
 	static bool CompatibilityFoodPapyrus()
 	{
 		return Settings::_CompatibilityMode;
 	}
-	static bool CompatibilityPoisonPapyrus()
-	{
-		return Settings::_CompatibilityMode;
-	}
+	/// <summary>
+	/// returns whether potions whould be used in compatibility mode
+	/// </summary>
+	/// <returns></returns>
 	static bool CompatibilityPotionPapyrus()
 	{
 		return Settings::_CompatibilityMode | Settings::_CompatibilityPotionAnimatedFX_UseAnimations;

@@ -647,10 +647,13 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
+		//logger::info("calc c 1");
 		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
 		return CalcRule(actor, acs, is, &info);
-	} else
+	} else {
+		//logger::info("calc c 2");
 		return CalcRule(actor, acs, is, nullptr);
+	}
 }
 
 Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc)
@@ -786,7 +789,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 			// boss actor
 		}
 	}
-
+	//logger::info("rule 1");
 	// now calculate rule and on top get the boss override
 
 	bool bossoverride = false;
@@ -800,6 +803,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	Rule* rule = nullptr;
 	// define general stuff
 	auto race = actor->GetRace();
+	//logger::info("rule 2");
 
 	//std::vector<Rule*> rls;
 	// find rule in npc map
@@ -807,10 +811,12 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	auto itnpc = npcMap()->find(actor->GetFormID());
 	if (itnpc != npcMap()->end()) {  // found the right rule!
 		rule = itnpc->second;     // this can be null if the specific npc is excluded
+		//logger::info("assign rule 1");
 		ruleoverride = true;
 		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(actor->GetFormID());
+	//logger::info("rule 3");
 
 	if (ruleoverride && bossoverride) {
 		goto SKIPActor;
@@ -821,28 +827,34 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		itnpc = npcMap()->find(actor->GetActorBase()->GetFormID());
 		if (itnpc != npcMap()->end()) {  // found the right rule!
 			rule = itnpc->second;     // this can be null if the specific npc is excluded
+			//logger::info("assign rule 2");
 			ruleoverride = true;
 			prio = INT_MAX;
 		}
 	}
+	//logger::info("rule 4");
 	bossoverride |= bosses()->contains(actor->GetActorBase()->GetFormID());
 
 	if (ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
+	//logger::info("rule 5");
 
 	if (tpltinfo && tpltinfo->tpltrace)
 		race = tpltinfo->tpltrace;
 	// now that we didnt't find something so far, check the rest
 	// this time all the priorities are the same
 	if (!ruleoverride) {
+		//logger::info("rule 6");
 		auto it = assocMap()->find(race->GetFormID());
 		if (it != assocMap()->end())
 			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
+				//logger::info("assign rule 3");
 				prio = std::get<0>(it->second);
 			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
+				//logger::info("assign rule 4");
 				prio = std::get<1>(it->second)->rulePriority;
 			}
 		baseexcluded |= baselineExclusions()->contains(race->GetFormID());
@@ -850,23 +862,27 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
 			if (itr != assocMap()->end())
 			{
-				if (prio < std::get<0>(it->second)) {
-					rule = std::get<1>(it->second);
-					prio = std::get<0>(it->second);
-				} else if (prio < std::get<1>(it->second)->rulePriority) {
-					rule = std::get<1>(it->second);
-					prio = std::get<1>(it->second)->rulePriority;
+				if (prio < std::get<0>(itr->second)) {
+					rule = std::get<1>(itr->second);
+					//logger::info("assign rule 5 {} {} {}", Utility::GetHex((uintptr_t)std::get<1>(itr->second)), race->keywords[i]->GetFormEditorID(), Utility::GetHex(race->keywords[i]->GetFormID()));
+					prio = std::get<0>(itr->second);
+				} else if (prio < std::get<1>(itr->second)->rulePriority) {
+					rule = std::get<1>(itr->second);
+					//logger::info("assign rule 6");
+					prio = std::get<1>(itr->second)->rulePriority;
 				}
 				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
 			}
 		}
 	}
+	//logger::info("rule 7");
 	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
 
 	if (ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
 
+	//logger::info("rule 8");
 	// handle keywords
 	for (unsigned int i = 0; i < base->numKeywords; i++) {
 		auto key = base->keywords[i];
@@ -876,9 +892,11 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 				if (it != assocMap()->end())
 					if (prio < std::get<0>(it->second)) {
 						rule = std::get<1>(it->second);
+						//logger::info("assign rule 7");
 						prio = std::get<0>(it->second);
 					} else if (prio < std::get<1>(it->second)->rulePriority) {
 						rule = std::get<1>(it->second);
+						//logger::info("assign rule 8");
 						prio = std::get<1>(it->second)->rulePriority;
 					}
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
@@ -887,15 +905,18 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		}
 	}
 	if (tpltinfo) {
+		//logger::info("rule 10");
 		for (int i = 0; i < tpltinfo->tpltkeywords.size(); i++) {
 			if (tpltinfo->tpltkeywords[i]) {
 				auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
 				if (it != assocMap()->end())
 					if (prio < std::get<0>(it->second)) {
 						rule = std::get<1>(it->second);
+						//logger::info("assign rule 9");
 						prio = std::get<0>(it->second);
 					} else if (prio < std::get<1>(it->second)->rulePriority) {
 						rule = std::get<1>(it->second);
+						//logger::info("assign rule 10");
 						prio = std::get<1>(it->second)->rulePriority;
 					}
 				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
@@ -903,10 +924,12 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 			}
 		}
 	}
+	//logger::info("rule 11");
 	if (ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
 
+	//logger::info("rule 12");
 	// handle factions
 	for (uint32_t i = 0; i < base->factions.size(); i++) {
 		if (!ruleoverride) {
@@ -914,9 +937,11 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 			if (it != assocMap()->end()) {
 				if (prio < std::get<0>(it->second)) {
 					rule = std::get<1>(it->second);
+					//logger::info("assign rule 11");
 					prio = std::get<0>(it->second);
 				} else if (prio < std::get<1>(it->second)->rulePriority) {
 					rule = std::get<1>(it->second);
+					//logger::info("assign rule 12");
 					prio = std::get<1>(it->second)->rulePriority;
 				}
 			}
@@ -925,15 +950,18 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
 	}
 	if (tpltinfo) {
+		//logger::info("rule 13");
 		for (int i = 0; i < tpltinfo->tpltfactions.size(); i++) {
 			if (tpltinfo->tpltfactions[i]) {
 				auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
 				if (it != assocMap()->end()) {
 					if (prio < std::get<0>(it->second)) {
 						rule = std::get<1>(it->second);
+						//logger::info("assign rule 13");
 						prio = std::get<0>(it->second);
 					} else if (prio < std::get<1>(it->second)->rulePriority) {
 						rule = std::get<1>(it->second);
+						//logger::info("assign rule 14");
 						prio = std::get<1>(it->second)->rulePriority;
 					}
 				}
@@ -942,6 +970,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 			}
 		}
 	}
+	//logger::info("rule 14");
 	if (bossoverride && ruleoverride || ruleoverride)
 		goto SKIPActor;
 
@@ -949,13 +978,16 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 
 	// handle classes
 	if (base->npcClass) {
+		//logger::info("rule 15");
 		auto it = assocMap()->find(base->npcClass->GetFormID());
 		if (it != assocMap()->end()) {
 			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
+				//logger::info("assign rule 15");
 				prio = std::get<0>(it->second);
 			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
+				//logger::info("assign rule 16");
 				prio = std::get<1>(it->second)->rulePriority;
 			}
 		}
@@ -963,13 +995,16 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 
 	// handle combat styles
 	if (base->combatStyle) {
+		//logger::info("rule 16");
 		auto it = assocMap()->find(base->combatStyle->GetFormID());
 		if (it != assocMap()->end()) {
 			if (prio < std::get<0>(it->second)) {
 				rule = std::get<1>(it->second);
+				//logger::info("assign rule 17");
 				prio = std::get<0>(it->second);
 			} else if (prio < std::get<1>(it->second)->rulePriority) {
 				rule = std::get<1>(it->second);
+				//logger::info("assign rule 18");
 				prio = std::get<1>(it->second)->rulePriority;
 			}
 		}
@@ -979,14 +1014,19 @@ SKIPActor:
 
 	if (bossoverride)
 		acs = ActorStrength::Boss;
+	//logger::info("rule 17");
 
 	if (rule) {
+		//logger::info("rule 18 {}", Utility::GetHex((uintptr_t)rule));
 		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
 		return rule;
 	} else {
 		// there are no rules!!!
-		if (baseexcluded)
+		//logger::info("rule 19");
+		if (baseexcluded) {
+			//logger::info("rule 20");
 			return Settings::Distribution::emptyRule;
+		}
 		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
 		return Settings::Distribution::defaultRule;
 	}
@@ -1087,12 +1127,12 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
 			if (itr != assocMap()->end())
 			{
-				if (prio < std::get<0>(it->second)) {
-					rule = std::get<1>(it->second);
-					prio = std::get<0>(it->second);
-				} else if (prio < std::get<1>(it->second)->rulePriority) {
-					rule = std::get<1>(it->second);
-					prio = std::get<1>(it->second)->rulePriority;
+				if (prio < std::get<0>(itr->second)) {
+					rule = std::get<1>(itr->second);
+					prio = std::get<0>(itr->second);
+				} else if (prio < std::get<1>(itr->second)->rulePriority) {
+					rule = std::get<1>(itr->second);
+					prio = std::get<1>(itr->second)->rulePriority;
 				}
 				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
 			}
@@ -1350,12 +1390,12 @@ std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> Setting
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
 			if (itr != assocMap()->end())
 			{
-				if (prio < std::get<0>(it->second)) {
-					rule = std::get<1>(it->second);
-					prio = std::get<0>(it->second);
-				} else if (prio < std::get<1>(it->second)->rulePriority) {
-					rule = std::get<1>(it->second);
-					prio = std::get<1>(it->second)->rulePriority;
+				if (prio < std::get<0>(itr->second)) {
+					rule = std::get<1>(itr->second);
+					prio = std::get<0>(itr->second);
+				} else if (prio < std::get<1>(itr->second)->rulePriority) {
+					rule = std::get<1>(itr->second);
+					prio = std::get<1>(itr->second)->rulePriority;
 				}
 				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Racekwd\t" + Utility::GetHex(race->keywords[i]->GetFormID()) + "\t" + std::string(race->keywords[i]->GetFormEditorID()) });
 			}
