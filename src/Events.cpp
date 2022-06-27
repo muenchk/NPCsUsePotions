@@ -392,7 +392,7 @@ namespace Events
 		RE::UI* ui = RE::UI::GetSingleton();
 		EventData* data = nullptr;
 		while (killEventHandler == false) {
-			LOG1_1("{}[HandleEvents] Starting EventHandler");
+			LOG_1("{}[HandleEvents] Starting EventHandler");
 			// this one locks this threads execution until an event is ready to be handled.
 			// this results in this thread only waking when an EventHandler calls sem_EventCounter.release() and
 			// thus increases the count on the semaphore and this thread aqcuires a lock.
@@ -405,7 +405,7 @@ namespace Events
 			sem_eventQueue.acquire();
 			if (eventQueue.empty()) {
 				sem_eventQueue.release();
-				LOG1_1("{}[HandleEvents] No Event");
+				LOG_1("{}[HandleEvents] No Event");
 				continue;
 			}
 			data = eventQueue.front();
@@ -539,7 +539,7 @@ namespace Events
 
 		SkipEvent:
 			delete data;
-			LOG1_1("{}[HandleEvents] Fisnished EventHandler");
+			LOG_1("{}[HandleEvents] Fisnished EventHandler");
 		}
 	}
 
