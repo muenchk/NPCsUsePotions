@@ -382,7 +382,17 @@ namespace Events
 	/// </summary>
 	static bool killEventHandler = false;
 
-	#define CheckExitEvent if (killEventHandler) goto SkipEvent;
+	static RE::Actor* PlayerRef = RE::PlayerCharacter::GetSingleton();
+
+#define CheckExitEvent      \
+	if (killEventHandler) { \
+		goto SkipEvent;     \
+	}
+#define CheckExitEventBegin      \
+	if (killEventHandler) { \
+		LOG_1("Aborting EventHandler"); \
+		continue;     \
+	}
 
 	/// <summary>
 	/// Handles events related to actors.
@@ -551,23 +561,53 @@ SkipEvent:
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
 	{
-		InitializeCompatibilityObjects();
-		auto actor = a_event->actorDying->As<RE::Actor>();
-		if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
-			// as with potion distribution, exlude excluded actors and potential followers
-			if (!Settings::Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false)
-			{
-				// create and insert new event
-				deads.insert(actor->GetFormID());
-				EventData* data = new EventData();
-				data->actor = actor;
-				data->evn = EventType::TESDeathEvent;
-				// insert into event queue
-				sem_eventQueue.acquire();
-				eventQueue.push_back(data);
-				sem_eventQueue.release();
-				// tell handler that there is one more event
-				sem_EventCounter.release();
+		if (a_event->actorDying.get() && a_event->actorDying->IsPlayerRef()) {
+			// clean up eventhandling before it crashes
+			killEventHandler = true;
+			sem_eventQueue.acquire();
+			EventData* tmpdata = nullptr;
+			while (!eventQueue.empty()) {
+				tmpdata = eventQueue.front();
+				if (tmpdata)
+					delete tmpdata;
+				eventQueue.pop_front();
+			}
+			eventQueue.clear();  // make completely sure its empty
+			sem_eventQueue.release();
+			// skip all events
+			while (sem_EventCounter.try_acquire())
+				;
+			if (eventhandler != nullptr) {
+				if (eventhandler->joinable()) {
+					// enable it to run 1 step, to kill it
+					sem_EventCounter.release();
+					eventhandler->join();
+					// if the release above wasn't necessary, remove it now
+					static_cast<void>(sem_EventCounter.try_acquire());
+				}
+				eventhandler->~thread();
+				delete eventhandler;
+				eventhandler = nullptr;
+			}
+			killEventHandler = false;
+		} else if (PlayerRef && PlayerRef->IsDead() == false) {
+			InitializeCompatibilityObjects();
+			auto actor = a_event->actorDying->As<RE::Actor>();
+			if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
+				// as with potion distribution, exlude excluded actors and potential followers
+				if (!Settings::Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false) {
+					// create and insert new event
+					deads.insert(actor->GetFormID());
+					EventData* data = new EventData();
+					data->actor = actor;
+					data->evn = EventType::TESDeathEvent;
+					// insert into event queue
+					sem_eventQueue.acquire();
+					eventQueue.push_back(data);
+					sem_eventQueue.release();
+					// tell handler that there is one more event
+					sem_EventCounter.release();
+				}
 			}
 		}
 
@@ -583,30 +623,32 @@ SkipEvent:
     /// <param name=""></param>
     /// <returns></returns>
     EventResult EventHandler::ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>*)
-    {
-		InitializeCompatibilityObjects();
-		auto actor = a_event->actor->As<RE::Actor>();
-		if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
-			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
-				// create new TESCombatEnterEvent
-				EventData* data = new EventData();
-				data->actor = actor;
-				data->evn = EventType::TESCombatEnterEvent;
-				sem_eventQueue.acquire();
-				eventQueue.push_back(data);
-				sem_eventQueue.release();
-				sem_EventCounter.release();
-				LOG_1("{}[TesCombatEvent] Registered TesCombatEnterEvent");
-			} else {
-				// create new TESCombatLeaveEvent
-				EventData* data = new EventData;
-				data->actor = actor;
-				data->evn = EventType::TESCombatLeaveEvent;
-				sem_eventQueue.acquire();
-				eventQueue.push_back(data);
-				sem_eventQueue.release();
-				sem_EventCounter.release();
-				LOG_1("{}[TesCombatEvent] Registered TesCombatLeaveEvent");
+	{
+		if (PlayerRef && PlayerRef->IsDead() == false) {
+			InitializeCompatibilityObjects();
+			auto actor = a_event->actor->As<RE::Actor>();
+			if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+				if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
+					// create new TESCombatEnterEvent
+					EventData* data = new EventData();
+					data->actor = actor;
+					data->evn = EventType::TESCombatEnterEvent;
+					sem_eventQueue.acquire();
+					eventQueue.push_back(data);
+					sem_eventQueue.release();
+					sem_EventCounter.release();
+					LOG_1("{}[TesCombatEvent] Registered TesCombatEnterEvent");
+				} else {
+					// create new TESCombatLeaveEvent
+					EventData* data = new EventData;
+					data->actor = actor;
+					data->evn = EventType::TESCombatLeaveEvent;
+					sem_eventQueue.acquire();
+					eventQueue.push_back(data);
+					sem_eventQueue.release();
+					sem_EventCounter.release();
+					LOG_1("{}[TesCombatEvent] Registered TesCombatLeaveEvent");
+				}
 			}
 		}
 
@@ -1371,13 +1413,13 @@ SkipEvent:
 	/// <param name="a_eventSource"></param>
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>*) {
-		
-		//logger::info("[CELLEVENT]");
-		if (cells.contains(a_event->cellID) == false) {
-			cells.insert(a_event->cellID);
-			Settings::CheckCellForActors(a_event->cellID);
+		if (PlayerRef && PlayerRef->IsDead() == false) {
+			//logger::info("[CELLEVENT]");
+			if (cells.contains(a_event->cellID) == false) {
+				cells.insert(a_event->cellID);
+				Settings::CheckCellForActors(a_event->cellID);
+			}
 		}
-
 		return EventResult::kContinue;
 	}
 
@@ -1390,39 +1432,41 @@ SkipEvent:
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>*)
 	{
-		if (a_event->actor.get()) {
-			if (a_event->actor->IsPlayerRef()) {
-				auto audiomanager = RE::BSAudioManager::GetSingleton();
+		if (PlayerRef && PlayerRef->IsDead() == false) {
+			if (a_event->actor.get()) {
+				if (a_event->actor->IsPlayerRef()) {
+					auto audiomanager = RE::BSAudioManager::GetSingleton();
 
-				RE::AlchemyItem* obj = RE::TESForm::LookupByID<RE::AlchemyItem>(a_event->baseObject);
-				if (obj) {
-					if ((obj->IsFood() || obj->HasKeyword(Settings::VendorItemFood)) && Settings::FixedFoodEat) {
-						RE::BSSoundHandle handle;
-						if (obj->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
-						else
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::FoodEat->soundDescriptor);
-						handle.SetObjectToFollow(a_event->actor->Get3D());
-						handle.SetVolume(1.0);
-						handle.Play();
-					} else if ((obj->IsPoison() || obj->HasKeyword(Settings::VendorItemPoison)) && Settings::FixedPoisonUse) {
-						RE::BSSoundHandle handle;
-						if (obj->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
-						else
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-						handle.SetObjectToFollow(a_event->actor->Get3D());
-						handle.SetVolume(1.0);
-						handle.Play();
-					} else if ((obj->IsMedicine() || obj->HasKeyword(Settings::VendorItemPotion)) && Settings::FixedPotionUse) {
-						RE::BSSoundHandle handle;
-						if (obj->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
-						else
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PotionUse->soundDescriptor);
-						handle.SetObjectToFollow(a_event->actor->Get3D());
-						handle.SetVolume(1.0);
-						handle.Play();
+					RE::AlchemyItem* obj = RE::TESForm::LookupByID<RE::AlchemyItem>(a_event->baseObject);
+					if (obj) {
+						if ((obj->IsFood() || obj->HasKeyword(Settings::VendorItemFood)) && Settings::FixedFoodEat) {
+							RE::BSSoundHandle handle;
+							if (obj->data.consumptionSound)
+								audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+							else
+								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::FoodEat->soundDescriptor);
+							handle.SetObjectToFollow(a_event->actor->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play();
+						} else if ((obj->IsPoison() || obj->HasKeyword(Settings::VendorItemPoison)) && Settings::FixedPoisonUse) {
+							RE::BSSoundHandle handle;
+							if (obj->data.consumptionSound)
+								audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+							else
+								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+							handle.SetObjectToFollow(a_event->actor->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play();
+						} else if ((obj->IsMedicine() || obj->HasKeyword(Settings::VendorItemPotion)) && Settings::FixedPotionUse) {
+							RE::BSSoundHandle handle;
+							if (obj->data.consumptionSound)
+								audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+							else
+								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PotionUse->soundDescriptor);
+							handle.SetObjectToFollow(a_event->actor->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play();
+						}
 					}
 				}
 			}
