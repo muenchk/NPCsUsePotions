@@ -1019,6 +1019,14 @@ void Settings::LoadDistrConfig()
 		logger::info("[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
 		logger::info("[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
 		logger::info("[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
+		/*for (int i = 0; i < Settings::Distribution::_rules.size(); i++) {
+			logger::info("rule {} pointer {}", i, Utility::GetHex((uintptr_t)Settings::Distribution::_rules[i]));
+		}
+		auto iter = Settings::Distribution::_assocMap.begin();
+		while (iter != Settings::Distribution::_assocMap.end()) {
+			logger::info("assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
+			iter++;
+		}*/
 	}
 }
 
@@ -1137,6 +1145,7 @@ void Settings::CheckActorsForRules()
 	auto datahandler = RE::TESDataHandler::GetSingleton();
 	std::string_view name = std::string_view{ "" };
 	bool lightplugin = false;
+	const RE::TESFile* file = nullptr;
 
 	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 	auto end = hashtable->end();
@@ -1157,12 +1166,39 @@ void Settings::CheckActorsForRules()
 				//act = nullptr;
 				act = (*iter).second->As<RE::Actor>();
 				npc = (*iter).second->As<RE::TESNPC>();
-				//logger::warn("[CheckActorsForRules] act {}\t\t npc {}", act ? Utility::GetHex(act->GetFormID()) : "", npc ? Utility::GetHex(npc->GetFormID()) : "");
+				logger::warn("[CheckActorsForRules] act {}\t\t npc {}", act ? Utility::GetHex(act->GetFormID()) : "", npc ? Utility::GetHex(npc->GetFormID()) : "");
 				if (npc && npc->GetFormID() != 0x07 && (npc->GetFormID() >> 24) != 0xFF) {
 					if (!visited.contains(npc->GetFormID())) {
 						visited.insert(npc->GetFormID());
 						//logger::info("check 1");
-
+						{
+							//logger::info("iter 5 {}", Utility::GetHex(npc->GetFormID()));
+							name = std::string_view{ "" };
+							if ((npc->GetFormID() >> 24) != 0xFE) {
+								file = datahandler->LookupLoadedModByIndex((uint8_t)(npc->GetFormID() >> 24));
+								if (file == nullptr) {
+									iter++;
+									//logger::info("invalid plugin");
+									continue;
+								}
+								name = file->GetFilename();
+							}
+							//logger::info("iter 5.1");
+							if (name.empty()) {
+								//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
+								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() & 0x00FFF000)) >> 12));
+								if (file == nullptr) {
+									iter++;
+									//logger::info("invalid plugin");
+									continue;
+								}
+								name = file->GetFilename();
+								lightplugin = true;
+							}
+							//logger::info("iter 5.2");
+							//logger::info("[CheckActorsForRules] {} named {} from {}", Utility::GetHex(npc->GetFormID()), npc->GetName(), name);
+							//logger::info("iter 5.3");
+						}
 						// check wether there is a rule that applies
 						if (Settings::Distribution::ExcludedNPC(npc)) {
 							iter++;
@@ -1182,13 +1218,25 @@ void Settings::CheckActorsForRules()
 							//logger::info("check 4");
 							name = std::string_view{ "" };
 
-							if ((npc->GetFormID() >> 24) != 0xFE)
-								name = datahandler->LookupLoadedModByIndex((uint8_t)(npc->GetFormID() >> 24))->GetFilename();
+							if ((npc->GetFormID() >> 24) != 0xFE) {
+								file = datahandler->LookupLoadedModByIndex((uint8_t)(npc->GetFormID() >> 24));
+								if (file == nullptr) {
+									iter++;
+									continue;
+								}
+								name = file->GetFilename();
+							}
+							//logger::info("check 4.1");
 							if (name.empty()) {
-								//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
-								name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() & 0x00FFF000)) >> 12))->GetFilename();
+								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() & 0x00FFF000)) >> 12));
+								if (file == nullptr) {
+									iter++;
+									continue;
+								}
+								name = file->GetFilename();
 								lightplugin = true;
 							}
+							//logger::info("check 4.2");
 							if (lightplugin && (npc->GetFormID() & 0x00000FFF) < 0x800) {
 								iter++;
 								//coun++;
@@ -1263,6 +1311,35 @@ void Settings::CheckActorsForRules()
 						// we didn't consider the current actors base so far
 						visited.insert(act->GetFormID());
 
+						{
+							//logger::info("iter 5 {}", Utility::GetHex(act->GetFormID()));
+							name = std::string_view{ "" };
+							if ((act->GetFormID() >> 24) != 0xFE) {
+								file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
+								if (file == nullptr) {
+									iter++;
+									logger::info("invalid plugin");
+									continue;
+								}
+								name = file->GetFilename();
+							}
+							//logger::info("iter 5.1");
+							if (name.empty()) {
+								//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
+								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
+								if (file == nullptr) {
+									iter++;
+									logger::info("invalid plugin");
+									continue;
+								}
+								name = file->GetFilename();
+								lightplugin = true;
+							}
+							//logger::info("iter 5.2");
+							logger::info("[CheckCellForActors] {} named {} from {}", Utility::GetHex(act->GetFormID()), act->GetName(), name);
+							//logger::info("iter 5.3");
+						}
+
 						// check wether there is a rule that applies
 						if (Settings::Distribution::ExcludedNPC(act)) {
 							iter++;
@@ -1277,10 +1354,21 @@ void Settings::CheckActorsForRules()
 							// lookup plugin of the actor red
 							//logger::info("check 24");
 							name = std::string_view{ "" };
-							if ((act->GetFormID() >> 24) != 0xFE && (act->GetFormID() >> 24) != 0xFF)
-								name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24))->GetFilename();
+							if ((act->GetFormID() >> 24) != 0xFE && (act->GetFormID() >> 24) != 0xFF) {
+								file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
+								if (file == nullptr) {
+									iter++;
+									continue;
+								}
+								name = file->GetFilename();
+							}
 							if (name.empty()) {
-								name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() << 8)) >> 20))->GetFilename();
+								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
+								if (file == nullptr) {
+									iter++;
+									continue;
+								}
+								name = file->GetFilename();
 								lightplugin = true;
 							}
 							if (lightplugin && (act->GetFormID() & 0x00000FFF) < 0x800) {
@@ -1347,7 +1435,7 @@ static std::binary_semaphore lockcells(1);
 void Settings::CheckCellForActors(RE::FormID cellid)
 {
 	lockcells.acquire();
-	logger::info("[CheckCellForActors] checking...");
+	logger::info("[CheckCellForActors] checking cell {}...", Utility::GetHex(cellid));
 	std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv", std::ofstream::app);
 	//out << "RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
 	//PluginBase;
@@ -1361,6 +1449,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 
 	RE::TESForm* tmp = RE::TESForm::LookupByID(cellid);
 	RE::TESObjectCELL* cell = nullptr;
+	const RE::TESFile* file = nullptr;
 	if (tmp)
 		cell = tmp->As<RE::TESObjectCELL>();
 	if (cell) {
@@ -1372,9 +1461,13 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 					lightplugin = false;
 					//npc = arr[coun];
 					//act = nullptr;
+					//logger::info("iter 1");
 					act = (*iter)->As<RE::Actor>();
+					//logger::info("iter 2");
 					if (act && !act->IsDeleted() && act->GetFormID() != 0x14) {
+						//logger::info("iter 3");
 						if (!visited.contains(act->GetFormID())) {
+							//logger::info("iter 4");
 							// lookup pluing of the actor base
 							/* name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetActorBase()->GetFormID() >> 24))->GetFilename();
 					if (name.empty())
@@ -1388,11 +1481,43 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							visited.insert(act->GetFormID());
 							bool excluded = false;
 							// check wether there is a rule that applies
+							if (Settings::EnableLog) {
+								//logger::info("iter 5 {}", Utility::GetHex(act->GetFormID()));
+								name = std::string_view{ "" };
+								if ((act->GetFormID() >> 24) != 0xFE) {
+									file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
+									if (file == nullptr) {
+										iter++;
+										logger::info("invalid plugin");
+										continue;
+									}
+									name = file->GetFilename();
+								}
+								//logger::info("iter 5.1");
+								if (name.empty()) {
+									//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
+									file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
+									if (file == nullptr) {
+										iter++;
+										logger::info("invalid plugin");
+										continue;
+									}
+									name = file->GetFilename();
+									lightplugin = true;
+								}
+								//logger::info("iter 5.2");
+								logger::info("[CheckCellForActors] {} named {} from {}", Utility::GetHex(act->GetFormID()), act->GetName(), name);
+								//logger::info("iter 5.3");
+							}
+							//logger::info("iter 6");
 							if (Settings::Distribution::ExcludedNPC(act)) {
 								excluded = true;
+								LOG_1("{}[CheckCellForActors] excluded");
 							}
+							//logger::info("iter 7");
 							// get rule
 							Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(act);
+							//logger::info("iter 8");
 							//logger::info("check 23");
 							//logger::warn("[CheckActorsForRules] got rule");
 							// lookup plugin of the actor red
@@ -1404,10 +1529,21 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							else
 								out << rl->ruleName << ";";
 							name = std::string_view{ "" };
-							if ((act->GetFormID() >> 24) != 0xFE && (act->GetFormID() >> 24) != 0xFF)
-								name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24))->GetFilename();
+							if ((act->GetFormID() >> 24) != 0xFE && (act->GetFormID() >> 24) != 0xFF) {
+								file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
+								if (file == nullptr) {
+									iter++;
+									continue;
+								}
+								name = file->GetFilename();
+							}
 							if (name.empty()) {
-								name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() << 8)) >> 20))->GetFilename();
+								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
+								if (file == nullptr) {
+									iter++;
+									continue;
+								}
+								name = file->GetFilename();
 								lightplugin = true;
 							}
 							if (lightplugin && (act->GetFormID() & 0x00000FFF) < 0x800) {
@@ -1451,6 +1587,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							out.flush();
 						}
 					}
+					//logger::info("end iter");
 				}
 			} catch (...) {
 				//logger::warn("catch");

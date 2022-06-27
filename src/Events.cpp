@@ -13,6 +13,7 @@
 #include "ActorManipulation.h"
 #include <limits>
 #include <filesystem>
+#include <deque>
 
 		
 namespace Events
@@ -36,6 +37,9 @@ namespace Events
 
 #define Look(s) RE::TESForm::LookupByEditorID(s)
 
+	/// <summary>
+	/// determines whether events and functions are run
+	/// </summary>
 	static bool initialized = false;
 
 	/// <summary>
@@ -44,7 +48,7 @@ namespace Events
 	void InitializeCompatibilityObjects()
 	{
 		// now that the game was loaded we can try to initialize all our variables we conuldn't before
-		{
+		if (!initialized) {
 			// if we are in com mode, try to find the needed items. If we cannot find them, deactivate comp mode
 			if (Settings::_CompatibilityPotionAnimatedFx) {
 				RE::TESForm* tmp = RE::TESForm::LookupByEditorID(std::string_view{ Settings::Compatibility::PAF_NPCDrinkingCoolDownEffect_name });
@@ -59,60 +63,59 @@ namespace Events
 					logger::info("[INIT] Some Forms from PotionAnimatedfx.esp seem to be missing. Forcefully deactivated compatibility mode");
 				}
 			}
-		}
-		// if compatibility mode for PotionnAnimatedFx is activated to use the animations, send events
-		// with required variables to the papyrus scripts
-		if (Settings::_CompatibilityPotionAnimatedFX_UseAnimations && !initialized) {
-			auto evs = SKSE::GetModCallbackEventSource();
+			// if compatibility mode for PotionnAnimatedFx is activated to use the animations, send events
+			// with required variables to the papyrus scripts
+			if (Settings::_CompatibilityPotionAnimatedFX_UseAnimations) {
+				auto evs = SKSE::GetModCallbackEventSource();
 
-			LOG_1("{}[LoadGameEvent] Setting variables for compatibility with PotionAnimatedfx.esp");
-			SKSE::ModCallbackEvent* ev = nullptr;
-			// send mod events to fill ALL the missing variables
-			// since there are multiple plugins with the same name
-			// and the same editor ids, but with different form
-			// ids and we may only query FormIDs in papyrus
+				LOG_1("{}[LoadGameEvent] Setting variables for compatibility with PotionAnimatedfx.esp");
+				SKSE::ModCallbackEvent* ev = nullptr;
+				// send mod events to fill ALL the missing variables
+				// since there are multiple plugins with the same name
+				// and the same editor ids, but with different form
+				// ids and we may only query FormIDs in papyrus
 
-			LOG_4("{}[LoadGameEvent] Set 1");
-			// PAF_DrinkSFX
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_DrinkSFX");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_DrinkSFX" })->As<RE::TESGlobal>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 2");
-			// PAF_NPCDrinkingSlowVersion
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingSlowVersion");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingSlowVersion" })->As<RE::TESGlobal>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 3");
-			// PAF_NPCFleeChance
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCFleeChance");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCFleeChance" })->As<RE::TESGlobal>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 6");
-			// PAF_NPCDrinkingCoolDownSpell
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingCoolDownSpell");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingCoolDownSpell" })->As<RE::SpellItem>();
-				evs->SendEvent(ev);
-			}
-			/*LOG_4("{}[LoadGameEvent] Set 5");
+				LOG_4("{}[LoadGameEvent] Set 1");
+				// PAF_DrinkSFX
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_DrinkSFX");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_DrinkSFX" })->As<RE::TESGlobal>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 2");
+				// PAF_NPCDrinkingSlowVersion
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingSlowVersion");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkingSlowVersion" })->As<RE::TESGlobal>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 3");
+				// PAF_NPCFleeChance
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCFleeChance");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCFleeChance" })->As<RE::TESGlobal>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 6");
+				// PAF_NPCDrinkingCoolDownSpell
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingCoolDownSpell");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkingCoolDownSpell" })->As<RE::SpellItem>();
+					evs->SendEvent(ev);
+				}
+				/*LOG_4("{}[LoadGameEvent] Set 5");
 			// PAF_CustomDrinkPotionSound
 			{
 				ev = new SKSE::ModCallbackEvent();
@@ -132,95 +135,96 @@ namespace Events
 				ev->sender = Look(std::string_view{ "PAF_OriginalDrinkPotionSound" })->As<RE::TESSound>();
 				evs->SendEvent(ev);
 			}*/
-			LOG_4("{}[LoadGameEvent] Set 7");
-			// PAF_NPCDrinkingInterruptDetectAbility
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptDetectAbility");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptDetectAbility" })->As<RE::SpellItem>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 8");
-			// PAF_NPCDrinkFleeSpell
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkFleeSpell");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkFleeSpell" })->As<RE::SpellItem>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 9");
-			// PAF_NPCDrinkingInterruptSpell
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptSpell");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptSpell" })->As<RE::SpellItem>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 10");
-			// PAF_NPCDrinkingCoolDownEffect
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingCoolDownEffect");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingCoolDownEffect" })->As<RE::EffectSetting>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 11");
-			// PAF_NPCDrinkingInterruptDetectEffect
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptDetectEffect");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptDetectEffect" })->As<RE::EffectSetting>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 12");
-			// PAF_NPCDrinkFleeEffect
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkFleeEffect");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkFleeEffect" })->As<RE::EffectSetting>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 13");
-			// PAF_NPCDrinkingInterruptEffect
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptEffect");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptEffect" })->As<RE::EffectSetting>();
-				evs->SendEvent(ev);
-			}
-			LOG_4("{}[LoadGameEvent] Set 14");
-			// PAF_MCMQuest
-			{
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NDP_Comp_PAF_MCMQuest");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = Look(std::string_view{ "PAF_MCMQuest" })->As<RE::TESQuest>();
-				evs->SendEvent(ev);
-			}
+				LOG_4("{}[LoadGameEvent] Set 7");
+				// PAF_NPCDrinkingInterruptDetectAbility
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptDetectAbility");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptDetectAbility" })->As<RE::SpellItem>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 8");
+				// PAF_NPCDrinkFleeSpell
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkFleeSpell");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkFleeSpell" })->As<RE::SpellItem>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 9");
+				// PAF_NPCDrinkingInterruptSpell
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptSpell");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptSpell" })->As<RE::SpellItem>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 10");
+				// PAF_NPCDrinkingCoolDownEffect
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingCoolDownEffect");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkingCoolDownEffect" })->As<RE::EffectSetting>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 11");
+				// PAF_NPCDrinkingInterruptDetectEffect
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptDetectEffect");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptDetectEffect" })->As<RE::EffectSetting>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 12");
+				// PAF_NPCDrinkFleeEffect
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkFleeEffect");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkFleeEffect" })->As<RE::EffectSetting>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 13");
+				// PAF_NPCDrinkingInterruptEffect
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_NPCDrinkingInterruptEffect");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_NPCDrinkingInterruptEffect" })->As<RE::EffectSetting>();
+					evs->SendEvent(ev);
+				}
+				LOG_4("{}[LoadGameEvent] Set 14");
+				// PAF_MCMQuest
+				{
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NDP_Comp_PAF_MCMQuest");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = Look(std::string_view{ "PAF_MCMQuest" })->As<RE::TESQuest>();
+					evs->SendEvent(ev);
+				}
 
-			// send control event to enable compatibility mode and check the delivered objects
-			ev = new SKSE::ModCallbackEvent();
-			ev->eventName = RE::BSFixedString("NPCsDrinkPotionCompPAFX");
-			ev->strArg = RE::BSFixedString("");
-			ev->numArg = 1.0f;
-			ev->sender = nullptr;
-			evs->SendEvent(ev);
-			LOG_4("{}[LoadGameEvent] Sent controlevent");
+				// send control event to enable compatibility mode and check the delivered objects
+				ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NPCsDrinkPotionCompPAFX");
+				ev->strArg = RE::BSFixedString("");
+				ev->numArg = 1.0f;
+				ev->sender = nullptr;
+				evs->SendEvent(ev);
+				LOG_4("{}[LoadGameEvent] Sent controlevent");
+			}
 			initialized = true;
 		}
 	}
@@ -332,59 +336,234 @@ namespace Events
     }
 
 	// Actor, health cooldown, magicka cooldown, stamina cooldown, other cooldown, reg cooldown
-	//static std::vector<std::tuple<RE::Actor*, int, int, int, int, int>> aclist{};
-	// list that holds currently handled actors
+	// static std::vector<std::tuple<RE::Actor*, int, int, int, int, int>> aclist{};
+
+	/// <summary>
+	/// list that holds currently handled actors
+	/// </summary>
 	static std::vector<Events::ActorInfo*> aclist{};
-	// semaphore used to sync access to actor handling, to prevent list changes while operations are done
+	/// <summary>
+	/// semaphore used to sync access to actor handling, to prevent list changes while operations are done
+	/// </summary>
 	static std::binary_semaphore sem(1);
 	// map actorid -> GameDay (reset)
-	// used to determine which actors may be given potions, and which recently received some
+	/// <summary>
+	/// used to determine which actors may be given potions, and which recently received some
+	/// </summary>
 	static std::map<uint64_t, float> actorresetmap{};
-	// semaphore used ot limit access to the reset map, to avoid problems
+	/// <summary>
+	/// semaphore used to limit access to the reset map, to avoid problems
+	/// </summary>
 	static std::binary_semaphore sem_actorreset(1);
 
-	// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
+	/// <summary>
+	/// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
+	/// </summary>
 	static std::unordered_set<RE::FormID> deads;
 
-	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
-	{
-		auto actor = a_event->actorDying->As<RE::Actor>();
-		if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
-			// as with potion distribution, exlude excluded actors and potential followers
+	/// <summary>
+	/// thread which executes HandleEvents()
+	/// </summary>
+	static std::thread* eventhandler = nullptr;
+	/// <summary>
+	/// Event queue for HandleEvents()
+	/// </summary>
+	static std::deque<EventData*> eventQueue;
+	/// <summary>
+	/// Lock for eventQueue
+	/// </summary>
+	static std::binary_semaphore sem_eventQueue(1);
+	/// <summary>
+	/// EventCounter for HandleEvents(), additionally limits execution to only run if there are events.
+	/// </summary>
+	static std::counting_semaphore sem_EventCounter(0);
+	/// <summary>
+	/// if [true] kills HandleEvents()
+	/// </summary>
+	static bool killEventHandler = false;
 
-			sem_actorreset.acquire();
-			if (!Settings::Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false)
-			{
-				deads.insert(actor->GetFormID());
-				LOG1_1("{}[TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
-				auto items = Settings::Distribution::GetMatchingInventoryItems(actor);
-				LOG1_1("{}[TESDeathEvent] found {} items", items.size());
-				if (items.size() > 0) {
-					// remove items that are too much
-					while (items.size() > Settings::_MaxItemsLeft) {
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(actor);
-						actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-						LOG1_1("{}[TESDeathEvent] Removed item {}", items.back()->GetName());
-						items.pop_back();
-					}
-					//logger::info("[TESDeathEvent] 3");
-					// remove the rest of the items per chance
-					if (Settings::_ChanceToRemoveItem < 100) {
-						for (int i = (int)items.size() - 1; i >= 0; i--) {
-							if (rand100(rand) <= Settings::_ChanceToRemoveItem) {
-								RE::ExtraDataList* extra = new RE::ExtraDataList();
-								extra->SetOwner(actor);
-								actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-								LOG1_1("{}[TESDeathEvent] Removed item {}", items[i]->GetName());
-							} else {
-								LOG1_1("{}[TESDeathEvent] Did not remove item {}", items[i]->GetName());
+	#define CheckExitEvent if (killEventHandler) goto SkipEvent;
+
+	/// <summary>
+	/// Handles events related to actors.
+	/// </summary>
+	static void HandleEvents()
+	{
+		RE::UI* ui = RE::UI::GetSingleton();
+		EventData* data = nullptr;
+		while (killEventHandler == false) {
+			// this one locks this threads execution until an event is ready to be handled.
+			// this results in this thread only waking when an EventHandler calls sem_EventCounter.release() and
+			// thus increases the count on the semaphore and this thread aqcuires a lock.
+			// the count on sem_EventCounter increases as long as there are more events incoming than can be handled
+			while (!killEventHandler && (ui->GameIsPaused() || !initialized))
+				std::this_thread::sleep_for(10ms);
+			CheckExitEvent;
+			sem_EventCounter.acquire();
+			// get an event from the queue
+			sem_eventQueue.acquire();
+			data = eventQueue.front();
+			eventQueue.pop_front();
+			sem_eventQueue.release();
+			// check whether the event is correct
+			if (data == nullptr || data->actor == nullptr || data->evn == EventType::None) {
+				// skip this event
+				continue;
+			}
+			CheckExitEvent;
+			switch (data->evn) {
+				// handle the death of an actor
+			case EventType::TESDeathEvent:
+				{
+					LOG1_1("{}[HandleEvents] [TESDeathEvent] Removing items from actor {}", std::to_string(data->actor->GetFormID()));
+					auto items = Settings::Distribution::GetMatchingInventoryItems(data->actor);
+					LOG1_1("{}[HandleEvents] [TESDeathEvent] found {} items", items.size());
+					if (items.size() > 0) {
+						// remove items that are too much
+						while (items.size() > Settings::_MaxItemsLeft) {
+							RE::ExtraDataList* extra = new RE::ExtraDataList();
+							extra->SetOwner(data->actor);
+							data->actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							LOG1_1("{}[HandleEvents] [TESDeathEvent] Removed item {}", items.back()->GetName());
+							items.pop_back();
+						}
+						CheckExitEvent;
+						//logger::info("[TESDeathEvent] 3");
+						// remove the rest of the items per chance
+						if (Settings::_ChanceToRemoveItem < 100) {
+							for (int i = (int)items.size() - 1; i >= 0; i--) {
+								if (rand100(rand) <= Settings::_ChanceToRemoveItem) {
+									RE::ExtraDataList* extra = new RE::ExtraDataList();
+									extra->SetOwner(data->actor);
+									data->actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+									LOG1_1("{}[HandleEvents] [TESDeathEvent] Removed item {}", items[i]->GetName());
+								} else {
+									LOG1_1("{}[HandleEvents] [TESDeathEvent] Did not remove item {}", items[i]->GetName());
+								}
 							}
 						}
 					}
 				}
+				break;
+			case EventType::TESCombatEnterEvent:
+				if (!data->actor->IsDead())
+				{
+					LOG_1("{}[HandleEvents] [TesCombatEnterEvent] Trying to register new actor for potion tracking");
+
+					// check wether this charackter maybe a follower
+					auto iterac = actorresetmap.find(data->actor->GetFormID());
+					if (iterac == actorresetmap.end() || RE::Calendar::GetSingleton()->GetDaysPassed() - iterac->second > 1) {
+						actorresetmap.erase(data->actor->GetFormID());
+						if (!Settings::Distribution::ExcludedNPC(data->actor)) {
+							// if we have characters that should not get items, the function
+							// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
+							auto items = Settings::Distribution::GetDistrItems(data->actor);
+							if (data->actor->IsDead()) {
+								goto SkipEvent;
+							}
+							CheckExitEvent;
+							if (items.size() > 0) {
+								for (int i = 0; i < items.size(); i++) {
+									if (items[i] == nullptr) {
+										//logger::info("[TESCombatEvent] Item: null");
+										continue;
+									}
+									std::string name = items[i]->GetName();
+									std::string id = Utility::GetHex(items[i]->GetFormID());
+									//logger::info("[TESCombatEvent] Item: {} {}", id, name);
+									RE::ExtraDataList* extra = new RE::ExtraDataList();
+									extra->SetOwner(data->actor);
+									data->actor->AddObjectToContainer(items[i], extra, 1, nullptr);
+								}
+								actorresetmap.insert_or_assign((uint64_t)(data->actor->GetFormID()), RE::Calendar::GetSingleton()->GetDaysPassed());
+							}
+						}
+					}
+					CheckExitEvent;
+
+					if (data->actor->IsDead())
+						goto SkipEvent;
+
+					if (Settings::_featUseFood) {
+						// use food at the beginning of the fight to simulate the npc having eaten
+						ACM::ActorUseAnyFood(data->actor, false);
+					}
+
+					CheckExitEvent;
+
+					sem.acquire();
+					auto it = aclist.begin();
+					auto end = aclist.end();
+					bool cont = false;
+					while (it != end) {
+						if ((*it)->actor == data->actor) {
+							cont = true;
+							break;
+						}
+						it++;
+					}
+					if (!cont)
+						aclist.insert(aclist.begin(), new Events::ActorInfo(data->actor, 0, 0, 0, 0, 0));
+					sem.release();
+					LOG_1("{}[HandleEvents] [TesCombatEnterEvent] finished registering NPC");
+				}
+				break;
+				// handle actor leaving combat
+			case EventType::TESCombatLeaveEvent:
+				if (!data->actor->IsDead())
+				{
+					LOG_1("{}[HandleEvents] [TesCombatLeaveEvent] Unregister NPC from potion tracking")
+					sem.acquire();
+					auto it = aclist.begin();
+					auto end = aclist.end();
+					while (it != end) {
+						if ((*it)->actor == data->actor) {
+							//logger::info("CombatEvent deleting list entry");
+							delete (*it);
+							aclist.erase(it);
+							break;
+						}
+						it++;
+					}
+					sem.release();
+					LOG_1("{}[HandleEvents] [TesCombatLeaveEvent] Unregistered NPC");
+				}
+				break;
 			}
-			sem_actorreset.release();
+
+			SkipEvent:
+			delete data;
+		}
+	}
+
+	/// <summary>
+	/// EventHandler for TESDeathEvent
+	/// removed unused potions and poisons from actor, to avoid economy instability
+	/// only registered if itemremoval is activated in the settings
+	/// </summary>
+	/// <param name="a_event"></param>
+	/// <param name="a_eventSource"></param>
+	/// <returns></returns>
+	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
+	{
+		InitializeCompatibilityObjects();
+		auto actor = a_event->actorDying->As<RE::Actor>();
+		if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
+			// as with potion distribution, exlude excluded actors and potential followers
+			if (!Settings::Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false)
+			{
+				// create and insert new event
+				deads.insert(actor->GetFormID());
+				EventData* data = new EventData();
+				data->actor = actor;
+				data->evn = EventType::TESDeathEvent;
+				// insert into event queue
+				sem_eventQueue.acquire();
+				eventQueue.push_back(data);
+				sem_eventQueue.release();
+				// tell handler that there is one more event
+				sem_EventCounter.release();
+			}
 		}
 
 		return EventResult::kContinue;
@@ -400,83 +579,29 @@ namespace Events
     /// <returns></returns>
     EventResult EventHandler::ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>*)
     {
+		InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
 		if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
-				LOG_1("{}[TesCombatEvent] Trying to register new actor for potion tracking");
-
-				// check wether this charackter maybe a follower
-				sem_actorreset.acquire();
-				auto iterac = actorresetmap.find(actor->GetFormID());
-				if (iterac == actorresetmap.end() || RE::Calendar::GetSingleton()->GetDaysPassed() - iterac->second > 1) {
-					actorresetmap.erase(actor->GetFormID());
-					if (!Settings::Distribution::ExcludedNPC(actor)) {
-						// if we have characters that should not get items, the function
-						// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
-						auto items = Settings::Distribution::GetDistrItems(actor);
-						if (actor->IsDead()) {
-							sem_actorreset.release();
-							return EventResult::kContinue;
-						}
-						if (items.size() > 0) {
-							for (int i = 0; i < items.size(); i++) {
-								if (items[i] == nullptr) {
-									//logger::info("[TESCombatEvent] Item: null");
-									continue;
-								}
-								std::string name = items[i]->GetName();
-								std::string id = Utility::GetHex(items[i]->GetFormID());
-								//logger::info("[TESCombatEvent] Item: {} {}", id, name);
-								RE::ExtraDataList* extra = new RE::ExtraDataList();
-								extra->SetOwner(actor);
-								actor->AddObjectToContainer(items[i], extra, 1, nullptr);
-							}
-							actorresetmap.insert_or_assign((uint64_t)(actor->GetFormID()), RE::Calendar::GetSingleton()->GetDaysPassed());
-						}
-					}
-				}
-				sem_actorreset.release();
-
-				if (actor->IsDead())
-					return EventResult::kContinue;
-
-				if (Settings::_featUseFood) {
-					// use food at the beginning of the fight to simulate the npc having eaten
-					ACM::ActorUseAnyFood(actor, false);
-				}
-
-				sem.acquire();
-				InitializeCompatibilityObjects();
-				auto it = aclist.begin();
-				auto end = aclist.end();
-				bool cont = false;
-				while (it != end) {
-					if ((*it)->actor == actor) {
-						cont = true;
-						break;
-					}
-					it++;
-				}
-				if (!cont)
-					aclist.insert(aclist.begin(), new Events::ActorInfo(actor, 0, 0, 0, 0, 0));
-				sem.release();
-				LOG_1("{}[TesCombatEvent] finished registering NPC");
+				// create new TESCombatEnterEvent
+				EventData* data = new EventData();
+				data->actor = actor;
+				data->evn = EventType::TESCombatEnterEvent;
+				sem_eventQueue.acquire();
+				eventQueue.push_back(data);
+				sem_eventQueue.release();
+				sem_EventCounter.release();
+				LOG_1("{}[TesCombatEvent] Registered TesCombatEnterEvent");
 			} else {
-				LOG_1("{}[TesCombatEvent] Unregister NPC from potion tracking")
-				sem.acquire();
-				auto it = aclist.begin();
-				auto end = aclist.end();
-				while (it != end) {
-					if ((*it)->actor == actor) {
-						//logger::info("CombatEvent deleting list entry");
-						delete (*it);
-						aclist.erase(it);
-						break;
-					}
-					it++;
-				}
-				sem.release();
-				LOG_1("{}[TesCombatEvent] Unregistered NPC");
+				// create new TESCombatLeaveEvent
+				EventData* data = new EventData;
+				data->actor = actor;
+				data->evn = EventType::TESCombatLeaveEvent;
+				sem_eventQueue.acquire();
+				eventQueue.push_back(data);
+				sem_eventQueue.release();
+				sem_EventCounter.release();
+				LOG_1("{}[TesCombatEvent] Registered TesCombatLeaveEvent");
 			}
 		}
 
@@ -487,21 +612,15 @@ namespace Events
 	/// if set to true stops the CheckActors thread on its next iteration
 	/// </summary>
 	static bool stopactorhandler = false;
+	/// <summary>
+	/// [true] if the actorhandler is running, [false] if the thread died
+	/// </summary>
 	static bool actorhandlerrunning = false;
 	/// <summary>
 	/// thread running the CheckActors function
 	/// </summary>
 	static std::thread* actorhandler = nullptr;
 
-#define UseHealth(t, dur, tolerance) \
-	if (Settings::_featHealthRestoration && dur < tolerance && ACM::GetAVPercentage(std::get<0>(t), RE::ActorValue::kHealth) < Settings::_healthThreshold) \
-		dur = ACM::ActorUsePotion(aclist[i]->actor, AlchemyEffect::kHealth);
-#define UseMagicka(t, dur, tolerance) \
-	if (Settings::_featMagickaRestoration && dur < tolerance && ACM::GetAVPercentage(std::get<0>(t), RE::ActorValue::kMagicka) < Settings::_magickaThreshold) \
-		dur = ACM::ActorUsePotion(aclist[i]->actor, AlchemyEffect::kMagicka);
-#define UseStamina(t, dur, tolerance) \
-	if (Settings::_featStaminaRestoration && dur < tolerance && ACM::GetAVPercentage(std::get<0>(t), RE::ActorValue::kStamina) < Settings::_staminaThreshold) \
-		dur = ACM::ActorUsePotion(aclist[i]->actor, AlchemyEffect::kMagicka);
 
 
 
@@ -534,6 +653,10 @@ namespace Events
 		uint64_t alch2 = 0;
 		uint64_t alch3 = 0;
 		bool player = false; // wether player was inserted into list
+
+		auto datahandler = RE::TESDataHandler::GetSingleton();
+		const RE::TESFile* file = nullptr;
+		std::string_view name = std::string_view{ "" };
 		
 		// main loop, if the thread should be stopped, exit the loop
 		while (!stopactorhandler) {
@@ -541,7 +664,7 @@ namespace Events
 			Events::ActorInfo* curr;
 			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
 			// do not compute, since nobody can actually take potions.
-			if (!ui->GameIsPaused()) {
+			if (!ui->GameIsPaused() && initialized) {
 				// reset player var.
 				player = false;
 				// get starttime of iteration
@@ -560,10 +683,25 @@ namespace Events
 				// the list does not change while doing this
 				for (int i = 0; i < aclist.size(); i++) {
 					curr = aclist[i];
-					if (curr == nullptr) {
+					if (curr == nullptr || curr->actor == nullptr) {
 						continue;
 					}
-					LOG1_1("{}[CheckActors] [Actor] {}", Utility::GetHex((curr->actor)->GetFormID()));
+					if (Settings::EnableLog) {
+						name = std::string_view{ "" };
+						if ((curr->actor->GetFormID() >> 24) != 0xFE) {
+							file = datahandler->LookupLoadedModByIndex((uint8_t)(curr->actor->GetFormID() >> 24));
+							if (file) {
+								name = file->GetFilename();
+							}
+						}
+						if (name.empty()) {
+							file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((curr->actor->GetFormID() & 0x00FFF000)) >> 12));
+							if (file) {
+								name = file->GetFilename();
+							}
+						}
+						LOG3_1("{}[CheckActors] [Actor] {} named {} from {}", Utility::GetHex((curr->actor)->GetFormID()), curr->actor->GetName(), name);
+					}
 					// if actor is valid and not dead
 					if (curr->actor && !(curr->actor->IsDead()) && curr->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
 						// handle potions
@@ -573,7 +711,9 @@ namespace Events
 						curr->durStamina -= Settings::_cycletime;
 						curr->durFortify -= Settings::_cycletime;
 						curr->durRegeneration -= Settings::_cycletime;
+						LOG5_1("{}[CheckActors] [Actor] cooldown: {} {} {} {} {}", curr->durHealth, curr->durMagicka, curr->durStamina, curr->durFortify, curr->durRegeneration);
 
+						// potions used this cycle
 						int counter = 0;
 
 						if (!curr->actor->IsPlayerRef() || Settings::_playerRestorationEnabled) {
@@ -601,14 +741,17 @@ namespace Events
 								switch (std::get<1>(tup)) {
 								case AlchemyEffect::kHealth:
 									curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
+									counter++;
 									LOG2_4("{}[CheckActors] use health pot with duration {} and magnitude {}", curr->durHealth, std::get<0>(tup));
 									break;
 								case AlchemyEffect::kMagicka:
 									curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+									counter++;
 									LOG2_4("{}[CheckActors] use magicka pot with duration {} and magnitude {}", curr->durMagicka, std::get<0>(tup));
 									break;
 								case AlchemyEffect::kStamina:
 									curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+									counter++;
 									LOG2_4("{}[CheckActors] use stamina pot with duration {} and magnitude {}", curr->durStamina, std::get<0>(tup));
 									break;
 								}
@@ -651,8 +794,10 @@ namespace Events
 							}
 						}
 
+						// get combatdata of current actor
 						uint32_t combatdata = Utility::GetCombatData(curr->actor);
 						uint32_t tcombatdata = 0;
+						// retrieve target of current actor if present
 						RE::ActorHandle handle = curr->actor->currentCombatTarget;
 						
 						if (Settings::_featUsePoisons && (Settings::_UsePoisonChance == 100 || rand100(rand) < Settings::_UsePoisonChance) && (!curr->actor->IsPlayerRef() || Settings::_playerUsePoisons)) {
@@ -774,6 +919,7 @@ namespace Events
 								// general stuff
 								uint64_t effects = 0;
 
+								// determine valid regeneration effects
 								if (curr->durRegeneration < tolerance) {
 									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHealRate) |
 									           static_cast<uint64_t>(Settings::AlchemyEffect::kHealRateMult);
@@ -799,6 +945,7 @@ namespace Events
 										           static_cast<uint64_t>(Settings::AlchemyEffect::kMagickaRateMult);
 									}
 								}
+								// determine valid fortify effects
 								if (curr->durFortify < tolerance) {
 									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kDamageResist) |
 									           static_cast<uint64_t>(Settings::AlchemyEffect::kResistMagic) |
@@ -934,7 +1081,7 @@ namespace Events
 				}
 				// write execution time of iteration
 				PROF1_1("{}[PROF] [CheckActors] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
-				LOG1_1("{}[CheckActors] check {} actors", std::to_string(aclist.size()));
+				LOG1_1("{}[CheckActors] checked {} actors", std::to_string(aclist.size()));
 				// release lock.
 				sem.release();
 			}
@@ -944,8 +1091,14 @@ namespace Events
 		actorhandlerrunning = false;
 	}
 
+	/// <summary>
+	/// thread which executes varying test functions
+	/// </summary>
 	std::thread* testhandler = nullptr;
 
+	/// <summary>
+	/// Teleports the player to every cell in the game and calculates the distribution rules for all actors
+	/// </summary>
 	void TestHandler() {
 		std::this_thread::sleep_for(10s);
 		RE::UI* ui = RE::UI::GetSingleton();
@@ -1020,48 +1173,78 @@ namespace Events
 		}
 		std::ofstream out = std::ofstream(path, std::ofstream::out);
 		std::ofstream outid = std::ofstream(pathid, std::ofstream::out);
-
-
-		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
-		auto iter = hashtable->begin();
+		
+		RE::TESObjectCELL * cell = nullptr;
+		std::vector<RE::TESObjectCELL*> cs;
+		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+		{
+			const RE::BSReadLockGuard locker{ lock };
+			auto iter = hashtable->begin();
+			while (iter != hashtable->end()) {
+				if ((*iter).second) {
+					cell = ((*iter).second)->As<RE::TESObjectCELL>();
+					if (cell) {
+						cs.push_back(cell);
+						out << cell->GetFormEditorID() << "\n";
+						outid << Utility::GetHex(cell->GetFormID()) << "\n";
+					}
+				}
+				iter++;
+			}
+		}
+		//auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
+		//auto iter = hashtable->begin();
 
 		//logger::info("tryna start");
-		RE::TESObjectCELL * cell = nullptr;
-		while (iter != hashtable->end()) {
-			if ((*iter).second) {
-				cell = ((*iter).second)->As<RE::TESObjectCELL>();
-				if (cell) {
-					out << cell->GetFormEditorID() << "\n";
-					outid << Utility::GetHex(cell->GetFormID()) << "\n";
-				}
-			}
-			iter++;
-		}
+		//while (iter != hashtable->end()) {
+		//	if ((*iter).second) {
+		//		cell = ((*iter).second)->As<RE::TESObjectCELL>();
+		//		if (cell) {
+		//			out << cell->GetFormEditorID() << "\n";
+		//			outid << Utility::GetHex(cell->GetFormID()) << "\n";
+		//		}
+		//	}
+		//	iter++;
+		//}
 		out.close();
 		outid.close();
-		iter = hashtable->begin();
-		while (iter != hashtable->end()) {
-			if ((*iter).second) {
-				cell = ((*iter).second)->As<RE::TESObjectCELL>();
+		auto console = RE::ConsoleLog::GetSingleton();
+		console->Print("Start Test");
+		logger::info("Start Test");
+		//iter = hashtable->begin();
+		//while (iter != hashtable->end()) {
+		//	if ((*iter).second) {
+		//		cell = ((*iter).second)->As<RE::TESObjectCELL>();
+		for (size_t i = 0; i < cs.size(); i++) {
+			cell = cs[(int)i];
 				if (cell) {
 					if (excludedid.contains(cell->GetFormID()) || done.contains(cell->GetFormID()) || std::string(cell->GetFormEditorID()) == "Wilderness") {
-						iter++;
+		//				iter++;
 						continue;
 					}
 					while (ui->GameIsPaused()) {
 						std::this_thread::sleep_for(100ms);
 					}
 					if (cell->references.size() > 0) {
+						char buff[70] = "Moving to cell:\t";
+						strcat_s(buff, 70, cell->GetFormEditorID());
+						console->Print(buff);
+						logger::info("Moving to cell:\t{}", cell->GetFormEditorID());
 						RE::PlayerCharacter::GetSingleton()->MoveTo((*(cell->references.begin())).get());
 					}
 					std::this_thread::sleep_for(7s);
 				}
-			}
-			iter++;
+		//	}
+		//	iter++;
 		}
+		console->Print("Finished Test");
+		logger::info("Finished Test");
 		//logger::info("tryna end");
 	}
 
+	/// <summary>
+	/// Calculates the distribution rules for all actors in all cells in the game
+	/// </summary>
 	void TestAllCells()
 	{
 		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrder.csv";
@@ -1110,6 +1293,21 @@ namespace Events
 	{
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
+		// if we cancel the event handle, reset that, additional delete all events that remain to be handled
+		killEventHandler = true;
+		sem_eventQueue.acquire();
+		EventData* tmpdata = nullptr;
+		while (!eventQueue.empty()) {
+			tmpdata = eventQueue.front();
+			if (tmpdata)
+				delete tmpdata;
+			eventQueue.pop_front();
+		}
+		eventQueue.clear(); // make completely sure its empty
+		sem_eventQueue.release();
+		// skip all events
+		while (sem_EventCounter.try_acquire())
+			;
 		// set initialized to false, since we did load or reload the game
 		initialized = false;
 		if (actorhandlerrunning == false) {
@@ -1126,6 +1324,22 @@ namespace Events
 			actorhandler = new std::thread(CheckActors);
 			LOG_1("{}[LoadGameEvent] Started CheckActors");
 		}
+		// reset eventhandler
+		if (eventhandler != nullptr) {
+			if (eventhandler->joinable()) {
+				// enable it to run 1 step, to kill it
+				sem_EventCounter.release();
+				eventhandler->join();
+				// if the release above wasn't necessary, remove it now
+				static_cast<void>(sem_EventCounter.try_acquire());
+			}
+			eventhandler->~thread();
+			delete eventhandler;
+			eventhandler = nullptr;
+		}
+		killEventHandler = false;
+		eventhandler = new std::thread(HandleEvents);
+
 		// delete the current actorresetmap, since we don't know wether its still valid across savegame load
 		sem_actorreset.acquire();
 		actorresetmap.clear();
@@ -1261,5 +1475,6 @@ namespace Events
 	void DisableThreads()
 	{
 		stopactorhandler = true;
+		killEventHandler = true;
 	}
 }
