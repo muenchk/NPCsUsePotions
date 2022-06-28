@@ -27,9 +27,9 @@ namespace Events
 	/// <returns></returns>
 	static std::mt19937 rand((unsigned int)(std::chrono::system_clock::now().time_since_epoch().count()));
 	/// <summary>
-	/// trims random numbers to 1 to 100 
+	/// trims random numbers to 1 to 100
 	/// </summary>
-	static std::uniform_int_distribution<signed> rand100(1, 100);	
+	static std::uniform_int_distribution<signed> rand100(1, 100);
 	/// <summary>
 	/// trims random numbers to 1 to 3
 	/// </summary>
@@ -229,7 +229,6 @@ namespace Events
 		}
 	}
 
-
 	/// <summary>
 	/// extracts all poisons from a list of AlchemyItems
 	/// </summary>
@@ -273,7 +272,7 @@ namespace Events
 	/// <summary>
 	/// This function returns all alchemy items contained in the death item lists of the actor
 	/// </summary>
-	std::list<RE::AlchemyItem*> FindDeathAlchemyItems(RE::Actor * _actor)
+	std::list<RE::AlchemyItem*> FindDeathAlchemyItems(RE::Actor* _actor)
 	{
 		LOG_2("{}[FINDALCHEMYITEMS] begin");
 		// create return list
@@ -304,8 +303,7 @@ namespace Events
 					if (al) {
 						ret.insert(ret.begin(), al);
 						LOG_4("{}[FINDALCHEMYITEMS] found alchemy item");
-					}
-					else if (ls)
+					} else if (ls)
 						lists.insert(lists.begin(), ls);
 				}
 			if (lists.size() > 0) {
@@ -322,18 +320,18 @@ namespace Events
 		return ret;
 	}
 
-    /// <summary>
-    /// Processes TESHitEvents
-    /// </summary>
-    /// <param name=""></param>
-    /// <param name=""></param>
-    /// <returns></returns>
-    EventResult EventHandler::ProcessEvent(const RE::TESHitEvent* /*a_event*/, RE::BSTEventSource<RE::TESHitEvent>*)
-    {
-		// currently unused 
+	/// <summary>
+	/// Processes TESHitEvents
+	/// </summary>
+	/// <param name=""></param>
+	/// <param name=""></param>
+	/// <returns></returns>
+	EventResult EventHandler::ProcessEvent(const RE::TESHitEvent* /*a_event*/, RE::BSTEventSource<RE::TESHitEvent>*)
+	{
+		// currently unused
 		// MARK TO REMOVE
 		return EventResult::kContinue;
-    }
+	}
 
 	// Actor, health cooldown, magicka cooldown, stamina cooldown, other cooldown, reg cooldown
 	// static std::vector<std::tuple<RE::Actor*, int, int, int, int, int>> aclist{};
@@ -362,6 +360,20 @@ namespace Events
 	static std::unordered_set<RE::FormID> deads;
 
 	/// <summary>
+	/// signals whether the player has died
+	/// </summary>
+	static bool playerdied = false;
+
+#define CheckDeadEvent      \
+	if (playerdied == true) \
+		return EventResult::kContinue;
+
+#define ReEvalPlayerDeath \
+	if (RE::PlayerCharacter::GetSingleton()->IsDead() == false) { \
+		playerdied = false; \
+	}
+
+	/// <summary>
 	/// EventHandler for TESDeathEvent
 	/// removed unused potions and poisons from actor, to avoid economy instability
 	/// only registered if itemremoval is activated in the settings
@@ -371,12 +383,17 @@ namespace Events
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
 	{
+		CheckDeadEvent;
 		InitializeCompatibilityObjects();
 		auto actor = a_event->actorDying->As<RE::Actor>();
+		if (actor->IsPlayerRef()) {
+			playerdied = true;
+		} else
 		if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
 			// as with potion distribution, exlude excluded actors and potential followers
 			if (!Settings::Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false) {
 				// create and insert new event
+				CheckDeadEvent;
 				deads.insert(actor->GetFormID());
 				sem_actorreset.acquire();
 				LOG1_1("{}[HandleEvents] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
@@ -427,6 +444,7 @@ namespace Events
     /// <returns></returns>
     EventResult EventHandler::ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>*)
 	{
+		CheckDeadEvent;
 		InitializeCompatibilityObjects();
 			auto actor = a_event->actor->As<RE::Actor>();
 		if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
@@ -464,7 +482,7 @@ namespace Events
 					}
 				}
 				sem_actorreset.release();
-
+				CheckDeadEvent;
 				if (actor->IsDead())
 					return EventResult::kContinue;
 
@@ -473,6 +491,7 @@ namespace Events
 					ACM::ActorUseAnyFood(actor, false);
 				}
 
+				CheckDeadEvent;
 				sem.acquire();
 				auto it = aclist.begin();
 				auto end = aclist.end();
@@ -490,6 +509,7 @@ namespace Events
 				LOG_1("{}[HandleEvents] [TesCombatEnterEvent] finished registering NPC");
 			} else {
 				LOG_1("{}[HandleEvents] [TesCombatLeaveEvent] Unregister NPC from potion tracking")
+				CheckDeadEvent;
 				sem.acquire();
 				auto it = aclist.begin();
 				auto end = aclist.end();
@@ -524,7 +544,10 @@ namespace Events
 	static std::thread* actorhandler = nullptr;
 
 
-
+#define CheckDeadCheckHandlerLoop \
+	if (playerdied) { \
+		break; \
+	}
 
 	/// <summary>
 	/// Main routine that periodically checks the actors status, and applies items
@@ -564,9 +587,10 @@ namespace Events
 		while (!stopactorhandler) {
 			// current actor
 			Events::ActorInfo* curr;
+			ReEvalPlayerDeath;
 			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
 			// do not compute, since nobody can actually take potions.
-			if (!ui->GameIsPaused() && initialized) {
+			if (!ui->GameIsPaused() && initialized && !playerdied) {
 				// reset player var.
 				player = false;
 				// get starttime of iteration
@@ -584,6 +608,7 @@ namespace Events
 				// handle all registered actors
 				// the list does not change while doing this
 				for (int i = 0; i < aclist.size(); i++) {
+					CheckDeadCheckHandlerLoop;
 					curr = aclist[i];
 					if (curr == nullptr || curr->actor == nullptr) {
 						continue;
@@ -695,6 +720,7 @@ namespace Events
 								}
 							}
 						}
+						CheckDeadCheckHandlerLoop;
 
 						// get combatdata of current actor
 						uint32_t combatdata = Utility::GetCombatData(curr->actor);
@@ -809,6 +835,7 @@ namespace Events
 							}
 							// else Mage or Hand to Hand which cannot use poisons
 						}
+						CheckDeadCheckHandlerLoop;
 
 						if (Settings::_featUseFortifyPotions && counter < Settings::_maxPotionsPerCycle && (!(curr->actor->IsPlayerRef()) || Settings::_playerUseFortifyPotions)) {
 							//logger::info("fortify potions stuff");
@@ -986,6 +1013,8 @@ namespace Events
 				LOG1_1("{}[CheckActors] checked {} actors", std::to_string(aclist.size()));
 				// release lock.
 				sem.release();
+			} else {
+				LOG_1("{}[CheckActors] Skip round.")						
 			}
 			std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::_cycletime));
 		}
@@ -1210,7 +1239,15 @@ namespace Events
 			actorhandler = new std::thread(CheckActors);
 			LOG_1("{}[LoadGameEvent] Started CheckActors");
 		}
-
+		// reset regsitered actors, since we skip unregister events after player has died
+		sem.acquire();
+		for (int i = 0; i < aclist.size(); i++) {
+			delete aclist[i];
+		}
+		aclist.clear();
+		sem.release();
+		// set player to alive
+		ReEvalPlayerDeath;
 		// delete the current actorresetmap, since we don't know wether its still valid across savegame load
 		sem_actorreset.acquire();
 		actorresetmap.clear();
@@ -1238,6 +1275,7 @@ namespace Events
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>*) {
 		//logger::info("[CELLEVENT]");
+		CheckDeadEvent;
 		if (cells.contains(a_event->cellID) == false) {
 			cells.insert(a_event->cellID);
 			Settings::CheckCellForActors(a_event->cellID);
@@ -1254,7 +1292,8 @@ namespace Events
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>*)
 	{
-			if (a_event->actor.get()) {
+		CheckDeadEvent;
+		if (a_event->actor.get()) {
 			if (a_event->actor->IsPlayerRef()) {
 				auto audiomanager = RE::BSAudioManager::GetSingleton();
 
