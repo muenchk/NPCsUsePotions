@@ -654,6 +654,10 @@ public:
 		/// set that contains association objects excluded from baseline distribution
 		/// </summary>
 		static inline std::unordered_set<RE::FormID> _baselineExclusions;
+		/// <summary>
+		/// contains items that have beeen added to the whitelists. Unused if whitelist feature is disabled
+		/// </summary>
+		static inline std::unordered_set<RE::FormID> _whitelistItems;
 
 	public:
 
@@ -702,6 +706,8 @@ public:
 		/// </summary>
 		/// <returns></returns>
 		static const std::unordered_set<RE::FormID>* baselineExclusions() { return initialised ? &_baselineExclusions : &_dummySet1; }
+
+		static const std::unordered_set<RE::FormID>* whitelistItems() { return initialised ? &_whitelistItems : & _dummySet1; }
 
 		#define RandomRange 1000
 
@@ -834,6 +840,8 @@ public:
 	static inline bool _ApplySkillBoostPerks = true;							// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
 	static inline bool _CompatibilityCACO = false;	// automatic
 	static inline bool _CompatibilityApothecary = false; // automatic
+
+	static inline bool _CompatibilityWhitelist = false;
 
 	// debug
 	static inline bool EnableLog = false;
@@ -1032,6 +1040,8 @@ public:
 		_CompatibilityPotionAnimatedFX_UseAnimations = ini.GetValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations") ? ini.GetBoolValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations") : false;
 		logger::info("[SETTINGS] {} {}", "PotionAnimatedfx.esp_UseAnimations", std::to_string(_CompatibilityPotionAnimatedFX_UseAnimations));
 
+		_CompatibilityWhitelist = ini.GetBoolValue("Compatibility", "WhitelistMode", false);
+		logger::info("[SETTINGS] {} {}", "WhitelistMode", std::to_string(_CompatibilityWhitelist));
 
 		// distribution
 		_LevelEasy = ini.GetValue("Distribution", "LevelEasy") ? ini.GetLongValue("Distribution", "LevelEasy") : _LevelEasy;
@@ -1336,6 +1346,7 @@ public:
 		ini.SetBoolValue("Compatibility", "DisableAutomaticAdjustments", _CompatibilityDisableAutomaticAdjustments, ";Disables automatic changes made to settings, due to compatibility.\n;Not all changes can be disabled.\n;1) Changes to \"MaxPotionsPerCycle\" when using Potion Animation Mods.\n;2) Enabling of \"UltimatePotionAnimation\" if zxlice's dll is found in your plugin folder. Since it would very likely result in a crash with this option enabled.");
 		if (_CompatibilityPotionAnimatedFX_UseAnimations)
 			ini.SetBoolValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations", _CompatibilityPotionAnimatedFX_UseAnimations, ";If you have one of the mods \"Animated Potion Drinking SE\", \"Potion Animated fix (SE)\" and the plugin \"PotionAnimatedfx.eso\" is found you may activate this.\n;This does NOT activate the compatibility mode for that mod, that happens automatically. Instead this determines wether the animations of that mod, are played for any mod that is drunken automatically.");
+		ini.SetBoolValue("Compatibility", "WhitelistMode", _CompatibilityWhitelist, ";Enables the whitelist mode. Items that shall be distributed must not\n;be explicitly stated in the rules. This is the opposit to the standard (blacklist) behaviour.\n;Only use this if your loadorder causes you CTDs etc due to items being distributed that should not.\n;If you know which mod is causing the issue please do report it, such that appropiate rules can be created. This should only be a temporary solution.");
 
 		// distribution options
 		ini.SetLongValue("Distribution", "LevelEasy", _LevelEasy, ";NPC lower or equal this level are considered weak.");
@@ -2114,187 +2125,7 @@ public:
 	/// <summary>
 	/// classifies all AlchemyItems in the game according to its effects
 	/// </summary>
-	static void ClassifyItems()
-	{
-		// resetting all items
-		_itemsInit = false;
-
-		_potionsWeak_main.clear();
-		_potionsWeak_rest.clear();
-		_potionsStandard_main.clear();
-		_potionsStandard_rest.clear();
-		_potionsPotent_main.clear();
-		_potionsPotent_rest.clear();
-		_potionsInsane_main.clear();
-		_potionsInsane_rest.clear();
-		_potionsBlood.clear();
-		_poisonsWeak_main.clear();
-		_poisonsWeak_rest.clear();
-		_poisonsStandard_main.clear();
-		_poisonsStandard_rest.clear();
-		_poisonsPotent_main.clear();
-		_poisonsPotent_rest.clear();
-		_poisonsWeak.clear();
-		_poisonsStandard.clear();
-		_poisonsPotent.clear();
-		_poisonsInsane.clear();
-		_foodmagicka.clear();
-		_foodstamina.clear();
-		_foodhealth.clear();
-
-		// start sorting items
-
-		auto begin = std::chrono::steady_clock::now();
-		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
-		auto end = hashtable->end();
-		auto iter = hashtable->begin();
-		RE::AlchemyItem* item = nullptr;
-		while (iter != end) {
-			if ((*iter).second && (*iter).second->IsMagicItem()) {
-				item = (*iter).second->As<RE::AlchemyItem>();
-				if (item) {
-					// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
-					if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0) {
-						iter++;
-						continue;
-					}
-					auto clas = ClassifyItem(item);
-					// check wether item is excluded
-					if (Settings::Distribution::excludedItems()->contains(item->GetFormID())) {
-						iter++;
-						continue;
-					}
-					// determine the type of item
-					if (std::get<2>(clas) == ItemType::kFood) {
-						// we will only classify food which works on stamina, magicka or health for now
-						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0) {
-							_foodhealth.insert(_foodhealth.end(), { std::get<0>(clas), item });
-						} else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-								   (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagickaRate)) > 0) {
-							_foodmagicka.insert(_foodmagicka.end(), { std::get<0>(clas), item });
-						} else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
-								   (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
-							_foodstamina.insert(_foodstamina.end(), { std::get<0>(clas), item });
-						}
-					} else if (std::get<2>(clas) == ItemType::kPoison) {
-						/*if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagickaRate)) > 0 ||
-							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
-							switch (std::get<1>(clas)) {
-							case ItemStrength::kWeak:
-								_poisonsWeak_main.insert(_poisonsWeak_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kStandard:
-								_poisonsStandard_main.insert(_poisonsStandard_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kPotent:
-								_poisonsPotent_main.insert(_poisonsPotent_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kInsane:
-								break;
-							}
-						} else if (std::get<0>(clas) != static_cast<uint64_t>(AlchemyEffect::kNone)) {
-							switch (std::get<1>(clas)) {
-							case ItemStrength::kWeak:
-								_poisonsWeak_rest.insert(_poisonsWeak_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kStandard:
-								_poisonsStandard_rest.insert(_poisonsStandard_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kPotent:
-								_poisonsPotent_rest.insert(_poisonsPotent_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kInsane:
-								break;
-							}
-						}*/
-						switch (std::get<1>(clas)) {
-						case ItemStrength::kWeak:
-							_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kStandard:
-							_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kPotent:
-							_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kInsane:
-							_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
-							break;
-						}
-					} else if (std::get<2>(clas) == ItemType::kPotion) {
-						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
-							_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
-						else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
-							switch (std::get<1>(clas)) {
-							case ItemStrength::kWeak:
-								_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kStandard:
-								_potionsStandard_main.insert(_potionsStandard_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kPotent:
-								_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kInsane:
-								_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
-								break;
-							}
-						} else if (std::get<0>(clas) != static_cast<uint64_t>(AlchemyEffect::kNone)) {
-							switch (std::get<1>(clas)) {
-							case ItemStrength::kWeak:
-								_potionsWeak_rest.insert(_potionsWeak_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kStandard:
-								_potionsStandard_rest.insert(_potionsStandard_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kPotent:
-								_potionsPotent_rest.insert(_potionsPotent_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kInsane:
-								_potionsInsane_rest.insert(_potionsInsane_rest.end(), { std::get<0>(clas), item });
-								break;
-							}
-						}
-					}
-				}
-			}
-			iter++;
-		}
-		PROF1_1("[PROF] [ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
-		
-		// items initialised
-		_itemsInit = true;
-		
-		LOG1_1("{}[ClassifyItems] _potionsWeak_main {}", potionsWeak_main()->size());
-		LOG1_1("{}[ClassifyItems] _potionsWeak_rest {}", potionsWeak_rest()->size());
-		LOG1_1("{}[ClassifyItems] _potionsStandard_main {}", potionsStandard_main()->size());
-		LOG1_1("{}[ClassifyItems] _potionsStandard_rest {}", potionsStandard_rest()->size());
-		LOG1_1("{}[ClassifyItems] _potionsPotent_main {}", potionsPotent_main()->size());
-		LOG1_1("{}[ClassifyItems] _potionsPotent_rest {}", potionsPotent_rest()->size());
-		LOG1_1("{}[ClassifyItems] _potionsInsane_main {}", potionsInsane_main()->size());
-		LOG1_1("{}[ClassifyItems] _potionsInsane_rest {}", potionsInsane_rest()->size());
-		LOG1_1("{}[ClassifyItems] _potionsBlood {}", potionsBlood()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak_main {}", poisonsWeak_main()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak_rest {}", poisonsWeak_rest()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard_main {}", poisonsStandard_main()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard_rest {}", poisonsStandard_rest()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent_main {}", poisonsPotent_main()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent_rest {}", poisonsPotent_rest()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsWeak {}", poisonsWeak()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsStandard {}", poisonsStandard()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsPotent {}", poisonsPotent()->size());
-		LOG1_1("{}[ClassifyItems] _poisonsInsane {}", poisonsInsane()->size());
-		LOG1_1("{}[ClassifyItems] _foodmagicka {}", foodmagicka()->size());
-		LOG1_1("{}[ClassifyItems] _foodstamina {}", foodstamina()->size());
-		LOG1_1("{}[ClassifyItems] _foodhealth {}", foodhealth()->size());
-	}
+	static void ClassifyItems();
 
 	/// <summary>
 	/// returns all item from [list] with the alchemy effect [effect]
