@@ -982,11 +982,11 @@ namespace Events
 								case Settings::AlchemyEffect::kMagickaRateMult:
 								case Settings::AlchemyEffect::kStaminaRateMult:
 									curr->durRegeneration = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
-									LOG1_4("{}[CheckActors] used regeneration potion with tracked duration {}", curr->durRegeneration);
+									LOG2_4("{}[CheckActors] used regeneration potion with tracked duration {} {}", curr->durRegeneration, std::get<0>(tup) * 1000);
 									break;
 								default:
 									curr->durFortify = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
-									LOG1_4("{}[CheckActors] used fortify av potion with tracked duration {}", curr->durFortify);
+									LOG2_4("{}[CheckActors] used fortify av potion with tracked duration {} {}", curr->durFortify, std::get<0>(tup) * 1000);
 									break;
 								}
 							}

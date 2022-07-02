@@ -906,6 +906,18 @@ public:
 		case RE::FormType::CombatStyle:
 			valid = true;
 			return Settings::Distribution::AssocType::kCombatStyle;
+		case RE::FormType::AlchemyItem:
+		case RE::FormType::Spell:
+		case RE::FormType::Scroll:
+		case RE::FormType::Armor:
+		case RE::FormType::Book:
+		case RE::FormType::Ingredient:
+		case RE::FormType::Misc:
+		case RE::FormType::Weapon:
+		case RE::FormType::Ammo:
+		case RE::FormType::SoulGem:
+			valid = true;
+			return Settings::Distribution::AssocType::kItem;
 		default:
 			valid = false;
 			return Settings::Distribution::AssocType::kKeyword;
