@@ -140,6 +140,27 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 	return ret;
 }
 
+std::list<RE::AlchemyItem*> ACM::GetAllPotions(RE::Actor* actor)
+{
+	std::list<RE::AlchemyItem*> ret{};
+	auto itemmap = actor->GetInventory();
+	auto iter = itemmap.begin();
+	RE::AlchemyItem* item = nullptr;
+	LOG_3("{}[GetAllPotions] trying to find potion");
+	while (iter != itemmap.end()) {
+		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			item = iter->first->As<RE::AlchemyItem>();
+			LOG_4("{}[GetAllPotions] checking item");
+			if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
+				LOG_4("{}[GetAllPotions] found potion.");
+				ret.insert(ret.begin(), item);
+			}
+		}
+		iter++;
+	}
+	return ret;
+}
+
 std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM::GetMatchingPoisons(RE::Actor* actor, uint64_t alchemyEffect)
 {
 	std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ret{};
@@ -161,6 +182,27 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 		iter++;
 	}
 	LOG1_3("{}[GetMatchingItemsPoisons] finished. found: {} poisons", ret.size());
+	return ret;
+}
+
+std::list<RE::AlchemyItem*> ACM::GetAllPoisons(RE::Actor* actor) 
+{
+	std::list<RE::AlchemyItem*> ret{};
+	auto itemmap = actor->GetInventory();
+	auto iter = itemmap.begin();
+	RE::AlchemyItem* item = nullptr;
+	LOG_3("{}[GetAllPoisons] trying to find poison");
+	while (iter != itemmap.end()) {
+		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			item = iter->first->As<RE::AlchemyItem>();
+			LOG_4("{}[GetAllPoisons] checking item");
+			if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
+				LOG_4("{}[GetAllPoisons] found poison.");
+				ret.insert(ret.begin(), item);
+			}
+		}
+		iter++;
+	}
 	return ret;
 }
 
@@ -190,6 +232,27 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> ACM
 		iter++;
 	}
 	LOG1_4("{}[GetMatchingItemsFood] return: {}", ret.size());
+	return ret;
+}
+
+std::list<RE::AlchemyItem*> ACM::GetAllFood(RE::Actor* actor)
+{
+	std::list<RE::AlchemyItem*> ret{};
+	auto itemmap = actor->GetInventory();
+	auto iter = itemmap.begin();
+	RE::AlchemyItem* item = nullptr;
+	LOG_3("{}[GetAllFood] trying to find food");
+	while (iter != itemmap.end()) {
+		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			item = iter->first->As<RE::AlchemyItem>();
+			LOG_4("{}[GetAllFood] checking item");
+			if (item && (item->HasKeyword(Settings::VendorItemFoodRaw) || item->HasKeyword(Settings::VendorItemFood))) {
+				LOG_4("{}[GetAllFood] found food.");
+				ret.insert(ret.begin(), item);
+			}
+		}
+		iter++;
+	}
 	return ret;
 }
 

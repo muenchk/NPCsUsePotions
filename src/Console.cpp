@@ -31,6 +31,8 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetRace()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
+	tmp = "Excluded:\t\t\t\t" + std::to_string(Settings::Distribution::ExcludedNPC(actor));
+	console->Print(tmp.c_str());
 	//logger::info("console 6");
 	tmp = "Strength of Actor:\t\t\t" + Utility::ToString(acs);
 	//logger::info("console 7");

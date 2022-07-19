@@ -836,6 +836,9 @@ public:
 	static inline bool _CompatibilityPotionAnimatedFx = false;					// no settings entry | Compatiblity Mode for Mods
 																				// 1) Animated Potion Drinking SE
 																				// 2) Potion Animated fix (SE)
+	static inline bool _CompatibilityRemoveItemsBeforeDist = false;				// removes items from actors before the distribution of new items
+	static inline bool _CompatibilityRemoveItemsStartup = false;				// removes items from actors at startup
+	static inline bool _CompatibilityRemoveItemsStartup_OnlyExcluded = false;	// removes only excluded items shortly after loading a game
 	static inline bool _CompatibilityPotionAnimatedFX_UseAnimations = false;	// if PotionAnimatedfx.esp is loaded, should their animations be used on all potions?
 	static inline bool _ApplySkillBoostPerks = true;							// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
 	static inline bool _CompatibilityCACO = false;	// automatic
@@ -1141,6 +1144,13 @@ public:
 			out << "CellName;RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
 		}
 
+		_CompatibilityRemoveItemsBeforeDist = ini.GetBoolValue("Debug", "RemoveItemsBeforeDist", false);
+		logger::info("[SETTINGS] {} {}", "RemoveItemsBeforeDist", std::to_string(_CompatibilityRemoveItemsBeforeDist));
+		_CompatibilityRemoveItemsStartup = ini.GetBoolValue("Debug", "RemoveItemsStartup", false);
+		logger::info("[SETTINGS] {} {}", "RemoveItemsStartup", std::to_string(_CompatibilityRemoveItemsStartup));
+		_CompatibilityRemoveItemsStartup_OnlyExcluded = ini.GetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", false);
+		logger::info("[SETTINGS] {} {}", "RemoveItemsStartup_OnlyExcluded", std::to_string(_CompatibilityRemoveItemsStartup_OnlyExcluded));
+
 		// save user settings, before applying adjustments
 		Save();
 
@@ -1347,7 +1357,7 @@ public:
 		if (_CompatibilityPotionAnimatedFX_UseAnimations)
 			ini.SetBoolValue("Compatibility", "PotionAnimatedfx.esp_UseAnimations", _CompatibilityPotionAnimatedFX_UseAnimations, ";If you have one of the mods \"Animated Potion Drinking SE\", \"Potion Animated fix (SE)\" and the plugin \"PotionAnimatedfx.eso\" is found you may activate this.\n;This does NOT activate the compatibility mode for that mod, that happens automatically. Instead this determines wether the animations of that mod, are played for any mod that is drunken automatically.");
 		ini.SetBoolValue("Compatibility", "WhitelistMode", _CompatibilityWhitelist, ";Enables the whitelist mode. Items that shall be distributed must not\n;be explicitly stated in the rules. This is the opposite to the standard (blacklist) behaviour.\n;Only use this if your loadorder causes you CTDs etc due to items being distributed that should not.\n;If you know which mod is causing the issue please do report it, such that appropriate rules can be created. This should only be a temporary solution.");
-
+		
 		// distribution options
 		ini.SetLongValue("Distribution", "LevelEasy", _LevelEasy, ";NPC lower or equal this level are considered weak.");
 		ini.SetLongValue("Distribution", "LevelNormal", _LevelNormal, ";NPC lower or equal this level are considered normal in terms of strength.");
@@ -1397,6 +1407,10 @@ public:
 		ini.SetBoolValue("Debug", "CheckActorWithoutRules", _CheckActorsWithoutRules, ";Checks all actors in the game on game start whether they are applied the default distribution rule.");
 		ini.SetBoolValue("Debug", "CalculateCellRules", _CalculateCellRules, ";When entering a new cell in game, all distribution rules are calculatet once.\n;The result of the evaluation is written to a csv file, for rule debugging");
 		ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", _Test, ";10 seconds after loading a save game the function for \"CalculateAllCellRules\" is applied to all cells in the game");
+
+		ini.SetBoolValue("Debug", "RemoveItemsBeforeDist", _CompatibilityRemoveItemsBeforeDist, ";Removes all distributables items from npcs before distributing new items.");
+		ini.SetBoolValue("Debug", "RemoveItemsStartup", _CompatibilityRemoveItemsStartup, ";Removes all distributables items from npcs 5 seconds after loading a game");
+		ini.SetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", _CompatibilityRemoveItemsStartup_OnlyExcluded, ";Removes only excluded items from npcs");
 
 		ini.SaveFile(path);
 	}
