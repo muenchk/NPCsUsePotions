@@ -457,6 +457,37 @@ namespace Events
 				if (iterac == actorresetmap.end() || RE::Calendar::GetSingleton()->GetDaysPassed() - iterac->second > 1) {
 					actorresetmap.erase(actor->GetFormID());
 					if (!Settings::Distribution::ExcludedNPC(actor)) {
+						// begin with compatibility mode removing items before distributing new ones
+						if (Settings::_CompatibilityRemoveItemsBeforeDist) {
+							auto items = ACM::GetAllPotions(actor);
+							auto it = items.begin();
+							while (it != items.end()) {
+								RE::ExtraDataList* extra = new RE::ExtraDataList();
+								extra->SetOwner(actor);
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+								LOG1_1("{}[HandleEvents] [TESCombatEventEnter] [Compatibility] Removed item {}", (*it)->GetName());
+								it++;
+							}
+							items = ACM::GetAllPoisons(actor);
+							it = items.begin();
+							while (it != items.end()) {
+								RE::ExtraDataList* extra = new RE::ExtraDataList();
+								extra->SetOwner(actor);
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+								LOG1_1("{}[HandleEvents] [TESCombatEventEnter] [Compatibility] Removed item {}", (*it)->GetName());
+								it++;
+							}
+							items = ACM::GetAllFood(actor);
+							it = items.begin();
+							while (it != items.end()) {
+								RE::ExtraDataList* extra = new RE::ExtraDataList();
+								extra->SetOwner(actor);
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+								LOG1_1("{}[HandleEvents] [TESCombatEventEnter] [Compatibility] Removed item {}", (*it)->GetName());
+								it++;
+							}
+						}
+
 						// if we have characters that should not get items, the function
 						// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 						auto items = Settings::Distribution::GetDistrItems(actor);
@@ -974,20 +1005,22 @@ namespace Events
 								//logger::info("take fortify with effects: {}", Utility::GetHex(effects));
 								LOG1_4("{}[CheckActors] check for fortify potion with effect {}", Utility::GetHex(effects));
 								auto tup = ACM::ActorUsePotion(curr->actor, effects, Settings::_CompatibilityPotionAnimationFortify);
-								switch (std::get<1>(tup)) {
-								case Settings::AlchemyEffect::kHealRate:
-								case Settings::AlchemyEffect::kMagickaRate:
-								case Settings::AlchemyEffect::kStaminaRate:
-								case Settings::AlchemyEffect::kHealRateMult:
-								case Settings::AlchemyEffect::kMagickaRateMult:
-								case Settings::AlchemyEffect::kStaminaRateMult:
-									curr->durRegeneration = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
-									LOG2_4("{}[CheckActors] used regeneration potion with tracked duration {} {}", curr->durRegeneration, std::get<0>(tup) * 1000);
-									break;
-								default:
-									curr->durFortify = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
-									LOG2_4("{}[CheckActors] used fortify av potion with tracked duration {} {}", curr->durFortify, std::get<0>(tup) * 1000);
-									break;
+								if (std::get<0>(tup) != -1) {
+									switch (std::get<1>(tup)) {
+									case Settings::AlchemyEffect::kHealRate:
+									case Settings::AlchemyEffect::kMagickaRate:
+									case Settings::AlchemyEffect::kStaminaRate:
+									case Settings::AlchemyEffect::kHealRateMult:
+									case Settings::AlchemyEffect::kMagickaRateMult:
+									case Settings::AlchemyEffect::kStaminaRateMult:
+										curr->durRegeneration = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+										LOG2_4("{}[CheckActors] used regeneration potion with tracked duration {} {}", curr->durRegeneration, std::get<0>(tup) * 1000);
+										break;
+									default:
+										curr->durFortify = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+										LOG2_4("{}[CheckActors] used fortify av potion with tracked duration {} {}", curr->durFortify, std::get<0>(tup) * 1000);
+										break;
+									}
 								}
 							}
 						}
@@ -1214,6 +1247,75 @@ namespace Events
 		}
 	}
 
+	std::thread* removeitemshandler = nullptr;
+
+	void RemoveItemsOnStartup()
+	{
+		std::this_thread::sleep_for(5s);
+
+		auto datahandler = RE::TESDataHandler::GetSingleton();
+		auto actors = datahandler->GetFormArray<RE::Actor>();
+		auto console = RE::ConsoleLog::GetSingleton();
+		RE::Actor* actor = nullptr;
+
+		RE::TESObjectCELL* cell = nullptr;
+		std::vector<RE::TESObjectCELL*> cs;
+		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+		{
+			const RE::BSReadLockGuard locker{ lock };
+			auto iter = hashtable->begin();
+			while (iter != hashtable->end()) {
+				if ((*iter).second) {
+					actor = ((*iter).second)->As<RE::Actor>();
+					if (actor) {
+						auto items = ACM::GetAllPotions(actor);
+						auto it = items.begin();
+						while (it != items.end()) {
+							if (Settings::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Settings::Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+								it++;
+								continue;
+							}
+							RE::ExtraDataList* extra = new RE::ExtraDataList();
+							extra->SetOwner(actor);
+							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							LOG1_1("{}[RemoveItemsOnStartup] Removed item {}", (*it)->GetName());
+							it++;
+						}
+						items = ACM::GetAllPoisons(actor);
+						it = items.begin();
+						while (it != items.end()) {
+							if (Settings::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Settings::Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+								it++;
+								continue;
+							}
+							RE::ExtraDataList* extra = new RE::ExtraDataList();
+							extra->SetOwner(actor);
+							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							LOG1_1("{}[RemoveItemsOnStartup] Removed item {}", (*it)->GetName());
+							it++;
+						}
+						items = ACM::GetAllFood(actor);
+						it = items.begin();
+						while (it != items.end()) {
+							if (Settings::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Settings::Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+								it++;
+								continue;
+							}
+							RE::ExtraDataList* extra = new RE::ExtraDataList();
+							extra->SetOwner(actor);
+							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							LOG1_1("{}[RemoveItemsOnStartup] Removed item {}", (*it)->GetName());
+							it++;
+						}
+					}
+				}
+				iter++;
+			}
+		}
+		console->Print("Finished Thread RemoveItemsOnStartup");
+	}
+
+
 	/// <summary>
 	/// EventHandler for TESLoadGameEvent. Loads main thread
 	/// </summary>
@@ -1259,6 +1361,13 @@ namespace Events
 			if (testhandler == nullptr) {
 				testhandler = new std::thread(TestAllCells);
 				LOG_1("{}[LoadGameEvent] Started TestHandler");
+			}
+		}
+
+		if (Settings::_CompatibilityRemoveItemsStartup) {
+			if (removeitemshandler == nullptr) {
+				removeitemshandler = new std::thread(RemoveItemsOnStartup);
+				LOG_1("{}[LoadGameEvent] Started RemoveItemsHandler");
 			}
 		}
 

@@ -1109,6 +1109,12 @@ void Settings::ClassifyItems()
 					continue;
 				}
 				auto clas = ClassifyItem(item);
+				// set medicine flag for those who need it
+				if (item->IsFood() == false && item->IsPoison() == false) { //  && item->IsMedicine() == false
+					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine;
+					logger::info("[AssignPotionFlag] {}", item->GetName());
+				}
+				
 				// determine the type of item
 				if (std::get<2>(clas) == ItemType::kFood) {
 					// we will only classify food which works on stamina, magicka or health for now
@@ -1998,6 +2004,7 @@ void Settings::ApplySkillBoostPerks()
 		if (npc && npc->GetFormID() != 0x7 ){//&& !((npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kSpells))) {
 			npc->AddPerk(Settings::AlchemySkillBoosts, 1);
 			npc->AddPerk(Settings::PerkSkillBoosts, 1);
+			LOG1_4("{}[AddPerks] Added perks to npc {}", npc->GetName());
 		}
 	}
 	/*

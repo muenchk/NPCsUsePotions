@@ -70,6 +70,13 @@ public:
 	static std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> GetMatchingPotions(RE::Actor* actor, uint64_t alchemyEffect);
 
 	/// <summary>
+	/// Searches for and returns all potions in the actors inventory
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static std::list<RE::AlchemyItem*> GetAllPotions(RE::Actor* actor);
+
+	/// <summary>
 	/// Searches for poisons with the effect [eff] in the inventory of the actor [actor]
 	/// </summary>
 	/// <param name="actor">actor to search</param>
@@ -78,12 +85,26 @@ public:
 	static std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> GetMatchingPoisons(RE::Actor* actor, uint64_t alchemyEffect);
 
 	/// <summary>
+	/// Searches for and returns all poisons in the actors inventory
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static std::list<RE::AlchemyItem*> GetAllPoisons(RE::Actor* actor);
+
+	/// <summary>
 	/// Searches for food with the effect [eff] in the inventory of the actor [actor]
 	/// </summary>
 	/// <param name="actor">actor to search</param>
 	/// <param name="eff">effect to search for</param>
 	/// <returns>list of matching items with magnitude and durations</returns>
 	static std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> GetMatchingFood(RE::Actor* actor, uint64_t alchemyEffect, bool raw);
+
+	/// <summary>
+	/// Searched for and returns all food in the actors inventory
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static std::list<RE::AlchemyItem*> GetAllFood(RE::Actor* actor);
 
 	/// <summary>
 	/// tries to use a potion with the given effect [eff]
