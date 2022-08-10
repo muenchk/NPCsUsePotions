@@ -764,6 +764,10 @@ void Settings::LoadDistrConfig()
 	if (Settings::CurrentHirelingFaction == nullptr) {
 		logger::info("[INIT] Couldn't find CurrentHirelingFaction Faction in game.");
 	}
+	Settings::ActorTypeDwarven = RE::TESForm::LookupByID<RE::BGSKeyword>(0x1397A);
+	if (Settings::ActorTypeDwarven == nullptr) {
+		logger::info("[INIT] Couldn't find ActorTypeDwarven Keyword in game.");
+	}
 
 	// hard exclude everyone that may become a follower
 	//Settings::Distribution::_excludedAssoc.insert(0x0005C84E);
@@ -1111,7 +1115,20 @@ void Settings::ClassifyItems()
 				auto clas = ClassifyItem(item);
 				// set medicine flag for those who need it
 				if (item->IsFood() == false && item->IsPoison() == false) { //  && item->IsMedicine() == false
-					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine;
+					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+					if (EnableLog && LogLevel >= 4) {
+						logger::info("Item: {}", item->GetName());
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
+							logger::info("\tFlag: CostOverride");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kFoodItem)
+							logger::info("\tFlag: FoodItem");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kExtendDuration)
+							logger::info("\tFlag: ExtendedDuration");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kMedicine)
+							logger::info("\tFlag: Medicine");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kPoison)
+							logger::info("\tFlag: Poison");
+					}
 					logger::info("[AssignPotionFlag] {}", item->GetName());
 				}
 				

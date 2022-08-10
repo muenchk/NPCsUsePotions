@@ -787,6 +787,8 @@ namespace Events
 										if (handle && handle.get() && handle.get().get()) {
 											// we can make the usage dependent on the target
 											RE::Actor* target = handle.get().get();
+											if (target->GetRace()->HasKeyword(Settings::ActorTypeDwarven) || target->GetActorBase()->HasKeyword(Settings::ActorTypeDwarven))
+												goto SkipPoison;
 											tcombatdata = Utility::GetCombatData(target);
 											// determine main actor value of enemy. That is the one we want to target ideally
 											float tmag = target->GetBaseActorValue(RE::ActorValue::kMagicka);
@@ -866,6 +868,7 @@ namespace Events
 							}
 							// else Mage or Hand to Hand which cannot use poisons
 						}
+						SkipPoison:;
 						CheckDeadCheckHandlerLoop;
 
 						if (Settings::_featUseFortifyPotions && counter < Settings::_maxPotionsPerCycle && (!(curr->actor->IsPlayerRef()) || Settings::_playerUseFortifyPotions)) {
@@ -1408,34 +1411,44 @@ namespace Events
 
 				RE::AlchemyItem* obj = RE::TESForm::LookupByID<RE::AlchemyItem>(a_event->baseObject);
 				if (obj) {
-					if ((obj->IsFood() || obj->HasKeyword(Settings::VendorItemFood)) && Settings::FixedFoodEat) {
+					if (obj->data.consumptionSound && 
+						(obj->data.consumptionSound->GetFormID() == Settings::PotionUse->GetFormID() && Settings::FixedPotionUse ||
+							obj->data.consumptionSound->GetFormID() == Settings::PoisonUse->GetFormID() && Settings::FixedPoisonUse ||
+							obj->data.consumptionSound->GetFormID() == Settings::FoodEat->GetFormID() && Settings::FixedFoodEat)) {
 						RE::BSSoundHandle handle;
-						if (obj->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
-						else
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::FoodEat->soundDescriptor);
-						handle.SetObjectToFollow(a_event->actor->Get3D());
-						handle.SetVolume(1.0);
-						handle.Play();
-					} else if ((obj->IsPoison() || obj->HasKeyword(Settings::VendorItemPoison)) && Settings::FixedPoisonUse) {
-						RE::BSSoundHandle handle;
-						if (obj->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
-						else
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-						handle.SetObjectToFollow(a_event->actor->Get3D());
-						handle.SetVolume(1.0);
-						handle.Play();
-					} else if ((obj->IsMedicine() || obj->HasKeyword(Settings::VendorItemPotion)) && Settings::FixedPotionUse) {
-						RE::BSSoundHandle handle;
-						if (obj->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
-						else
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PotionUse->soundDescriptor);
+						audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
 						handle.SetObjectToFollow(a_event->actor->Get3D());
 						handle.SetVolume(1.0);
 						handle.Play();
 					}
+					/* if ((obj->IsFood() || obj->HasKeyword(Settings::VendorItemFood)) && Settings::FixedFoodEat) {
+						RE::BSSoundHandle handle;
+						if (obj->data.consumptionSound) {
+							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+							handle.SetObjectToFollow(a_event->actor->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play();
+						} else
+							;  //audiomanager->BuildSoundDataFromDescriptor(handle, Settings::FoodEat->soundDescriptor);
+					} else if ((obj->IsPoison() || obj->HasKeyword(Settings::VendorItemPoison)) && Settings::FixedPoisonUse) {
+						RE::BSSoundHandle handle;
+						if (obj->data.consumptionSound) {
+							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+							handle.SetObjectToFollow(a_event->actor->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play()
+						} else
+							;  //audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+					} else if ((obj->IsMedicine() || obj->HasKeyword(Settings::VendorItemPotion)) && Settings::FixedPotionUse) {
+						RE::BSSoundHandle handle;
+						if (obj->data.consumptionSound) {
+							audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+							handle.SetObjectToFollow(a_event->actor->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play();
+						} else
+							;  //audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PotionUse->soundDescriptor);
+					}*/
 				}
 			}
 		}

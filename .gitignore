@@ -5,6 +5,7 @@ src/.vscode
 src/out
 src/TODO.txt
 src/Changelog.txt
+startenv.bat
 
 # Prerequisites
 *.d

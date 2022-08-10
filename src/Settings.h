@@ -956,6 +956,7 @@ public:
 	static inline RE::BGSKeyword* VendorItemFood;
 	static inline RE::BGSKeyword* VendorItemFoodRaw;
 	static inline RE::BGSKeyword* VendorItemPoison;
+	static inline RE::BGSKeyword* ActorTypeDwarven;
 
 	static inline RE::TESFaction* CurrentFollowerFaction;
 	static inline RE::TESFaction* CurrentHirelingFaction;
@@ -1246,10 +1247,14 @@ public:
 				if (PotionUse) {
 					RE::BGSSoundDescriptor* PotionUseSD = PotionUse->soundDescriptor;
 					RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
+					//LOG1_1("{}{}", (PotionUseOM->outputModel->GetFormID()));
 					if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						PotionUseOM->outputModel = SOMMono01400_verb;
-						FixedPotionUse = true;
 						logger::info("[SETTINGS] changed output model for ITMPotionUse sound effect");
+					}
+					if (PotionUseOM->outputModel->GetFormID() != SOMMono01400Player1st->GetFormID()) {
+						FixedPotionUse = true;
+						logger::info("[SETTINGS] enabled sound playing for ITMPotionUse");
 					}
 				}
 
@@ -1298,6 +1303,10 @@ public:
 						FixedPoisonUse = true;
 						logger::info("[SETTINGS] changed output model for ITMPoisonUse sound effect");
 					}
+					if (PoisonUseOM->outputModel->GetFormID() != SOMMono01400Player1st->GetFormID()) {
+						FixedPoisonUse = true;
+						logger::info("[SETTINGS] enabled sound playing for ITMPoisonUse");
+					}
 				}
 				// ITMFoodEat
 				RE::TESForm* FoodEatF = RE::TESForm::LookupByID(0xCAF94);
@@ -1309,8 +1318,11 @@ public:
 					RE::BGSStandardSoundDef* FoodEatOM = (RE::BGSStandardSoundDef*)FoodEatSD;
 					if (FoodEatOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						FoodEatOM->outputModel = SOMMono01400_verb;
-						FixedFoodEat = true;
 						logger::info("[SETTINGS] changed output model for ITMFoodEat sound effect");
+					}
+					if (FoodEatOM->outputModel->GetFormID() != SOMMono01400Player1st->GetFormID()) {
+						FixedFoodEat = true;
+						logger::info("[SETTINGS] enabled sound playing for ITMFoodEat");
 					}
 				}
 			}
