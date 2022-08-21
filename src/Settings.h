@@ -223,6 +223,16 @@ public:
 		kFear = (unsigned __int64)1 << 40,					// 10000000000
 		kBowSpeed = (unsigned __int64)1 << 41,              // 20000000000
 		kReflectDamage = (unsigned __int64)1 << 42,			// 40000000000
+		kCureDisease = (unsigned __int64)1 << 43,			// 80000000000
+		kCurePoison = (unsigned __int64)1 << 44,			// 100000000000
+		kEnchanting = (unsigned __int64)1 << 45,			// 200000000000
+		kWaterbreathing = (unsigned __int64)1 << 46,		// 400000000000
+		kSmithing = (unsigned __int64)1 << 47,				// 800000000000
+		kSpeech = (unsigned __int64)1 << 48,				// 1000000000000
+		kCarryWeight = (unsigned __int64)1 << 49,			// 2000000000000
+		kPersuasion = (unsigned __int64)1 << 50,			// 4000000000000
+		kAlchemy = (unsigned __int64)1 << 51,				// 8000000000000
+		kCustom = (unsigned __int64)1 << 63,				// 4000000000000000
 		// 2000007
 		kAnyPotion = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kInvisibility),
 		// 180D7E3C007
@@ -307,6 +317,8 @@ public:
 			kCombatStyle = 128,
 		};
 
+		class CustomItemStorage;
+
 		/// <summary>
 		/// A distribution rule
 		/// </summary>
@@ -351,9 +363,13 @@ public:
 			//std::string			assocExclusions;
 
 			std::vector<std::tuple<int, Settings::AlchemyEffect>> potionDistr;
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> potionDistrChance;
 			std::vector<std::tuple<int, Settings::AlchemyEffect>> poisonDistr;
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> poisonDistrChance;
 			std::vector<std::tuple<int, Settings::AlchemyEffect>> fortifyDistr;
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> fortifyDistrChance;
 			std::vector<std::tuple<int, Settings::AlchemyEffect>> foodDistr;
+			std::vector<std::tuple<int, Settings::AlchemyEffect>> foodDistrChance;
 
 			uint64_t validPotions;
 			uint64_t validPoisons;
@@ -365,29 +381,33 @@ public:
 			/// </summary>
 			/// <param name="strength">strength of the item to give</param>
 			/// <param name="acstrength">strength of the actor the potion will be given to</param>
+			/// <param name="custItems">custom items appropiate for the actor</param>
 			/// <returns>A randomly chosen potion according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			std::vector<RE::AlchemyItem*> GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
 			/// <summary>
 			/// returns a random popoisontion according to [strength] and [acsstrength]
 			/// </summary>
 			/// <param name="strength">strength of the item to give</param>
 			/// <param name="acstrength">strength of the actor the poison will be given to</param>
+			/// <param name="custItems">custom items appropiate for the actor</param>
 			/// <returns>A randomly chosen poison according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			std::vector<RE::AlchemyItem*> GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
 			/// <summary>
 			/// returns a random fortify potion according to [strength] and [acsstrength]
 			/// </summary>
 			/// <param name="strength">strength of the item to give</param>
 			/// <param name="acstrength">strength of the actor the fortify potion will be given to</param>
+			/// <param name="custItems">custom items appropiate for the actor</param>
 			/// <returns>A randomly chosen fortify potion according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
 			/// <summary>
 			/// returns a random food according to [strength] and [acsstrength]
 			/// </summary>
 			/// <param name="strength">strength of the item to give</param>
 			/// <param name="acstrength">strength of the actor the food will be given to</param>
+			/// <param name="custItems">custom items appropiate for the actor</param>
 			/// <returns>A randomly chosen food according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			std::vector<RE::AlchemyItem*> GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
 
 #define COPY(vec1, vec2)       \
 	vec2.reserve(vec1.size()); \
@@ -486,98 +506,98 @@ public:
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns the second random potion
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns the third random potion
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns an additional random potion
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Returns an according to potion properties randomly chosen potion
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion(int str);
+			RE::AlchemyItem* GetRandomPotion(int str, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns the first random poison
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns the second random poison
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns the third random poison
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns addtional random poison
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Returns an according to poison properties randomly chosen poison
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison(int str);
+			RE::AlchemyItem* GetRandomPoison(int str, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns the first random fortify potion
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns the second random fortify potion
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Returns an according to fortify properties randomly chosen fortify potion
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFortifyPotion(int str);
+			RE::AlchemyItem* GetRandomFortifyPotion(int str, Settings::Distribution::CustomItemStorage* custItems);
 			/// <summary>
 			/// Calculates and returns a random food item
 			/// </summary>
 			/// <param name="strength"></param>
 			/// <param name="acstrength"></param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFood_intern(Settings::ItemStrength strength, Settings::ActorStrength acstrength);
+			RE::AlchemyItem* GetRandomFood_intern(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
 
 			/// <summary>
 			/// Returns a random effect accoring to the rules item effect properties
@@ -585,6 +605,12 @@ public:
 			/// <param name="type">Determines which items effect property is consulted</param>
 			/// <returns></returns>
 			Settings::AlchemyEffect GetRandomEffect(Settings::ItemType type);
+			/// <summary>
+			/// Returns a random effect accoring to the rules item effect properties with additional custom item chance
+			/// </summary>
+			/// <param name="type">Determines which items effect property is consulted</param>
+			/// <returns></returns>
+			Settings::AlchemyEffect GetRandomEffectChance(Settings::ItemType type);
 			
 		};
 
@@ -614,6 +640,23 @@ public:
 			/// class of the template npc
 			/// </summary>
 			RE::TESClass* tpltclass = nullptr;
+		};
+
+		class CustomItemStorage
+		{
+		public:
+			/// <summary>
+			/// races, factions, kwds, classes, combatstyles, etc. which may get the items below
+			/// </summary>
+			std::unordered_set<RE::FormID> assocobjects;
+			/// <summary>
+			/// items associated with the objects above
+			/// </summary>
+			std::vector<std::pair<RE::TESBoundObject*, int>> items;
+			std::vector<std::pair<RE::AlchemyItem*, int>> potions;
+			std::vector<std::pair<RE::AlchemyItem*, int>> fortify;
+			std::vector<std::pair<RE::AlchemyItem*, int>> poisons;
+			std::vector<std::pair<RE::AlchemyItem*, int>> food;
 		};
 
 	private:
@@ -658,11 +701,16 @@ public:
 		/// contains items that have beeen added to the whitelists. Unused if whitelist feature is disabled
 		/// </summary>
 		static inline std::unordered_set<RE::FormID> _whitelistItems;
+		/// <summary>
+		/// contains associations and custom items that may be distributed
+		/// </summary>
+		static inline std::unordered_map<uint32_t, std::vector<CustomItemStorage*>> _customItems;
 
 	public:
 
 		static inline std::vector<Rule*> _dummyVecR;
 		static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
+		static inline std::unordered_map<uint32_t, std::vector<CustomItemStorage*>> _dummyMapC;
 		static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
 		static inline std::unordered_set<RE::FormID> _dummySet1;
 
@@ -706,8 +754,16 @@ public:
 		/// </summary>
 		/// <returns></returns>
 		static const std::unordered_set<RE::FormID>* baselineExclusions() { return initialised ? &_baselineExclusions : &_dummySet1; }
-
+		/// <summary>
+		/// returns the set of whitelisted items
+		/// </summary>
+		/// <returns></returns>
 		static const std::unordered_set<RE::FormID>* whitelistItems() { return initialised ? &_whitelistItems : & _dummySet1; }
+		/// <summary>
+		/// returns the map of custom item associations
+		/// </summary>
+		/// <returns></returns>
+		static const std::unordered_map<uint32_t, std::vector<CustomItemStorage*>>* customItems() { return initialised ? &_customItems : &_dummyMapC; }
 
 		#define RandomRange 1000
 
@@ -784,10 +840,12 @@ public:
 	private:
 		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 		static Rule* CalcRule(RE::Actor* actor);
+		static Rule* CalcRule(RE::Actor* actor, CustomItemStorage* custItems);
 		static Rule* CalcRule(RE::TESNPC* npc);
 		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
-		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo);
-		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo = nullptr);
+		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems);
+		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems = nullptr);
+		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
 		static std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
 		static Rule* FindRule(std::string name)
@@ -827,6 +885,7 @@ public:
 	static inline bool _featDistributeFood = true;				// player is excluded from distribution options, as well as followers
 	static inline bool _featUseDeathItems = true;				// the npc will be given potions that may appear in their deathItems if available
 	static inline bool _featRemoveItemsOnDeath = true;		// remove unused items on death, if activated chances for removal can be set
+	static inline bool _featDisableItemUsageWhileStaggered = false;		// disables potion and poison usage while the npc is staggered
 
 	// compatibility
 	static inline bool _CompatibilityMode = false;								// Use Items with Papyrus, needs the plugin
@@ -920,6 +979,7 @@ private:
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodmagicka{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodstamina{};
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodhealth{};
+	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodall{};
 
 	static inline bool _itemsInit = false;
 
@@ -946,6 +1006,7 @@ public:
 	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodmagicka() { return _itemsInit ? &_foodmagicka : &_dummylist; }
 	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodstamina() { return _itemsInit ? &_foodstamina : &_dummylist; }
 	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodhealth() { return _itemsInit ? &_foodhealth : &_dummylist; }
+	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodall() { return _itemsInit ? &_foodall : &_dummylist; }
 
 	//static inline std::list<RE::AlchemyItem*> alitems{};
 	//static inline std::list<RE::AlchemyItem*> potions{};
@@ -1017,6 +1078,10 @@ public:
 
 		_featRemoveItemsOnDeath = ini.GetValue("Features", "RemoveItemsOnDeath") ? ini.GetBoolValue("Features", "RemoveItemsOnDeath") : true;
 		logger::info("[SETTINGS] {} {}", "RemoveItemsOnDeath", std::to_string(_featRemoveItemsOnDeath));
+		
+		
+		_featDisableItemUsageWhileStaggered = ini.GetValue("Features", "DisableItemUsageWhileStaggered") ? ini.GetBoolValue("Features", "DisableItemUsageWhileStaggered") : false;
+		logger::info("[SETTINGS] {} {}", "DisableItemUsageWhileStaggered", std::to_string(_featDisableItemUsageWhileStaggered));
 		
 
 		// fixes
@@ -1358,6 +1423,8 @@ public:
 		ini.SetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions, ";NPCs are give fortify potions when they enter combat.");
 		ini.SetBoolValue("Features", "RemoveItemsOnDeath", _featRemoveItemsOnDeath, ";Remove items from NPCs after they died.");
 
+		ini.SetBoolValue("Features", "DisableItemUsageWhileStaggered", _featDisableItemUsageWhileStaggered, ";NPCs that are staggered aren't able to use any potions and poisons.");
+
 		// fixes
 		ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", _ApplySkillBoostPerks, ";Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply.");
 
@@ -1463,6 +1530,76 @@ public:
 		return true;
 	}
 
+	static AlchemyEffect ConvertToAlchemyEffect(RE::EffectSetting* effect)
+	{
+		return ConvertToAlchemyEffectPrimary(effect);
+	}
+
+	static AlchemyEffect ConvertToAlchemyEffectPrimary(RE::EffectSetting* effect)
+	{
+		if (effect) {
+			AlchemyEffect eff = ConvertToAlchemyEffect(effect->data.primaryAV);
+			auto eff2 = ConvertToAlchemyEffectIDs(effect);
+			if (eff2 != AlchemyEffect::kNone)
+				return eff2;
+			else
+				return eff;
+		}
+		return AlchemyEffect::kNone;
+	}
+
+	static AlchemyEffect ConvertToAlchemyEffectSecondary(RE::EffectSetting* effect)
+	{
+		if (effect) {
+			AlchemyEffect eff = ConvertToAlchemyEffect(effect->data.secondaryAV);
+			//auto eff2 = ConvertToAlchemyEffectIDs(effect);
+			//if (eff2 != AlchemyEffect::kNone)
+			//	return eff2;
+			//else
+				return eff;
+		}
+		return AlchemyEffect::kNone;
+	}
+
+	static AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect)
+	{
+		if (effect)
+		{
+			AlchemyEffect eff = AlchemyEffect::kNone;
+			RE::FormID id = effect->GetFormID();
+			if (id == 0x73F30)  // Paralysis
+				eff = AlchemyEffect::kParalysis;
+			if (id == 0xAE722)  // CureDisease
+				eff = AlchemyEffect::kCureDisease;
+			if (id == 0x109ADD)	// CurePoison
+				eff = AlchemyEffect::kCurePoison;
+			if (id == 0x3AC2D)  // Waterbreathing
+				eff = AlchemyEffect::kWaterbreathing;
+			if (id == 0xD6947)  // Persuasion
+				eff = AlchemyEffect::kPersuasion;
+			// COMPATIBILITY FOR CACO
+			if (Settings::_CompatibilityCACO) {
+				// DamageStaminaRavage
+				if (id == 0x73F23)
+					eff = AlchemyEffect::kStamina;
+				// DamageMagickaRavage
+				if (id == 0x73F27)
+					eff = AlchemyEffect::kMagicka;
+			}
+			// COMPATIBILITY FOR APOTHECARY
+			if (Settings::_CompatibilityApothecary) {
+				// DamageWeapon
+				if (id == 0x73F26)
+					eff = AlchemyEffect::kAttackDamageMult;
+				// Silence
+				if (id == 0x73F2B)
+					eff = AlchemyEffect::kMagickaRate;
+			}
+			return eff;
+		}
+		return AlchemyEffect::kNone;
+	}
+
 	static AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val)
 	{
 		switch (val) {
@@ -1495,10 +1632,11 @@ public:
 		case RE::ActorValue::kBlockPowerModifier:
 			return (AlchemyEffect::kBlock);
 			break;
-		//case RE::ActorValue::kSmithing:
-		//case RE::ActorValue::kSmithingModifier:
-		//case RE::ActorValue::kSmithingPowerModifier:
-		//	break;
+		case RE::ActorValue::kSmithing:
+		case RE::ActorValue::kSmithingModifier:
+		case RE::ActorValue::kSmithingPowerModifier:
+			return (AlchemyEffect::kSmithing); 
+			break;
 		case RE::ActorValue::kHeavyArmor:
 		case RE::ActorValue::kHeavyArmorModifier:
 		case RE::ActorValue::kHeavyArmorPowerModifier:
@@ -1524,14 +1662,16 @@ public:
 		case RE::ActorValue::kSneakingPowerModifier:
 			return (AlchemyEffect::kSneak);
 			break;
-		//case RE::ActorValue::kAlchemy:
-		//case RE::ActorValue::kAlchemyModifier:
-		//case RE::ActorValue::kAlchemyPowerModifier:
-		//	break;
-		//case RE::ActorValue::kSpeech:
-		//case RE::ActorValue::kSpeechcraftModifier:
-		//case RE::ActorValue::kSpeechcraftPowerModifier:
-		//	break;
+		case RE::ActorValue::kAlchemy:
+		case RE::ActorValue::kAlchemyModifier:
+		case RE::ActorValue::kAlchemyPowerModifier:
+			return (AlchemyEffect::kAlchemy);
+			break;
+		case RE::ActorValue::kSpeech:
+		case RE::ActorValue::kSpeechcraftModifier:
+		case RE::ActorValue::kSpeechcraftPowerModifier:
+			return (AlchemyEffect::kSpeech);
+			break;
 		case RE::ActorValue::kAlteration:
 		case RE::ActorValue::kAlterationModifier:
 		case RE::ActorValue::kAlterationPowerModifier:
@@ -1557,10 +1697,11 @@ public:
 		case RE::ActorValue::kRestorationPowerModifier:
 			return (AlchemyEffect::kRestoration);
 			break;
-		//case RE::ActorValue::kEnchanting:
-		//case RE::ActorValue::kEnchantingModifier:
-		//case RE::ActorValue::kEnchantingPowerModifier:
-		//	break;
+		case RE::ActorValue::kEnchanting:
+		case RE::ActorValue::kEnchantingModifier:
+		case RE::ActorValue::kEnchantingPowerModifier:
+			return (AlchemyEffect::kEnchanting);
+			break;
 		case RE::ActorValue::kHealRate:
 			return (AlchemyEffect::kHealRate);
 			break;
@@ -1575,8 +1716,9 @@ public:
 			break;
 		//case RE::ActorValue::kInventoryWeight:
 		//	break;
-		//case RE::ActorValue::kCarryWeight:
-		//	break;
+		case RE::ActorValue::kCarryWeight:
+			return (AlchemyEffect::kCarryWeight);
+			break;
 		case RE::ActorValue::kCriticalChance:
 			return (AlchemyEffect::kCriticalChance);
 			break;
@@ -1781,6 +1923,24 @@ public:
 		case AlchemyEffect::kReflectDamage:
 			return RE::ActorValue::kReflectDamage;
 			break;
+		case AlchemyEffect::kEnchanting:
+			return RE::ActorValue::kEnchanting;
+			break;
+		case AlchemyEffect::kSmithing:
+			return RE::ActorValue::kSmithing;
+			break;
+		case AlchemyEffect::kSpeech:
+			return RE::ActorValue::kSpeech;
+		case AlchemyEffect::kCarryWeight:
+			return RE::ActorValue::kCarryWeight;
+			break;
+		case AlchemyEffect::kAlchemy:
+			return RE::ActorValue::kAlchemy;
+			break;
+		//case AlchemyEffect::kCureDisease:
+		//case AlchemyEffect::kCurePoison:
+		//case AlchemyEffect::kWaterbreathing:
+		//case AlchemyEffect::kPersuasion:
 		default:
 			return RE::ActorValue::kNone;
 			break;

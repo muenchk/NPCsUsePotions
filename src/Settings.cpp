@@ -59,7 +59,7 @@ void Settings::LoadDistrConfig()
 			if (infile.is_open()) {
 				std::string line;
 				while (std::getline(infile, line)) {
-					std::string tmp(line);
+					std::string tmp = line;
 					// we read another line
 					// check if its empty or with a comment
 					if (line.empty())
@@ -343,20 +343,24 @@ void Settings::LoadDistrConfig()
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
 									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
+									rule->potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
 									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
-									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr);
+									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr, true);
 									std::vector<std::tuple<uint64_t, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
 									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
+									rule->poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
 									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
-									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr);
+									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr, true);
 									std::vector<std::tuple<uint64_t, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
 									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
+									rule->fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
 									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
-									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr);
+									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr, true);
 									std::vector<std::tuple<uint64_t, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
 									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
+									rule->foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
 									LOGE2_2("[Settings] [LoadDistrRules] rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
-									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr);
+									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr, true);
 
 									std::pair<int, Settings::Distribution::Rule*> tmptuple = { rule->rulePriority, rule };
 
@@ -503,12 +507,12 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
-							case 6:
+							case 6: // copy rule
 								{
 									copyrules.push_back({ splits, file, tmp });
 								}
 								break;
-							case 7:
+							case 7: // whitelist rule
 								{
 									if (splits->size() != 3) {
 										logger::warn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
@@ -530,9 +534,121 @@ void Settings::LoadDistrConfig()
 											} else if (std::get<0>(items[i]) == Settings::Distribution::AssocType::kRace) {
 											}
 										}
-										// since we are done delete splits
-										delete splits;
 									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 8: // custom object distribution
+								{
+									if (splits->size() != 4) {
+										logger::warn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+
+									Settings::Distribution::CustomItemStorage* citems = new Settings::Distribution::CustomItemStorage();
+									// parse associated obj
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID>> assocobj = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									
+									// parse items associated
+									assoc = splits->at(splitindex);
+									splitindex++;
+									error = false;
+									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t>> associtm = Utility::ParseAssocObjectsChance(assoc, error, file, tmp);
+									RE::TESForm* tmpf = nullptr;
+									RE::TESBoundObject* tmpb = nullptr;
+									RE::AlchemyItem* alch = nullptr;
+									// parse items first: if there are no items we don't need to do anything further
+									for (int i = 0; i < associtm.size(); i++) {
+										tmpf = nullptr;
+										tmpb = nullptr;
+										switch (std::get<0>(associtm[i])) {
+										case Settings::Distribution::AssocType::kItem:
+											tmpf = RE::TESForm::LookupByID(std::get<1>(associtm[i]));
+											if (tmpf) {
+												tmpb = tmpf->As<RE::TESBoundObject>();
+												if (tmpb) {
+													alch = tmpf->As<RE::AlchemyItem>();
+													if (alch) {
+														auto res = ClassifyItem(alch);
+														switch (std::get<2>(res)) {
+														case Settings::ItemType::kFood:
+															citems->food.push_back({ alch, std::get<2>(associtm[i]) });
+															break;
+														case Settings::ItemType::kFortifyPotion:
+															citems->fortify.push_back({ alch, std::get<2>(associtm[i]) });
+															break;
+														case Settings::ItemType::kPoison:
+															citems->poisons.push_back({ alch, std::get<2>(associtm[i]) });
+															break;
+														case Settings::ItemType::kPotion:
+															citems->potions.push_back({ alch, std::get<2>(associtm[i]) });
+															break;
+														}
+													} else {
+														citems->items.push_back({ tmpb, std::get<2>(associtm[i]) });
+													}
+												}
+											}
+											break;
+										}
+										if (EnableLog) {
+											if (std::get<0>(associtm[i]) == Settings::Distribution::AssocType::kItem) {
+												LOGE1_2("[Settings] [LoadDistrRules] whitelisted item {}.", Utility::GetHex(std::get<1>(associtm[i])));
+											}
+										}
+									}
+									if (citems->items.size() == 0)
+									{
+										logger::warn("[Settings] [LoadDistrRules] rule does not contain any items. file: {}, rule:\"{}\"", file, tmp);
+										delete citems;
+										continue;
+									}
+
+									int cx = 0;
+									// now parse associations
+									for (int i = 0; i < assocobj.size(); i++) {
+										switch (std::get<0>(assocobj[i])) {
+										case Settings::Distribution::AssocType::kActor:
+										case Settings::Distribution::AssocType::kNPC:
+										case Settings::Distribution::AssocType::kClass:
+										case Settings::Distribution::AssocType::kCombatStyle:
+										case Settings::Distribution::AssocType::kFaction:
+										case Settings::Distribution::AssocType::kKeyword:
+										case Settings::Distribution::AssocType::kRace:
+											citems->assocobjects.insert(std::get<1>(assocobj[i]));
+											auto iter = Settings::Distribution::_customItems.find(std::get<1>(assocobj[i]));
+											if (iter != Settings::Distribution::_customItems.end())
+											{
+												auto vec = iter->second;
+												vec.push_back(citems);
+												Settings::Distribution::_customItems.insert_or_assign(std::get<1>(assocobj[i]), vec);
+												cx++;
+											} else {
+												std::vector<Settings::Distribution::CustomItemStorage*> vec = { citems };
+												Settings::Distribution::_customItems.insert_or_assign(std::get<1>(assocobj[i]), vec);
+												cx++;
+											}
+											break;
+										}
+										if (EnableLog) {
+											if (std::get<0>(assocobj[i]) == Settings::Distribution::AssocType::kKeyword) {
+											} else if (std::get<0>(assocobj[i]) == Settings::Distribution::AssocType::kRace) {
+											} else if (std::get<0>(assocobj[i]) == Settings::Distribution::AssocType::kFaction) {
+											} else if (std::get<0>(assocobj[i]) == Settings::Distribution::AssocType::kCombatStyle) {
+											} else if (std::get<0>(assocobj[i]) == Settings::Distribution::AssocType::kClass) {
+											} else if (std::get<0>(assocobj[i]) == Settings::Distribution::AssocType::kActor || std::get<0>(assocobj[i]) == Settings::Distribution::AssocType::kNPC) {
+											}
+										}
+									}
+									if (cx == 0)
+										delete citems;
+
+									// since we are done delete splits
+									delete splits;
 								}
 								break;
 							default:
@@ -785,10 +901,11 @@ void Settings::LoadDistrConfig()
 
 
 
-	// handle standard exclusions
-	RE::TESForm* tmp = nullptr;
 
 	/// EXCLUDE ITEMS
+
+	// handle standard exclusions
+	RE::TESForm* tmp = nullptr;
 	
 	// MQ201Drink (don't give quest items out)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00036D53, "", "")) != nullptr)
@@ -1087,6 +1204,9 @@ void Settings::ClassifyItems()
 	_foodmagicka.clear();
 	_foodstamina.clear();
 	_foodhealth.clear();
+	_foodall.clear();
+
+	std::vector<std::tuple<std::string, std::string>> ingredienteffectmap;
 
 	// start sorting items
 
@@ -1095,10 +1215,12 @@ void Settings::ClassifyItems()
 	auto end = hashtable->end();
 	auto iter = hashtable->begin();
 	RE::AlchemyItem* item = nullptr;
+	RE::IngredientItem* itemi = nullptr;
 	while (iter != end) {
 		if ((*iter).second && (*iter).second->IsMagicItem()) {
 			item = (*iter).second->As<RE::AlchemyItem>();
 			if (item) {
+				LOG1_4("{}[ClassifyItems] Found AlchemyItem {}", item->GetName());
 				// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
 				if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0 ||
 					std::string(item->GetName()).find(std::string("Dummy")) != std::string::npos ||
@@ -1138,13 +1260,16 @@ void Settings::ClassifyItems()
 					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
 						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0) {
 						_foodhealth.insert(_foodhealth.end(), { std::get<0>(clas), item });
-					} else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
+					}
+					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
 							   (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagickaRate)) > 0) {
 						_foodmagicka.insert(_foodmagicka.end(), { std::get<0>(clas), item });
-					} else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
-							   (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
+					}
+					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
+						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
 						_foodstamina.insert(_foodstamina.end(), { std::get<0>(clas), item });
 					}
+					_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
 				} else if (std::get<2>(clas) == ItemType::kPoison) {
 					/*if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
 							(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
@@ -1232,6 +1357,18 @@ void Settings::ClassifyItems()
 					}
 				}
 			}
+
+			itemi = (*iter).second->As<RE::IngredientItem>();
+			if (itemi) {
+				LOG1_4("{}[ClassifyItems] Found IngredientItem {}", itemi->GetName());
+				for (int i = 0; i < (int)itemi->effects.size(); i++) {
+					auto sett = itemi->effects[i]->baseEffect;
+					// just retrieve the effects, we will analyze them later
+					if (sett) {
+						ingredienteffectmap.push_back({ itemi->GetName(), Utility::ToString(ConvertToAlchemyEffectPrimary(sett)) });
+					}
+				}
+			}
 		}
 		iter++;
 	}
@@ -1262,6 +1399,7 @@ void Settings::ClassifyItems()
 	LOG1_1("{}[ClassifyItems] _foodmagicka {}", foodmagicka()->size());
 	LOG1_1("{}[ClassifyItems] _foodstamina {}", foodstamina()->size());
 	LOG1_1("{}[ClassifyItems] _foodhealth {}", foodhealth()->size());
+	LOG1_1("{}[ClassifyItems] _foodall {}", foodall()->size());
 
 	if (EnableLog && LogLevel >= 4) {
 		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\items.txt";
@@ -1371,6 +1509,21 @@ void Settings::ClassifyItems()
 			visited.insert(std::get<1>(*it)->GetFormID());
 			it++;
 		}
+		out << "foodall\n";
+		it = foodall()->begin();
+		while (it != foodall()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+
+		std::string pathing = "Data\\SKSE\\Plugins\\NPCsUsePotions\\ingredients.csv";
+		std::ofstream outing = std::ofstream(pathing, std::ofstream::out);
+		for (int i = 0; i < ingredienteffectmap.size(); i++) {
+			outing << std::get<0>(ingredienteffectmap[i]) << ";" << std::get<1>(ingredienteffectmap[i]) << "\n";
+		}
 
 		/*for (int i = 0; i < potionsWeak_main()->size(); i++) {
 				out << "\t" << std::get<1>(potionsWeak_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsWeak_main()[i])->GetFormEditorID() << "\n";
@@ -1434,6 +1587,10 @@ void Settings::ClassifyItems()
 			out << "foodhealth\n";
 			for (int i = 0; i < foodhealth()->size(); i++) {
 				out << "\t" << std::get<1>(foodhealth()[i])->GetFormID() << "\t\t" << std::get<1>(foodhealth()[i])->GetFormEditorID() << "\n";
+			}
+			out << "foodall\n";
+			for (int i = 0; i < foodall()->size(); i++) {
+				out << "\t" << std::get<1>(foodall()[i])->GetFormID() << "\t\t" << std::get<1>(foodall()[i])->GetFormEditorID() << "\n";
 			}*/
 	}
 }

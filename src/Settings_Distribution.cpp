@@ -65,7 +65,43 @@ Settings::AlchemyEffect Settings::Distribution::Rule::GetRandomEffect(Settings::
 	return Settings::AlchemyEffect::kNone;
 }
 
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+Settings::AlchemyEffect Settings::Distribution::Rule::GetRandomEffectChance(Settings::ItemType type)
+{
+	int random = randRR(randi);
+	switch (type) {
+	case Settings::ItemType::kPotion:
+		for (int i = 0; i < this->potionDistrChance.size(); i++) {
+			if (random <= std::get<0>(this->potionDistrChance[i])) {
+				return std::get<1>(this->potionDistrChance[i]);
+			}
+		}
+		break;
+	case Settings::ItemType::kPoison:
+		for (int i = 0; i < this->poisonDistrChance.size(); i++) {
+			if (random <= std::get<0>(this->poisonDistrChance[i])) {
+				return std::get<1>(this->poisonDistrChance[i]);
+			}
+		}
+		break;
+	case Settings::ItemType::kFortifyPotion:
+		for (int i = 0; i < this->fortifyDistrChance.size(); i++) {
+			if (random <= std::get<0>(this->fortifyDistrChance[i])) {
+				return std::get<1>(this->fortifyDistrChance[i]);
+			}
+		}
+		break;
+	case Settings::ItemType::kFood:
+		for (int i = 0; i < this->foodDistrChance.size(); i++) {
+			if (random <= std::get<0>(this->foodDistrChance[i])) {
+				return std::get<1>(this->foodDistrChance[i]);
+			}
+		}
+		break;
+	}
+	return Settings::AlchemyEffect::kNone;
+}
+
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -77,9 +113,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion1(Settings::ItemSt
 	} else {
 		return nullptr;
 	}
-	return GetRandomPotion(str);
+	return GetRandomPotion(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -91,9 +127,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion2(Settings::ItemSt
 	} else {
 		return nullptr;
 	}
-	return GetRandomPotion(str);
+	return GetRandomPotion(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -105,9 +141,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion3(Settings::ItemSt
 	} else {
 		return nullptr;
 	}
-	return GetRandomPotion(str);
+	return GetRandomPotion(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -119,9 +155,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotionAdditional(Setting
 	} else {
 		return nullptr;
 	}
-	return GetRandomPotion(str);
+	return GetRandomPotion(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion(int str)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion(int str, CustomItemStorage* custItems)
 {
 	str += potionTierAdjust;
 	if (str < 1)
@@ -130,8 +166,20 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion(int str)
 		str = 4;
 	// get matching items
 	std::vector<RE::AlchemyItem*> items;
-	auto eff = GetRandomEffect(ItemType::kPotion);
-	if (eff == AlchemyEffect::kBlood) {
+	auto eff = GetRandomEffectChance(ItemType::kPotion);
+GetRandomPotioneff:;
+	if (eff == AlchemyEffect::kCustom) {
+		if (custItems->potions.size() == 0) {
+			eff = GetRandomEffect(ItemType::kPotion);
+			goto GetRandomPotioneff;
+		}
+		std::uniform_int_distribution<signed> ra(0, (int)(custItems->potions.size() - 1));
+		auto itm = custItems->potions[ra(randi)];
+		if (std::get<1>(itm) <= rand100(randi)) // calc chances
+			return std::get<0>(itm);
+		else
+			return nullptr;
+	} else if (eff == AlchemyEffect::kBlood) {
 		items = Settings::GetMatchingItems(*Settings::potionsBlood(), static_cast<uint64_t>(eff));
 	} else {
 RetryPotion:
@@ -168,7 +216,7 @@ RetryPotion:
 		return items[r(randi)];
 	return nullptr;
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -180,9 +228,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison1(Settings::ItemSt
 	} else {
 		return nullptr;
 	}
-	return GetRandomPoison(str);
+	return GetRandomPoison(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -194,9 +242,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison2(Settings::ItemSt
 	} else {
 		return nullptr;
 	}
-	return GetRandomPoison(str);
+	return GetRandomPoison(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -208,9 +256,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison3(Settings::ItemSt
 	} else {
 		return nullptr;
 	}
-	return GetRandomPoison(str);
+	return GetRandomPoison(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -222,9 +270,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoisonAdditional(Setting
 	} else {
 		return nullptr;
 	}
-	return GetRandomPoison(str);
+	return GetRandomPoison(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison(int str)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison(int str, CustomItemStorage* custItems)
 {
 	str += poisonTierAdjust;
 	if (str < 1)
@@ -233,32 +281,47 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison(int str)
 		str = 4;
 	// get matching items
 	std::vector<RE::AlchemyItem*> items;
+	auto eff = GetRandomEffectChance(ItemType::kPoison);
+GetRandomPoisoneff:;
+	if (eff == AlchemyEffect::kCustom) {
+		if (custItems->poisons.size() == 0) {
+			eff = GetRandomEffect(ItemType::kPoison);
+			goto GetRandomPoisoneff;
+		}
+		std::uniform_int_distribution<signed> ra(0, (int)(custItems->poisons.size() - 1));
+		auto itm = custItems->poisons[ra(randi)];
+		if (std::get<1>(itm) <= rand100(randi)) // calc chances
+			return std::get<0>(itm);
+		else
+			return nullptr;
+	} else {
 RetryPoison:
-	switch (str) {
-	case 1:  // weak
-		items = Settings::GetMatchingItems(*Settings::poisonsWeak(), static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		break;
-	case 2:  // standard
-		items = Settings::GetMatchingItems(*Settings::poisonsStandard(), static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryPoison;
+		switch (str) {
+		case 1:  // weak
+			items = Settings::GetMatchingItems(*Settings::poisonsWeak(), static_cast<uint64_t>(eff));
+			break;
+		case 2:  // standard
+			items = Settings::GetMatchingItems(*Settings::poisonsStandard(), static_cast<uint64_t>(eff));
+			if (items.size() == 0) {
+				str -= 1;
+				goto RetryPoison;
+			}
+			break;
+		case 3:  // potent
+			items = Settings::GetMatchingItems(*Settings::poisonsPotent(), static_cast<uint64_t>(eff));
+			if (items.size() == 0) {
+				str -= 1;
+				goto RetryPoison;
+			}
+			break;
+		case 4:  // insane
+			items = Settings::GetMatchingItems(*Settings::poisonsInsane(), static_cast<uint64_t>(eff));
+			if (items.size() == 0) {
+				str -= 1;
+				goto RetryPoison;
+			}
+			break;
 		}
-		break;
-	case 3:  // potent
-		items = Settings::GetMatchingItems(*Settings::poisonsPotent(), static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryPoison;
-		}
-		break;
-	case 4:  // insane
-		items = Settings::GetMatchingItems(*Settings::poisonsInsane(), static_cast<uint64_t>(GetRandomEffect(ItemType::kPoison)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryPoison;
-		}
-		break;
 	}
 	// return random item
 	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
@@ -266,7 +329,7 @@ RetryPoison:
 		return items[r(randi)];
 	return nullptr;
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -278,9 +341,9 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion1(Settings:
 	} else {
 		return nullptr;
 	}
-	return GetRandomFortifyPotion(str);
+	return GetRandomFortifyPotion(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -292,38 +355,53 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion2(Settings:
 	} else {
 		return nullptr;
 	}
-	return GetRandomFortifyPotion(str);
+	return GetRandomFortifyPotion(str, custItems);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion(int str)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion(int str, CustomItemStorage* custItems)
 {
 	// get matching items
 	std::vector<RE::AlchemyItem*> items;
+	auto eff = GetRandomEffectChance(ItemType::kFortifyPotion);
+GetRandomFortifyeff:;
+	if (eff == AlchemyEffect::kCustom) {
+		if (custItems->fortify.size() == 0) {
+			eff = GetRandomEffect(ItemType::kFortifyPotion);
+			goto GetRandomFortifyeff;
+		}
+		std::uniform_int_distribution<signed> ra(0, (int)(custItems->fortify.size() - 1));
+		auto itm = custItems->fortify[ra(randi)];
+		if (std::get<1>(itm) <= rand100(randi)) // calc chances
+			return std::get<0>(itm);
+		else
+			return nullptr;
+	} else {
 RetryFortify:
-	switch (str) {
-	case 1:  // weak
-		items = Settings::GetMatchingItems(*Settings::potionsWeak_rest(), static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		break;
-	case 2:  // standard
-		items = Settings::GetMatchingItems(*Settings::potionsStandard_rest(), static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryFortify;
+		switch (str) {
+		case 1:  // weak
+			items = Settings::GetMatchingItems(*Settings::potionsWeak_rest(), static_cast<uint64_t>(eff));
+			break;
+		case 2:  // standard
+			items = Settings::GetMatchingItems(*Settings::potionsStandard_rest(), static_cast<uint64_t>(eff));
+			if (items.size() == 0) {
+				str -= 1;
+				goto RetryFortify;
+			}
+			break;
+		case 3:  // potent
+			items = Settings::GetMatchingItems(*Settings::potionsPotent_rest(), static_cast<uint64_t>(eff));
+			if (items.size() == 0) {
+				str -= 1;
+				goto RetryFortify;
+			}
+			break;
+		case 4:  // insane
+			items = Settings::GetMatchingItems(*Settings::potionsInsane_rest(), static_cast<uint64_t>(eff));
+			if (items.size() == 0) {
+				str -= 1;
+				goto RetryFortify;
+			}
+			break;
 		}
-		break;
-	case 3:  // potent
-		items = Settings::GetMatchingItems(*Settings::potionsPotent_rest(), static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryFortify;
-		}
-		break;
-	case 4:  // insane
-		items = Settings::GetMatchingItems(*Settings::potionsInsane_rest(), static_cast<uint64_t>(GetRandomEffect(ItemType::kFortifyPotion)));
-		if (items.size() == 0) {
-			str -= 1;
-			goto RetryFortify;
-		}
-		break;
 	}
 	// return random item
 	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
@@ -331,7 +409,7 @@ RetryFortify:
 		return items[r(randi)];
 	return nullptr;
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFood_intern(Settings::ItemStrength, Settings::ActorStrength acstrength)
+RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFood_intern(Settings::ItemStrength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -343,23 +421,43 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFood_intern(Settings::It
 		return nullptr;
 	// get matching items
 	std::vector<RE::AlchemyItem*> items;
-	auto reff = GetRandomEffect(ItemType::kFood);
-	switch (reff) {
-	case AlchemyEffect::kMagicka:
-	case AlchemyEffect::kMagickaRate:
-	case AlchemyEffect::kMagickaRateMult:
-		items = Settings::GetMatchingItems(*Settings::foodmagicka(), static_cast<uint64_t>(reff));
-		break;
-	case AlchemyEffect::kHealRate:
-	case AlchemyEffect::kHealRateMult:
-	case AlchemyEffect::kHealth:
-		items = Settings::GetMatchingItems(*Settings::foodstamina(), static_cast<uint64_t>(reff));
-		break;
-	case AlchemyEffect::kStamina:
-	case AlchemyEffect::kStaminaRate:
-	case AlchemyEffect::kStaminaRateMult:
-		items = Settings::GetMatchingItems(*Settings::foodhealth(), static_cast<uint64_t>(reff));
-		break;
+	auto reff = GetRandomEffectChance(ItemType::kFood);
+GetRandomFoodeff:;
+	if (reff == AlchemyEffect::kCustom) {
+		if (custItems->food.size() == 0) {
+			reff = GetRandomEffect(ItemType::kFood);
+			goto GetRandomFoodeff;
+		}
+		std::uniform_int_distribution<signed> ra(0, (int)(custItems->food.size() - 1));
+		auto itm = custItems->food[ra(randi)];
+		if (std::get<1>(itm) <= rand100(randi)) // calc chances
+			return std::get<0>(itm);
+		else
+			return nullptr;
+	} else {
+		switch (reff) {
+		case AlchemyEffect::kMagicka:
+		case AlchemyEffect::kMagickaRate:
+		case AlchemyEffect::kMagickaRateMult:
+			items = Settings::GetMatchingItems(*Settings::foodmagicka(), static_cast<uint64_t>(reff));
+			break;
+		case AlchemyEffect::kHealRate:
+		case AlchemyEffect::kHealRateMult:
+		case AlchemyEffect::kHealth:
+			items = Settings::GetMatchingItems(*Settings::foodstamina(), static_cast<uint64_t>(reff));
+			break;
+		case AlchemyEffect::kStamina:
+		case AlchemyEffect::kStaminaRate:
+		case AlchemyEffect::kStaminaRateMult:
+			items = Settings::GetMatchingItems(*Settings::foodhealth(), static_cast<uint64_t>(reff));
+			break;
+		default:
+			items = Settings::GetMatchingItems(*Settings::foodall(), static_cast<uint64_t>(reff));
+			if (items.size() == 0) {
+				items = Settings::GetMatchingItems(*Settings::foodall(), validFood);
+			}
+			break;
+		}
 	}
 	// return random item
 	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
@@ -370,54 +468,54 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFood_intern(Settings::It
 
 // public
 
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomPotion1(strength, acstrength);
+	auto tmp = GetRandomPotion1(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
-	tmp = GetRandomPotion2(strength, acstrength);
+	tmp = GetRandomPotion2(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
-	tmp = GetRandomPotion3(strength, acstrength);
+	tmp = GetRandomPotion3(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
-	while (ret.size() <= this->maxPotions && (tmp = GetRandomPotionAdditional(strength, acstrength)) != nullptr) {
+	while (ret.size() <= this->maxPotions && (tmp = GetRandomPotionAdditional(strength, acstrength, custItems)) != nullptr) {
 		ret.push_back(tmp);
 	}
 	return ret;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomPoison1(strength, acstrength);
+	auto tmp = GetRandomPoison1(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
-	tmp = GetRandomPoison2(strength, acstrength);
+	tmp = GetRandomPoison2(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
-	tmp = GetRandomPoison3(strength, acstrength);
+	tmp = GetRandomPoison3(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
-	while (ret.size() <= this->maxPoisons && (tmp = GetRandomPoisonAdditional(strength, acstrength)) != nullptr) {
+	while (ret.size() <= this->maxPoisons && (tmp = GetRandomPoisonAdditional(strength, acstrength, custItems)) != nullptr) {
 		ret.push_back(tmp);
 	}
 	return ret;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
 	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomFortifyPotion1(strength, acstrength);
+	auto tmp = GetRandomFortifyPotion1(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
-	tmp = GetRandomFortifyPotion2(strength, acstrength);
+	tmp = GetRandomFortifyPotion2(strength, acstrength, custItems);
 	if (tmp)
 		ret.push_back(tmp);
 	return ret;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength)
+std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength, CustomItemStorage* custItems)
 {
-	return std::vector<RE::AlchemyItem*>{ GetRandomFood_intern(strength, acstrength) };
+	return std::vector<RE::AlchemyItem*>{ GetRandomFood_intern(strength, acstrength, custItems) };
 }
 
 #pragma endregion
@@ -433,10 +531,11 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 {
 	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
 	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
+	CustomItemStorage citems;
+	Rule* rule = CalcRule(actor, acs, is, &citems);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::_featDistributePotions) {
-		auto ritems = rule->GetRandomPotions(is, acs);
+		auto ritems = rule->GetRandomPotions(is, acs, &citems);
 		LOG_4("{}[GetDistrItems] matching potions");
 		auto items = ACM::GetMatchingPotions(actor, rule->validPotions);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
@@ -450,7 +549,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 		//logger::info("potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributePoisons) {
-		auto ritems = rule->GetRandomPoisons(is, acs);
+		auto ritems = rule->GetRandomPoisons(is, acs, &citems);
 		LOG_4("{}[GetDistrItems] matching poisons");
 		auto items = ACM::GetMatchingPoisons(actor, rule->validPoisons);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
@@ -464,7 +563,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 		//logger::info("poisons to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFortifyPotions) {
-		auto ritems = rule->GetRandomFortifyPotions(is, acs);
+		auto ritems = rule->GetRandomFortifyPotions(is, acs, &citems);
 		LOG_4("{}[GetDistrItems] matching fortify");
 		auto items = ACM::GetMatchingPotions(actor, rule->validFortifyPotions);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
@@ -478,7 +577,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(RE::Actor* a
 		//logger::info("fortify potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFood) {
-		auto ritems = rule->GetRandomFood(is, acs);
+		auto ritems = rule->GetRandomFood(is, acs, &citems);
 		LOG_4("{}[GetDistrItems] matching food");
 		auto items = ACM::GetMatchingFood(actor, rule->validFood, false);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
@@ -503,8 +602,9 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPotions(RE::Actor*
 {
 	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
 	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomPotions(is, acs);
+	CustomItemStorage citems;
+	Rule* rule = CalcRule(actor, acs, is, &citems);
+	auto ritems = rule->GetRandomPotions(is, acs, &citems);
 	auto items = ACM::GetMatchingPotions(actor, rule->validPotions);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
@@ -518,8 +618,9 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPoisons(RE::Actor*
 {
 	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
 	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomPoisons(is, acs);
+	CustomItemStorage citems;
+	Rule* rule = CalcRule(actor, acs, is, &citems);
+	auto ritems = rule->GetRandomPoisons(is, acs, &citems);
 	auto items = ACM::GetMatchingPoisons(actor, rule->validPoisons);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
@@ -533,8 +634,9 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFortifyPotions(RE:
 {
 	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
 	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomFortifyPotions(is, acs);
+	CustomItemStorage citems;
+	Rule* rule = CalcRule(actor, acs, is, &citems);
+	auto ritems = rule->GetRandomFortifyPotions(is, acs, &citems);
 	auto items = ACM::GetMatchingPotions(actor, rule->validFortifyPotions);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
@@ -548,8 +650,9 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFood(RE::Actor* ac
 {
 	Settings::ActorStrength acs = Settings::ActorStrength::Normal;
 	Settings::ItemStrength is = Settings::ItemStrength::kStandard;
-	Rule* rule = CalcRule(actor, acs, is);
-	auto ritems = rule->GetRandomFood(is, acs);
+	CustomItemStorage citems;
+	Rule* rule = CalcRule(actor, acs, is, &citems);
+	auto ritems = rule->GetRandomFood(is, acs, &citems);
 	auto items = ACM::GetMatchingFood(actor, rule->validFood, false);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
@@ -562,7 +665,8 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFood(RE::Actor* ac
 
 std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItemsUnique(RE::Actor* actor)
 {
-	Rule* rule = CalcRule(actor);
+	CustomItemStorage citems;
+	Rule* rule = CalcRule(actor, &citems);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::_featDistributePotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> items = ACM::GetMatchingPotions(actor, rule->validPotions);
@@ -649,10 +753,24 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
 		//logger::info("calc c 1");
 		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
-		return CalcRule(actor, acs, is, &info);
+		return CalcRule(actor, acs, is, &info, nullptr);
 	} else {
 		//logger::info("calc c 2");
-		return CalcRule(actor, acs, is, nullptr);
+		return CalcRule(actor, acs, is, nullptr, nullptr);
+	}
+}
+
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, CustomItemStorage* custItems)
+{
+	ActorStrength acs = ActorStrength::Weak;
+	ItemStrength is = ItemStrength::kWeak;
+	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
+		//logger::info("calc c 1");
+		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		return CalcRule(actor, acs, is, &info, custItems);
+	} else {
+		//logger::info("calc c 2");
+		return CalcRule(actor, acs, is, nullptr, custItems);
 	}
 }
 
@@ -660,7 +778,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc)
 {
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
-	return CalcRule(npc, acs, is);
+	return CalcRule(npc, acs, is, nullptr);
 }
 
 Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
@@ -669,9 +787,20 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
 		//logger::info("fire 2");
 		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
-		return CalcRule(actor, acs, is, &info);
+		return CalcRule(actor, acs, is, &info, nullptr);
 	} else
-		return CalcRule(actor, acs, is, nullptr);
+		return CalcRule(actor, acs, is, nullptr, nullptr);
+}
+
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems)
+{
+	//logger::info("fire 1");
+	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
+		//logger::info("fire 2");
+		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		return CalcRule(actor, acs, is, &info, custItems);
+	} else
+		return CalcRule(actor, acs, is, nullptr, custItems);
 }
 
 /// <summary>
@@ -745,7 +874,7 @@ bool Settings::Distribution::ExcludedNPC(RE::TESNPC* npc)
 	return ret;
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo)
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
 	if (_GameDifficultyScaling) {
@@ -810,15 +939,29 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	// npc rules always have the highest priority
 	auto itnpc = npcMap()->find(actor->GetFormID());
 	if (itnpc != npcMap()->end()) {  // found the right rule!
-		rule = itnpc->second;     // this can be null if the specific npc is excluded
+		rule = itnpc->second;        // this can be null if the specific npc is excluded
 		//logger::info("assign rule 1");
 		ruleoverride = true;
 		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(actor->GetFormID());
+	// get custom items
+	if (custItems) {
+		auto itc = customItems()->find(actor->GetFormID());
+		if (itc != customItems()->end()) {
+			auto vec = itc->second;
+			for (int d = 0; d < vec.size(); d++) {
+				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}
+		}
+	}
 	//logger::info("rule 3");
 
-	if (ruleoverride && bossoverride) {
+	if (custItems == nullptr && ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
 
@@ -826,7 +969,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	if (!ruleoverride) {
 		itnpc = npcMap()->find(actor->GetActorBase()->GetFormID());
 		if (itnpc != npcMap()->end()) {  // found the right rule!
-			rule = itnpc->second;     // this can be null if the specific npc is excluded
+			rule = itnpc->second;        // this can be null if the specific npc is excluded
 			//logger::info("assign rule 2");
 			ruleoverride = true;
 			prio = INT_MAX;
@@ -834,10 +977,25 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	}
 	//logger::info("rule 4");
 	bossoverride |= bosses()->contains(actor->GetActorBase()->GetFormID());
+	// get custom items
+	if (custItems) {
+		auto itc = customItems()->find(actor->GetActorBase()->GetFormID());
+		if (itc != customItems()->end()) {
+			auto vec = itc->second;
+			for (int d = 0; d < vec.size(); d++) {
+				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}
+		}
+	}
 
-	if (ruleoverride && bossoverride) {
+	if (custItems == nullptr && ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
+
 	//logger::info("rule 5");
 
 	if (tpltinfo && tpltinfo->tpltrace)
@@ -860,8 +1018,7 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 		baseexcluded |= baselineExclusions()->contains(race->GetFormID());
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
-			if (itr != assocMap()->end())
-			{
+			if (itr != assocMap()->end()) {
 				if (prio < std::get<0>(itr->second)) {
 					rule = std::get<1>(itr->second);
 					//logger::info("assign rule 5 {} {} {}", Utility::GetHex((uintptr_t)std::get<1>(itr->second)), race->keywords[i]->GetFormEditorID(), Utility::GetHex(race->keywords[i]->GetFormID()));
@@ -877,8 +1034,35 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	}
 	//logger::info("rule 7");
 	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
+	// get custom items
+	if (custItems) {
+		auto itc = customItems()->find(race->GetFormID());
+		if (itc != customItems()->end()) {
+			auto vec = itc->second;
+			for (int d = 0; d < vec.size(); d++) {
+				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}
+		}
+		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			itc = customItems()->find(race->keywords[i]->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
+			}
+		}
+	}
 
-	if (ruleoverride && bossoverride) {
+	if (custItems == nullptr && ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
 
@@ -902,30 +1086,60 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
+			// get custom items
+			if (custItems) {
+				auto itc = customItems()->find(key->GetFormID());
+				if (itc != customItems()->end()) {
+					auto vec = itc->second;
+					for (int d = 0; d < vec.size(); d++) {
+						custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+						custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+						custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+						custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+						custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+					}
+				}
+			}
 		}
 	}
 	if (tpltinfo) {
 		//logger::info("rule 10");
 		for (int i = 0; i < tpltinfo->tpltkeywords.size(); i++) {
 			if (tpltinfo->tpltkeywords[i]) {
-				auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
-				if (it != assocMap()->end())
-					if (prio < std::get<0>(it->second)) {
-						rule = std::get<1>(it->second);
-						//logger::info("assign rule 9");
-						prio = std::get<0>(it->second);
-					} else if (prio < std::get<1>(it->second)->rulePriority) {
-						rule = std::get<1>(it->second);
-						//logger::info("assign rule 10");
-						prio = std::get<1>(it->second)->rulePriority;
-					}
-				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				if (!ruleoverride) {
+					auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
+					if (it != assocMap()->end())
+						if (prio < std::get<0>(it->second)) {
+							rule = std::get<1>(it->second);
+							//logger::info("assign rule 9");
+							prio = std::get<0>(it->second);
+						} else if (prio < std::get<1>(it->second)->rulePriority) {
+							rule = std::get<1>(it->second);
+							//logger::info("assign rule 10");
+							prio = std::get<1>(it->second)->rulePriority;
+						}
+					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				// get custom items
+				if (custItems) {
+					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
+					if (itc != customItems()->end()) {
+						auto vec = itc->second;
+						for (int d = 0; d < vec.size(); d++) {
+							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}
+					}
+				}
 			}
 		}
 	}
 	//logger::info("rule 11");
-	if (ruleoverride && bossoverride) {
+	if (custItems == nullptr && ruleoverride && bossoverride) {
 		goto SKIPActor;
 	}
 
@@ -948,47 +1162,91 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
+		if (custItems) {
+			auto itc = customItems()->find(base->factions[i].faction->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
+			}
+		}
 	}
 	if (tpltinfo) {
 		//logger::info("rule 13");
 		for (int i = 0; i < tpltinfo->tpltfactions.size(); i++) {
 			if (tpltinfo->tpltfactions[i]) {
-				auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
-				if (it != assocMap()->end()) {
-					if (prio < std::get<0>(it->second)) {
-						rule = std::get<1>(it->second);
-						//logger::info("assign rule 13");
-						prio = std::get<0>(it->second);
-					} else if (prio < std::get<1>(it->second)->rulePriority) {
-						rule = std::get<1>(it->second);
-						//logger::info("assign rule 14");
-						prio = std::get<1>(it->second)->rulePriority;
+				if (!ruleoverride) {
+					auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
+					if (it != assocMap()->end()) {
+						if (prio < std::get<0>(it->second)) {
+							rule = std::get<1>(it->second);
+							//logger::info("assign rule 13");
+							prio = std::get<0>(it->second);
+						} else if (prio < std::get<1>(it->second)->rulePriority) {
+							rule = std::get<1>(it->second);
+							//logger::info("assign rule 14");
+							prio = std::get<1>(it->second)->rulePriority;
+						}
+					}
+					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				}
+				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				if (custItems) {
+					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
+					if (itc != customItems()->end()) {
+						auto vec = itc->second;
+						for (int d = 0; d < vec.size(); d++) {
+							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}
 					}
 				}
-				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
-				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
 			}
 		}
 	}
 	//logger::info("rule 14");
-	if (bossoverride && ruleoverride || ruleoverride)
+	if (custItems == nullptr && (ruleoverride && bossoverride || ruleoverride)) {
 		goto SKIPActor;
+	}
 
 	// dont use tplt for class and combatstyle, since they may have been modified during runtime
 
 	// handle classes
 	if (base->npcClass) {
 		//logger::info("rule 15");
-		auto it = assocMap()->find(base->npcClass->GetFormID());
-		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second)) {
-				rule = std::get<1>(it->second);
-				//logger::info("assign rule 15");
-				prio = std::get<0>(it->second);
-			} else if (prio < std::get<1>(it->second)->rulePriority) {
-				rule = std::get<1>(it->second);
-				//logger::info("assign rule 16");
-				prio = std::get<1>(it->second)->rulePriority;
+		if (!ruleoverride) {
+			auto it = assocMap()->find(base->npcClass->GetFormID());
+			if (it != assocMap()->end()) {
+				if (prio < std::get<0>(it->second)) {
+					rule = std::get<1>(it->second);
+					//logger::info("assign rule 15");
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
+					rule = std::get<1>(it->second);
+					//logger::info("assign rule 16");
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+			}
+		}
+		if (custItems) {
+			auto itc = customItems()->find(base->npcClass->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
 			}
 		}
 	}
@@ -996,16 +1254,31 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	// handle combat styles
 	if (base->combatStyle) {
 		//logger::info("rule 16");
-		auto it = assocMap()->find(base->combatStyle->GetFormID());
-		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second)) {
-				rule = std::get<1>(it->second);
-				//logger::info("assign rule 17");
-				prio = std::get<0>(it->second);
-			} else if (prio < std::get<1>(it->second)->rulePriority) {
-				rule = std::get<1>(it->second);
-				//logger::info("assign rule 18");
-				prio = std::get<1>(it->second)->rulePriority;
+		if (!ruleoverride) {
+			auto it = assocMap()->find(base->combatStyle->GetFormID());
+			if (it != assocMap()->end()) {
+				if (prio < std::get<0>(it->second)) {
+					rule = std::get<1>(it->second);
+					//logger::info("assign rule 17");
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
+					rule = std::get<1>(it->second);
+					//logger::info("assign rule 18");
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+			}
+		}
+		if (custItems) {
+			auto itc = customItems()->find(base->combatStyle->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
 			}
 		}
 	}
@@ -1032,7 +1305,7 @@ SKIPActor:
 	}
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo)
+Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
 	if (_GameDifficultyScaling) {
@@ -1103,8 +1376,22 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(npc->GetFormID());
+	// get custom items
+	if (custItems) {
+		auto itc = customItems()->find(npc->GetFormID());
+		if (itc != customItems()->end()) {
+			auto vec = itc->second;
+			for (int d = 0; d < vec.size(); d++) {
+				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}
+		}
+	}
 
-	if (ruleoverride && bossoverride) {
+	if (custItems == nullptr && ruleoverride && bossoverride) {
 		goto SKIPNPC;
 	}
 
@@ -1139,8 +1426,35 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 		}
 	}
 	bossoverride |= bosses()->contains(npc->GetRace()->GetFormID());
+	// get custom items
+	if (custItems) {
+		auto itc = customItems()->find(race->GetFormID());
+		if (itc != customItems()->end()) {
+			auto vec = itc->second;
+			for (int d = 0; d < vec.size(); d++) {
+				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}
+		}
+		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			itc = customItems()->find(race->keywords[i]->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
+			}
+		}
+	}
 
-	if (ruleoverride && bossoverride) {
+	if (custItems == nullptr && ruleoverride && bossoverride) {
 		goto SKIPNPC;
 	}
 
@@ -1161,26 +1475,56 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
+			// get custom items
+			if (custItems) {
+				auto itc = customItems()->find(key->GetFormID());
+				if (itc != customItems()->end()) {
+					auto vec = itc->second;
+					for (int d = 0; d < vec.size(); d++) {
+						custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+						custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+						custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+						custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+						custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+					}
+				}
+			}
 		}
 	}
 	if (tpltinfo) {
 		for (int i = 0; i < tpltinfo->tpltkeywords.size(); i++) {
 			if (tpltinfo->tpltkeywords[i]) {
-				auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
-				if (it != assocMap()->end())
-					if (prio < std::get<0>(it->second)) {
-						rule = std::get<1>(it->second);
-						prio = std::get<0>(it->second);
-					} else if (prio < std::get<1>(it->second)->rulePriority) {
-						rule = std::get<1>(it->second);
-						prio = std::get<1>(it->second)->rulePriority;
-					}
-				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				if (!ruleoverride) {
+					auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
+					if (it != assocMap()->end())
+						if (prio < std::get<0>(it->second)) {
+							rule = std::get<1>(it->second);
+							prio = std::get<0>(it->second);
+						} else if (prio < std::get<1>(it->second)->rulePriority) {
+							rule = std::get<1>(it->second);
+							prio = std::get<1>(it->second)->rulePriority;
+						}
+					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				// get custom items
+				if (custItems) {
+					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
+					if (itc != customItems()->end()) {
+						auto vec = itc->second;
+						for (int d = 0; d < vec.size(); d++) {
+							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}
+					}
+				}
 			}
 		}
 	}
-	if (ruleoverride && bossoverride) {
+	if (custItems == nullptr && ruleoverride && bossoverride) {
 		goto SKIPNPC;
 	}
 
@@ -1200,41 +1544,84 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 			baseexcluded |= baselineExclusions()->contains(npc->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(npc->factions[i].faction->GetFormID());
+		if (custItems) {
+			auto itc = customItems()->find(npc->factions[i].faction->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
+			}
+		}
 	}
 	if (tpltinfo) {
 		for (int i = 0; i < tpltinfo->tpltfactions.size(); i++) {
 			if (tpltinfo->tpltfactions[i]) {
-				auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
-				if (it != assocMap()->end()) {
-					if (prio < std::get<0>(it->second)) {
-						rule = std::get<1>(it->second);
-						prio = std::get<0>(it->second);
-					} else if (prio < std::get<1>(it->second)->rulePriority) {
-						rule = std::get<1>(it->second);
-						prio = std::get<1>(it->second)->rulePriority;
+				if (!ruleoverride) {
+					auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
+					if (it != assocMap()->end()) {
+						if (prio < std::get<0>(it->second)) {
+							rule = std::get<1>(it->second);
+							prio = std::get<0>(it->second);
+						} else if (prio < std::get<1>(it->second)->rulePriority) {
+							rule = std::get<1>(it->second);
+							prio = std::get<1>(it->second)->rulePriority;
+						}
+					}
+					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				}
+				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				if (custItems) {
+					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
+					if (itc != customItems()->end()) {
+						auto vec = itc->second;
+						for (int d = 0; d < vec.size(); d++) {
+							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}
 					}
 				}
-				baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
-				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
 			}
 		}
 	}
 
-	if (bossoverride && ruleoverride || ruleoverride)
+	if (custItems == nullptr && (bossoverride && ruleoverride || ruleoverride))
 		goto SKIPNPC;
 
 	// handle classes
 	if (tpltinfo && tpltinfo->tpltclass)
 		cls = tpltinfo->tpltclass;
 	if (cls) {
-		auto it = assocMap()->find(cls->GetFormID());
-		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second)) {
-				rule = std::get<1>(it->second);
-				prio = std::get<0>(it->second);
-			} else if (prio < std::get<1>(it->second)->rulePriority) {
-				rule = std::get<1>(it->second);
-				prio = std::get<1>(it->second)->rulePriority;
+		if (!ruleoverride) {
+			auto it = assocMap()->find(cls->GetFormID());
+			if (it != assocMap()->end()) {
+				if (prio < std::get<0>(it->second)) {
+					rule = std::get<1>(it->second);
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
+					rule = std::get<1>(it->second);
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+			}
+		}
+		if (custItems) {
+			auto itc = customItems()->find(cls->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
 			}
 		}
 	}
@@ -1242,14 +1629,29 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, 
 	if (tpltinfo && tpltinfo->tpltstyle)
 		style = tpltinfo->tpltstyle;
 	if (style) {
-		auto it = assocMap()->find(style->GetFormID());
-		if (it != assocMap()->end()) {
-			if (prio < std::get<0>(it->second)) {
-				rule = std::get<1>(it->second);
-				prio = std::get<0>(it->second);
-			} else if (prio < std::get<1>(it->second)->rulePriority) {
-				rule = std::get<1>(it->second);
-				prio = std::get<1>(it->second)->rulePriority;
+		if (!ruleoverride) {
+			auto it = assocMap()->find(style->GetFormID());
+			if (it != assocMap()->end()) {
+				if (prio < std::get<0>(it->second)) {
+					rule = std::get<1>(it->second);
+					prio = std::get<0>(it->second);
+				} else if (prio < std::get<1>(it->second)->rulePriority) {
+					rule = std::get<1>(it->second);
+					prio = std::get<1>(it->second)->rulePriority;
+				}
+			}
+		}
+		if (custItems) {
+			auto itc = customItems()->find(style->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int d = 0; d < vec.size(); d++) {
+					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
+					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
+					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
+					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
+					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}
 			}
 		}
 	}

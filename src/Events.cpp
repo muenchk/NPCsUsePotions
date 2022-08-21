@@ -519,7 +519,7 @@ namespace Events
 
 				if (Settings::_featUseFood) {
 					// use food at the beginning of the fight to simulate the npc having eaten
-					ACM::ActorUseAnyFood(actor, false);
+					ACM::ActorUseFood(actor);
 				}
 
 				CheckDeadEvent;
@@ -644,6 +644,10 @@ namespace Events
 					if (curr == nullptr || curr->actor == nullptr) {
 						continue;
 					}
+					if (Settings::_featDisableItemUsageWhileStaggered && curr->actor->actorState2.staggered) {
+						LOG_1("{}[CheckActors] [Actor] Actor is staggered, abort round");
+						continue;
+					}
 					if (Settings::EnableLog) {
 						name = std::string_view{ "" };
 						if ((curr->actor->GetFormID() >> 24) != 0xFE) {
@@ -694,21 +698,27 @@ namespace Events
 							// use potions
 							// do the first round
 							if (alch != 0 && (Settings::_UsePotionChance == 100 || rand100(rand) < Settings::_UsePotionChance)) {
+								auto avmag = curr->actor->GetActorValue(RE::ActorValue::kMagicka);
+								auto avhealth = curr->actor->GetActorValue(RE::ActorValue::kHealth);
+								auto avstam = curr->actor->GetActorValue(RE::ActorValue::kStamina);
 								auto tup = ACM::ActorUsePotion(curr->actor, alch, Settings::_CompatibilityPotionAnimation);
 								LOG1_2("{}[CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<1>(tup)));
 								switch (std::get<1>(tup)) {
 								case AlchemyEffect::kHealth:
 									curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
+									avhealth += std::get<0>(tup) * std::get<2>(tup);
 									counter++;
 									LOG2_4("{}[CheckActors] use health pot with duration {} and magnitude {}", curr->durHealth, std::get<0>(tup));
 									break;
 								case AlchemyEffect::kMagicka:
 									curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+									avmag += std::get<0>(tup) * std::get<2>(tup);
 									counter++;
 									LOG2_4("{}[CheckActors] use magicka pot with duration {} and magnitude {}", curr->durMagicka, std::get<0>(tup));
 									break;
 								case AlchemyEffect::kStamina:
 									curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+									avstam += std::get<0>(tup) * std::get<2>(tup);
 									counter++;
 									LOG2_4("{}[CheckActors] use stamina pot with duration {} and magnitude {}", curr->durStamina, std::get<0>(tup));
 									break;
@@ -716,33 +726,36 @@ namespace Events
 								// do the rest of the rounds
 								for (int c = 1; c < Settings::_maxPotionsPerCycle; c++) {
 									// get combined effect for magicka, health, and stamina
-									if (Settings::_featHealthRestoration && curr->durHealth < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kHealth) < Settings::_healthThreshold)
+									if (Settings::_featHealthRestoration && curr->durHealth < tolerance && ACM::GetAVPercentageFromValue(curr->actor, RE::ActorValue::kHealth, avhealth) < Settings::_healthThreshold)
 										alch = static_cast<uint64_t>(AlchemyEffect::kHealth);
 									else
 										alch = 0;
-									if (Settings::_featMagickaRestoration && curr->durMagicka < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kMagicka) < Settings::_magickaThreshold)
+									if (Settings::_featMagickaRestoration && curr->durMagicka < tolerance && ACM::GetAVPercentageFromValue(curr->actor, RE::ActorValue::kMagicka, avmag) < Settings::_magickaThreshold)
 										alch2 = static_cast<uint64_t>(AlchemyEffect::kMagicka);
 									else
 										alch2 = 0;
-									if (Settings::_featStaminaRestoration && curr->durStamina < tolerance && ACM::GetAVPercentage(curr->actor, RE::ActorValue::kStamina) < Settings::_staminaThreshold)
+									if (Settings::_featStaminaRestoration && curr->durStamina < tolerance && ACM::GetAVPercentageFromValue(curr->actor, RE::ActorValue::kStamina, avstam) < Settings::_staminaThreshold)
 										alch3 = static_cast<uint64_t>(AlchemyEffect::kStamina);
 									else
 										alch3 = 0;
 									// construct combined effect
 									alch |= alch2 | alch3;
 									if (alch != 0) {
-										tup = ACM::ActorUsePotion(curr->actor, std::get<2>(tup),  Settings::_CompatibilityPotionAnimation);
+										tup = ACM::ActorUsePotion(curr->actor, std::get<3>(tup),  Settings::_CompatibilityPotionAnimation);
 										switch (std::get<1>(tup)) {
 										case AlchemyEffect::kHealth:
 											curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											avhealth += std::get<0>(tup) * std::get<2>(tup);
 											counter++;
 											break;
 										case AlchemyEffect::kMagicka:
 											curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											avmag += std::get<0>(tup) * std::get<2>(tup);
 											counter++;
 											break;
 										case AlchemyEffect::kStamina:
 											curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											avstam += std::get<0>(tup) * std::get<2>(tup);
 											counter++;
 											break;
 										}

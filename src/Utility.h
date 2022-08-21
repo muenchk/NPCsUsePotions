@@ -144,6 +144,130 @@ public:
 		}
 	}
 
+	static std::string ToString(Settings::AlchemyEffect ae)
+	{
+		switch (ae) {
+		case Settings::AlchemyEffect::kAlteration:
+			return "Alteration";
+		case Settings::AlchemyEffect::kAnyFood:
+			return "AnyFood";
+		case Settings::AlchemyEffect::kAnyFortify:
+			return "AnyFortify";
+		case Settings::AlchemyEffect::kAnyPoison:
+			return "AnyPoison";
+		case Settings::AlchemyEffect::kAnyPotion:
+			return "AnyPotion";
+		case Settings::AlchemyEffect::kArchery:
+			return "Archery";
+		case Settings::AlchemyEffect::kAttackDamageMult:
+			return "AttackDamageMult";
+		case Settings::AlchemyEffect::kBlock:
+			return "Block";
+		case Settings::AlchemyEffect::kBlood:
+			return "Blood";
+		case Settings::AlchemyEffect::kBowSpeed:
+			return "BowSpeed";
+		case Settings::AlchemyEffect::kConjuration:
+			return "Conjuration";
+		case Settings::AlchemyEffect::kCriticalChance:
+			return "CriticalChance";
+		case Settings::AlchemyEffect::kDamageResist:
+			return "DamageResist";
+		case Settings::AlchemyEffect::kDestruction:
+			return "Destruction";
+		case Settings::AlchemyEffect::kFear:
+			return "Fear";
+		case Settings::AlchemyEffect::kFrenzy:
+			return "Frenzy";
+		case Settings::AlchemyEffect::kHealRate:
+			return "HealRate";
+		case Settings::AlchemyEffect::kHealRateMult:
+			return "HealRateMult";
+		case Settings::AlchemyEffect::kHealth:
+			return "Health";
+		case Settings::AlchemyEffect::kHeavyArmor:
+			return "HeavyArmor";
+		case Settings::AlchemyEffect::kIllusion:
+			return "Illusion";
+		case Settings::AlchemyEffect::kInvisibility:
+			return "Invisibility";
+		case Settings::AlchemyEffect::kLightArmor:
+			return "LightArmor";
+		case Settings::AlchemyEffect::kLockpicking:
+			return "Lockpicking";
+		case Settings::AlchemyEffect::kMagicka:
+			return "Magicka";
+		case Settings::AlchemyEffect::kMagickaRate:
+			return "MagickaRate";
+		case Settings::AlchemyEffect::kMagickaRateMult:
+			return "MagickaRateMult";
+		case Settings::AlchemyEffect::kMeleeDamage:
+			return "MeleeDamage";
+		case Settings::AlchemyEffect::kNone:
+			return "None";
+		case Settings::AlchemyEffect::kOneHanded:
+			return "OneHanded";
+		case Settings::AlchemyEffect::kParalysis:
+			return "Paralysis";
+		case Settings::AlchemyEffect::kPickpocket:
+			return "Pickpocket";
+		case Settings::AlchemyEffect::kPoisonResist:
+			return "PoisonResist";
+		case Settings::AlchemyEffect::kReflectDamage:
+			return "ReflectDamage";
+		case Settings::AlchemyEffect::kResistDisease:
+			return "ResistDisease";
+		case Settings::AlchemyEffect::kResistFire:
+			return "ResistFire";
+		case Settings::AlchemyEffect::kResistFrost:
+			return "ResistFrost";
+		case Settings::AlchemyEffect::kResistMagic:
+			return "ResistMagic";
+		case Settings::AlchemyEffect::kResistShock:
+			return "ResistShock";
+		case Settings::AlchemyEffect::kRestoration:
+			return "Restoration";
+		case Settings::AlchemyEffect::kSneak:
+			return "Sneak";
+		case Settings::AlchemyEffect::kSpeedMult:
+			return "SpeedMult";
+		case Settings::AlchemyEffect::kStamina:
+			return "Stamina";
+		case Settings::AlchemyEffect::kStaminaRate:
+			return "StaminaRate";
+		case Settings::AlchemyEffect::kStaminaRateMult:
+			return "StaminaRateMult";
+		case Settings::AlchemyEffect::kTwoHanded:
+			return "TwoHanded";
+		case Settings::AlchemyEffect::kUnarmedDamage:
+			return "UnarmedDamage";
+		case Settings::AlchemyEffect::kWeaponSpeedMult:
+			return "WeapenSpeedMult";
+		case Settings::AlchemyEffect::kCureDisease:
+			return "CureDisease";
+		case Settings::AlchemyEffect::kCurePoison:
+			return "CurePoison";
+		case Settings::AlchemyEffect::kEnchanting:
+			return "Enchanting";
+		case Settings::AlchemyEffect::kWaterbreathing:
+			return "Waterbreathing";
+		case Settings::AlchemyEffect::kSmithing:
+			return "Smithing";
+		case Settings::AlchemyEffect::kSpeech:
+			return "Speech";
+		case Settings::AlchemyEffect::kCarryWeight:
+			return "CarryWeight";
+		case Settings::AlchemyEffect::kAlchemy:
+			return "Alchemy";
+		case Settings::AlchemyEffect::kPersuasion:
+			return "Persuasion";
+		case Settings::AlchemyEffect::kCustom:
+			return "Custom";
+		default:
+			return "Unknown";
+		}
+	}
+
 	enum class CurrentCombatStyle
 	{
 		Spellsword = 0x1, // combination spell and onehanded
@@ -874,6 +998,115 @@ public:
 	}
 
 	/// <summary>
+	/// Parses objects for distribution rules from a string input with an optional chance for items
+	/// </summary>
+	/// <param name="input">the string to parse</param>
+	/// <param name="error">will be overwritten with [true] if an error occurs</param>
+	/// <param name="file">the relative path of the file that contains the string</param>
+	/// <param name="line">the line in the file that contains the string</param>
+	/// <returns>a vector of parsed and validated objects and their chances</returns>
+	static std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t>> ParseAssocObjectsChance(std::string input, bool& error, std::string file, std::string line)
+	{
+		LOG_4("{}[ParseAssocObjectsChance]");
+		std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t>> ret;
+		try {
+			auto datahandler = RE::TESDataHandler::GetSingleton();
+			size_t pos;
+			Settings::Distribution::AssocType type = Settings::Distribution::AssocType::kActor;
+			uint32_t formid = 0;
+			bool form = false;
+			bool valid = false;
+			std::string editorid;
+			RE::TESForm* tmp = nullptr;
+			std::string pluginname;
+			std::string chances;
+			int32_t chance = 100;
+			while (input.empty() == false) {
+				form = false;
+				valid = false;
+				pluginname = "";
+				chances = "";
+				chance = 100;
+				input.erase(0, input.find('<') + 1);
+				if ((pos = input.find('>')) != std::string::npos) {
+					// we have a valid entry, probably
+					// copy the current object to [entry]
+					std::string entry = input.substr(0, pos);
+					input.erase(0, pos + 1);
+					// parse form or editor id
+					if ((pos = entry.find(',')) == std::string::npos) {
+						error = true;
+						return ret;
+					}
+					try {
+						formid = static_cast<uint32_t>(std::stol(entry.substr(0, pos), nullptr, 16));
+						form = true;
+					} catch (std::exception&) {
+					}
+					// assign [editorid] the first entry
+					editorid = entry.substr(0, pos);
+					// assign [entry] the rest
+					entry.erase(0, pos + 1);
+					if ((pos = entry.find(',')) == std::string::npos) {
+						// the rest is the pluginname
+						pluginname = entry;
+					} else {
+						// the rest consists of the pluginname and the chance
+						pluginname = entry.substr(0, pos);
+						chances = entry.erase(0, pos + 1);
+						try {
+							chance = static_cast<uint32_t>(std::stol(chances, nullptr));
+							if (chance < 0)
+								chance = 0;
+							if (chance > 100)
+								chance = 100;
+						} catch (std::exception&) {
+							chance = 100;
+						}
+					}
+					if (pluginname.size() != 0) {
+						if (form) {
+							tmp = datahandler->LookupForm(formid, std::string_view{ pluginname });
+							if (tmp == nullptr) {
+								tmp = RE::TESForm::LookupByEditorID(std::string_view{ editorid });
+							}
+						} else {
+							tmp = RE::TESForm::LookupByEditorID(std::string_view{ editorid });
+						}
+						// else we cannot find what we were lookin for
+					} else {
+						// pluginname is not given, so try to find the form by the id itself
+						tmp = RE::TESForm::LookupByID(formid);
+					}
+					// check wether form has a correct type
+					if (tmp != nullptr) {
+						type = MatchValidFormType(tmp->GetFormType(), valid);
+						if (valid) {
+							ret.push_back({ type, tmp->GetFormID(), chance });
+						} else {
+							logger::warn("[Settings] [LoadDistrRules] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
+						}
+					} else {
+						if (form)
+							logger::warn("[Settings] [LoadDistrRules] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+						else
+							logger::warn("[Settings] [LoadDistrRules] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+					}
+				} else {
+					// invalid input return what we parsed so far and set error
+					error = true;
+					return ret;
+				}
+			}
+		} catch (std::exception&) {
+			// we have a malformed input so return
+			error = true;
+			return ret;
+		}
+		return ret;
+	}
+
+	/// <summary>
 	/// Returns an AssocType for the given RE::FormType. If the RE::FormType is not supported, [valid] is set to true
 	/// </summary>
 	/// <param name="type">RE::FormType to convert</param>
@@ -984,20 +1217,23 @@ public:
 	/// <param name="effectmap">effectmap containing effects and weights which will be translated into the distribution</param>
 	/// <param name="range">range the distribution chances are computed for</param>
 	/// <returns>Weighted Distribution</returns>
-	static std::vector<std::tuple<int, Settings::AlchemyEffect>> GetDistribution(std::vector<std::tuple<uint64_t, float>> effectmap, int range)
+	static std::vector<std::tuple<int, Settings::AlchemyEffect>> GetDistribution(std::vector<std::tuple<uint64_t, float>> effectmap, int range, bool chance = false)
 	{
 		std::vector<std::tuple<int, Settings::AlchemyEffect>> ret;
 		uint64_t tmp = 0;
 		std::map<Settings::AlchemyEffect, float> map;
 		// iterate over all effects in effect map
 		for (int i = 0; i < effectmap.size(); i++) {
-			// iterate over all effects that could be mashed up in the effect map we can only iterate until c << 62 so as to avoid
+			// iterate over all effects that could be mashed up in the effect map we can only iterate until c 62 so as to avoid
 			// an overflow error
-			for (uint64_t c = 1; c < 4611686018427387903; c = c << 1) {
+			for (uint64_t c = 1; c < 4611686018427387905; c = c << 1) {
 				if ((tmp = (std::get<0>(effectmap[i]) & c)) > 0) {
 					map.insert_or_assign(static_cast<Settings::AlchemyEffect>(tmp), std::get<1>(effectmap[i]));
 				}
 			}
+		}
+		if (chance) {
+			map.insert_or_assign(static_cast<Settings::AlchemyEffect>(Settings::AlchemyEffect::kCustom), 1.0f);
 		}
 		// get the weighted sum of all modifiers over all effects and do multiply mashed up effects with the number of contained effects
 		float sum = 0.0f;
@@ -1022,13 +1258,15 @@ public:
 	/// </summary>
 	/// <param name="list">list with AlchemyEffects to sum</param>
 	/// <returns>Combined value with all Alchemyeffects</returns>
-	static uint64_t SumAlchemyEffects(std::vector<std::tuple<int, Settings::AlchemyEffect>> list)
+	static uint64_t SumAlchemyEffects(std::vector<std::tuple<int, Settings::AlchemyEffect>> list, bool chance = false)
 	{
 		uint64_t ret = 0;
 		for (int i = 0; i < list.size(); i++) {
 			LOG1_4("{}[SumAlchemyEffects] effect to sum: {}", GetHex(static_cast<uint64_t>(std::get<1>(list[i]))));
 			ret |= static_cast<uint64_t>(std::get<1>(list[i]));
 		}
+		if (chance)
+			ret |= static_cast<uint64_t>(Settings::AlchemyEffect::kCustom);
 		LOG1_4("{}[SumAlchemyEffects] summed effects: {}", GetHex(ret));
 		return ret;
 	}

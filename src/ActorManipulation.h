@@ -37,6 +37,9 @@ public:
 	static float GetAVPercentage(RE::Actor* _actor, RE::ActorValue av)
 	{
 		return _actor->GetActorValue(av) / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+		/*float tmp = _actor->GetActorValue(av) / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+		logger::info("[GetAVPercentage] {}", tmp);
+		return tmp;*/
 	}
 	/// <summary>
 	/// Returns the actor value percentage of an actor calculated from their base value
@@ -49,6 +52,9 @@ public:
 	static float GetAVPercentageFromValue(RE::Actor* _actor, RE::ActorValue av, float curr)
 	{
 		return curr / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+		/*float tmp = curr / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+		logger::info("[GetAVPercentageFromValue] {}", tmp);
+		return tmp;*/
 	}
 	#pragma endregion
 
@@ -107,12 +113,19 @@ public:
 	static std::list<RE::AlchemyItem*> GetAllFood(RE::Actor* actor);
 
 	/// <summary>
+	/// Returns a random food item from the list of food items in an actors inventory
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect> GetRandomFood(RE::Actor* actor);
+
+	/// <summary>
 	/// tries to use a potion with the given effect [eff]
 	/// </summary>
 	/// <param name="_actor">actor to apply potion on</param>
 	/// <param name="eff">effect to apply</param>
 	/// <returns>Wether a potion was consumed</returns>
-	static std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, uint64_t alchemyEffect, bool compatiblity = false);
+	static std::tuple<int, Settings::AlchemyEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, uint64_t alchemyEffect, bool compatiblity = false);
 
 	/// <summary>
 	/// takes an already computed list and uses the first item in the list
@@ -120,7 +133,7 @@ public:
 	/// <param name="_actor"></param>
 	/// <param name="ls"></param>
 	/// <returns></returns>
-	static std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls, bool compatibility = false);
+	static std::tuple<int, Settings::AlchemyEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>> ActorUsePotion(RE::Actor* _actor, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>> &ls, bool compatibility = false);
 	
 	/// <summary>
 	/// tries to use a food with the given effect [eff]
@@ -129,6 +142,13 @@ public:
 	/// <param name="eff">effect to apply</param>
 	/// <returns>wether a food was used</returns>
 	static std::pair<int, Settings::AlchemyEffect> ActorUseFood(RE::Actor* _actor, uint64_t alchemyEffect, bool raw);
+
+	/// <summary>
+	/// tries to use a random food item from an actors inventory
+	/// </summary>
+	/// <param name="_actor">actor to apply food to</param>
+	/// <returns>wether a food was used</returns>
+	static std::pair<int, Settings::AlchemyEffect> ActorUseFood(RE::Actor* _actor);
 
 	/// <summary>
 	/// tries to use a poison with the given effect [eff]

@@ -6,6 +6,7 @@ src/out
 src/TODO.txt
 src/Changelog.txt
 startenv.bat
+startenvlaptop.bat
 
 # Prerequisites
 *.d
