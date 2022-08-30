@@ -36,7 +36,7 @@ public:
 
 	#pragma region SortingFunctions
 	// comparator used to sort magnitude - duration - AlchemyItem* lists for maximum magnitude descending
-	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect> first, std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect> second)
+	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> first, std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> second)
 	{
 		return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
 	}
@@ -105,18 +105,18 @@ public:
 	/// </summary>
 	/// <param name="acs"></param>
 	/// <returns></returns>
-	static std::string ToString(Settings::ActorStrength acs)
+	static std::string ToString(ActorStrength acs)
 	{
 		switch (acs) {
-		case Settings::ActorStrength::Weak:
+		case ActorStrength::Weak:
 			return "Weak";
-		case Settings::ActorStrength::Normal:
+		case ActorStrength::Normal:
 			return "Normal";
-		case Settings::ActorStrength::Powerful:
+		case ActorStrength::Powerful:
 			return "Powerful";
-		case Settings::ActorStrength::Insane:
+		case ActorStrength::Insane:
 			return "Insane";
-		case Settings::ActorStrength::Boss:
+		case ActorStrength::Boss:
 			return "Boss";
 		default:
 			return "Not Applicable";
@@ -128,16 +128,16 @@ public:
 	/// </summary>
 	/// <param name="is"></param>
 	/// <returns></returns>
-	static std::string ToString(Settings::ItemStrength is)
+	static std::string ToString(ItemStrength is)
 	{
 		switch (is) {
-		case Settings::ItemStrength::kWeak:
+		case ItemStrength::kWeak:
 			return "Weak";
-		case Settings::ItemStrength::kStandard:
+		case ItemStrength::kStandard:
 			return "Standard";
-		case Settings::ItemStrength::kPotent:
+		case ItemStrength::kPotent:
 			return "Potent";
-		case Settings::ItemStrength::kInsane:
+		case ItemStrength::kInsane:
 			return "Insane";
 		default:
 			return "Not Applicable";
@@ -1005,10 +1005,10 @@ public:
 	/// <param name="file">the relative path of the file that contains the string</param>
 	/// <param name="line">the line in the file that contains the string</param>
 	/// <returns>a vector of parsed and validated objects and their chances</returns>
-	static std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t>> ParseAssocObjectsChance(std::string input, bool& error, std::string file, std::string line)
+	static std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t>> ParseCustomObjects(std::string input, bool& error, std::string file, std::string line)
 	{
 		LOG_4("{}[ParseAssocObjectsChance]");
-		std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t>> ret;
+		std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t>> ret;
 		try {
 			auto datahandler = RE::TESDataHandler::GetSingleton();
 			size_t pos;
@@ -1020,10 +1020,18 @@ public:
 			RE::TESForm* tmp = nullptr;
 			std::string pluginname;
 			std::string chances;
+			std::string flags;
+			std::string numitems;
+			bool exclude = false;
+			uint64_t conditions1;
+			uint64_t conditions2;
+			int8_t num;
+			CustomItemFlag flag;
 			int32_t chance = 100;
 			while (input.empty() == false) {
 				form = false;
 				valid = false;
+				exclude = false;
 				pluginname = "";
 				chances = "";
 				chance = 100;
@@ -1048,12 +1056,54 @@ public:
 					// assign [entry] the rest
 					entry.erase(0, pos + 1);
 					if ((pos = entry.find(',')) == std::string::npos) {
-						// the rest is the pluginname
-						pluginname = entry;
+						error = true;
+						return ret;
+					}
+					pluginname = entry.substr(0, pos);
+					entry.erase(0, pos + 1);
+					if ((pos = entry.find(',')) == std::string::npos) {
+						error = true;
+						return ret;
+					}
+					numitems = entry.substr(0, pos);
+					entry.erase(0, pos + 1);
+					try {
+						num = (int8_t)(std::stol(numitems));
+					} catch (std::exception&) {
+					}
+					if ((pos = entry.find(',')) == std::string::npos) {
+						error = true;
+						return ret;
+					}
+					if (entry.substr(0, pos) == "1")
+						exclude = true;
+					entry.erase(0, pos + 1);
+					if ((pos = entry.find(',')) == std::string::npos) {
+						error = true;
+						return ret;
+					}
+					try {
+						conditions1 = static_cast<uint32_t>(std::stol(entry.substr(0, pos), nullptr, 16));
+					} catch (std::exception&) {
+					}
+					entry.erase(0, pos + 1);
+					if ((pos = entry.find(',')) == std::string::npos) {
+						error = true;
+						return ret;
+					}
+					try {
+						conditions2 = static_cast<uint32_t>(std::stol(entry.substr(0, pos), nullptr, 16));
+					} catch (std::exception&) {
+					}
+					entry.erase(0, pos + 1);
+					if ((pos = entry.find(',')) == std::string::npos) {
+						// the rest is the item flag
+						flags = entry;
 					} else {
-						// the rest consists of the pluginname and the chance
-						pluginname = entry.substr(0, pos);
-						chances = entry.erase(0, pos + 1);
+						// the rest consists of the item flag and the chance
+						flags = entry.substr(0, pos);
+						entry.erase(0, pos + 1);
+						chances = entry;
 						try {
 							chance = static_cast<uint32_t>(std::stol(chances, nullptr));
 							if (chance < 0)
@@ -1063,6 +1113,21 @@ public:
 						} catch (std::exception&) {
 							chance = 100;
 						}
+					}
+					if (flags == "" || ToLower(flags) == "object") {
+						flag = CustomItemFlag::Object;
+					} else if (ToLower(flags) == "potion") {
+						flag = CustomItemFlag::Potion;
+					} else if (ToLower(flags) == "poison") {
+						flag = CustomItemFlag::Poison;
+					} else if (ToLower(flags) == "food") {
+						flag = CustomItemFlag::Food;
+					} else if (ToLower(flags) == "fortify") {
+						flag = CustomItemFlag::Fortify;
+					} else if (ToLower(flags) == "death") {
+						flag = CustomItemFlag::DeathObject;
+					} else {
+						flag = CustomItemFlag::Object;
 					}
 					if (pluginname.size() != 0) {
 						if (form) {
@@ -1082,7 +1147,7 @@ public:
 					if (tmp != nullptr) {
 						type = MatchValidFormType(tmp->GetFormType(), valid);
 						if (valid) {
-							ret.push_back({ type, tmp->GetFormID(), chance });
+							ret.push_back({ type, tmp->GetFormID(), chance, flag, num, exclude, conditions1, conditions2 });
 						} else {
 							logger::warn("[Settings] [LoadDistrRules] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
 						}

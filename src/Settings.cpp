@@ -13,9 +13,9 @@
 #include <vector>
 #include "ActorManipulation.h"
 
-using ActorStrength = Settings::ActorStrength;
+using ActorStrength = ActorStrength;
 using AlchemyEffect = Settings::AlchemyEffect;
-using ItemStrength = Settings::ItemStrength;
+using ItemStrength = ItemStrength;
 using ItemType = Settings::ItemType;
 
 static std::mt19937 randi((unsigned int)(std::chrono::system_clock::now().time_since_epoch().count()));
@@ -557,7 +557,7 @@ void Settings::LoadDistrConfig()
 									assoc = splits->at(splitindex);
 									splitindex++;
 									error = false;
-									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t>> associtm = Utility::ParseAssocObjectsChance(assoc, error, file, tmp);
+									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t>> associtm = Utility::ParseCustomObjects(assoc, error, file, tmp);
 									RE::TESForm* tmpf = nullptr;
 									RE::TESBoundObject* tmpb = nullptr;
 									RE::AlchemyItem* alch = nullptr;
@@ -567,38 +567,56 @@ void Settings::LoadDistrConfig()
 										tmpb = nullptr;
 										switch (std::get<0>(associtm[i])) {
 										case Settings::Distribution::AssocType::kItem:
-											tmpf = RE::TESForm::LookupByID(std::get<1>(associtm[i]));
-											if (tmpf) {
-												tmpb = tmpf->As<RE::TESBoundObject>();
+											{
+												tmpf = RE::TESForm::LookupByID(std::get<1>(associtm[i]));
+												if (tmpf) {
+													tmpb = tmpf->As<RE::TESBoundObject>();
+												}
 												if (tmpb) {
-													alch = tmpf->As<RE::AlchemyItem>();
-													if (alch) {
-														auto res = ClassifyItem(alch);
-														switch (std::get<2>(res)) {
-														case Settings::ItemType::kFood:
-															citems->food.push_back({ alch, std::get<2>(associtm[i]) });
-															break;
-														case Settings::ItemType::kFortifyPotion:
-															citems->fortify.push_back({ alch, std::get<2>(associtm[i]) });
-															break;
-														case Settings::ItemType::kPoison:
-															citems->poisons.push_back({ alch, std::get<2>(associtm[i]) });
-															break;
-														case Settings::ItemType::kPotion:
-															citems->potions.push_back({ alch, std::get<2>(associtm[i]) });
-															break;
+													if (std::get<5>(associtm[i]))
+														Distribution::_excludedItems.insert(std::get<2>(associtm[i]));
+													switch (std::get<3>(associtm[i])) {
+													case CustomItemFlag::Object:
+														{
+															citems->items.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
 														}
-													} else {
-														citems->items.push_back({ tmpb, std::get<2>(associtm[i]) });
+														break;
+													case CustomItemFlag::DeathObject:
+														{
+															citems->death.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+														}
+														break;
+													default:
+														{
+															alch = tmpf->As<RE::AlchemyItem>();
+															if (alch) {
+																switch (std::get<3>(associtm[i])) {
+																case CustomItemFlag::Food:
+																	citems->food.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+																	break;
+																case CustomItemFlag::Fortify:
+																	citems->fortify.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+																	break;
+																case CustomItemFlag::Poison:
+																	citems->poisons.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+																	break;
+																case CustomItemFlag::Potion:
+																	citems->potions.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+																	break;
+																}
+															} else {
+																// item is not an alchemy item so do not add it
+																LOGE1_2("[Settings] [LoadDistrRules] custom rule for item {} cannot be applied, due to the item not being an AlchemyItem.", Utility::GetHex(std::get<1>(associtm[i])));
+																//citems->items.push_back({ tmpb, std::get<2>(associtm[i]) });
+															}
+														}
+														break;
 													}
+												} else {
+													LOGE1_2("[Settings] [LoadDistrRules] custom rule for item {} cannot be applied, due to the item not being an TESBoundObject.", Utility::GetHex(std::get<1>(associtm[i])));
 												}
 											}
 											break;
-										}
-										if (EnableLog) {
-											if (std::get<0>(associtm[i]) == Settings::Distribution::AssocType::kItem) {
-												LOGE1_2("[Settings] [LoadDistrRules] whitelisted item {}.", Utility::GetHex(std::get<1>(associtm[i])));
-											}
 										}
 									}
 									if (citems->items.size() == 0)
@@ -644,8 +662,19 @@ void Settings::LoadDistrConfig()
 											}
 										}
 									}
-									if (cx == 0)
-										delete citems;
+									if (cx == 0) {
+										auto iter = Settings::Distribution::_customItems.find(0x0);
+										if (iter != Settings::Distribution::_customItems.end()) {
+											auto vec = iter->second;
+											vec.push_back(citems);
+											Settings::Distribution::_customItems.insert_or_assign(0x0, vec);
+											cx++;
+										} else {
+											std::vector<Settings::Distribution::CustomItemStorage*> vec = { citems };
+											Settings::Distribution::_customItems.insert_or_assign(0x0, vec);
+											cx++;
+										}
+									}
 
 									// since we are done delete splits
 									delete splits;
@@ -1718,8 +1747,8 @@ void Settings::CheckActorsForRules()
 	std::set<RE::FormID> visited;
 	RE::Actor* act = nullptr;
 	RE::TESNPC* npc = nullptr;
-	Settings::ActorStrength acs;
-	Settings::ItemStrength is;
+	ActorStrength acs;
+	ItemStrength is;
 	//auto arr = datahandler->GetFormArray<RE::TESNPC>();
 	//auto coun = 0;
 	while (iter != hashtable->end()) {
@@ -1912,7 +1941,9 @@ void Settings::CheckActorsForRules()
 							continue;  // the npc is covered by an exclusion
 						}
 						// get rule
-						Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(act);
+						ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
+						Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(acinfo);
+						delete acinfo;
 						//logger::info("check 23");
 						//logger::warn("[CheckActorsForRules] got rule");
 						if (rl && rl->ruleName == DefaultRuleName) {
@@ -2081,7 +2112,9 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							}
 							//logger::info("iter 7");
 							// get rule
-							Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(act);
+							ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
+							Settings::Distribution::Rule* rl = Settings::Distribution::CalcRule(acinfo);
+							delete acinfo;
 							//logger::info("iter 8");
 							//logger::info("check 23");
 							//logger::warn("[CheckActorsForRules] got rule");

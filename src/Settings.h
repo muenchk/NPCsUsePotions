@@ -20,123 +20,12 @@
 #include <forward_list>
 #include <semaphore>
 #include <limits>
-#include "Console.h"
+#include "ActorInfo.h"
+#include <Console.h>
+#include <Logging.h>
 
 
-#define LOGE_1(s)             \
-	if (Settings::EnableLog) \
-		logger::info(s);
-
-#define LOGE1_1(s, t)         \
-	if (Settings::EnableLog) \
-		logger::info(s, t);
-
-#define LOGE_2(s)            \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s);
-
-#define LOGE1_2(s, t)        \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, t);
-
-#define LOGE2_2(s, t, u)                                   \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, t, u);
-
-#define LOGE3_2(s, t, u, v)                                   \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, t, u, v);
-
-#define LOGE5_2(s, t, u, v, x, y)                             \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, t, u, v, x, y);
-
-
-
-#define LOG_1(s)               \
-	if (Settings::EnableLog) \
-		logger::info(s, Settings::TimePassed() + " | ");
-
-#define LOG1_1(s, t)           \
-	if (Settings::EnableLog) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
-#define LOG2_1(s, t, u)         \
-	if (Settings::EnableLog) \
-		logger::info(s, Settings::TimePassed() + " | ", t, u);
-
-#define LOG3_1(s, t, u, v)      \
-	if (Settings::EnableLog) \
-		logger::info(s, Settings::TimePassed() + " | ", t, u, v);
-
-#define LOG5_1(s, t, u, v, w, x)      \
-	if (Settings::EnableLog) \
-		logger::info(s, Settings::TimePassed() + " | ", t, u, v, w, x);
-
-#define LOG_2(s)                                        \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, Settings::TimePassed() + " | ");
-
-#define LOG1_2(s, t)         \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
-#define LOG2_2(s, t, u)                                    \
-	if (Settings::EnableLog && Settings::LogLevel >= 1) \
-		logger::info(s, Settings::TimePassed() + " | ", t, u);
-
-#define LOG_3(s)             \
-	if (Settings::EnableLog && Settings::LogLevel >= 2) \
-		logger::info(s, Settings::TimePassed() + " | ");
-
-#define LOG1_3(s, t)         \
-	if (Settings::EnableLog && Settings::LogLevel >= 2) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
-#define LOG_4(s)             \
-	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, Settings::TimePassed() + " | ");
-
-#define LOG1_4(s, t)         \
-	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
-#define LOG2_4(s, t, u)                           \
-	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, Settings::TimePassed() + " | ", t, u);
-
-#define LOG4_1(s, t)                           \
-	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
-#define LOG4_4(s, t, u, v, w)                                    \
-	if (Settings::EnableLog && Settings::LogLevel >= 3) \
-		logger::info(s, Settings::TimePassed() + " | ", t, u, v, w);
-
-#define PROF_1(s)                    \
-	if (Settings::EnableProfiling) \
-		logger::info(s, Settings::TimePassed() + " | ");
-
-#define PROF1_1(s, t)                \
-	if (Settings::EnableProfiling) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
-#define PROF_2(s)                    \
-	if (Settings::EnableProfiling && Settings::ProfileLevel >= 1) \
-		logger::info(s, Settings::TimePassed() + " | ");
-
-#define PROF1_2(s, t)                \
-	if (Settings::EnableProfiling && Settings::ProfileLevel >= 1) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
-#define PROF_3(s)                    \
-	if (Settings::EnableProfiling && Settings::ProfileLevel >= 2) \
-		logger::info(s, Settings::TimePassed() + " | ");
-
-#define PROF1_3(s, t)                \
-	if (Settings::EnableProfiling && Settings::ProfileLevel >= 2) \
-		logger::info(s, Settings::TimePassed() + " | ", t);
-
+typedef uint64_t AlchemyEffectBase;
 
 class Settings
 {
@@ -145,21 +34,6 @@ public:
 	/// Name of this plugin
 	/// </summary>
 	static inline std::string PluginName = "NPCsUsePotions.esp";
-	/// <summary>
-	/// time the game was started
-	/// </summary>
-	static inline std::chrono::time_point<std::chrono::system_clock> execstart = std::chrono::system_clock::now();
-	
-	/// <summary>
-	/// calculates and returns the time passed sinve programstart
-	/// </summary>
-	/// <returns></returns>
-	static std::string TimePassed()
-	{
-		std::stringstream ss;
-		ss << std::setw(12) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - execstart);
-		return ss.str();
-	}
 
 	/// <summary>
 	/// Contains values used for compatibility
@@ -242,27 +116,6 @@ public:
 		// 1C007
 		kAnyFood = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate),
 		
-	};
-	/// <summary>
-	/// Determines the strength of an Item
-	/// </summary>
-	enum class ItemStrength
-	{
-		kWeak = 1,
-		kStandard = 2,
-		kPotent = 3,
-		kInsane = 4
-	};
-	/// <summary>
-	/// Determines the strength of an Actor
-	/// </summary>
-	enum class ActorStrength
-	{
-		Weak = 0,
-		Normal = 1,
-		Powerful = 2,
-		Insane = 3,
-		Boss = 4,
 	};
 	/// <summary>
 	/// Supported types of Items
@@ -379,35 +232,26 @@ public:
 			/// <summary>
 			/// returns a random potion according to [strength] and [acsstrength]
 			/// </summary>
-			/// <param name="strength">strength of the item to give</param>
-			/// <param name="acstrength">strength of the actor the potion will be given to</param>
-			/// <param name="custItems">custom items appropiate for the actor</param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns>A randomly chosen potion according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
+			std::vector<RE::AlchemyItem*> GetRandomPotions(ActorInfo* acinfo);
 			/// <summary>
 			/// returns a random popoisontion according to [strength] and [acsstrength]
-			/// </summary>
-			/// <param name="strength">strength of the item to give</param>
-			/// <param name="acstrength">strength of the actor the poison will be given to</param>
-			/// <param name="custItems">custom items appropiate for the actor</param>
+			/// </summary>v
 			/// <returns>A randomly chosen poison according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomPoisons(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
+			std::vector<RE::AlchemyItem*> GetRandomPoisons(ActorInfo* acinfo);
 			/// <summary>
 			/// returns a random fortify potion according to [strength] and [acsstrength]
 			/// </summary>
-			/// <param name="strength">strength of the item to give</param>
-			/// <param name="acstrength">strength of the actor the fortify potion will be given to</param>
-			/// <param name="custItems">custom items appropiate for the actor</param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns>A randomly chosen fortify potion according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
+			std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(ActorInfo* acinfo);
 			/// <summary>
 			/// returns a random food according to [strength] and [acsstrength]
 			/// </summary>
-			/// <param name="strength">strength of the item to give</param>
-			/// <param name="acstrength">strength of the actor the food will be given to</param>
-			/// <param name="custItems">custom items appropiate for the actor</param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns>A randomly chosen food according to the rule</returns>
-			std::vector<RE::AlchemyItem*> GetRandomFood(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems = nullptr);
+			std::vector<RE::AlchemyItem*> GetRandomFood(ActorInfo* acinfo);
 
 #define COPY(vec1, vec2)       \
 	vec2.reserve(vec1.size()); \
@@ -503,101 +347,87 @@ public:
 			/// <summary>
 			/// Calculates and returns the first random potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPotion1(ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns the second random potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPotion2(ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns the third random potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion3(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPotion3(ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns an additional random potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotionAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPotionAdditional(ActorInfo* acinfo);
 			/// <summary>
 			/// Returns an according to potion properties randomly chosen potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPotion(int str, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPotion(int str, ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns the first random poison
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPoison1(ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns the second random poison
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPoison2(ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns the third random poison
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison3(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPoison3(ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns addtional random poison
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoisonAdditional(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPoisonAdditional(ActorInfo* acinfo);
 			/// <summary>
 			/// Returns an according to poison properties randomly chosen poison
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomPoison(int str, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomPoison(int str, ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns the first random fortify potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFortifyPotion1(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomFortifyPotion1(ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns the second random fortify potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFortifyPotion2(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomFortifyPotion2(ActorInfo* acinfo);
 			/// <summary>
 			/// Returns an according to fortify properties randomly chosen fortify potion
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFortifyPotion(int str, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomFortifyPotion(int str, ActorInfo* acinfo);
 			/// <summary>
 			/// Calculates and returns a random food item
 			/// </summary>
-			/// <param name="strength"></param>
-			/// <param name="acstrength"></param>
+			/// <param name="acinfo">information about the actor the item is for</param>
 			/// <returns></returns>
-			RE::AlchemyItem* GetRandomFood_intern(Settings::ItemStrength strength, Settings::ActorStrength acstrength, Settings::Distribution::CustomItemStorage* custItems);
+			RE::AlchemyItem* GetRandomFood_intern(ActorInfo* acinfo);
 
 			/// <summary>
 			/// Returns a random effect accoring to the rules item effect properties
@@ -652,11 +482,12 @@ public:
 			/// <summary>
 			/// items associated with the objects above
 			/// </summary>
-			std::vector<std::pair<RE::TESBoundObject*, int>> items;
-			std::vector<std::pair<RE::AlchemyItem*, int>> potions;
-			std::vector<std::pair<RE::AlchemyItem*, int>> fortify;
-			std::vector<std::pair<RE::AlchemyItem*, int>> poisons;
-			std::vector<std::pair<RE::AlchemyItem*, int>> food;
+			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> items;
+			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> death;
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> potions;
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> fortify;
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> poisons;
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> food;
 		};
 
 	private:
@@ -790,44 +621,44 @@ public:
 		/// </summary>
 		/// <param name="actor">actor to calculate items for</param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetDistrItems(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrItems(ActorInfo* acinfo);
 		/// <summary>
 		/// Returns potions that shall be distributed to [actor]
 		/// </summary>
 		/// <param name="actor">actor to calculate items for</param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetDistrPotions(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrPotions(ActorInfo* acinfo);
 		/// <summary>
 		/// Returns poisons that shall be distributed to [actor]
 		/// </summary>
 		/// <param name="actor">actor to calculate items for</param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetDistrPoisons(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrPoisons(ActorInfo* acinfo);
 		/// <summary>
 		/// Returns fortify potions that shall be distributed to [actor]
 		/// </summary>
 		/// <param name="actor">actor to calculate items for</param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetDistrFortifyPotions(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrFortifyPotions(ActorInfo* acinfo);
 		/// <summary>
 		/// Returns food that shall be distributed to [actor]
 		/// </summary>
 		/// <param name="actor">actor to calculate items for</param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetDistrFood(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetDistrFood(ActorInfo* acinfo);
 
 		/// <summary>
 		/// Returns all unique inventory items matching the distribution rule 
 		/// </summary>
 		/// <param name="actor"></param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(ActorInfo* acinfo);
 		/// <summary>
 		/// Returns all inventory items (duplicates as extra vector entries) matching the distribution rule
 		/// </summary>
 		/// <param name="actor"></param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(RE::Actor* actor);
+		static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(ActorInfo* acinfo);
 
 		static bool ExcludedNPC(RE::Actor* actor);
 		static bool ExcludedNPC(RE::TESNPC* npc);
@@ -836,16 +667,17 @@ public:
 		friend void Settings::CheckCellForActors(RE::FormID cellid);
 		friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
 		friend void Settings::LoadDistrConfig();
+		friend void ActorInfo::CalcCustomItems();
 
 	private:
-		static void CalcStrength(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
-		static Rule* CalcRule(RE::Actor* actor);
-		static Rule* CalcRule(RE::Actor* actor, CustomItemStorage* custItems);
-		static Rule* CalcRule(RE::TESNPC* npc);
-		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
-		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems);
-		static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems = nullptr);
+		//static Rule* CalcRule(RE::Actor* actor);
+		//static Rule* CalcRule(RE::Actor* actor, CustomItemStorage* custItems);
+		//static Rule* CalcRule(RE::TESNPC* npc);
+		//static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
+		//static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems);
+		//static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems = nullptr);
 		static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
+		static Rule* CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tpltinfo = nullptr);
 		static std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
 		static Rule* FindRule(std::string name)
@@ -1189,12 +1021,16 @@ public:
 
 		// Debugging
 		EnableLog = ini.GetValue("Debug", "EnableLogging") ? ini.GetBoolValue("Debug", "EnableLogging") : false;
+		Logging::EnableLog = EnableLog;
 		logger::info("[SETTINGS] {} {}", "EnableLogging", std::to_string(EnableLog));
 		LogLevel = ini.GetValue("Debug", "LogLevel") ? ini.GetLongValue("Debug", "LogLevel") : 0;
+		Logging::LogLevel = LogLevel;
 		logger::info("[SETTINGS] {} {}", "LogLevel", std::to_string(LogLevel));
 		EnableProfiling = ini.GetValue("Debug", "EnableProfiling") ? ini.GetBoolValue("Debug", "EnableProfiling") : false;
+		Logging::EnableProfiling = EnableProfiling;
 		logger::info("[SETTINGS] {} {}", "EnableProfiling", std::to_string(EnableProfiling));
 		ProfileLevel = ini.GetValue("Debug", "ProfileLevel") ? ini.GetLongValue("Debug", "ProfileLevel") : 0;
+		Logging::ProfileLevel = ProfileLevel;
 		logger::info("[SETTINGS] {} {}", "ProfileLevel", std::to_string(LogLevel));
 
 		_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", false);

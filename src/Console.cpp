@@ -1,6 +1,7 @@
 #include<Console.h>
 #include<Settings.h>
 #include<Utility.h>
+#include<Events.h>
 
 bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&)
 {
@@ -17,8 +18,8 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 		return false;
 	}
 	//logger::info("console 3");
-	Settings::ActorStrength acs = Settings::ActorStrength::Weak;
-	Settings::ItemStrength is = Settings::ItemStrength::kWeak;
+	ActorStrength acs = ActorStrength::Weak;
+	ItemStrength is = ItemStrength::kWeak;
 	std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> rls = Settings::Distribution::CalcAllRules(actor, acs, is);
 	//logger::info("console 4");
 
@@ -112,7 +113,8 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 		outscript.close();
 	}*/
 	auto console = RE::ConsoleLog::GetSingleton();
-
+	console->Print("Resetting information about actors...");
+	Events::ResetActorInfoMap();
 	console->Print("Reloading Settings...");
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");

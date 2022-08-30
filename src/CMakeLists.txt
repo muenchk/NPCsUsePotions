@@ -9,6 +9,8 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Settings_Distribution.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
 	"${SOURCE_DIR}/Console.cpp"
+	"${SOURCE_DIR}/ActorInfo.cpp"
+	"${SOURCE_DIR}/Game.cpp"
 	"${SOURCE_DIR}/PCH.h"
 )
 
