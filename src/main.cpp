@@ -2,6 +2,7 @@
 #include "Events.h"
 #include "Settings.h"
 #include "Console.h"
+#include "Game.h"
 
 
 namespace
@@ -65,11 +66,13 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// load distribution settings
 		Settings::LoadDistrConfig();
 		logger::info("Distribution configuration loaded");
+		// Debug stuff
 		if (Settings::_CheckActorsWithoutRules)
 			Settings::CheckActorsForRules();
 		// classify currently loaded game items
 		Settings::ClassifyItems();
 		logger::info("Items classified");
+		// register eventhandlers
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
 		//Console::RegisterConsoleCommands();
@@ -89,8 +92,17 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	auto messaging = SKSE::GetMessagingInterface();
 	if (!messaging->RegisterListener("SKSE", MessageHandler)) {
+		logger::error("[LOADPLUGIN] couldn't register listener");
 		return false;
 	}
+
+	auto serialization = (SKSE::SerializationInterface*)a_skse->QueryInterface(SKSE::LoadInterface::kSerialization);
+	if (!serialization) {
+		logger::error("[LOADPLUGIN] couldn't get serialization interface");
+		return false;
+	}
+
+	Game::SaveLoad::GetSingleton()->Register(serialization, 0xFD34899E);
 
 	//Hooks::InstallHooks();
 

@@ -2,6 +2,8 @@
 //#ifndef KPMEvents
 //#define KPMEvents
 
+#include<ActorInfo.h>
+
 namespace Events
 {
     using EventResult = RE::BSEventNotifyControl;
@@ -92,47 +94,14 @@ namespace Events
 	void DisableThreads();
 
 	/// <summary>
-	/// Stores information about an actor.
+	/// Resets information about actors
 	/// </summary>
-	class ActorInfo
-	{
-	public:
-		/// <summary>
-		/// The actor
-		/// </summary>
-		RE::Actor* actor;
-		/// <summary>
-		/// Current remaining cooldown on health potions
-		/// </summary>
-		int durHealth = 0;
-		/// <summary>
-		/// Current remaining cooldown on magicka potions
-		/// </summary>
-		int durMagicka = 0;
-		/// <summary>
-		/// Current remaining cooldown on stamina potions
-		/// </summary>
-		int durStamina = 0;
-		/// <summary>
-		/// Current remaining cooldown on fortify potions
-		/// </summary>
-		int durFortify = 0;
-		/// <summary>
-		/// Current remaining cooldown on regeneration potions
-		/// </summary>
-		int durRegeneration = 0;
+	void ResetActorInfoMap();
 
-
-		ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
-		{
-			actor = _actor;
-			durHealth = _durHealth;
-			durMagicka = _durMagicka;
-			durStamina = _durStamina;
-			durFortify = _durFortify;
-			durRegeneration = _durRegeneration;
-		}
-	};
+	/// <summary>
+	/// Retrieves Information about an actor from an internal database
+	/// </summary>
+	ActorInfo* FindActor(RE::Actor* actor);
 
 	/// <summary>
 	/// The type of event
