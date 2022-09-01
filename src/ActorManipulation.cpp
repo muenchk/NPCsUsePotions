@@ -39,22 +39,24 @@ std::tuple<bool, float, int, AlchemyEffectBase> ACM::HasAlchemyEffect(RE::Alchem
 					found = true;
 
 					//logger::info("alch effect id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.primaryAV));
-					out &= tmp;
+					out |= tmp;
 					if (mag * dur < item->effects[i]->effectItem.magnitude * item->effects[i]->effectItem.duration) {
 						mag = item->effects[i]->effectItem.magnitude;
 						dur = item->effects[i]->effectItem.duration;
 					}
-				}
+				} else if (tmp != 0)
+					out |= tmp;
 				if (sett->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (tmp = ((static_cast<uint64_t>(Settings::ConvertToAlchemyEffectSecondary(sett)) & alchemyEffect))) > 0) {
 					found = true;
 
 					//logger::info("alch effect2 id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.secondaryAV));
-					out &= tmp;
+					out |= tmp;
 					if (mag * dur < item->effects[i]->effectItem.magnitude * item->effects[i]->effectItem.duration) {
 						mag = item->effects[i]->effectItem.magnitude;
 						dur = item->effects[i]->effectItem.duration;
 					}
-				}
+				} else if (tmp != 0)
+					out |= tmp;
 			}
 		}
 	} else {
@@ -283,6 +285,25 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(A
 	} else {
 		return { 0.0f, 0, nullptr, static_cast<AlchemyEffectBase>(Settings::AlchemyEffect::kNone) };
 	}
+}
+
+std::unordered_map<uint32_t, int> ACM::GetCustomItems(ActorInfo* acinfo)
+{
+	std::unordered_map<uint32_t, int> ret{};
+	auto itemmap = acinfo->actor->GetInventory();
+	auto iter = itemmap.begin();
+	LOG_3("{}[GetCustomItems] checking items");
+	while (iter != itemmap.end()) {
+		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			if (acinfo->IsCustomItem(iter->first)) {
+				ret.insert_or_assign(iter->first->GetFormID(), std::get<0>(iter->second));
+				LOG_4("{}[GetCustomItems] found custom item");
+			}
+		}
+		iter++;
+	}
+	LOG1_4("{}[GetCustomItems] return: {}", ret.size());
+	return ret;
 }
 
 std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ACM::ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatibility)

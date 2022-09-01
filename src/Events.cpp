@@ -20,7 +20,6 @@
 namespace Events
 {
 	using AlchemyEffect = Settings::AlchemyEffect;
-#define Base(x) static_cast<uint64_t>(x)
 
 	/// <summary>
 	/// random number generator for processing probabilities
@@ -545,6 +544,7 @@ namespace Events
 								RE::ExtraDataList* extra = new RE::ExtraDataList();
 								extra->SetOwner(actor);
 								actor->AddObjectToContainer(items[i], extra, 1, nullptr);
+								LOG2_4("{}[HandleEvents] [TESCombatEventEnter] added item {} to actor {}", Utility::GetHex(items[i]->GetFormID()), Utility::GetHex(actor->GetFormID()));
 							}
 							acinfo->lastDistrTime = RE::Calendar::GetSingleton()->GetDaysPassed();
 						}
@@ -587,9 +587,32 @@ namespace Events
     }
 
 	/// <summary>
+	/// Calculates the cooldowns of an actor for a specific effect
+	/// </summary>
+	void CalcActorCooldowns(ActorInfo* acinfo, AlchemyEffectBase effect, int dur)
+	{
+		if (effect & static_cast<uint64_t>(Settings::AlchemyEffect::kHealth)) {
+			acinfo->durHealth = dur;
+		}
+		if (effect & static_cast<uint64_t>(Settings::AlchemyEffect::kMagicka)) {
+			acinfo->durMagicka = dur;
+		}
+		if (effect & static_cast<uint64_t>(Settings::AlchemyEffect::kStamina)) {
+			acinfo->durStamina = dur;
+		}
+		if (effect & static_cast<uint64_t>(Settings::AlchemyEffect::kAnyRegen)) {
+			acinfo->durRegeneration = dur;
+		}
+		if (effect & static_cast<uint64_t>(Settings::AlchemyEffect::kAnyFortify)) {
+			acinfo->durFortify = dur;
+		}
+	}
+
+	/// <summary>
 	/// if set to true stops the CheckActors thread on its next iteration
 	/// </summary>
 	static bool stopactorhandler = false;
+	static bool skipactorhandler = false;
 	/// <summary>
 	/// [true] if the actorhandler is running, [false] if the thread died
 	/// </summary>
@@ -766,21 +789,21 @@ namespace Events
 									if (alch != 0) {
 										tup = ACM::ActorUsePotion(curr, std::get<3>(tup), Settings::_CompatibilityPotionAnimation);
 										if (static_cast<AlchemyEffectBase>(Settings::AlchemyEffect::kHealth) & std::get<1>(tup)) {
-											curr->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											CalcActorCooldowns(curr, std::get<1>(tup), std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);
 											avhealth += std::get<0>(tup) * std::get<2>(tup);
-											LOG2_4("{}[CheckActors] use health pot with duration {} and magnitude {}", curr->durHealth, std::get<0>(tup));
+											LOG3_4("{}[CheckActors] use health pot with duration {} and magnitude {} and effect {}", curr->durHealth, std::get<0>(tup), Utility::ToString(std::get<1>(tup)));
 											counter++;
 										}
 										if (static_cast<AlchemyEffectBase>(Settings::AlchemyEffect::kMagicka) & std::get<1>(tup)) {
-											curr->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											CalcActorCooldowns(curr, std::get<1>(tup), std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);
 											avmag += std::get<0>(tup) * std::get<2>(tup);
-											LOG2_4("{}[CheckActors] use magicka pot with duration {} and magnitude {}", curr->durMagicka, std::get<0>(tup));
+											LOG3_4("{}[CheckActors] use magicka pot with duration {} and magnitude {} and effect {}", curr->durMagicka, std::get<0>(tup), Utility::ToString(std::get<1>(tup)));
 											counter++;
 										}
 										if (static_cast<AlchemyEffectBase>(Settings::AlchemyEffect::kStamina) & std::get<1>(tup)) {
-											curr->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
+											CalcActorCooldowns(curr, std::get<1>(tup), std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);
 											avstam += std::get<0>(tup) * std::get<2>(tup);
-											LOG2_4("{}[CheckActors] use stamina pot with duration {} and magnitude {}", curr->durStamina, std::get<0>(tup));
+											LOG3_4("{}[CheckActors] use stamina pot with duration {} and magnitude {} and effect {}", curr->durStamina, std::get<0>(tup), Utility::ToString(std::get<1>(tup)));
 											counter++;
 										}
 										if (std::get<1>(tup) != 0) {
@@ -1035,34 +1058,32 @@ namespace Events
 											effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kResistShock);
 										}
 									}
-								}
 
-								// light and heavy armor
-								uint32_t armordata = Utility::GetArmorData(curr->actor);
-								if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::LightArmor))
-									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kLightArmor);
-								if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
-									effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHeavyArmor);
+									// light and heavy armor
+									uint32_t armordata = Utility::GetArmorData(curr->actor);
+									if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::LightArmor))
+										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kLightArmor);
+									if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
+										effects |= static_cast<uint64_t>(Settings::AlchemyEffect::kHeavyArmor);
+								}
 
 								// std::tuple<int, Settings::AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, Settings::AlchemyEffect>>>
 								//logger::info("take fortify with effects: {}", Utility::GetHex(effects));
 								LOG1_4("{}[CheckActors] check for fortify potion with effect {}", Utility::GetHex(effects));
 								auto tup = ACM::ActorUsePotion(curr, effects, Settings::_CompatibilityPotionAnimationFortify);
 								if (std::get<0>(tup) != -1) {
-									AlchemyEffectBase eff = Base(std::get<1>(tup));
-									if (eff & Base(Settings::AlchemyEffect::kHealRate) ||
-										eff & Base(Settings::AlchemyEffect::kMagickaRate) ||
-										eff & Base(Settings::AlchemyEffect::kStaminaRate) ||
-										eff & Base(Settings::AlchemyEffect::kHealRateMult) ||
-										eff & Base(Settings::AlchemyEffect::kMagickaRateMult) ||
-										eff & Base(Settings::AlchemyEffect::kStaminaRateMult)) {
-										curr->durRegeneration = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+									AlchemyEffectBase eff = std::get<1>(tup);
+									if (eff & Base(Settings::AlchemyEffect::kAnyRegen)) {
+										//curr->durRegeneration = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+										CalcActorCooldowns(curr, eff, std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000);
 										counter++;
-										LOG2_4("{}[CheckActors] used regeneration potion with tracked duration {} {}", curr->durRegeneration, std::get<0>(tup) * 1000);
-									} else {
-										curr->durFortify = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+										LOG3_4("{}[CheckActors] used regeneration potion with tracked duration {} {} and effect {}", curr->durRegeneration, std::get<0>(tup) * 1000, Utility::ToString(std::get<1>(tup)));
+									}
+									if (eff & Base(Settings::AlchemyEffect::kAnyFortify)) {
+										//curr->durFortify = std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000;
+										CalcActorCooldowns(curr, eff, std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000);
 										counter++;
-										LOG2_4("{}[CheckActors] used fortify av potion with tracked duration {} {}", curr->durFortify, std::get<0>(tup) * 1000);
+										LOG3_4("{}[CheckActors] used fortify av potion with tracked duration {} {} and effect {}", curr->durFortify, std::get<0>(tup) * 1000, Utility::ToString(std::get<1>(tup)));
 										break;
 									}
 								}
@@ -1387,6 +1408,7 @@ namespace Events
 			actorhandler = new std::thread(CheckActors);
 			LOG_1("{}[LoadGameEvent] Started CheckActors");
 		}
+		LOG_1("{}[LoadGameEvent] 1");
 		// reset regsitered actors, since we skip unregister events after player has died
 		sem.acquire();
 		for (int i = 0; i < aclist.size(); i++) {
@@ -1394,6 +1416,7 @@ namespace Events
 		}
 		aclist.clear();
 		sem.release();
+		LOG_1("{}[LoadGameEvent] 2");
 		// set player to alive
 		ReEvalPlayerDeath;
 		// reset actor lastDistrTime until it is saved in save game
@@ -1401,10 +1424,14 @@ namespace Events
 		auto itr = actorinfoMap.begin();
 		while (itr != actorinfoMap.end()) {
 			itr->second->lastDistrTime = 0.0f;
+			itr++;
 		}
 		sem.release();
+		LOG_1("{}[LoadGameEvent] 3");
 		// reset the list of actors that died
 		deads.clear();
+
+		LOG_1("{}[LoadGameEvent] 4");
 
 		if (Settings::_Test) {
 			if (testhandler == nullptr) {
@@ -1419,6 +1446,8 @@ namespace Events
 				LOG_1("{}[LoadGameEvent] Started RemoveItemsHandler");
 			}
 		}
+
+		LOG_1("{}[LoadGameEvent] end");
 
 		return EventResult::kContinue;
 	}

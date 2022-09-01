@@ -120,6 +120,11 @@ public:
 	static std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> GetRandomFood(ActorInfo* acinfo);
 
 	/// <summary>
+	/// Returns the custom items that an actor posseses
+	/// </summary>
+	static std::unordered_map<uint32_t, int> GetCustomItems(ActorInfo* acinfo);
+
+	/// <summary>
 	/// tries to use a potion with the given effect [eff]
 	/// </summary>
 	/// <param name="acinfo">actor to apply potion on</param>
