@@ -38,9 +38,9 @@ std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> Actor
 	return dist;
 }
 
-std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> ActorInfo::FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> itms)
+std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> ActorInfo::FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> itms)
 {
-	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> dist;
+	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> dist;
 	for (int i = 0; i < itms.size(); i++) {
 		uint64_t cond1 = std::get<3>(itms[i]);
 		uint64_t cond2 = std::get<4>(itms[i]);

@@ -517,10 +517,10 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFood(ActorI
 
 #pragma region Distribution
 
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(ActorInfo* acinfo)
+std::vector<RE::TESBoundObject*> Settings::Distribution::GetDistrItems(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
-	std::vector<RE::AlchemyItem*> ret;
+	std::vector<RE::TESBoundObject*> ret;
 	if (Settings::_featDistributePotions) {
 		auto ritems = rule->GetRandomPotions(acinfo);
 		LOG_4("{}[GetDistrItems] matching potions");
@@ -578,6 +578,32 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrItems(ActorInfo* a
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
 		//logger::info("food to give:\t{}", ritems.size());
+	}
+	// custom generic items are distributed whenever one of the options above is used
+	if (Settings::_featDistributeFood || Settings::_featDistributePoisons || Settings::_featDistributePotions) {
+		std::unordered_map<uint32_t, int> items = ACM::GetCustomItems(acinfo);
+		auto ritems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->items);
+		for (int i = 0; i < ritems.size(); i++) {
+			auto item = ritems[i];
+			if (std::get<5>(item) == true && acinfo->_distributedCustomItems) // if item is only given once and we already gave items: skip
+				continue;
+			auto itr = items.find(std::get<0>(item)->GetFormID());
+			if (itr == items.end()) {
+				// run for number of items to give
+				for (int x = 0; x < std::get<2>(item); x++) {
+					if (rand100(randi) < std::get<1>(item)) {
+						ret.push_back(std::get<0>(item));
+					}
+				}
+			} else {
+				for (int x = itr->second; x < std::get<2>(item); x++) {
+					if (rand100(randi) < std::get<1>(item)) {
+						ret.push_back(std::get<0>(item));
+					}
+				}
+			}
+		}
+		acinfo->_distributedCustomItems = true;
 	}
 	if (ret.size() > 0 && ret.back() == nullptr) {
 		LOG_4("{}[GetDistrItems] remove last item");

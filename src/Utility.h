@@ -7,6 +7,8 @@
 #include <tuple>
 #include <utility>
 
+#define Base(x) static_cast<uint64_t>(x)
+
 /// <summary>
 /// Provides generic functions
 /// </summary>
@@ -266,6 +268,123 @@ public:
 		default:
 			return "Unknown";
 		}
+	}
+
+	static std::string ToString(AlchemyEffectBase ae)
+	{
+		std::string ret = "|";
+		if (ae & Base(Settings::AlchemyEffect::kAlteration))
+			ret += "Alteration|";
+		if (ae & Base(Settings::AlchemyEffect::kArchery))
+			ret += "Archery|";
+		if (ae & Base(Settings::AlchemyEffect::kAttackDamageMult))
+			ret += "AttackDamageMult|";
+		if (ae & Base(Settings::AlchemyEffect::kBlock))
+			ret += "Block|";
+		if (ae & Base(Settings::AlchemyEffect::kBlood))
+			ret += "Blood|";
+		if (ae & Base(Settings::AlchemyEffect::kBowSpeed))
+			ret += "BowSpeed|";
+		if (ae & Base(Settings::AlchemyEffect::kConjuration))
+			ret += "Conjuration|";
+		if (ae & Base(Settings::AlchemyEffect::kCriticalChance))
+			ret += "CriticalChance|";
+		if (ae & Base(Settings::AlchemyEffect::kDamageResist))
+			ret += "DamageResist|";
+		if (ae & Base(Settings::AlchemyEffect::kDestruction))
+			ret += "Destruction|";
+		if (ae & Base(Settings::AlchemyEffect::kFear))
+			ret += "Fear|";
+		if (ae & Base(Settings::AlchemyEffect::kFrenzy))
+			ret += "Frenzy|";
+		if (ae & Base(Settings::AlchemyEffect::kHealRate))
+			ret += "HealRate|";
+		if (ae & Base(Settings::AlchemyEffect::kHealRateMult))
+			ret += "HealRateMult|";
+		if (ae & Base(Settings::AlchemyEffect::kHealth))
+			ret += "Health|";
+		if (ae & Base(Settings::AlchemyEffect::kHeavyArmor))
+			ret += "HeavyArmor|";
+		if (ae & Base(Settings::AlchemyEffect::kIllusion))
+			ret += "Illusion|";
+		if (ae & Base(Settings::AlchemyEffect::kInvisibility))
+			ret += "Invisibility|";
+		if (ae & Base(Settings::AlchemyEffect::kLightArmor))
+			ret += "LightArmor|";
+		if (ae & Base(Settings::AlchemyEffect::kLockpicking))
+			ret += "Lockpicking|";
+		if (ae & Base(Settings::AlchemyEffect::kMagicka))
+			ret += "Magicka|";
+		if (ae & Base(Settings::AlchemyEffect::kMagickaRate))
+			ret += "MagickaRate|";
+		if (ae & Base(Settings::AlchemyEffect::kMagickaRateMult))
+			ret += "MagickaRateMult|";
+		if (ae & Base(Settings::AlchemyEffect::kMeleeDamage))
+			ret += "MeleeDamage|";
+		if (ae & Base(Settings::AlchemyEffect::kNone))
+			ret += "None|";
+		if (ae & Base(Settings::AlchemyEffect::kOneHanded))
+			ret += "OneHanded|";
+		if (ae & Base(Settings::AlchemyEffect::kParalysis))
+			ret += "Paralysis|";
+		if (ae & Base(Settings::AlchemyEffect::kPickpocket))
+			ret += "Pickpocket|";
+		if (ae & Base(Settings::AlchemyEffect::kPoisonResist))
+			ret += "PoisonResist|";
+		if (ae & Base(Settings::AlchemyEffect::kReflectDamage))
+			ret += "ReflectDamage|";
+		if (ae & Base(Settings::AlchemyEffect::kResistDisease))
+			ret += "ResistDisease|";
+		if (ae & Base(Settings::AlchemyEffect::kResistFire))
+			ret += "ResistFire|";
+		if (ae & Base(Settings::AlchemyEffect::kResistFrost))
+			ret += "ResistFrost|";
+		if (ae & Base(Settings::AlchemyEffect::kResistMagic))
+			ret += "ResistMagic|";
+		if (ae & Base(Settings::AlchemyEffect::kResistShock))
+			ret += "ResistShock|";
+		if (ae & Base(Settings::AlchemyEffect::kRestoration))
+			ret += "Restoration|";
+		if (ae & Base(Settings::AlchemyEffect::kSneak))
+			ret += "Sneak|";
+		if (ae & Base(Settings::AlchemyEffect::kSpeedMult))
+			ret += "SpeedMult|";
+		if (ae & Base(Settings::AlchemyEffect::kStamina))
+			ret += "Stamina|";
+		if (ae & Base(Settings::AlchemyEffect::kStaminaRate))
+			ret += "StaminaRate|";
+		if (ae & Base(Settings::AlchemyEffect::kStaminaRateMult))
+			ret += "StaminaRateMult|";
+		if (ae & Base(Settings::AlchemyEffect::kTwoHanded))
+			ret += "TwoHanded|";
+		if (ae & Base(Settings::AlchemyEffect::kUnarmedDamage))
+			ret += "UnarmedDamage|";
+		if (ae & Base(Settings::AlchemyEffect::kWeaponSpeedMult))
+			ret += "WeapenSpeedMult|";
+		if (ae & Base(Settings::AlchemyEffect::kCureDisease))
+			ret += "CureDisease|";
+		if (ae & Base(Settings::AlchemyEffect::kCurePoison))
+			ret += "CurePoison|";
+		if (ae & Base(Settings::AlchemyEffect::kEnchanting))
+			ret += "Enchanting|";
+		if (ae & Base(Settings::AlchemyEffect::kWaterbreathing))
+			ret += "Waterbreathing|";
+		if (ae & Base(Settings::AlchemyEffect::kSmithing))
+			ret += "Smithing|";
+		if (ae & Base(Settings::AlchemyEffect::kSpeech))
+			ret += "Speech|";
+		if (ae & Base(Settings::AlchemyEffect::kCarryWeight))
+			ret += "CarryWeight|";
+		if (ae & Base(Settings::AlchemyEffect::kAlchemy))
+			ret += "Alchemy|";
+		if (ae & Base(Settings::AlchemyEffect::kPersuasion))
+			ret += "Persuasion|";
+		if (ae & Base(Settings::AlchemyEffect::kCustom))
+			ret += "Custom|";
+		
+		if (ret == "|")
+			return "|Unknown|";
+		return ret;
 	}
 
 	enum class CurrentCombatStyle
@@ -1005,10 +1124,10 @@ public:
 	/// <param name="file">the relative path of the file that contains the string</param>
 	/// <param name="line">the line in the file that contains the string</param>
 	/// <returns>a vector of parsed and validated objects and their chances</returns>
-	static std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t>> ParseCustomObjects(std::string input, bool& error, std::string file, std::string line)
+	static std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t, bool>> ParseCustomObjects(std::string input, bool& error, std::string file, std::string line)
 	{
 		LOG_4("{}[ParseAssocObjectsChance]");
-		std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t>> ret;
+		std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t, bool>> ret;
 		try {
 			auto datahandler = RE::TESDataHandler::GetSingleton();
 			size_t pos;
@@ -1023,6 +1142,7 @@ public:
 			std::string flags;
 			std::string numitems;
 			bool exclude = false;
+			bool giveonce = false;
 			uint64_t conditions1;
 			uint64_t conditions2;
 			int8_t num;
@@ -1032,6 +1152,7 @@ public:
 				form = false;
 				valid = false;
 				exclude = false;
+				giveonce = false;
 				pluginname = "";
 				chances = "";
 				chance = 100;
@@ -1077,6 +1198,13 @@ public:
 					}
 					if (entry.substr(0, pos) == "1")
 						exclude = true;
+					entry.erase(0, pos + 1);
+					if ((pos = entry.find(',')) == std::string::npos) {
+						error = true;
+						return ret;
+					}
+					if (entry.substr(0, pos) == "1")
+						giveonce = true;
 					entry.erase(0, pos + 1);
 					if ((pos = entry.find(',')) == std::string::npos) {
 						error = true;
@@ -1147,7 +1275,7 @@ public:
 					if (tmp != nullptr) {
 						type = MatchValidFormType(tmp->GetFormType(), valid);
 						if (valid) {
-							ret.push_back({ type, tmp->GetFormID(), chance, flag, num, exclude, conditions1, conditions2 });
+							ret.push_back({ type, tmp->GetFormID(), chance, flag, num, exclude, conditions1, conditions2, giveonce });
 						} else {
 							logger::warn("[Settings] [LoadDistrRules] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
 						}

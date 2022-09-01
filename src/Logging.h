@@ -82,6 +82,10 @@
 	if (Logging::EnableLog && Logging::LogLevel >= 3) \
 		logger::info(s, Logging::TimePassed() + " | ", t, u);
 
+#define LOG3_4(s, t, u, v)                               \
+	if (Logging::EnableLog && Logging::LogLevel >= 3) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v);
+
 #define LOG4_1(s, t)                                    \
 	if (Logging::EnableLog && Logging::LogLevel >= 3) \
 		logger::info(s, Logging::TimePassed() + " | ", t);

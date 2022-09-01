@@ -61,12 +61,12 @@ public:
 		/// <summary>
 		/// contains custom items that may be distributed to the actor on combat enter
 		/// </summary>
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> items;
+		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> items;
 		std::unordered_map<uint32_t, int> itemsset;
 		/// <summary>
 		/// contains custom items that may be distributed to the actor upon their death
 		/// </summary>
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> death;
+		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> death;
 		std::unordered_map<uint32_t, int> deathset;
 		/// <summary>
 		/// contains custom potions that may be distributed to the actor
@@ -130,6 +130,11 @@ public:
 	/// </summary>
 	float lastDistrTime = 0.0f;
 
+	/// <summary>
+	/// whether custom items have already been given to the npc
+	/// </summary>
+	bool _distributedCustomItems = false;
+
 	ActorStrength actorStrength;
 	ItemStrength itemStrength;
 
@@ -148,7 +153,7 @@ public:
 	bool IsBoss() { return _boss; }
 
 	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> FilterCustomConditionsDistr(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms);
-	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> itms);
+	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> itms);
 	bool CanUseItem(RE::FormID item);
 	bool CanUsePot(RE::FormID item);
 	bool CanUsePotion(RE::FormID item);

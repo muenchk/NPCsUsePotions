@@ -557,7 +557,7 @@ void Settings::LoadDistrConfig()
 									assoc = splits->at(splitindex);
 									splitindex++;
 									error = false;
-									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t>> associtm = Utility::ParseCustomObjects(assoc, error, file, tmp);
+									std::vector<std::tuple<Settings::Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t, bool>> associtm = Utility::ParseCustomObjects(assoc, error, file, tmp);
 									RE::TESForm* tmpf = nullptr;
 									RE::TESBoundObject* tmpb = nullptr;
 									RE::AlchemyItem* alch = nullptr;
@@ -578,12 +578,12 @@ void Settings::LoadDistrConfig()
 													switch (std::get<3>(associtm[i])) {
 													case CustomItemFlag::Object:
 														{
-															citems->items.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+															citems->items.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]), std::get<8>(associtm[i]) });
 														}
 														break;
 													case CustomItemFlag::DeathObject:
 														{
-															citems->death.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+															citems->death.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]), std::get<8>(associtm[i]) });
 														}
 														break;
 													default:

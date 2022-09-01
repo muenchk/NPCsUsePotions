@@ -111,8 +111,9 @@ public:
 		kAnyPotion = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kInvisibility),
 		// 180D7E3C007
 		kAnyPoison = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kParalysis) | static_cast<uint64_t>(kSpeedMult) | static_cast<uint64_t>(kDamageResist) | static_cast<uint64_t>(kPoisonResist) | static_cast<uint64_t>(kWeaponSpeedMult) | static_cast<uint64_t>(kAttackDamageMult) | static_cast<uint64_t>(kResistFire) | static_cast<uint64_t>(kResistFrost) | static_cast<uint64_t>(kResistMagic) | static_cast<uint64_t>(kResistShock) | static_cast<uint64_t>(kFrenzy) | static_cast<uint64_t>(kFear),
+		kAnyRegen = static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate) | static_cast<uint64_t>(kHealRateMult) | static_cast<uint64_t>(kMagickaRateMult) | static_cast<uint64_t>(kStaminaRateMult),
 		// CBFA3FF8
-		kAnyFortify = static_cast<uint64_t>(kOneHanded) | static_cast<uint64_t>(kTwoHanded) | static_cast<uint64_t>(kArchery) | static_cast<uint64_t>(kBlock) | static_cast<uint64_t>(kHeavyArmor) | static_cast<uint64_t>(kLightArmor) | static_cast<uint64_t>(kAlteration) | static_cast<uint64_t>(kConjuration) | static_cast<uint64_t>(kDestruction) | static_cast<uint64_t>(kIllusion) | static_cast<uint64_t>(kRestoration) | static_cast<uint64_t>(kSpeedMult) | static_cast<uint64_t>(kMeleeDamage) | static_cast<uint64_t>(kUnarmedDamage) | static_cast<uint64_t>(kDamageResist) | static_cast<uint64_t>(kPoisonResist) | static_cast<uint64_t>(kResistFire) | static_cast<uint64_t>(kResistFrost) | static_cast<uint64_t>(kResistShock) | static_cast<uint64_t>(kResistDisease) | static_cast<uint64_t>(kWeaponSpeedMult) | static_cast<uint64_t>(kAttackDamageMult),
+		kAnyFortify = static_cast<uint64_t>(kOneHanded) | static_cast<uint64_t>(kTwoHanded) | static_cast<uint64_t>(kArchery) | static_cast<uint64_t>(kBlock) | static_cast<uint64_t>(kHeavyArmor) | static_cast<uint64_t>(kLightArmor) | static_cast<uint64_t>(kAlteration) | static_cast<uint64_t>(kConjuration) | static_cast<uint64_t>(kDestruction) | static_cast<uint64_t>(kIllusion) | static_cast<uint64_t>(kRestoration) | static_cast<uint64_t>(kSpeedMult) | static_cast<uint64_t>(kMeleeDamage) | static_cast<uint64_t>(kUnarmedDamage) | static_cast<uint64_t>(kDamageResist) | static_cast<uint64_t>(kPoisonResist) | static_cast<uint64_t>(kResistFire) | static_cast<uint64_t>(kResistFrost) | static_cast<uint64_t>(kResistShock) | static_cast<uint64_t>(kResistDisease) | static_cast<uint64_t>(kWeaponSpeedMult) | static_cast<uint64_t>(kAttackDamageMult) | static_cast<uint64_t>(kPickpocket) | static_cast<uint64_t>(kLockpicking) | static_cast<uint64_t>(kEnchanting) | static_cast<uint64_t>(kWaterbreathing) | static_cast<uint64_t>(kSmithing) | static_cast<uint64_t>(kSpeech) | static_cast<uint64_t>(kCarryWeight) | static_cast<uint64_t>(kPersuasion) | static_cast<uint64_t>(kAlchemy),
 		// 1C007
 		kAnyFood = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate),
 		
@@ -482,8 +483,8 @@ public:
 			/// <summary>
 			/// items associated with the objects above
 			/// </summary>
-			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> items;
-			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t>> death;
+			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> items;
+			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> death;
 			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> potions;
 			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> fortify;
 			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> poisons;
@@ -621,7 +622,7 @@ public:
 		/// </summary>
 		/// <param name="actor">actor to calculate items for</param>
 		/// <returns></returns>
-		static std::vector<RE::AlchemyItem*> GetDistrItems(ActorInfo* acinfo);
+		static std::vector<RE::TESBoundObject*> GetDistrItems(ActorInfo* acinfo);
 		/// <summary>
 		/// Returns potions that shall be distributed to [actor]
 		/// </summary>
@@ -694,7 +695,7 @@ public:
 	};
 
 	static inline int _MaxDuration = 10000;
-	static inline int _MaxFortifyDuration = 60000;
+	static inline int _MaxFortifyDuration = 180000;
 
 	//general
 	static inline long _maxPotionsPerCycle = 2;
