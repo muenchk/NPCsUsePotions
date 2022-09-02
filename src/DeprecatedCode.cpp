@@ -209,4 +209,100 @@ namespace Events
 		PROF1_2("{}[PROF] [ActorUsePotion] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 
+
+	/// UNUSED
+
+	
+
+	/// <summary>
+	/// extracts all poisons from a list of AlchemyItems
+	/// </summary>
+	/// <param name="items"></param>
+	/// <returns></returns>
+	std::list<RE::AlchemyItem*> GetPoisons(std::list<RE::AlchemyItem*>& items)
+	{
+		std::list<RE::AlchemyItem*> ret{};
+		for (auto item : items)
+			if (item->IsPoison())
+				ret.insert(ret.begin(), item);
+		return ret;
+	}
+	/// <summary>
+	/// extracts all food items from a list of alchemyitems
+	/// </summary>
+	/// <param name="items"></param>
+	/// <returns></returns>
+	std::list<RE::AlchemyItem*> GetFood(std::list<RE::AlchemyItem*>& items)
+	{
+		std::list<RE::AlchemyItem*> ret{};
+		for (auto item : items)
+			if (item->IsFood())
+				ret.insert(ret.begin(), item);
+		return ret;
+	}
+	/// <summary>
+	/// extracts all potions from a list of alchemyitems
+	/// </summary>
+	/// <param name="items"></param>
+	/// <returns></returns>
+	std::list<RE::AlchemyItem*> GetPotions(std::list<RE::AlchemyItem*>& items)
+	{
+		std::list<RE::AlchemyItem*> ret{};
+		for (auto item : items)
+			if ((item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion)))
+				ret.insert(ret.begin(), item);
+		return ret;
+	}
+
+	/// <summary>
+	/// This function returns all alchemy items contained in the death item lists of the actor
+	/// </summary>
+	std::list<RE::AlchemyItem*> FindDeathAlchemyItems(RE::Actor* _actor)
+	{
+		LOG_2("{}[Events] [FINDALCHEMYITEMS] begin");
+		// create return list
+		std::list<RE::AlchemyItem*> ret{};
+		// get first leveled list
+		if (_actor->GetActorBase() == nullptr)
+			return ret;
+		RE::TESLeveledList* deathlist = _actor->GetActorBase()->deathItem;
+		if (deathlist == nullptr)
+			return ret;
+		// fix pointer to entries of first list
+		auto entries = &(deathlist->entries);
+		std::int8_t chancenone = deathlist->chanceNone;
+		std::list<RE::TESLeveledList*> lists{};
+
+		// tmp vars
+		RE::TESLeveledList* ls = nullptr;
+		RE::AlchemyItem* al = nullptr;
+		int iter = 0;
+		// while entries pointer is valid search the leveled list for matching items
+		while (entries != nullptr && iter < 30) {
+			LOG_4("{}[FINDALCHEMYITEMS] iter");
+			if (rand100(rand) > chancenone)
+				for (int i = 0; i < entries->size(); i++) {
+					al = (*entries)[i].form->As<RE::AlchemyItem>();
+					ls = (*entries)[i].form->As<RE::TESLeveledList>();
+					LOG_4("{}[FINDALCHEMYITEMS] checking item");
+					if (al) {
+						ret.insert(ret.begin(), al);
+						LOG_4("{}[FINDALCHEMYITEMS] found alchemy item");
+					} else if (ls)
+						lists.insert(lists.begin(), ls);
+				}
+			if (lists.size() > 0) {
+				entries = &(lists.front()->entries);
+				chancenone = lists.front()->chanceNone;
+				lists.pop_front();
+			} else {
+				entries = nullptr;
+				chancenone = 0;
+			}
+			iter++;
+		}
+		LOG_2("{}[FINDALCHEMYITEMS] end");
+		return ret;
+	}
+
 }

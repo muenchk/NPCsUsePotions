@@ -1,5 +1,6 @@
 build/
 buildvr/
+.vs/
 src/.vs/
 src/.vscode
 src/out

@@ -3,6 +3,7 @@
 #include "Settings.h"
 #include "Console.h"
 #include "Game.h"
+#include "NUPInterface.h"
 
 namespace
 {
@@ -125,4 +126,13 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	//Hooks::InstallHooks();
 
 	return true;
+}
+
+extern "C" DLLEXPORT void* SKSEAPI RequestPluginAPI()
+{
+	auto api = NPCsUsePotions::NUPInterface::GetSingleton();
+
+	logger::info("[API] NUP API requested and returned");
+
+	return static_cast<void*>(api);
 }

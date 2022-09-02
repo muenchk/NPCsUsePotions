@@ -1,4 +1,3 @@
-#include "Settings.h"
 #include "Utility.h"
 #include <fstream>
 #include <iostream>
@@ -12,10 +11,9 @@
 #include <tuple>
 #include <vector>
 #include "ActorManipulation.h"
+#include "Distribution.h"
+#include "Settings.h"
 
-using ActorStrength = ActorStrength;
-using AlchemyEffect = Settings::AlchemyEffect;
-using ItemStrength = ItemStrength;
 using ItemType = Settings::ItemType;
 
 static std::mt19937 randi((unsigned int)(std::chrono::system_clock::now().time_since_epoch().count()));
@@ -29,7 +27,7 @@ static std::uniform_int_distribution<signed> rand100(1, 100);
 
 // private
 
-Settings::AlchemyEffect Settings::Distribution::Rule::GetRandomEffect(Settings::ItemType type)
+AlchemyEffect Distribution::Rule::GetRandomEffect(Settings::ItemType type)
 {
 	int random = randRR(randi);
 	switch (type) {
@@ -62,10 +60,10 @@ Settings::AlchemyEffect Settings::Distribution::Rule::GetRandomEffect(Settings::
 		}
 		break;
 	}
-	return Settings::AlchemyEffect::kNone;
+	return AlchemyEffect::kNone;
 }
 
-Settings::AlchemyEffect Settings::Distribution::Rule::GetRandomEffectChance(Settings::ItemType type)
+AlchemyEffect Distribution::Rule::GetRandomEffectChance(Settings::ItemType type)
 {
 	int random = randRR(randi);
 	switch (type) {
@@ -98,10 +96,10 @@ Settings::AlchemyEffect Settings::Distribution::Rule::GetRandomEffectChance(Sett
 		}
 		break;
 	}
-	return Settings::AlchemyEffect::kNone;
+	return AlchemyEffect::kNone;
 }
 
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion1(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPotion1(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -115,7 +113,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion1(ActorInfo* acinf
 	}
 	return GetRandomPotion(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion2(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPotion2(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -129,7 +127,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion2(ActorInfo* acinf
 	}
 	return GetRandomPotion(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion3(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPotion3(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -143,7 +141,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion3(ActorInfo* acinf
 	}
 	return GetRandomPotion(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotionAdditional(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPotionAdditional(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -157,7 +155,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotionAdditional(ActorIn
 	}
 	return GetRandomPotion(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPotion(int str, ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPotion(int str, ActorInfo* acinfo)
 {
 	str += potionTierAdjust;
 	if (str < 1)
@@ -214,7 +212,7 @@ RetryPotion:
 		return items[r(randi)];
 	return nullptr;
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison1(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPoison1(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -228,7 +226,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison1(ActorInfo* acinf
 	}
 	return GetRandomPoison(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison2(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPoison2(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -242,7 +240,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison2(ActorInfo* acinf
 	}
 	return GetRandomPoison(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison3(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPoison3(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -256,7 +254,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison3(ActorInfo* acinf
 	}
 	return GetRandomPoison(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoisonAdditional(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPoisonAdditional(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -270,7 +268,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoisonAdditional(ActorIn
 	}
 	return GetRandomPoison(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomPoison(int str, ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomPoison(int str, ActorInfo* acinfo)
 {
 	str += poisonTierAdjust;
 	if (str < 1)
@@ -328,7 +326,7 @@ RetryPoison:
 		return items[r(randi)];
 	return nullptr;
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion1(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion1(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -342,7 +340,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion1(ActorInfo
 	}
 	return GetRandomFortifyPotion(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion2(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion2(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -356,7 +354,7 @@ RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion2(ActorInfo
 	}
 	return GetRandomFortifyPotion(str, acinfo);
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFortifyPotion(int str, ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion(int str, ActorInfo* acinfo)
 {
 	// get matching items
 	std::vector<RE::AlchemyItem*> items;
@@ -406,7 +404,7 @@ RetryFortify:
 		return items[r(randi)];
 	return nullptr;
 }
-RE::AlchemyItem* Settings::Distribution::Rule::GetRandomFood_intern(ActorInfo* acinfo)
+RE::AlchemyItem* Distribution::Rule::GetRandomFood_intern(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
 	if (valid == false)
@@ -463,7 +461,7 @@ GetRandomFoodeff:;
 
 // public
 
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPotions(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPotions(ActorInfo* acinfo)
 {
 	std::vector<RE::AlchemyItem*> ret;
 	auto tmp = GetRandomPotion1(acinfo);
@@ -480,7 +478,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPotions(Act
 	}
 	return ret;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPoisons(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPoisons(ActorInfo* acinfo)
 {
 	std::vector<RE::AlchemyItem*> ret;
 	auto tmp = GetRandomPoison1(acinfo);
@@ -497,7 +495,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomPoisons(Act
 	}
 	return ret;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFortifyPotions(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFortifyPotions(ActorInfo* acinfo)
 {
 	std::vector<RE::AlchemyItem*> ret;
 	auto tmp = GetRandomFortifyPotion1(acinfo);
@@ -508,7 +506,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFortifyPoti
 		ret.push_back(tmp);
 	return ret;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFood(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFood(ActorInfo* acinfo)
 {
 	return std::vector<RE::AlchemyItem*>{ GetRandomFood_intern(acinfo) };
 }
@@ -517,64 +515,64 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::Rule::GetRandomFood(ActorI
 
 #pragma region Distribution
 
-std::vector<RE::TESBoundObject*> Settings::Distribution::GetDistrItems(ActorInfo* acinfo)
+std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
 	std::vector<RE::TESBoundObject*> ret;
 	if (Settings::_featDistributePotions) {
 		auto ritems = rule->GetRandomPotions(acinfo);
-		LOG_4("{}[GetDistrItems] matching potions");
+		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching potions");
 		auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 		// if the number of found items is less then the number of items to add
 		// then add the difference in numbers
 		if (diff > 0) {
 			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] potions size: {}", std::to_string(ritems.size()));
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] potions size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
 		//logger::info("potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributePoisons) {
 		auto ritems = rule->GetRandomPoisons(acinfo);
-		LOG_4("{}[GetDistrItems] matching poisons");
+		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching poisons");
 		auto items = ACM::GetMatchingPoisons(acinfo, rule->validPoisons);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 		// if the number of found items is less then the number of items to add
 		// then add the difference in numbers
 		if (diff > 0) {
 			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] poisons size: {}", std::to_string(ritems.size()));
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] poisons size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
 		//logger::info("poisons to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFortifyPotions) {
 		auto ritems = rule->GetRandomFortifyPotions(acinfo);
-		LOG_4("{}[GetDistrItems] matching fortify");
+		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching fortify");
 		auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 		// if the number of found items is less then the number of items to add
 		// then add the difference in numbers
 		if (diff > 0) {
 			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] fortify size: {}", std::to_string(ritems.size()));
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] fortify size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
 		//logger::info("fortify potions to give:\t{}", ritems.size());
 	}
 	if (Settings::_featDistributeFood) {
 		auto ritems = rule->GetRandomFood(acinfo);
-		LOG_4("{}[GetDistrItems] matching food");
+		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching food");
 		auto items = ACM::GetMatchingFood(acinfo, rule->validFood, false);
 		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		LOG1_4("{}[GetDistrItems] diff: {}", diff);
+		LOG1_4("{}[SettingsDistribution] [GetDistrItems] diff: {}", diff);
 		// if the number of found items is less then the number of items to add
 		// then add the difference in numbers
 		if (diff > 0) {
-			LOG_4("{}[GetDistrItems] diff greater 0");
+			LOG_4("{}[SettingsDistribution] [GetDistrItems] diff greater 0");
 			ritems.resize(diff);
-			LOG1_4("{}[GetDistrItems] food size: {}", std::to_string(ritems.size()));
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] food size: {}", std::to_string(ritems.size()));
 			ret.insert(ret.end(), ritems.begin(), ritems.end());
 		}
 		//logger::info("food to give:\t{}", ritems.size());
@@ -606,12 +604,12 @@ std::vector<RE::TESBoundObject*> Settings::Distribution::GetDistrItems(ActorInfo
 		acinfo->_distributedCustomItems = true;
 	}
 	if (ret.size() > 0 && ret.back() == nullptr) {
-		LOG_4("{}[GetDistrItems] remove last item");
+		LOG_4("{}[SettingsDistribution] [GetDistrItems] remove last item");
 		ret.pop_back();
 	}
 	return ret;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPotions(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomPotions(acinfo);
@@ -624,7 +622,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPotions(ActorInfo*
 	ritems.resize(diff);
 	return ritems;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPoisons(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::GetDistrPoisons(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomPoisons(acinfo);
@@ -637,7 +635,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrPoisons(ActorInfo*
 	ritems.resize(diff);
 	return ritems;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFortifyPotions(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::GetDistrFortifyPotions(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomFortifyPotions(acinfo);
@@ -650,7 +648,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFortifyPotions(Act
 	ritems.resize(diff);
 	return ritems;
 }
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFood(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::GetDistrFood(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomFood(acinfo);
@@ -664,7 +662,7 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetDistrFood(ActorInfo* ac
 	return ritems;
 }
 
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItemsUnique(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
@@ -697,35 +695,35 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItemsU
 	return ret;
 }
 
-std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItems(ActorInfo* acinfo)
+std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo* acinfo)
 {
-	//logger::info("GetMatchingInventoryItems enter");
+	//logger::info("[SettingsDistribution] GetMatchingInventoryItems enter");
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::_featDistributePotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
-		//logger::info("GetMatchingInventoryItems| potions {} | found: {}", Utility::GetHex(rule->validPotions), items.size());
+		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| potions {} | found: {}", Utility::GetHex(rule->validPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
 	if (Settings::_featDistributePoisons) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPoisons(acinfo, rule->validPoisons);
-		//logger::info("GetMatchingInventoryItems| poisons {} | found: {}", Utility::GetHex(rule->validPoisons), items.size());
+		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| poisons {} | found: {}", Utility::GetHex(rule->validPoisons), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
 	if (Settings::_featDistributeFortifyPotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
-		//logger::info("GetMatchingInventoryItems| fortify {} | found: {}", Utility::GetHex(rule->validFortifyPotions), items.size());
+		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| fortify {} | found: {}", Utility::GetHex(rule->validFortifyPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
 	if (Settings::_featDistributeFood) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingFood(acinfo, rule->validFood, false);
-		//logger::info("GetMatchingInventoryItems| food {} | found: {}", Utility::GetHex(rule->validFood), items.size());
+		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| food {} | found: {}", Utility::GetHex(rule->validFood), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
@@ -746,13 +744,13 @@ std::vector<RE::AlchemyItem*> Settings::Distribution::GetMatchingInventoryItems(
 	return ret;
 }
 /*
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
+Distribution::Rule* Distribution::CalcRule(RE::Actor* actor)
 {
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
 		//logger::info("calc c 1");
-		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
 		return CalcRule(actor, acs, is, &info, nullptr);
 	} else {
 		//logger::info("calc c 2");
@@ -760,13 +758,13 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor)
 	}
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, CustomItemStorage* custItems)
+Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, CustomItemStorage* custItems)
 {
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
 		//logger::info("calc c 1");
-		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
 		return CalcRule(actor, acs, is, &info, custItems);
 	} else {
 		//logger::info("calc c 2");
@@ -774,30 +772,30 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 	}
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc)
+Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc)
 {
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	return CalcRule(npc, acs, is, nullptr);
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
+Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
 {
 	//logger::info("fire 1");
 	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
 		//logger::info("fire 2");
-		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
 		return CalcRule(actor, acs, is, &info, nullptr);
 	} else
 		return CalcRule(actor, acs, is, nullptr, nullptr);
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems)
+Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems)
 {
 	//logger::info("fire 1");
 	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
 		//logger::info("fire 2");
-		auto info = Settings::Distribution::ExtractTemplateInfo(actor->GetActorBase());
+		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
 		return CalcRule(actor, acs, is, &info, custItems);
 	} else
 		return CalcRule(actor, acs, is, nullptr, custItems);
@@ -808,32 +806,32 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor,
 /// </summary>
 /// <param name="actor">ActorRef to check</param>
 /// <returns></returns>
-bool Settings::Distribution::ExcludedNPC(RE::Actor* actor)
+bool Distribution::ExcludedNPC(RE::Actor* actor)
 {
 	// skip fucking deleted references
 	if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
-	bool ret = Settings::Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
+	bool ret = Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
 	           actor->IsInFaction(Settings::CurrentFollowerFaction) ||
 	           actor->IsInFaction(Settings::CurrentHirelingFaction) ||
-	           (Settings::Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID())) ||
+	           (Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID())) ||
 	           actor->IsGhost();
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-	if (!Settings::Distribution::npcMap()->contains(actor->GetFormID()) && ret == false) {
+	if (!Distribution::npcMap()->contains(actor->GetFormID()) && ret == false) {
 		auto base = actor->GetActorBase();
 		for (uint32_t i = 0; i < base->numKeywords; i++) {
 			if (base->keywords[i])
-				ret |= Settings::Distribution::excludedAssoc()->contains(base->keywords[i]->GetFormID());
+				ret |= Distribution::excludedAssoc()->contains(base->keywords[i]->GetFormID());
 		}
 		for (uint32_t i = 0; i < base->factions.size(); i++) {
 			if (base->factions[i].faction)
-				ret |= Settings::Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID());
+				ret |= Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID());
 		}
 		auto race = actor->GetRace();
 		if (race) {
-			ret |= Settings::Distribution::excludedAssoc()->contains(race->GetFormID());
+			ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
-				ret |= Settings::Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+				ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
 			}
 		}
 	}
@@ -844,37 +842,37 @@ bool Settings::Distribution::ExcludedNPC(RE::Actor* actor)
 /// </summary>
 /// <param name="npc">ActorBase to check</param>
 /// <returns></returns>
-bool Settings::Distribution::ExcludedNPC(RE::TESNPC* npc)
+bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 {
 	// skip fucking deleted references
 	if (npc->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
-	bool ret = (Settings::Distribution::excludedNPCs()->contains(npc->GetFormID())) ||
+	bool ret = (Distribution::excludedNPCs()->contains(npc->GetFormID())) ||
 	           npc->IsInFaction(Settings::CurrentFollowerFaction) ||
 	           npc->IsInFaction(Settings::CurrentHirelingFaction) ||
 	           npc->IsGhost();
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-	if (!Settings::Distribution::npcMap()->contains(npc->GetFormID()) && ret == false) {
+	if (!Distribution::npcMap()->contains(npc->GetFormID()) && ret == false) {
 		for (uint32_t i = 0; i < npc->numKeywords; i++) {
 			if (npc->keywords[i])
-				ret |= Settings::Distribution::excludedAssoc()->contains(npc->keywords[i]->GetFormID());
+				ret |= Distribution::excludedAssoc()->contains(npc->keywords[i]->GetFormID());
 		}
 		for (uint32_t i = 0; i < npc->factions.size(); i++) {
 			if (npc->factions[i].faction)
-				ret |= Settings::Distribution::excludedAssoc()->contains(npc->factions[i].faction->GetFormID());
+				ret |= Distribution::excludedAssoc()->contains(npc->factions[i].faction->GetFormID());
 		}
 		auto race = npc->GetRace();
 		if (race) {
-			ret |= Settings::Distribution::excludedAssoc()->contains(race->GetFormID());
+			ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
-				ret |= Settings::Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+				ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
 			}
 		}
 	}
 	return ret;
 }
 /*
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
+Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
 	if (_GameDifficultyScaling) {
@@ -1298,17 +1296,17 @@ SKIPActor:
 		//logger::info("rule 19");
 		if (baseexcluded) {
 			//logger::info("rule 20");
-			return Settings::Distribution::emptyRule;
+			return Distribution::emptyRule;
 		}
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return Settings::Distribution::defaultRule;
+		LOG1_1("{}[CalcRuleBase] default rule found: {}", Distribution::defaultRule->ruleName);
+		return Distribution::defaultRule;
 	}
 }
 */
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
+Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
-	if (_GameDifficultyScaling) {
+	if (Settings::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
@@ -1662,23 +1660,23 @@ SKIPNPC:
 		acs = ActorStrength::Boss;
 
 	if (rule) {
-		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
+		LOG1_1("{}[SettingsDistribution] [CalcRuleBase] rule found: {}", rule->ruleName);
 		return rule;
 	} else {
 		// there are no rules!!!
 		if (baseexcluded)
-			return Settings::Distribution::emptyRule;
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return Settings::Distribution::defaultRule;
+			return Distribution::emptyRule;
+		LOG1_1("{}[SettingsDistribution] [CalcRuleBase] default rule found: {}", Distribution::defaultRule->ruleName);
+		return Distribution::defaultRule;
 	}
 }
 
-Settings::Distribution::Rule* Settings::Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tpltinfo)
+Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tpltinfo)
 {
 	if (acinfo == nullptr)
 		return emptyRule;
 	// calc strength section
-	if (_GameDifficultyScaling) {
+	if (Settings::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
@@ -1697,19 +1695,19 @@ Settings::Distribution::Rule* Settings::Distribution::CalcRule(ActorInfo* acinfo
 	} else {
 		// get level dependencies
 		short lvl = acinfo->actor->GetLevel();
-		if (lvl <= _LevelEasy) {
+		if (lvl <= Settings::_LevelEasy) {
 			acinfo->actorStrength = ActorStrength::Weak;
 			acinfo->itemStrength = ItemStrength::kWeak;
 			// weak actor
-		} else if (lvl <= _LevelNormal) {
+		} else if (lvl <= Settings::_LevelNormal) {
 			acinfo->actorStrength = ActorStrength::Normal;
 			acinfo->itemStrength = ItemStrength::kStandard;
 			// normal actor
-		} else if (lvl <= _LevelDifficult) {
+		} else if (lvl <= Settings::_LevelDifficult) {
 			acinfo->actorStrength = ActorStrength::Powerful;
 			acinfo->itemStrength = ItemStrength::kPotent;
 			// difficult actor
-		} else if (lvl <= _LevelInsane) {
+		} else if (lvl <= Settings::_LevelInsane) {
 			acinfo->actorStrength = ActorStrength::Insane;
 			acinfo->itemStrength = ItemStrength::kInsane;
 			// insane actor
@@ -2111,17 +2109,17 @@ SKIPActor:
 
 	if (rule) {
 		//logger::info("rule 18 {}", Utility::GetHex((uintptr_t)rule));
-		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
+		LOG1_1("{}[SettingsDistribution] [CalcRuleBase] rule found: {}", rule->ruleName);
 		return rule;
 	} else {
 		// there are no rules!!!
 		//logger::info("rule 19");
 		if (baseexcluded) {
 			//logger::info("rule 20");
-			return Settings::Distribution::emptyRule;
+			return Distribution::emptyRule;
 		}
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return Settings::Distribution::defaultRule;
+		LOG1_1("{}[SettingsDistribution] [CalcRuleBase] default rule found: {}", Distribution::defaultRule->ruleName);
+		return Distribution::defaultRule;
 	}
 }
 
@@ -2144,10 +2142,10 @@ static std::string GetFormEditorID(RE::TESFaction* fid)
 	return "ERROR";
 }
 
-std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> Settings::Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
+std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
 {
 	// calc strength section
-	if (_GameDifficultyScaling) {
+	if (Settings::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
@@ -2166,19 +2164,19 @@ std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> Setting
 	} else {
 		// get level dependencies
 		short lvl = actor->GetLevel();
-		if (lvl <= _LevelEasy) {
+		if (lvl <= Settings::_LevelEasy) {
 			acs = ActorStrength::Weak;
 			is = ItemStrength::kWeak;
 			// weak actor
-		} else if (lvl <= _LevelNormal) {
+		} else if (lvl <= Settings::_LevelNormal) {
 			acs = ActorStrength::Normal;
 			is = ItemStrength::kStandard;
 			// normal actor
-		} else if (lvl <= _LevelDifficult) {
+		} else if (lvl <= Settings::_LevelDifficult) {
 			acs = ActorStrength::Powerful;
 			is = ItemStrength::kPotent;
 			// difficult actor
-		} else if (lvl <= _LevelInsane) {
+		} else if (lvl <= Settings::_LevelInsane) {
 			acs = ActorStrength::Insane;
 			is = ItemStrength::kInsane;
 			// insane actor
@@ -2199,7 +2197,7 @@ std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> Setting
 
 	auto base = actor->GetActorBase();
 
-	std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> rls;
+	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls;
 	Rule* rule = nullptr;
 
 	//std::vector<Rule*> rls;
@@ -2332,16 +2330,16 @@ std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> Setting
 		acs = ActorStrength::Boss;
 
 	if (rule) {
-		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
+		LOG1_1("{}[SettingsDistribution] [CalcRuleBase] rule found: {}", rule->ruleName);
 		rls.insert(rls.begin(), { INT_MIN, rule, "Chosen" });
 		return rls;
 	} else {
 		// there are no rules!!!
 		if (baseexcluded) {
-			return std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>>{ { INT_MIN, Settings::Distribution::emptyRule, "Empty" } };
+			return std::vector<std::tuple<int, Distribution::Rule*, std::string>>{ { INT_MIN, Distribution::emptyRule, "Empty" } };
 		}
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Settings::Distribution::defaultRule->ruleName);
-		return std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>>{ { INT_MIN, Settings::Distribution::defaultRule, "Default" } };
+		LOG1_1("{}[SettingsDistribution] [CalcRuleBase] default rule found: {}", Distribution::defaultRule->ruleName);
+		return std::vector<std::tuple<int, Distribution::Rule*, std::string>>{ { INT_MIN, Distribution::defaultRule, "Default" } };
 	}
 }
 #pragma endregion

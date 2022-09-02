@@ -1,16 +1,21 @@
 set(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
+include_directories("${ROOT_DIR}/include")
+
 set(SOURCE_DIR "${ROOT_DIR}/src")
 set(SOURCE_FILES
 	"${SOURCE_DIR}/main.cpp"
 	"${SOURCE_DIR}/Hooks.cpp"
 	"${SOURCE_DIR}/Events.cpp"
 	"${SOURCE_DIR}/Settings.cpp"
-	"${SOURCE_DIR}/Settings_Distribution.cpp"
+	"${SOURCE_DIR}/SettingsLoadSave.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
+	"${SOURCE_DIR}/Distribution.cpp"
 	"${SOURCE_DIR}/Console.cpp"
 	"${SOURCE_DIR}/ActorInfo.cpp"
 	"${SOURCE_DIR}/Game.cpp"
+	"${SOURCE_DIR}/Utility.cpp"
+	"${SOURCE_DIR}/NUPInterface.cpp"
 	"${SOURCE_DIR}/PCH.h"
 )
 
