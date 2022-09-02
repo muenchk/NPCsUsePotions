@@ -141,11 +141,15 @@ public:
 	bool _boss;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
+
+	std::string ToString();
 	
 
 	~ActorInfo()
 	{
-		delete citems;
+		try {
+			delete citems;
+		} catch (std::exception&) {}
 	}
 
 public:

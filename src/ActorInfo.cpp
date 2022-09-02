@@ -1,8 +1,11 @@
 #include<ActorInfo.h>
 #include<Settings.h>
+#include<Utility.h>
+#include <Distribution.h>
 
 ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
 {
+	LOG_3("{}[ActorInfo] [ActorInfo]");
 	actor = _actor;
 	durHealth = _durHealth;
 	durMagicka = _durMagicka;
@@ -13,17 +16,26 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 	CalcCustomItems();
 }
 
+std::string ActorInfo::ToString()
+{
+	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor)) + "\tactor id:" + Utility::GetHex((actor ? actor->GetFormID() : 0));
+}
+
 void ActorInfo::CalcCustomItems()
 {
-	Settings::Distribution::CalcRule(this);
+	LOG_3("{}[ActorInfo] [CalcCustomItems]");
+	Distribution::CalcRule(this);
 }
 
 #define CV(x) static_cast<uint64_t>(x)
 
 std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> ActorInfo::FilterCustomConditionsDistr(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms)
 {
+	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
 	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> dist;
 	for (int i = 0; i < itms.size(); i++) {
+		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0)
+			continue;
 		uint64_t cond1 = std::get<3>(itms[i]);
 		uint64_t cond2 = std::get<4>(itms[i]);
 		bool valid = true;
@@ -40,8 +52,11 @@ std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> Actor
 
 std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> ActorInfo::FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> itms)
 {
+	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems]");
 	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> dist;
 	for (int i = 0; i < itms.size(); i++) {
+		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0)
+			continue;
 		uint64_t cond1 = std::get<3>(itms[i]);
 		uint64_t cond2 = std::get<4>(itms[i]);
 		bool valid = true;
@@ -58,14 +73,17 @@ std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, boo
 
 bool ActorInfo::CanUseItem(RE::FormID item)
 {
+	LOG_3("{}[ActorInfo] [CanUseItem]");
 	return CanUsePotion(item) | CanUsePoison(item) | CanUseFortify(item) | CanUseFood(item);
 }
 bool ActorInfo::CanUsePot(RE::FormID item)
 {
+	LOG_3("{}[ActorInfo] [CanUsePot]");
 	return CanUsePotion(item) | CanUseFortify(item);
 }
 bool ActorInfo::CanUsePotion(RE::FormID item)
 {
+	LOG_3("{}[ActorInfo] [CanUsePotion]");
 	auto itr = citems->potionsset.find(item);
 	if (itr->second < 0 || itr->second > citems->potions.size())
 		return false;
@@ -80,6 +98,7 @@ bool ActorInfo::CanUsePotion(RE::FormID item)
 }
 bool ActorInfo::CanUsePoison(RE::FormID item) 
 {
+	LOG_3("{}[ActorInfo] [CanUsePoison]");
 	auto itr = citems->poisonsset.find(item);
 	if (itr->second < 0 || itr->second > citems->poisons.size())
 		return false;
@@ -94,6 +113,7 @@ bool ActorInfo::CanUsePoison(RE::FormID item)
 }
 bool ActorInfo::CanUseFortify(RE::FormID item)
 {
+	LOG_3("{}[ActorInfo] [CanUseFortify]");
 	auto itr = citems->fortifyset.find(item);
 	if (itr->second < 0 || itr->second > citems->fortify.size())
 		return false;
@@ -108,6 +128,7 @@ bool ActorInfo::CanUseFortify(RE::FormID item)
 }
 bool ActorInfo::CanUseFood(RE::FormID item)
 {
+	LOG_3("{}[ActorInfo] [CanUseFood]");
 	auto itr = citems->foodset.find(item);
 	if (itr->second < 0 || itr->second > citems->food.size())
 		return false;
@@ -123,6 +144,7 @@ bool ActorInfo::CanUseFood(RE::FormID item)
 
 bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
 {
+	LOG_3("{}[ActorInfo] [IsCustomAlchItem]");
 	auto itr = citems->potionsset.find(item->GetFormID());
 	if (itr != citems->potionsset.end())
 		return true;
@@ -139,6 +161,7 @@ bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
 }
 bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 {
+	LOG_3("{}[ActorInfo] [IsCustomItem]");
 	auto itr = citems->itemsset.find(item->GetFormID());
 	if (itr != citems->itemsset.end())
 		return true;
@@ -147,6 +170,7 @@ bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 
 void ActorInfo::CustomItems::CreateMaps()
 {
+	LOG_3("{}[ActorInfo] [CreatMaps]");
 	// items map
 	itemsset.clear();
 	for (int i = 0; i < items.size(); i++) {
@@ -181,6 +205,7 @@ void ActorInfo::CustomItems::CreateMaps()
 
 void ActorInfo::CustomItems::Reset()
 {
+	LOG_3("{}[ActorInfo] [Reset]");
 	items.clear();
 	itemsset.clear();
 	death.clear();

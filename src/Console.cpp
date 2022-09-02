@@ -2,9 +2,11 @@
 #include<Settings.h>
 #include<Utility.h>
 #include<Events.h>
+#include<Distribution.h>
 
 bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&)
 {
+	LOG_3("{}[Console] [CalcRule] [Process]");
 	auto console = RE::ConsoleLog::GetSingleton();
 	//logger::info("console 1");
 	if (a_thisObj == nullptr) {
@@ -20,7 +22,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	//logger::info("console 3");
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
-	std::vector<std::tuple<int, Settings::Distribution::Rule*, std::string>> rls = Settings::Distribution::CalcAllRules(actor, acs, is);
+	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
 	//logger::info("console 4");
 
 	std::string tmp = "Displaying stats for Actor:\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::GetHex(actor->GetFormID());
@@ -32,7 +34,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetRace()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
-	tmp = "Excluded:\t\t\t\t" + std::to_string(Settings::Distribution::ExcludedNPC(actor));
+	tmp = "Excluded:\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(actor));
 	console->Print(tmp.c_str());
 	//logger::info("console 6");
 	tmp = "Strength of Actor:\t\t\t" + Utility::ToString(acs);
@@ -80,6 +82,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 
 bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR*, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&) 
 {
+	LOG_3("{}[Console] [ReloadDist] [Process]");
 	/*{
 		std::ofstream outcons("Data\\SKSE\\Plugins\\NPCsUsePotions\\ConsoleCommands.txt");
 		std::ofstream outscript("Data\\SKSE\\Plugins\\NPCsUsePotions\\ScriptCommands.txt");

@@ -10,6 +10,17 @@
 	if (Logging::EnableLog) \
 		logger::info(s, t);
 
+#define LOGE2_1(s, t, u)       \
+	if (Logging::EnableLog) \
+		logger::info(s, t, u);
+
+#define LOGE2_1(s, t, u, v)    \
+	if (Logging::EnableLog) \
+		logger::info(s, t, u, v);
+
+#define LOGE2_1(s, t, u, v, w) \
+	if (Logging::EnableLog) \
+		logger::info(s, t, u, v, w);
 #define LOGE_2(s)                                       \
 	if (Logging::EnableLog && Logging::LogLevel >= 1) \
 		logger::info(s);
@@ -25,6 +36,10 @@
 #define LOGE3_2(s, t, u, v)                             \
 	if (Logging::EnableLog && Logging::LogLevel >= 1) \
 		logger::info(s, t, u, v);
+
+#define LOGE4_2(s, t, u, v, w)                           \
+	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+		logger::info(s, t, u, v, w);
 
 #define LOGE5_2(s, t, u, v, x, y)                       \
 	if (Logging::EnableLog && Logging::LogLevel >= 1) \
@@ -46,6 +61,10 @@
 	if (Logging::EnableLog) \
 		logger::info(s, Logging::TimePassed() + " | ", t, u, v);
 
+#define LOG4_1(s, t, u, v, w)  \
+	if (Logging::EnableLog) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w);
+
 #define LOG5_1(s, t, u, v, w, x) \
 	if (Logging::EnableLog)     \
 		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x);
@@ -62,6 +81,14 @@
 	if (Logging::EnableLog && Logging::LogLevel >= 1) \
 		logger::info(s, Logging::TimePassed() + " | ", t, u);
 
+#define LOG3_2(s, t, u, v)                               \
+	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w);
+
+#define LOG4_2(s, t, u, v, w)                               \
+	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w);
+
 #define LOG_3(s)                                        \
 	if (Logging::EnableLog && Logging::LogLevel >= 2) \
 		logger::info(s, Logging::TimePassed() + " | ");
@@ -69,6 +96,18 @@
 #define LOG1_3(s, t)                                    \
 	if (Logging::EnableLog && Logging::LogLevel >= 2) \
 		logger::info(s, Logging::TimePassed() + " | ", t);
+
+#define LOG2_3(s, t, u)                                  \
+	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u);
+
+#define LOG3_3(s, t, u, v)                                  \
+	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v);
+
+#define LOG4_3(s, t, u, v, w)                                  \
+	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w);
 
 #define LOG_4(s)                                        \
 	if (Logging::EnableLog && Logging::LogLevel >= 3) \
@@ -86,13 +125,34 @@
 	if (Logging::EnableLog && Logging::LogLevel >= 3) \
 		logger::info(s, Logging::TimePassed() + " | ", t, u, v);
 
-#define LOG4_1(s, t)                                    \
+#define LOG4_4(s, t, u, v, w)                                    \
 	if (Logging::EnableLog && Logging::LogLevel >= 3) \
-		logger::info(s, Logging::TimePassed() + " | ", t);
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w);
 
 #define LOG4_4(s, t, u, v, w)                           \
 	if (Logging::EnableLog && Logging::LogLevel >= 3) \
 		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w);
+
+#define LOG_5(s)                                      \
+	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+		logger::info(s, Logging::TimePassed() + " | ");
+
+#define LOG1_5(s, t)                                  \
+	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+		logger::info(s, Logging::TimePassed() + " | ", t);
+
+#define LOG2_5(s, t, u)                                  \
+	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u);
+
+#define LOG3_5(s, t, u, v)                                  \
+	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v);
+
+#define LOG4_5(s, t, u, v, w)                                  \
+	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+		logger::info(s, Logging::TimePassed() + " | ", t, u, v, w);
+
 
 #define PROF_1(s)                  \
 	if (Logging::EnableProfiling) \
