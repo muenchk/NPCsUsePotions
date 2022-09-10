@@ -4,6 +4,7 @@
 #include "Console.h"
 #include "Game.h"
 #include "NUPInterface.h"
+#include "DataStorage.h"
 
 namespace
 {
@@ -93,7 +94,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// register console commands
 		Console::RegisterConsoleCommands();
 		logger::info("Registered Console Commands");
-		
+		// register data storage
+		Storage::Register();
 	}
 }
 
@@ -103,7 +105,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	InitializeLog();
 #endif
 
-	logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
+	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
 

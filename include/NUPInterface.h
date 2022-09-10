@@ -42,9 +42,11 @@ namespace NPCsUsePotions
 	[[nodiscard]] inline void* RequestPluginAPI()
 	{
 		auto pluginHandle = GetModuleHandle("NPCsUsePotions.dll");
-		_RequestPluginAPI requestAPIFunction = (_RequestPluginAPI)GetProcAddress(pluginHandle, "RequestPluginAPI");
-		if (requestAPIFunction) {
-			return requestAPIFunction();
+		if (pluginHandle != 0) {
+			_RequestPluginAPI requestAPIFunction = (_RequestPluginAPI)GetProcAddress(pluginHandle, "RequestPluginAPI");
+			if (requestAPIFunction) {
+				return requestAPIFunction();
+			}
 		}
 		return nullptr;
 	}

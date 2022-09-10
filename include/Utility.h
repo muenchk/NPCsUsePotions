@@ -564,6 +564,8 @@ public:
 	/// <param name="acinfo">ActorInfo to verify</param>
 	/// </summary>
 	static bool VerifyActorInfo(ActorInfo* acinfo);
+
+	static const char* GetPluginName(RE::TESForm* form);
 	#pragma endregion
 
 };

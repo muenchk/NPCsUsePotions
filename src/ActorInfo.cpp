@@ -1,7 +1,10 @@
-#include<ActorInfo.h>
-#include<Settings.h>
-#include<Utility.h>
-#include <Distribution.h>
+#include <exception>
+
+#include "ActorInfo.h"
+#include "Settings.h"
+#include "Utility.h"
+#include "Distribution.h"
+#include "BufferOperations.h"
 
 ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
 {
@@ -14,6 +17,11 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 	durRegeneration = _durRegeneration;
 	citems = new CustomItems();
 	CalcCustomItems();
+}
+
+ActorInfo::ActorInfo()
+{
+	citems = new CustomItems();
 }
 
 std::string ActorInfo::ToString()
@@ -219,4 +227,116 @@ void ActorInfo::CustomItems::Reset()
 	food.clear();
 	foodset.clear();
 	calculated = false;
+}
+
+// data functions
+
+uint32_t ActorInfo::GetVersion()
+{
+	return version;
+}
+
+int32_t ActorInfo::GetDataSize()
+{
+	int32_t size = 0;
+	// versionid
+	//size += 4;
+	// actor id
+	//size += 4;
+	// pluginname
+	size += Buffer::CalcStringLength(std::string(Utility::GetPluginName(actor)));
+	// durHealth, durMagicka, durStamina, durFortify, durRegeneration
+	//size += 20;
+	// lastDistrTime
+	//size += 4;
+	// distributedCustomItems
+	//size += 1;
+	// actorStrength, itemStrength -> int
+	//size += 8;
+	// _boss
+	//size += 1;
+
+	// all except string are constant:
+	size += 42;
+	return size;
+}
+
+int32_t ActorInfo::GetMinDataSize(int32_t vers)
+{
+	switch (vers) {
+	case 1:
+		return 42;
+	default:
+		return 0;
+	}
+}
+
+void ActorInfo::WriteData(unsigned char* buffer, int offset)
+{
+	int addoff = 0;
+	// version
+	Buffer::Write(version, buffer, offset);
+	// actor id
+	Buffer::Write(actor->GetFormID(), buffer, offset);
+	// pluginname
+	Buffer::Write(std::string(Utility::GetPluginName(actor)), buffer, offset);
+	// durHealth
+	Buffer::Write(durHealth, buffer, offset);
+	// durMagicka
+	Buffer::Write(durMagicka, buffer, offset);
+	// durStamina
+	Buffer::Write(durStamina, buffer, offset);
+	// durFortify
+	Buffer::Write(durFortify, buffer, offset);
+	// durRegeneration
+	Buffer::Write(durRegeneration, buffer, offset);
+	// lastDistrTime
+	Buffer::Write(lastDistrTime, buffer, offset);
+	// distributedCustomItems
+	Buffer::Write(_distributedCustomItems, buffer, offset);
+	// actorStrength
+	Buffer::Write(static_cast<uint32_t>(actorStrength), buffer, offset);
+	// itemStrength
+	Buffer::Write(static_cast<uint32_t>(itemStrength), buffer, offset);
+	// _boss
+	Buffer::Write(_boss, buffer, offset);
+}
+
+bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
+{
+	int ver = Buffer::ReadUInt32(buffer, offset);
+	try {
+		switch (ver) {
+		case 1:
+			{
+				// first try to make sure that the buffer contains all necessary data and we do not go out of bounds
+				int size = GetMinDataSize(ver);
+				int strsize = (int)Buffer::CalcStringLength(buffer, offset + 4);  // offset + actorid is begin of pluginname
+				if (length < size + strsize)
+					return false;
+
+				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), Buffer::ReadUInt32(buffer, offset), Buffer::ReadString(buffer, offset));
+				if (!form)
+					return false;
+				actor = form->As<RE::Actor>();
+				if (!actor)
+					return false;
+				durHealth = Buffer::ReadInt32(buffer, offset);
+				durMagicka = Buffer::ReadInt32(buffer, offset);
+				durStamina = Buffer::ReadInt32(buffer, offset);
+				durFortify = Buffer::ReadInt32(buffer, offset);
+				durRegeneration = Buffer::ReadInt32(buffer, offset);
+				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
+				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
+				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
+				_boss = Buffer::ReadBool(buffer, offset);
+			}
+			return true;
+		default:
+			return false;
+		}
+	} catch (std::exception&) {
+		return false;
+	}
 }

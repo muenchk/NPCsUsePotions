@@ -75,3 +75,20 @@ enum class AlchemyEffect : unsigned __int64
 	kAnyFood = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate),
 
 };
+
+AlchemyEffect ConvertToAlchemyEffect(RE::EffectSetting* effect);
+
+AlchemyEffect ConvertToAlchemyEffectPrimary(RE::EffectSetting* effect);
+
+AlchemyEffect ConvertToAlchemyEffectSecondary(RE::EffectSetting* effect);
+
+AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect);
+
+AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val);
+
+/// <summary>
+/// converts an AlchemyEffect into RE::ActorValue
+/// </summary>
+/// <param name="eff"></param>
+/// <returns></returns>
+RE::ActorValue ConvertAlchemyEffect(AlchemyEffect eff);

@@ -10,13 +10,15 @@
 #include <random>
 #include <fstream>
 #include <iostream>
-#include "ActorManipulation.h"
 #include <limits>
 #include <filesystem>
 #include <deque>
+
+#include "ActorManipulation.h"
 #include "ActorInfo.h"
-#include <Game.h>
-#include <Distribution.h>
+#include "Game.h"
+#include "Distribution.h"
+#include "Data.h"
 		
 namespace Events
 {
@@ -41,6 +43,8 @@ namespace Events
 
 #pragma region Data
 
+	static Data* data = nullptr;
+
 	/// <summary>
 	/// determines whether events and functions are run
 	/// </summary>
@@ -61,6 +65,17 @@ namespace Events
 		return enableProcessing;
 	}
 
+	bool LockProcessing()
+	{
+		bool val = enableProcessing;
+		enableProcessing = false;
+		return val;
+	}
+	void UnlockProcessing()
+	{
+		enableProcessing = true;
+	}
+
 	// Actor, health cooldown, magicka cooldown, stamina cooldown, other cooldown, reg cooldown
 	// static std::vector<std::tuple<RE::Actor*, int, int, int, int, int>> aclist{};
 
@@ -77,11 +92,6 @@ namespace Events
 	/// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
 	/// </summary>
 	static std::unordered_set<RE::FormID> deads;
-
-	/// <summary>
-	/// map that contains information about any npc that has entered combat during runtime
-	/// </summary>
-	static std::unordered_map<uint32_t, ActorInfo*> actorinfoMap;
 
 	/// <summary>
 	/// signals whether the player has died
@@ -145,37 +155,11 @@ namespace Events
 					Settings::Compatibility::PAF_NPCDrinkingCoolDownSpell = tmp->As<RE::SpellItem>();
 				if (!(Settings::Compatibility::PAF_NPCDrinkingCoolDownEffect && Settings::Compatibility::PAF_NPCDrinkingCoolDownSpell)) {
 					Settings::_CompatibilityPotionAnimatedFx = false;
-					logger::info("[Events] [INIT] Some Forms from PotionAnimatedfx.esp seem to be missing. Forcefully deactivated compatibility mode");
+					loginfo("[Events] [INIT] Some Forms from PotionAnimatedfx.esp seem to be missing. Forcefully deactivated compatibility mode");
 				}
 			}
 			initialized = true;
 		}
-	}
-
-	ActorInfo* FindActor(RE::Actor* actor)
-	{
-		ActorInfo* acinfo = nullptr;
-		logger::info("1");
-		auto itr = actorinfoMap.find(actor->GetFormID());
-		logger::info("2");
-		if (itr == actorinfoMap.end()) {
-			logger::info("3");
-			acinfo = new ActorInfo(actor, 0, 0, 0, 0, 0);
-			actorinfoMap.insert_or_assign(actor->GetFormID(), acinfo);
-		} else if (itr->second == nullptr || itr->second->actor == nullptr || itr->second->actor->GetFormID() == 0 || itr->second->actor->GetFormID() != actor->GetFormID()) {
-			// either delete acinfo, deleted actor, actor fid 0 or acinfo belongs to wrong actor
-			actorinfoMap.erase(actor->GetFormID());
-			logger::info("3.1");
-			acinfo = new ActorInfo(actor, 0, 0, 0, 0, 0);
-			actorinfoMap.insert_or_assign(actor->GetFormID(), acinfo);
-		} else {
-			logger::info("4");
-			acinfo = itr->second;
-			if (acinfo->citems == nullptr)
-				acinfo->citems = new ActorInfo::CustomItems();
-		}
-		logger::info("5");
-		return acinfo;
 	}
 
 	/// <summary>
@@ -500,7 +484,7 @@ namespace Events
 										LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects);
 										auto tup = ACM::ActorUsePoison(curr, effects);
 										//if (std::get<1>(tup) != AlchemyEffect::kNone)
-										//	logger::info("Used poison on actor:\t{}", curr->actor->GetName());
+										//	loginfo("Used poison on actor:\t{}", curr->actor->GetName());
 									}
 								}
 								if (combatdata == 0)
@@ -521,7 +505,7 @@ SkipPoison:;
 						CheckDeadCheckHandlerLoop;
 
 						if (Settings::_featUseFortifyPotions && counter < Settings::_maxPotionsPerCycle && (!(curr->actor->IsPlayerRef()) || Settings::_playerUseFortifyPotions)) {
-							//logger::info("fortify potions stuff");
+							//loginfo("fortify potions stuff");
 							LOG_2("{}[Events] [CheckActors] [fortify]");
 
 							if (curr->actor->IsInFaction(Settings::CurrentFollowerFaction) || curr->actor->IsPlayerRef() && !(Settings::_EnemyNumberThreshold < aclist.size() || (handle && handle.get() && handle.get().get() && handle.get().get()->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::_EnemyLevelScalePlayerLevel))) {
@@ -654,7 +638,7 @@ SkipPoison:;
 								}
 
 								// std::tuple<int, AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffect>>>
-								//logger::info("take fortify with effects: {}", Utility::GetHex(effects));
+								//loginfo("take fortify with effects: {}", Utility::GetHex(effects));
 								LOG1_4("{}[Events] [CheckActors] check for fortify potion with effect {}", Utility::GetHex(effects));
 								auto tup = ACM::ActorUsePotion(curr, effects, Settings::_CompatibilityPotionAnimationFortify);
 								if (std::get<0>(tup) != -1) {
@@ -747,7 +731,7 @@ SkipFortify:;
 					formid = static_cast<uint32_t>(std::stol(id, nullptr, 16));
 					done.insert(formid);
 				} catch (std::exception&) {
-					//logger::info("tryna fail");
+					//loginfo("tryna fail");
 				}
 			}
 			excluded.insert(lineinp);
@@ -762,7 +746,7 @@ SkipFortify:;
 						formid = static_cast<uint32_t>(std::stol(tmp, nullptr, 16));
 						excludedid.insert(formid);
 					} catch (std::exception&) {
-						//logger::info("tryna fail fail");
+						//loginfo("tryna fail fail");
 					}
 				}
 				fail.close();
@@ -807,7 +791,7 @@ SkipFortify:;
 		//auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 		//auto iter = hashtable->begin();
 
-		//logger::info("tryna start");
+		//loginfo("tryna start");
 		//while (iter != hashtable->end()) {
 		//	if ((*iter).second) {
 		//		cell = ((*iter).second)->As<RE::TESObjectCELL>();
@@ -822,7 +806,7 @@ SkipFortify:;
 		outid.close();
 		auto console = RE::ConsoleLog::GetSingleton();
 		console->Print("Start Test");
-		logger::info("Start Test");
+		loginfo("Start Test");
 		//iter = hashtable->begin();
 		//while (iter != hashtable->end()) {
 		//	if ((*iter).second) {
@@ -842,7 +826,7 @@ SkipFortify:;
 						char buff[70] = "Moving to cell:\t";
 						strcat_s(buff, 70, cell->GetFormEditorID());
 						console->Print(buff);
-						logger::info("Moving to cell:\t{}", cell->GetFormEditorID());
+						loginfo("Moving to cell:\t{}", cell->GetFormEditorID());
 						RE::PlayerCharacter::GetSingleton()->MoveTo((*(cell->references.begin())).get());
 					}
 					std::this_thread::sleep_for(7s);
@@ -851,8 +835,8 @@ SkipFortify:;
 		//	iter++;
 		}
 		console->Print("Finished Test");
-		logger::info("Finished Test");
-		//logger::info("tryna end");
+		loginfo("Finished Test");
+		//loginfo("tryna end");
 	}
 
 	/// <summary>
@@ -865,7 +849,7 @@ SkipFortify:;
 		std::string pathid = "Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellOrderID.csv";
 		std::ofstream out = std::ofstream(path, std::ofstream::out);
 		std::ofstream outid = std::ofstream(pathid, std::ofstream::out);
-		//logger::info("tryna start");
+		//loginfo("tryna start");
 		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 		auto iter = hashtable->begin();
 		RE::TESObjectCELL* cell = nullptr;
@@ -919,7 +903,7 @@ SkipFortify:;
 				if ((*iter).second) {
 					actor = ((*iter).second)->As<RE::Actor>();
 					if (actor) {
-						ActorInfo* acinfo = FindActor(actor);
+						ActorInfo* acinfo = data->FindActor(actor);
 						auto items = ACM::GetAllPotions(acinfo);
 						auto it = items.begin();
 						while (it != items.end()) {
@@ -987,7 +971,7 @@ SkipFortify:;
 			if (!Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false) {
 				// create and insert new event
 				EvalProcessingEvent();
-				ActorInfo* acinfo = FindActor(actor);
+				ActorInfo* acinfo = data->FindActor(actor);
 				deads.insert(actor->GetFormID());
 				LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
 				auto items = Distribution::GetMatchingInventoryItems(acinfo);
@@ -1004,7 +988,7 @@ SkipFortify:;
 					if (actor->IsDead()) {
 						return EventResult::kContinue;
 					}
-					//logger::info("[Events] [TESDeathEvent] 3");
+					//loginfo("[Events] [TESDeathEvent] 3");
 					// remove the rest of the items per chance
 					if (Settings::_ChanceToRemoveItem < 100) {
 						for (int i = (int)items.size() - 1; i >= 0; i--) {
@@ -1070,15 +1054,15 @@ SkipFortify:;
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				LOG_1("{}[Events] [TesCombatEnterEvent] Trying to register new actor for potion tracking");
 
-				ActorInfo* acinfo = FindActor(actor);
+				ActorInfo* acinfo = data->FindActor(actor);
 				// first insert the actor into the list
 				EvalProcessingEvent();
 				sem.acquire();
-				logger::info("x1");
+				loginfo("x1");
 				auto itra = aclist.begin();
 				auto end = aclist.end();
 				bool cont = false;
-				logger::info("x2");
+				loginfo("x2");
 				while (itra != end) {
 					if ((*itra)->actor == actor) {
 						cont = true;
@@ -1086,23 +1070,23 @@ SkipFortify:;
 					}
 					itra++;
 				}
-				logger::info("x3");
+				loginfo("x3");
 				if (!cont) {
-					logger::info("x4");
+					loginfo("x4");
 					aclist.insert(aclist.begin(), acinfo);
 				} else {
-					logger::info("x5");
+					loginfo("x5");
 					sem.release();
 					return EventResult::kContinue;
 				}
 				sem.release();
-				logger::info("x6\t{}", acinfo->ToString());
+				loginfo("x6\t{}", acinfo->ToString());
 
 				// check wether this charackter maybe a follower
 				if (acinfo->lastDistrTime == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->lastDistrTime > 1) {
-					logger::info("x^7");
+					loginfo("x^7");
 					if (!Distribution::ExcludedNPC(actor)) {
-						logger::info("x8");
+						loginfo("x8");
 						// begin with compatibility mode removing items before distributing new ones
 						if (Settings::_CompatibilityRemoveItemsBeforeDist) {
 							auto items = ACM::GetAllPotions(acinfo);
@@ -1134,23 +1118,23 @@ SkipFortify:;
 							}
 						}
 
-						logger::info("x9");
+						loginfo("x9");
 						// if we have characters that should not get items, the function
 						// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 						auto items = Distribution::GetDistrItems(acinfo);
-						logger::info("x10");
+						loginfo("x10");
 						if (actor->IsDead()) {
 							return EventResult::kContinue;
 						}
 						if (items.size() > 0) {
 							for (int i = 0; i < items.size(); i++) {
 								if (items[i] == nullptr) {
-									//logger::info("[Events] [TESCombatEvent] Item: null");
+									//loginfo("[Events] [TESCombatEvent] Item: null");
 									continue;
 								}
 								std::string name = items[i]->GetName();
 								std::string id = Utility::GetHex(items[i]->GetFormID());
-								//logger::info("[Events] [TESCombatEvent] Item: {} {}", id, name);
+								//loginfo("[Events] [TESCombatEvent] Item: {} {}", id, name);
 								RE::ExtraDataList* extra = new RE::ExtraDataList();
 								extra->SetOwner(actor);
 								actor->AddObjectToContainer(items[i], extra, 1, nullptr);
@@ -1160,7 +1144,7 @@ SkipFortify:;
 						}
 					}
 				}
-				logger::info("x20");
+				loginfo("x20");
 				EvalProcessingEvent();
 				if (actor->IsDead())
 					return EventResult::kContinue;
@@ -1340,7 +1324,7 @@ SkipFortify:;
 	void LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [LoadGameCallback]");
-		
+		data = Data::GetSingleton();
 	}
 
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
@@ -1349,16 +1333,6 @@ SkipFortify:;
 		enableProcessing = false;
 		stopactorhandler = true;
 		LOG1_1("{}[PlayerDead] {}", playerdied);
-		auto itr = actorinfoMap.begin();
-		while (itr != actorinfoMap.end()) {
-			if (itr->second != nullptr)
-				try {
-					delete itr->second;
-				} catch (std::exception&) {}
-			itr++;
-		}
-		// reset actor information
-		actorinfoMap.clear();
 		// reset actor processing list
 		aclist.clear();
 	}
@@ -1397,7 +1371,7 @@ SkipFortify:;
 		}
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, LoadGameCallback);
 		LOG1_1("{}Registered {}", typeid(LoadGameCallback).name());
-		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000003, RevertGameCallback);
+		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000002, RevertGameCallback);
 		LOG1_1("{}Registered {}", typeid(RevertGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000003, SaveGameCallback);
 		LOG1_1("{}Registered {}", typeid(SaveGameCallback).name());
@@ -1420,20 +1394,4 @@ SkipFortify:;
 		stopactorhandler = true;
 		//killEventHandler = true;
 	}
-
-	/// <summary>
-	/// Resets information about actors
-	/// </summary>
-	void ResetActorInfoMap()
-	{
-		sem.acquire();
-		auto itr = actorinfoMap.begin();
-		while (itr != actorinfoMap.end()) {
-			if (itr->second )
-			itr->second->_boss = false;
-			itr->second->citems->Reset();
-		}
-		sem.release();
-	}
-
 }

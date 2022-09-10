@@ -140,7 +140,10 @@ public:
 
 	bool _boss;
 
+	const uint32_t version = 1;
+
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
+	ActorInfo();
 
 	std::string ToString();
 	
@@ -166,4 +169,11 @@ public:
 	bool CanUseFood(RE::FormID item);
 	bool IsCustomAlchItem(RE::AlchemyItem* item);
 	bool IsCustomItem(RE::TESBoundObject* item);
+
+	uint32_t GetVersion();
+
+	int32_t GetDataSize();
+	int32_t GetMinDataSize(int32_t version);
+	void WriteData(unsigned char* buffer, int offset);
+	bool ReadData(unsigned char* buffer, int offset, int length);
 };

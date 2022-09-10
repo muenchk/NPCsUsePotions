@@ -141,6 +141,20 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion3(ActorInfo* acinfo)
 	}
 	return GetRandomPotion(str, acinfo);
 }
+RE::AlchemyItem* Distribution::Rule::GetRandomPotion4(ActorInfo* acinfo)
+{
+	// if the rule is invalid (empty) return
+	if (valid == false)
+		return nullptr;
+	int astr = static_cast<int>(acinfo->actorStrength);
+	int str = static_cast<int>(acinfo->itemStrength);
+	if (rand100(randi) <= potion4Chance[astr]) {
+		// we rolled successfully
+	} else {
+		return nullptr;
+	}
+	return GetRandomPotion(str, acinfo);
+}
 RE::AlchemyItem* Distribution::Rule::GetRandomPotionAdditional(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
@@ -254,6 +268,20 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison3(ActorInfo* acinfo)
 	}
 	return GetRandomPoison(str, acinfo);
 }
+RE::AlchemyItem* Distribution::Rule::GetRandomPoison4(ActorInfo* acinfo)
+{
+	// if the rule is invalid (empty) return
+	if (valid == false)
+		return nullptr;
+	int astr = static_cast<int>(acinfo->actorStrength);
+	int str = static_cast<int>(acinfo->itemStrength);
+	if (rand100(randi) <= poison4Chance[astr]) {
+		// we rolled successfully
+	} else {
+		return nullptr;
+	}
+	return GetRandomPoison(str, acinfo);
+}
 RE::AlchemyItem* Distribution::Rule::GetRandomPoisonAdditional(ActorInfo* acinfo)
 {
 	// if the rule is invalid (empty) return
@@ -348,6 +376,48 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion2(ActorInfo* acinfo)
 	int astr = static_cast<int>(acinfo->actorStrength);
 	int str = static_cast<int>(acinfo->itemStrength);
 	if (rand100(randi) <= fortify2Chance[astr]) {
+		// we rolled successfully
+	} else {
+		return nullptr;
+	}
+	return GetRandomFortifyPotion(str, acinfo);
+}
+RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion3(ActorInfo* acinfo)
+{
+	// if the rule is invalid (empty) return
+	if (valid == false)
+		return nullptr;
+	int astr = static_cast<int>(acinfo->actorStrength);
+	int str = static_cast<int>(acinfo->itemStrength);
+	if (rand100(randi) <= fortify3Chance[astr]) {
+		// we rolled successfully
+	} else {
+		return nullptr;
+	}
+	return GetRandomFortifyPotion(str, acinfo);
+}
+RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion4(ActorInfo* acinfo)
+{
+	// if the rule is invalid (empty) return
+	if (valid == false)
+		return nullptr;
+	int astr = static_cast<int>(acinfo->actorStrength);
+	int str = static_cast<int>(acinfo->itemStrength);
+	if (rand100(randi) <= fortify4Chance[astr]) {
+		// we rolled successfully
+	} else {
+		return nullptr;
+	}
+	return GetRandomFortifyPotion(str, acinfo);
+}
+RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotionAdditional(ActorInfo* acinfo)
+{
+	// if the rule is invalid (empty) return
+	if (valid == false)
+		return nullptr;
+	int astr = static_cast<int>(acinfo->actorStrength);
+	int str = static_cast<int>(acinfo->itemStrength);
+	if (rand100(randi) <= fortifyAdditionalChance[astr]) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -464,46 +534,100 @@ GetRandomFoodeff:;
 std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPotions(ActorInfo* acinfo)
 {
 	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomPotion1(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPotion2(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPotion3(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
-	while (ret.size() <= this->maxPotions && (tmp = GetRandomPotionAdditional(acinfo)) != nullptr) {
-		ret.push_back(tmp);
+	if (ruleVersion == 1) {
+		auto tmp = GetRandomPotion1(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPotion2(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPotion3(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		while (ret.size() <= this->maxPotions && (tmp = GetRandomPotionAdditional(acinfo)) != nullptr) {
+			ret.push_back(tmp);
+		}
+	} else if (ruleVersion == 2) {
+		auto tmp = GetRandomPotion1(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPotion2(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPotion3(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPotion4(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		while (ret.size() <= this->maxPotions && (tmp = GetRandomPotionAdditional(acinfo)) != nullptr) {
+			ret.push_back(tmp);
+		}
 	}
 	return ret;
 }
 std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPoisons(ActorInfo* acinfo)
 {
 	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomPoison1(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPoison2(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomPoison3(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
-	while (ret.size() <= this->maxPoisons && (tmp = GetRandomPoisonAdditional(acinfo)) != nullptr) {
-		ret.push_back(tmp);
+	if (ruleVersion == 1) {
+		auto tmp = GetRandomPoison1(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPoison2(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPoison3(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		while (ret.size() <= this->maxPoisons && (tmp = GetRandomPoisonAdditional(acinfo)) != nullptr) {
+			ret.push_back(tmp);
+		}
+	} else if (ruleVersion == 2) {
+		auto tmp = GetRandomPoison1(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPoison2(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPoison3(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomPoison4(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		while (ret.size() <= this->maxPoisons && (tmp = GetRandomPoisonAdditional(acinfo)) != nullptr) {
+			ret.push_back(tmp);
+		}
 	}
 	return ret;
 }
 std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFortifyPotions(ActorInfo* acinfo)
 {
 	std::vector<RE::AlchemyItem*> ret;
-	auto tmp = GetRandomFortifyPotion1(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
-	tmp = GetRandomFortifyPotion2(acinfo);
-	if (tmp)
-		ret.push_back(tmp);
+	if (ruleVersion == 1) {
+		auto tmp = GetRandomFortifyPotion1(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomFortifyPotion2(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+	} else if (ruleVersion == 2) {
+		auto tmp = GetRandomFortifyPotion1(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomFortifyPotion2(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomFortifyPotion3(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		tmp = GetRandomFortifyPotion4(acinfo);
+		if (tmp)
+			ret.push_back(tmp);
+		while (ret.size() <= this->maxFortify && (tmp = GetRandomFortifyPotionAdditional(acinfo)) != nullptr) {
+			ret.push_back(tmp);
+		}
+	}
 	return ret;
 }
 std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFood(ActorInfo* acinfo)
@@ -743,64 +867,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 	}
 	return ret;
 }
-/*
-Distribution::Rule* Distribution::CalcRule(RE::Actor* actor)
-{
-	ActorStrength acs = ActorStrength::Weak;
-	ItemStrength is = ItemStrength::kWeak;
-	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
-		//logger::info("calc c 1");
-		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
-		return CalcRule(actor, acs, is, &info, nullptr);
-	} else {
-		//logger::info("calc c 2");
-		return CalcRule(actor, acs, is, nullptr, nullptr);
-	}
-}
 
-Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, CustomItemStorage* custItems)
-{
-	ActorStrength acs = ActorStrength::Weak;
-	ItemStrength is = ItemStrength::kWeak;
-	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
-		//logger::info("calc c 1");
-		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
-		return CalcRule(actor, acs, is, &info, custItems);
-	} else {
-		//logger::info("calc c 2");
-		return CalcRule(actor, acs, is, nullptr, custItems);
-	}
-}
-
-Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc)
-{
-	ActorStrength acs = ActorStrength::Weak;
-	ItemStrength is = ItemStrength::kWeak;
-	return CalcRule(npc, acs, is, nullptr);
-}
-
-Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
-{
-	//logger::info("fire 1");
-	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
-		//logger::info("fire 2");
-		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
-		return CalcRule(actor, acs, is, &info, nullptr);
-	} else
-		return CalcRule(actor, acs, is, nullptr, nullptr);
-}
-
-Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems)
-{
-	//logger::info("fire 1");
-	if ((actor->GetActorBase()->GetFormID() & 0xFF000000) == 0xFF000000) {
-		//logger::info("fire 2");
-		auto info = Distribution::ExtractTemplateInfo(actor->GetActorBase());
-		return CalcRule(actor, acs, is, &info, custItems);
-	} else
-		return CalcRule(actor, acs, is, nullptr, custItems);
-}
-*/
 /// <summary>
 /// returns wether an npc is excluded from item distribution
 /// </summary>
@@ -871,438 +938,7 @@ bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 	}
 	return ret;
 }
-/*
-Distribution::Rule* Distribution::CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
-{
-	// calc strength section
-	if (_GameDifficultyScaling) {
-		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
-		if (diff == 0 || diff == 1) {
-			acs = ActorStrength::Weak;
-			is = ItemStrength::kWeak;
-		} else if (diff == 2 || diff == 3) {
-			acs = ActorStrength::Normal;
-			is = ItemStrength::kStandard;
-		} else if (diff == 4) {
-			acs = ActorStrength::Powerful;
-			is = ItemStrength::kPotent;
-		} else {  // diff == 5
-			acs = ActorStrength::Insane;
-			is = ItemStrength::kInsane;
-		}
-	} else {
-		// get level dependencies
-		short lvl = actor->GetLevel();
-		if (lvl <= _LevelEasy) {
-			acs = ActorStrength::Weak;
-			is = ItemStrength::kWeak;
-			// weak actor
-		} else if (lvl <= _LevelNormal) {
-			acs = ActorStrength::Normal;
-			is = ItemStrength::kStandard;
-			// normal actor
-		} else if (lvl <= _LevelDifficult) {
-			acs = ActorStrength::Powerful;
-			is = ItemStrength::kPotent;
-			// difficult actor
-		} else if (lvl <= _LevelInsane) {
-			acs = ActorStrength::Insane;
-			is = ItemStrength::kInsane;
-			// insane actor
-		} else {
-			acs = ActorStrength::Boss;
-			is = ItemStrength::kInsane;
-			// boss actor
-		}
-	}
-	//logger::info("rule 1");
-	// now calculate rule and on top get the boss override
 
-	bool bossoverride = false;
-
-	bool ruleoverride = false;
-	bool baseexcluded = false;
-	int prio = INT_MIN;
-
-	auto base = actor->GetActorBase();
-
-	Rule* rule = nullptr;
-	// define general stuff
-	auto race = actor->GetRace();
-	//logger::info("rule 2");
-
-	//std::vector<Rule*> rls;
-	// find rule in npc map
-	// npc rules always have the highest priority
-	auto itnpc = npcMap()->find(actor->GetFormID());
-	if (itnpc != npcMap()->end()) {  // found the right rule!
-		rule = itnpc->second;        // this can be null if the specific npc is excluded
-		//logger::info("assign rule 1");
-		ruleoverride = true;
-		prio = INT_MAX;
-	}
-	bossoverride |= bosses()->contains(actor->GetFormID());
-	// get custom items
-	if (custItems) {
-		auto itc = customItems()->find(actor->GetFormID());
-		if (itc != customItems()->end()) {
-			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
-				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-			}
-		}
-	}
-	//logger::info("rule 3");
-
-	if (custItems == nullptr && ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	// now also perform a check on the actor base
-	if (!ruleoverride) {
-		itnpc = npcMap()->find(actor->GetActorBase()->GetFormID());
-		if (itnpc != npcMap()->end()) {  // found the right rule!
-			rule = itnpc->second;        // this can be null if the specific npc is excluded
-			//logger::info("assign rule 2");
-			ruleoverride = true;
-			prio = INT_MAX;
-		}
-	}
-	//logger::info("rule 4");
-	bossoverride |= bosses()->contains(actor->GetActorBase()->GetFormID());
-	// get custom items
-	if (custItems) {
-		auto itc = customItems()->find(actor->GetActorBase()->GetFormID());
-		if (itc != customItems()->end()) {
-			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
-				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-			}
-		}
-	}
-
-	if (custItems == nullptr && ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	//logger::info("rule 5");
-
-	if (tpltinfo && tpltinfo->tpltrace)
-		race = tpltinfo->tpltrace;
-	// now that we didnt't find something so far, check the rest
-	// this time all the priorities are the same
-	if (!ruleoverride) {
-		//logger::info("rule 6");
-		auto it = assocMap()->find(race->GetFormID());
-		if (it != assocMap()->end())
-			if (prio < std::get<0>(it->second)) {
-				rule = std::get<1>(it->second);
-				//logger::info("assign rule 3");
-				prio = std::get<0>(it->second);
-			} else if (prio < std::get<1>(it->second)->rulePriority) {
-				rule = std::get<1>(it->second);
-				//logger::info("assign rule 4");
-				prio = std::get<1>(it->second)->rulePriority;
-			}
-		baseexcluded |= baselineExclusions()->contains(race->GetFormID());
-		for (uint32_t i = 0; i < race->numKeywords; i++) {
-			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
-			if (itr != assocMap()->end()) {
-				if (prio < std::get<0>(itr->second)) {
-					rule = std::get<1>(itr->second);
-					//logger::info("assign rule 5 {} {} {}", Utility::GetHex((uintptr_t)std::get<1>(itr->second)), race->keywords[i]->GetFormEditorID(), Utility::GetHex(race->keywords[i]->GetFormID()));
-					prio = std::get<0>(itr->second);
-				} else if (prio < std::get<1>(itr->second)->rulePriority) {
-					rule = std::get<1>(itr->second);
-					//logger::info("assign rule 6");
-					prio = std::get<1>(itr->second)->rulePriority;
-				}
-				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
-			}
-		}
-	}
-	//logger::info("rule 7");
-	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
-	// get custom items
-	if (custItems) {
-		auto itc = customItems()->find(race->GetFormID());
-		if (itc != customItems()->end()) {
-			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
-				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-			}
-		}
-		for (uint32_t i = 0; i < race->numKeywords; i++) {
-			itc = customItems()->find(race->keywords[i]->GetFormID());
-			if (itc != customItems()->end()) {
-				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}
-			}
-		}
-	}
-
-	if (custItems == nullptr && ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	//logger::info("rule 8");
-	// handle keywords
-	for (unsigned int i = 0; i < base->numKeywords; i++) {
-		auto key = base->keywords[i];
-		if (key) {
-			if (!ruleoverride) {
-				auto it = assocMap()->find(key->GetFormID());
-				if (it != assocMap()->end())
-					if (prio < std::get<0>(it->second)) {
-						rule = std::get<1>(it->second);
-						//logger::info("assign rule 7");
-						prio = std::get<0>(it->second);
-					} else if (prio < std::get<1>(it->second)->rulePriority) {
-						rule = std::get<1>(it->second);
-						//logger::info("assign rule 8");
-						prio = std::get<1>(it->second)->rulePriority;
-					}
-				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
-			}
-			bossoverride |= bosses()->contains(key->GetFormID());
-			// get custom items
-			if (custItems) {
-				auto itc = customItems()->find(key->GetFormID());
-				if (itc != customItems()->end()) {
-					auto vec = itc->second;
-					for (int d = 0; d < vec.size(); d++) {
-						custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-						custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-						custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-						custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-						custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-					}
-				}
-			}
-		}
-	}
-	if (tpltinfo) {
-		//logger::info("rule 10");
-		for (int i = 0; i < tpltinfo->tpltkeywords.size(); i++) {
-			if (tpltinfo->tpltkeywords[i]) {
-				if (!ruleoverride) {
-					auto it = assocMap()->find(tpltinfo->tpltkeywords[i]->GetFormID());
-					if (it != assocMap()->end())
-						if (prio < std::get<0>(it->second)) {
-							rule = std::get<1>(it->second);
-							//logger::info("assign rule 9");
-							prio = std::get<0>(it->second);
-						} else if (prio < std::get<1>(it->second)->rulePriority) {
-							rule = std::get<1>(it->second);
-							//logger::info("assign rule 10");
-							prio = std::get<1>(it->second)->rulePriority;
-						}
-					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
-				}
-				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
-				// get custom items
-				if (custItems) {
-					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
-					if (itc != customItems()->end()) {
-						auto vec = itc->second;
-						for (int d = 0; d < vec.size(); d++) {
-							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-						}
-					}
-				}
-			}
-		}
-	}
-	//logger::info("rule 11");
-	if (custItems == nullptr && ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
-	//logger::info("rule 12");
-	// handle factions
-	for (uint32_t i = 0; i < base->factions.size(); i++) {
-		if (!ruleoverride) {
-			auto it = assocMap()->find(base->factions[i].faction->GetFormID());
-			if (it != assocMap()->end()) {
-				if (prio < std::get<0>(it->second)) {
-					rule = std::get<1>(it->second);
-					//logger::info("assign rule 11");
-					prio = std::get<0>(it->second);
-				} else if (prio < std::get<1>(it->second)->rulePriority) {
-					rule = std::get<1>(it->second);
-					//logger::info("assign rule 12");
-					prio = std::get<1>(it->second)->rulePriority;
-				}
-			}
-			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
-		}
-		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
-		if (custItems) {
-			auto itc = customItems()->find(base->factions[i].faction->GetFormID());
-			if (itc != customItems()->end()) {
-				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}
-			}
-		}
-	}
-	if (tpltinfo) {
-		//logger::info("rule 13");
-		for (int i = 0; i < tpltinfo->tpltfactions.size(); i++) {
-			if (tpltinfo->tpltfactions[i]) {
-				if (!ruleoverride) {
-					auto it = assocMap()->find(tpltinfo->tpltfactions[i]->GetFormID());
-					if (it != assocMap()->end()) {
-						if (prio < std::get<0>(it->second)) {
-							rule = std::get<1>(it->second);
-							//logger::info("assign rule 13");
-							prio = std::get<0>(it->second);
-						} else if (prio < std::get<1>(it->second)->rulePriority) {
-							rule = std::get<1>(it->second);
-							//logger::info("assign rule 14");
-							prio = std::get<1>(it->second)->rulePriority;
-						}
-					}
-					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
-				}
-				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
-				if (custItems) {
-					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
-					if (itc != customItems()->end()) {
-						auto vec = itc->second;
-						for (int d = 0; d < vec.size(); d++) {
-							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-						}
-					}
-				}
-			}
-		}
-	}
-	//logger::info("rule 14");
-	if (custItems == nullptr && (ruleoverride && bossoverride || ruleoverride)) {
-		goto SKIPActor;
-	}
-
-	// dont use tplt for class and combatstyle, since they may have been modified during runtime
-
-	// handle classes
-	if (base->npcClass) {
-		//logger::info("rule 15");
-		if (!ruleoverride) {
-			auto it = assocMap()->find(base->npcClass->GetFormID());
-			if (it != assocMap()->end()) {
-				if (prio < std::get<0>(it->second)) {
-					rule = std::get<1>(it->second);
-					//logger::info("assign rule 15");
-					prio = std::get<0>(it->second);
-				} else if (prio < std::get<1>(it->second)->rulePriority) {
-					rule = std::get<1>(it->second);
-					//logger::info("assign rule 16");
-					prio = std::get<1>(it->second)->rulePriority;
-				}
-			}
-		}
-		if (custItems) {
-			auto itc = customItems()->find(base->npcClass->GetFormID());
-			if (itc != customItems()->end()) {
-				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}
-			}
-		}
-	}
-
-	// handle combat styles
-	if (base->combatStyle) {
-		//logger::info("rule 16");
-		if (!ruleoverride) {
-			auto it = assocMap()->find(base->combatStyle->GetFormID());
-			if (it != assocMap()->end()) {
-				if (prio < std::get<0>(it->second)) {
-					rule = std::get<1>(it->second);
-					//logger::info("assign rule 17");
-					prio = std::get<0>(it->second);
-				} else if (prio < std::get<1>(it->second)->rulePriority) {
-					rule = std::get<1>(it->second);
-					//logger::info("assign rule 18");
-					prio = std::get<1>(it->second)->rulePriority;
-				}
-			}
-		}
-		if (custItems) {
-			auto itc = customItems()->find(base->combatStyle->GetFormID());
-			if (itc != customItems()->end()) {
-				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}
-			}
-		}
-	}
-
-SKIPActor:
-
-	if (bossoverride)
-		acs = ActorStrength::Boss;
-	//logger::info("rule 17");
-
-	if (rule) {
-		//logger::info("rule 18 {}", Utility::GetHex((uintptr_t)rule));
-		LOG1_1("{}[CalcRuleBase] rule found: {}", rule->ruleName);
-		return rule;
-	} else {
-		// there are no rules!!!
-		//logger::info("rule 19");
-		if (baseexcluded) {
-			//logger::info("rule 20");
-			return Distribution::emptyRule;
-		}
-		LOG1_1("{}[CalcRuleBase] default rule found: {}", Distribution::defaultRule->ruleName);
-		return Distribution::defaultRule;
-	}
-}
-*/
 Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
@@ -1354,6 +990,13 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 	// now calculate rule and on top get the boss override
 
 	bool bossoverride = false;
+	int acsadj = 0;
+	auto adjustacs = [&acsadj](RE::FormID id) {
+		try {
+			acsadj += actorStrengthMap()->at(id);
+		} catch (std::out_of_range&) {
+		}
+	};
 
 	bool ruleoverride = false;
 	bool baseexcluded = false;
@@ -1374,6 +1017,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(npc->GetFormID());
+	adjustacs(npc->GetFormID());
 	// get custom items
 	if (custItems) {
 		auto itc = customItems()->find(npc->GetFormID());
@@ -1387,10 +1031,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}
 		}
-	}
-
-	if (custItems == nullptr && ruleoverride && bossoverride) {
-		goto SKIPNPC;
 	}
 
 	if (tpltinfo && tpltinfo->tpltrace)
@@ -1420,10 +1060,13 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					prio = std::get<1>(itr->second)->rulePriority;
 				}
 				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
+				bossoverride |= bosses()->contains(race->keywords[i]->GetFormID());
+				adjustacs(race->keywords[i]->GetFormID());
 			}
 		}
 	}
 	bossoverride |= bosses()->contains(npc->GetRace()->GetFormID());
+	adjustacs(npc->GetRace()->GetFormID());
 	// get custom items
 	if (custItems) {
 		auto itc = customItems()->find(race->GetFormID());
@@ -1452,10 +1095,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		}
 	}
 
-	if (custItems == nullptr && ruleoverride && bossoverride) {
-		goto SKIPNPC;
-	}
-
 	// handle keywords
 	for (unsigned int i = 0; i < npc->numKeywords; i++) {
 		auto key = npc->keywords[i];
@@ -1473,6 +1112,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
+			adjustacs(key->GetFormID());
 			// get custom items
 			if (custItems) {
 				auto itc = customItems()->find(key->GetFormID());
@@ -1505,6 +1145,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
 				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				adjustacs(tpltinfo->tpltkeywords[i]->GetFormID());
 				// get custom items
 				if (custItems) {
 					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
@@ -1521,9 +1162,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				}
 			}
 		}
-	}
-	if (custItems == nullptr && ruleoverride && bossoverride) {
-		goto SKIPNPC;
 	}
 
 	// handle factions
@@ -1542,6 +1180,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			baseexcluded |= baselineExclusions()->contains(npc->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(npc->factions[i].faction->GetFormID());
+		adjustacs(npc->factions[i].faction->GetFormID());
 		if (custItems) {
 			auto itc = customItems()->find(npc->factions[i].faction->GetFormID());
 			if (itc != customItems()->end()) {
@@ -1573,6 +1212,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
 				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				adjustacs(tpltinfo->tpltfactions[i]->GetFormID());
 				if (custItems) {
 					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
 					if (itc != customItems()->end()) {
@@ -1590,9 +1230,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		}
 	}
 
-	if (custItems == nullptr && (bossoverride && ruleoverride || ruleoverride))
-		goto SKIPNPC;
-
 	// handle classes
 	if (tpltinfo && tpltinfo->tpltclass)
 		cls = tpltinfo->tpltclass;
@@ -1609,6 +1246,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				}
 			}
 		}
+		adjustacs(cls->GetFormID());
 		if (custItems) {
 			auto itc = customItems()->find(cls->GetFormID());
 			if (itc != customItems()->end()) {
@@ -1639,6 +1277,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				}
 			}
 		}
+		adjustacs(style->GetFormID());
 		if (custItems) {
 			auto itc = customItems()->find(style->GetFormID());
 			if (itc != customItems()->end()) {
@@ -1654,8 +1293,15 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		}
 	}
 
-SKIPNPC:
-
+	if (acsadj != 0) {
+		int str = static_cast<int>(acs);
+		str += acsadj;
+		if (str < 0)
+			str = 0;
+		if (str > static_cast<int>(ActorStrength::Boss))
+			str = static_cast<int>(ActorStrength::Boss);
+		acs = static_cast<ActorStrength>(str);
+	}
 	if (bossoverride)
 		acs = ActorStrength::Boss;
 
@@ -1721,6 +1367,14 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 	// now calculate rule and on top get the boss override
 
 	bool bossoverride = false;
+	int acsadj = 0;
+	auto adjustacs = [&acsadj](RE::FormID id) {
+		try {
+			acsadj += actorStrengthMap()->at(id);
+		} catch (std::out_of_range&) {
+		}
+	};
+
 
 	bool ruleoverride = false;
 	bool baseexcluded = false;
@@ -1746,6 +1400,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(acinfo->actor->GetFormID());
+	adjustacs(acinfo->actor->GetFormID());
 	// get custom items
 	if (calccustitems) {
 		auto itc = customItems()->find(acinfo->actor->GetFormID());
@@ -1762,10 +1417,6 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 	}
 	//logger::info("rule 3");
 
-	if (!calccustitems && ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
 	// now also perform a check on the actor base
 	if (!ruleoverride) {
 		itnpc = npcMap()->find(acinfo->actor->GetActorBase()->GetFormID());
@@ -1778,6 +1429,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 	}
 	//logger::info("rule 4");
 	bossoverride |= bosses()->contains(acinfo->actor->GetActorBase()->GetFormID());
+	adjustacs(acinfo->actor->GetActorBase()->GetFormID());
 	// get custom items
 	if (calccustitems) {
 		auto itc = customItems()->find(acinfo->actor->GetActorBase()->GetFormID());
@@ -1791,10 +1443,6 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}
 		}
-	}
-
-	if (!calccustitems && ruleoverride && bossoverride) {
-		goto SKIPActor;
 	}
 
 	//logger::info("rule 5");
@@ -1830,11 +1478,14 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					prio = std::get<1>(itr->second)->rulePriority;
 				}
 				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
+				bossoverride |= bosses()->contains(race->keywords[i]->GetFormID());
+				adjustacs(race->keywords[i]->GetFormID());
 			}
 		}
 	}
 	//logger::info("rule 7");
 	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
+	adjustacs(base->GetRace()->GetFormID());
 	// get custom items
 	if (calccustitems) {
 		auto itc = customItems()->find(race->GetFormID());
@@ -1863,10 +1514,6 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		}
 	}
 
-	if (!calccustitems && ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
-
 	//logger::info("rule 8");
 	// handle keywords
 	for (unsigned int i = 0; i < base->numKeywords; i++) {
@@ -1887,6 +1534,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
+			adjustacs(key->GetFormID());
 			// get custom items
 			if (calccustitems) {
 				auto itc = customItems()->find(key->GetFormID());
@@ -1922,6 +1570,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
 				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
+				adjustacs(tpltinfo->tpltkeywords[i]->GetFormID());
 				// get custom items
 				if (calccustitems) {
 					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
@@ -1940,9 +1589,6 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		}
 	}
 	//logger::info("rule 11");
-	if (!calccustitems && ruleoverride && bossoverride) {
-		goto SKIPActor;
-	}
 
 	//logger::info("rule 12");
 	// handle factions
@@ -1963,6 +1609,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
+		adjustacs(base->factions[i].faction->GetFormID());
 		if (calccustitems) {
 			auto itc = customItems()->find(base->factions[i].faction->GetFormID());
 			if (itc != customItems()->end()) {
@@ -1997,6 +1644,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
 				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
+				adjustacs(tpltinfo->tpltfactions[i]->GetFormID());
 				if (calccustitems) {
 					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
 					if (itc != customItems()->end()) {
@@ -2014,10 +1662,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		}
 	}
 	//logger::info("rule 14");
-	if (!calccustitems && (ruleoverride && bossoverride || ruleoverride)) {
-		goto SKIPActor;
-	}
-
+	
 	// dont use tplt for class and combatstyle, since they may have been modified during runtime
 
 	// handle classes
@@ -2037,6 +1682,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				}
 			}
 		}
+		adjustacs(base->npcClass->GetFormID());
 		if (calccustitems) {
 			auto itc = customItems()->find(base->npcClass->GetFormID());
 			if (itc != customItems()->end()) {
@@ -2069,6 +1715,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				}
 			}
 		}
+		adjustacs(base->combatStyle->GetFormID());
 		if (calccustitems) {
 			auto itc = customItems()->find(base->combatStyle->GetFormID());
 			if (itc != customItems()->end()) {
@@ -2084,8 +1731,15 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		}
 	}
 
-SKIPActor:
-
+	if (acsadj != 0) {
+		int str = static_cast<int>(acinfo->actorStrength);
+		str += acsadj;
+		if (str < 0)
+			str = 0;
+		if (str > static_cast<int>(ActorStrength::Boss))
+			str = static_cast<int>(ActorStrength::Boss);
+		acinfo->actorStrength = static_cast<ActorStrength>(str);
+	}
 	if (bossoverride)
 		acinfo->actorStrength = ActorStrength::Boss;
 	//logger::info("rule 17");
@@ -2190,6 +1844,13 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 	// now calculate rule and on top get the boss override
 
 	bool bossoverride = false;
+	int acsadj = 0;
+	auto adjustacs = [&acsadj](RE::FormID id) {
+		try {
+			acsadj += actorStrengthMap()->at(id);
+		} catch (std::out_of_range&) {
+		}
+	};
 
 	bool baseexcluded = false;
 	int prio = INT_MIN;
@@ -2210,6 +1871,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(actor->GetFormID());
+	adjustacs(actor->GetFormID());
 
 	// now also perform a check on the actor base
 	if (!ruleoverride) {
@@ -2221,6 +1883,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 		}
 	}
 	bossoverride |= bosses()->contains(actor->GetActorBase()->GetFormID());
+	adjustacs(actor->GetActorBase()->GetFormID());
 
 	// now that we didnt't find something so far, check the rest
 	// this time all the priorities are the same
@@ -2237,6 +1900,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Race\t" + Utility::GetHex(base->GetRace()->GetFormID()) + "\t" + std::string(base->GetRace()->GetName()) });
 		}
 		baseexcluded |= baselineExclusions()->contains(base->GetRace()->GetFormID());
+		adjustacs(base->GetRace()->GetFormID());
 		auto race = base->GetRace();
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
@@ -2252,9 +1916,12 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Racekwd\t" + Utility::GetHex(race->keywords[i]->GetFormID()) + "\t" + std::string(race->keywords[i]->GetFormEditorID()) });
 			}
 			baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
+			bossoverride |= bosses()->contains(race->keywords[i]->GetFormID());
+			adjustacs(race->keywords[i]->GetFormID());
 		}
 	}
 	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
+	adjustacs(base->GetRace()->GetFormID());
 
 	// handle keywords
 	for (unsigned int i = 0; i < base->numKeywords; i++) {
@@ -2275,6 +1942,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
+			adjustacs(key->GetFormID());
 		}
 	}
 
@@ -2294,6 +1962,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
+		adjustacs(base->factions[i].faction->GetFormID());
 	}
 
 	// handle classes
@@ -2309,6 +1978,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 			}
 			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Class\t" + Utility::GetHex(base->npcClass->GetFormID()) + "\t" + std::string(base->npcClass->GetFormEditorID()) });
 		}
+		adjustacs(base->npcClass->GetFormID());
 	}
 
 	// handle combat styles
@@ -2324,8 +1994,18 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 			}
 			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "CombatStyle\t" + Utility::GetHex(base->combatStyle->GetFormID()) + "\t" + std::string(base->combatStyle->GetFormEditorID()) });
 		}
+		adjustacs(base->combatStyle->GetFormID());
 	}
 
+	if (acsadj != 0) {
+		int str = static_cast<int>(acs);
+		str += acsadj;
+		if (str < 0)
+			str = 0;
+		if (str > static_cast<int>(ActorStrength::Boss))
+			str = static_cast<int>(ActorStrength::Boss);
+		acs = static_cast<ActorStrength>(str);
+	}
 	if (bossoverride)
 		acs = ActorStrength::Boss;
 

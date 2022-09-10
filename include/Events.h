@@ -104,6 +104,16 @@ namespace Events
 	ActorInfo* FindActor(RE::Actor* actor);
 
 	/// <summary>
+	/// temporarily disables processing
+	/// </summary>
+	bool LockProcessing();
+
+	/// <summary>
+	/// unlocks temporary lock on processing
+	/// </summary>
+	void UnlockProcessing();
+
+	/// <summary>
 	/// The type of event
 	/// </summary>
 	enum EventType

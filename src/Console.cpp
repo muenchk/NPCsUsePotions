@@ -1,8 +1,9 @@
-#include<Console.h>
-#include<Settings.h>
-#include<Utility.h>
-#include<Events.h>
-#include<Distribution.h>
+#include "Console.h"
+#include "Settings.h"
+#include "Utility.h"
+#include "Events.h"
+#include "Distribution.h"
+#include "Data.h"
 
 bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&)
 {
@@ -117,7 +118,10 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	}*/
 	auto console = RE::ConsoleLog::GetSingleton();
 	console->Print("Resetting information about actors...");
-	Events::ResetActorInfoMap();
+	bool preproc = Events::LockProcessing();
+	Data::GetSingleton()->ResetActorInfoMap();
+	if (preproc)
+		Events::UnlockProcessing();
 	console->Print("Reloading Settings...");
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");

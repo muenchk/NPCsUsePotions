@@ -16,8 +16,10 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Game.cpp"
 	"${SOURCE_DIR}/Utility.cpp"
 	"${SOURCE_DIR}/NUPInterface.cpp"
+	"${SOURCE_DIR}/AlchemyEffect.cpp"
 	"${SOURCE_DIR}/PCH.h"
-)
+	"${SOURCE_DIR}/DataStorage.cpp"
+	"${SOURCE_DIR}/Data.cpp")
 
 source_group(TREE "${ROOT_DIR}" FILES ${SOURCE_FILES})
 
@@ -62,6 +64,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
 			"/permissive-"	# Standards conformance
 			"/Zc:preprocessor"	# Enable preprocessor conformance mode
+
+			"/D_CRT_SECURE_NO_WARNINGS"
 
 			"/wd5105"
 			# disable warnings

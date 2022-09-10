@@ -1,8 +1,9 @@
 #include "ActorManipulation.h"
+#include "AlchemyEffect.h"
 
 using AlchemyEffect = AlchemyEffect;
 
-#define ConvAlchULong(x) static_cast<uint64_t>(Settings::ConvertToAlchemyEffect(x))
+#define ConvAlchULong(x) static_cast<uint64_t>(ConvertToAlchemyEffect(x))
 #define ULong(x) static_cast<uint64_t>(x)
 
 
@@ -35,7 +36,7 @@ std::tuple<bool, float, int, AlchemyEffectBase> ACM::HasAlchemyEffect(RE::Alchem
 					dur = item->effects[i]->effectItem.duration;
 				}
 				uint32_t formid = sett->GetFormID();
-				if ((tmp = (static_cast<uint64_t>(Settings::ConvertToAlchemyEffectPrimary(sett)) & alchemyEffect)) > 0) {
+				if ((tmp = (static_cast<uint64_t>(ConvertToAlchemyEffectPrimary(sett)) & alchemyEffect)) > 0) {
 					found = true;
 
 					//logger::info("[ActorManipulation] [HasAlchemyEffect] alch effect id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.primaryAV));
@@ -46,7 +47,7 @@ std::tuple<bool, float, int, AlchemyEffectBase> ACM::HasAlchemyEffect(RE::Alchem
 					}
 				} else if (tmp != 0)
 					out |= tmp;
-				if (sett->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (tmp = ((static_cast<uint64_t>(Settings::ConvertToAlchemyEffectSecondary(sett)) & alchemyEffect))) > 0) {
+				if (sett->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (tmp = ((static_cast<uint64_t>(ConvertToAlchemyEffectSecondary(sett)) & alchemyEffect))) > 0) {
 					found = true;
 
 					//logger::info("[ActorManipulation] [HasAlchemyEffect] alch effect2 id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.secondaryAV));
@@ -62,7 +63,7 @@ std::tuple<bool, float, int, AlchemyEffectBase> ACM::HasAlchemyEffect(RE::Alchem
 	} else {
 		RE::MagicItem::SkillUsageData err;
 		item->GetSkillUsageData(err);
-		if ((out = ConvAlchULong(item->avEffectSetting->data.primaryAV) & alchemyEffect) > 0) {
+		if (item->avEffectSetting && (out = ConvAlchULong(item->avEffectSetting->data.primaryAV) & alchemyEffect) > 0) {
 			found = true;
 			mag = err.magnitude;
 		}
@@ -265,7 +266,7 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(A
 						for (uint32_t i = 0; i < item->effects.size(); i++) {
 							sett = item->effects[i]->baseEffect;
 							if (sett) {
-								if ((tmp = Settings::ConvertToAlchemyEffectPrimary(sett)) != AlchemyEffect::kNone) {
+								if ((tmp = ConvertToAlchemyEffectPrimary(sett)) != AlchemyEffect::kNone) {
 									found = true;
 									out = static_cast<AlchemyEffectBase>(tmp);
 									mag = item->effects[i]->effectItem.magnitude;
@@ -359,8 +360,8 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 			if (Settings::CompatibilityPotionPapyrus() || compatibility) {
 				LOG_3("{}[ActorManipulation] [ActorUsePotion] Compatibility Mode");
 				if (!Settings::CompatibilityPotionPlugin(acinfo->actor)) {
-					return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
 					LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
+					return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
 				}
 				// preliminary, has check built in wether it applies
 				SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
@@ -378,8 +379,8 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 			} else {
 				// apply compatibility stuff before using potion
 				if (!Settings::CompatibilityPotionPlugin(acinfo->actor)) {
-					return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
 					LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
+					return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
 				}
 				RE::ExtraDataList* extra = new RE::ExtraDataList();
 				extra->SetOwner(acinfo->actor);
@@ -389,7 +390,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 				else
 					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra);
 			}
-			auto val = ls.front();
+			std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
 			ls.pop_front();
 			return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
 		}

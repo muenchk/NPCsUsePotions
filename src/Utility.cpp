@@ -978,3 +978,29 @@ bool Utility::VerifyActorInfo(ActorInfo* acinfo)
 	}
 	return true;
 }
+
+const char* Utility::GetPluginName(RE::TESForm* form)
+{
+	auto datahandler = RE::TESDataHandler::GetSingleton();
+	const RE::TESFile* file = nullptr;
+	std::string_view name = std::string_view{ "" };
+	if ((form->GetFormID() >> 24) == 0xFF)
+		return "";
+	if ((form->GetFormID() >> 24) != 0xFE) {
+		file = datahandler->LookupLoadedModByIndex((uint8_t)(form->GetFormID() >> 24));
+		if (file == nullptr) {
+			return "";
+		}
+		name = file->GetFilename();
+	}
+	//loginfo("iter 5.1");
+	if (name.empty()) {
+		//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
+		file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((form->GetFormID() & 0x00FFF000)) >> 12));
+		if (file == nullptr) {
+			return "";
+		}
+		name = file->GetFilename();
+	}
+	return name.data();
+}
