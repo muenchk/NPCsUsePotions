@@ -21,6 +21,7 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 
 ActorInfo::ActorInfo()
 {
+	actor = nullptr;
 	citems = new CustomItems();
 }
 
@@ -247,6 +248,8 @@ int32_t ActorInfo::GetDataSize()
 	size += Buffer::CalcStringLength(std::string(Utility::GetPluginName(actor)));
 	// durHealth, durMagicka, durStamina, durFortify, durRegeneration
 	//size += 20;
+	// nextFoodTime
+	//size ´+= 4;
 	// lastDistrTime
 	//size += 4;
 	// distributedCustomItems
@@ -257,7 +260,7 @@ int32_t ActorInfo::GetDataSize()
 	//size += 1;
 
 	// all except string are constant:
-	size += 42;
+	size += 46;
 	return size;
 }
 
@@ -265,7 +268,7 @@ int32_t ActorInfo::GetMinDataSize(int32_t vers)
 {
 	switch (vers) {
 	case 1:
-		return 42;
+		return 46;
 	default:
 		return 0;
 	}
@@ -280,6 +283,7 @@ void ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(actor->GetFormID(), buffer, offset);
 	// pluginname
 	Buffer::Write(std::string(Utility::GetPluginName(actor)), buffer, offset);
+	std::string tmp = std::string(Utility::GetPluginName(actor));
 	// durHealth
 	Buffer::Write(durHealth, buffer, offset);
 	// durMagicka
@@ -290,6 +294,8 @@ void ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(durFortify, buffer, offset);
 	// durRegeneration
 	Buffer::Write(durRegeneration, buffer, offset);
+	// nextFoodTime
+	Buffer::Write(nextFoodTime, buffer, offset);
 	// lastDistrTime
 	Buffer::Write(lastDistrTime, buffer, offset);
 	// distributedCustomItems
@@ -315,7 +321,9 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), Buffer::ReadUInt32(buffer, offset), Buffer::ReadString(buffer, offset));
+				uint32_t actorid = Buffer::ReadUInt32(buffer, offset);
+				std::string pluginname = Buffer::ReadString(buffer, offset);
+				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), actorid, pluginname);
 				if (!form)
 					return false;
 				actor = form->As<RE::Actor>();
@@ -326,6 +334,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				durStamina = Buffer::ReadInt32(buffer, offset);
 				durFortify = Buffer::ReadInt32(buffer, offset);
 				durRegeneration = Buffer::ReadInt32(buffer, offset);
+				nextFoodTime = Buffer::ReadFloat(buffer, offset);
 				lastDistrTime = Buffer::ReadFloat(buffer, offset);
 				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));

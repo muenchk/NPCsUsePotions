@@ -32,6 +32,7 @@ namespace Storage
 	{
 		LOG_1("{}[DataStorage] [SaveGameCallback]");
 		WriteData(a_intfc);
+		LOG_1("{}[DataStorage] [SaveGameCallback] end");
 	}
 
 	/// <summary>
@@ -42,10 +43,10 @@ namespace Storage
 	void LoadGameCallback(SKSE::SerializationInterface* a_intfc)
 	{
 		LOG_1("{}[DataStorage] [LoadGameCallback]");
-		data = Data::GetSingleton();
 		ReadData(a_intfc);
 
 		processing = true;
+		LOG_1("{}[DataStorage] [LoadGameCallback] end");
 	}
 
 	/// <summary>
@@ -55,9 +56,10 @@ namespace Storage
 	/// <param name=""></param>
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
-		LOG_1("{}[DataStorage] [LoadGameCallback]");
+		LOG_1("{}[DataStorage] [RevertGameCallback]");
 		processing = false;
 		RevertData();
+		LOG_1("{}[DataStorage] [RevertGameCallback] end");
 	}
 
 	void Register()
@@ -68,6 +70,9 @@ namespace Storage
 		loginfo("[DataStorage] [Register] Registered for RevertGameCallback");
 		Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000030, SaveGameCallback);
 		loginfo("[DataStorage] [Register] Registered for SaveGameCallback");
+		data = Data::GetSingleton();
+		if (data == nullptr)
+			logcritical("[DataStorage] [Register] Cannot access data storage");
 	}
 
 	void ReadData(SKSE::SerializationInterface* a_intfc)
@@ -83,8 +88,9 @@ namespace Storage
 
 		loginfo("[DataStorage] [ReadData] Beginning data load...");
 		while (a_intfc->GetNextRecordInfo(type, version, length)) {
+			loginfo("[DataStorage] found record with type {} and length {}", type, length);
 			switch (type) {
-			case 'ACIF': // ActorInfo
+			case 'ACIF':  // ActorInfo
 				unsigned char* buffer = new unsigned char[length];
 				a_intfc->ReadRecordData(buffer, length);
 				ActorInfo* acinfo = new ActorInfo();
@@ -94,6 +100,7 @@ namespace Storage
 				} else {
 					accounter++;
 					data->ActorInfoMap()->insert_or_assign(acinfo->actor->GetFormID(), acinfo);
+					loginfo("[DataStorage] read ActorInfo. id: {}, name: {}", Utility::GetHex(acinfo->actor->GetFormID()), acinfo->actor->GetName());
 				}
 				break;
 			}
@@ -101,10 +108,12 @@ namespace Storage
 
 		loginfo("[DataStorage] [ReadData] Read {} ActorInfos", accounter);
 		loginfo("[DataStorage] [ReadData] Failed to read {} ActorInfos", acfcounter);
-		
+
 		loginfo("[DataStorage] [ReadData] Finished loading data");
-		if (preproc)  // if processing was enabled before locking
+		if (preproc) {  // if processing was enabled before locking
 			Events::UnlockProcessing();
+			loginfo("[DataStorage] [ReadData] Enable processing");
+		}
 	}
 
 	void WriteData(SKSE::SerializationInterface* a_intfc)
@@ -116,7 +125,7 @@ namespace Storage
 		loginfo("[DataStorage] [WriteData] Writing ActorInfo");
 		auto itr = data->ActorInfoMap()->begin();
 		while (itr != data->ActorInfoMap()->end()) {
-			if (itr->second) {
+			if (itr->second && itr->second->actor && itr->second->actor->IsDead() == false) {
 				// open skse record
 				if (a_intfc->OpenRecord('ACIF', 0)) {
 					// get entry length
@@ -135,8 +144,10 @@ namespace Storage
 
 		loginfo("[DataStorage] [WriteData] Finished writing data");
 
-		if (preproc)  // if processing was enabled before locking
+		if (preproc) {  // if processing was enabled before locking
 			Events::UnlockProcessing();
+			loginfo("[DataStorage] [WriteData] Enable processing");
+		}
 	}
 
 	void RevertData()

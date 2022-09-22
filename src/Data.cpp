@@ -42,5 +42,6 @@ void Data::ResetActorInfoMap()
 		if (itr->second)
 			itr->second->_boss = false;
 		itr->second->citems->Reset();
+		itr++;
 	}
 }

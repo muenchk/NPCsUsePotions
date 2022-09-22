@@ -99,11 +99,6 @@ namespace Events
 	void ResetActorInfoMap();
 
 	/// <summary>
-	/// Retrieves Information about an actor from an internal database
-	/// </summary>
-	ActorInfo* FindActor(RE::Actor* actor);
-
-	/// <summary>
 	/// temporarily disables processing
 	/// </summary>
 	bool LockProcessing();

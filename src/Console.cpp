@@ -76,6 +76,44 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print("");
 	//logger::info("console 16");
 
+	console->Print("");
+	console->Print("Current Actor Info");
+	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
+	// durHealth
+	tmp = "Duration Health:\t\t" + std::to_string(acinfo->durHealth);
+	console->Print(tmp.c_str());
+	// durMagicka
+	tmp = "Duration Magicka:\t\t" + std::to_string(acinfo->durMagicka);
+	console->Print(tmp.c_str());
+	// durStamina
+	tmp = "Duration Stamina:\t\t" + std::to_string(acinfo->durStamina);
+	console->Print(tmp.c_str());
+	// durFortify
+	tmp = "Duration Fortify:\t\t" + std::to_string(acinfo->durFortify);
+	console->Print(tmp.c_str());
+	// durRegeneration
+	tmp = "Duration Regen:\t\t" + std::to_string(acinfo->durRegeneration);
+	console->Print(tmp.c_str());
+	// nextFoodTime
+	tmp = "Next Food Time:\t\t" + std::to_string(acinfo->nextFoodTime);
+	console->Print(tmp.c_str());
+	// lastDistrTime
+	tmp = "Last Distribution Time:\t" + std::to_string(acinfo->lastDistrTime);
+	console->Print(tmp.c_str());
+	// distributedCustomItems
+	tmp = "Distributed Custom Items:\t" + std::to_string(acinfo->_distributedCustomItems);
+	console->Print(tmp.c_str());
+	// actorStrength
+	tmp = "Actor Strength:\t\t" + Utility::ToString(acinfo->actorStrength);
+	console->Print(tmp.c_str());
+	// itemStrength
+	tmp = "Item Strength:\t\t" + Utility::ToString(acinfo->itemStrength);
+	console->Print(tmp.c_str());
+	// boss
+	tmp = "Boss:\t\t\t" + std::to_string(acinfo->_boss);
+	console->Print(tmp.c_str());
+
+	console->Print("");
 
 	return true;
 }

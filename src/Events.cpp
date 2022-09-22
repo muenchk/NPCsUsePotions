@@ -65,12 +65,19 @@ namespace Events
 		return enableProcessing;
 	}
 
+	/// <summary>
+	/// Temporarily locks processing for all functions
+	/// </summary>
+	/// <returns></returns>
 	bool LockProcessing()
 	{
 		bool val = enableProcessing;
 		enableProcessing = false;
 		return val;
 	}
+	/// <summary>
+	/// Unlocks processing for all functions
+	/// </summary>
 	void UnlockProcessing()
 	{
 		enableProcessing = true;
@@ -1149,9 +1156,11 @@ SkipFortify:;
 				if (actor->IsDead())
 					return EventResult::kContinue;
 
-				if (Settings::_featUseFood) {
+				if (Settings::_featUseFood && RE::Calendar::GetSingleton()->GetDaysPassed() >= acinfo->nextFoodTime) {
 					// use food at the beginning of the fight to simulate the npc having eaten
-					ACM::ActorUseFood(acinfo);
+					auto [dur, effect] = ACM::ActorUseFood(acinfo);
+					acinfo->nextFoodTime = RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24;
+					LOG2_1("[Events] [TesCombatEnterEvent] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->nextFoodTime));
 				}
 				LOG_1("{}[Events] [TesCombatEnterEvent] finished registering NPC");
 			} else {
@@ -1285,16 +1294,12 @@ SkipFortify:;
 			actorhandler = new std::thread(CheckActors);
 			LOG_1("{}[Events] [LoadGameEvent] Started CheckActors");
 		}
-		LOG_1("{}[Events] [LoadGameEvent] 1");
-		LOG_1("{}[Events] [LoadGameEvent] 2");
 		// reset the list of actors that died
 		deads.clear();
 		// set player to alive
 		ReEvalPlayerDeath;
-		LOG_1("{}[Events] [LoadGameEvent] 3");
 
 		enableProcessing = true;
-		LOG_1("{}[Events] [LoadGameEvent] 4");
 
 		if (Settings::_Test) {
 			if (testhandler == nullptr) {
@@ -1324,7 +1329,6 @@ SkipFortify:;
 	void LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [LoadGameCallback]");
-		data = Data::GetSingleton();
 	}
 
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
@@ -1375,6 +1379,7 @@ SkipFortify:;
 		LOG1_1("{}Registered {}", typeid(RevertGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000003, SaveGameCallback);
 		LOG1_1("{}Registered {}", typeid(SaveGameCallback).name());
+		data = Data::GetSingleton();
 	}
 
 	/// <summary>

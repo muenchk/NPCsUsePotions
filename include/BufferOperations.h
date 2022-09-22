@@ -46,8 +46,10 @@ namespace Buffer
 		size_t length = value.length();
 		*((size_t*)(buffer + offset)) = length;
 		offset += 8;
-		if (length != 0)
+		if (length != 0) {
 			std::strncpy((char*)(buffer + offset), value.c_str(), length);
+			offset += (int)length;
+		}
 	}
 
 	uint32_t ReadUInt32(unsigned char* buffer, int &offset)
@@ -80,12 +82,15 @@ namespace Buffer
 		offset += 4;  // size read
 		return *((float*)(buffer + offset - 4));
 	}
-	std::string ReadString(unsigned char* buffer, int& offset)
+	std::string ReadString(unsigned char* buffer, int &offset)
 	{
 		size_t length = *((size_t*)(buffer + offset));
 		offset += 8;
-		if (length != 0)
-			return std::string((char*)(buffer + offset), length);
+		if (length != 0) {
+			std::string tmp = std::string((char*)(buffer + offset), length);
+			offset += (int)length;
+			return tmp;
+		}
 		else
 			return "";
 	}

@@ -1,4 +1,4 @@
-#include <Game.h>
+#include "Game.h"
 
 
 namespace Game
@@ -20,6 +20,7 @@ namespace Game
 				(std::get<0>(it->second))(a_intfc);
 			it++;
 		}
+		logger::info("[Game] [LoadCallback] end");
 	}
 
 	void SaveLoad::SaveCallback(SKSE::SerializationInterface* a_intfc)
@@ -31,6 +32,7 @@ namespace Game
 				(std::get<0>(it->second))(a_intfc);
 			it++;
 		}
+		logger::info("[Game] [SaveCallback] end");
 	}
 
 	void SaveLoad::RevertCallback(SKSE::SerializationInterface* a_intfc)
@@ -42,6 +44,7 @@ namespace Game
 				(std::get<0>(it->second))(a_intfc);
 			it++;
 		}
+		logger::info("[Game] [RevertCallback] end");
 	}
 
 	void SaveLoad::RegisterForLoadCallback(uint32_t id, EventCallback* callback)

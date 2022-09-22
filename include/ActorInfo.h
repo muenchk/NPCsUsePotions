@@ -124,7 +124,10 @@ public:
 	/// Current remaining cooldown on regeneration potions
 	/// </summary>
 	int durRegeneration = 0;
-
+	/// <summary>
+	/// time when the actor may use the next food item -> compare with RE::Calendar::GetSingleton()->GetDaysPassed();
+	/// </summary>
+	float nextFoodTime = 0.0f;
 	/// <summary>
 	/// Time the npc was last given items
 	/// </summary>
@@ -135,12 +138,12 @@ public:
 	/// </summary>
 	bool _distributedCustomItems = false;
 
-	ActorStrength actorStrength;
-	ItemStrength itemStrength;
+	ActorStrength actorStrength = ActorStrength::Weak;
+	ItemStrength itemStrength = ItemStrength::kWeak;
 
-	bool _boss;
+	bool _boss = false;
 
-	const uint32_t version = 1;
+	const uint32_t version = 0x00000001;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
 	ActorInfo();
