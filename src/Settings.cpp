@@ -14,6 +14,7 @@
 #include "ActorManipulation.h"
 #include "Distribution.h"
 #include "AlchemyEffect.h"
+#include "Data.h"
 
 using ActorStrength = ActorStrength;
 using ItemStrength = ItemStrength;
@@ -572,45 +573,44 @@ void Settings::LoadDistrConfig()
 												tmpf = RE::TESForm::LookupByID(std::get<1>(associtm[i]));
 												if (tmpf) {
 													tmpb = tmpf->As<RE::TESBoundObject>();
+													alch = tmpf->As<RE::AlchemyItem>();
 												}
+												LOG1_3("{}[Settings] [LoadDstrRules] Flag converted: {}", static_cast<uint64_t>(std::get<3>(associtm[i])));
 												if (tmpb) {
 													if (std::get<5>(associtm[i]))
 														Distribution::_excludedItems.insert(std::get<2>(associtm[i]));
 													switch (std::get<3>(associtm[i])) {
 													case CustomItemFlag::Object:
 														{
+															LOG_3("{}[Settings] [LoadDstrRules] Path 1");
 															citems->items.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]), std::get<8>(associtm[i]) });
 														}
 														break;
 													case CustomItemFlag::DeathObject:
 														{
+															LOG_3("{}[Settings] [LoadDstrRules] Path 2");
 															citems->death.push_back({ tmpb, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]), std::get<8>(associtm[i]) });
 														}
 														break;
-													default:
-														{
-															alch = tmpf->As<RE::AlchemyItem>();
-															if (alch) {
-																switch (std::get<3>(associtm[i])) {
-																case CustomItemFlag::Food:
-																	citems->food.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
-																	break;
-																case CustomItemFlag::Fortify:
-																	citems->fortify.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
-																	break;
-																case CustomItemFlag::Poison:
-																	citems->poisons.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
-																	break;
-																case CustomItemFlag::Potion:
-																	citems->potions.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
-																	break;
-																}
-															} else {
-																// item is not an alchemy item so do not add it
-																LOGE1_2("[Settings] [LoadDistrRules] custom rule for item {} cannot be applied, due to the item not being an AlchemyItem.", Utility::GetHex(std::get<1>(associtm[i])));
-																//citems->items.push_back({ tmpb, std::get<2>(associtm[i]) });
-															}
-														}
+													case CustomItemFlag::Food:
+														LOG_3("{}[Settings] [LoadDstrRules] Path 3");
+														if (alch)
+															citems->food.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+														break;
+													case CustomItemFlag::Fortify:
+														LOG_3("{}[Settings] [LoadDstrRules] Path 4");
+														if (alch)
+															citems->fortify.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+														break;
+													case CustomItemFlag::Poison:
+														LOG_3("{}[Settings] [LoadDstrRules] Path 5");
+														if (alch)
+															citems->poisons.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
+														break;
+													case CustomItemFlag::Potion:
+														LOG_3("{}[Settings] [LoadDstrRules] Path 6");
+														if (alch)
+															citems->potions.push_back({ alch, std::get<2>(associtm[i]), std::get<4>(associtm[i]), std::get<6>(associtm[i]), std::get<7>(associtm[i]) });
 														break;
 													}
 												} else {
@@ -620,7 +620,12 @@ void Settings::LoadDistrConfig()
 											break;
 										}
 									}
-									if (citems->items.size() == 0)
+									if (citems->items.size() == 0 && 
+										citems->death.size() == 0 &&
+										citems->food.size() == 0 &&
+										citems->fortify.size() == 0 &&
+										citems->poisons.size() == 0 &&
+										citems->potions.size() == 0)
 									{
 										logwarn("[Settings] [LoadDistrRules] rule does not contain any items. file: {}, rule:\"{}\"", file, tmp);
 										delete citems;
@@ -1218,10 +1223,26 @@ void Settings::LoadDistrConfig()
 			Distribution::GetVector(RandomRange, AlchemyEffect::kAnyPoison) /*poisonDistr*/,
 			Distribution::GetVector(RandomRange, AlchemyEffect::kAnyFortify) /*fortifyDistr*/,
 			Distribution::GetVector(RandomRange, AlchemyEffect::kAnyFood) /*foodDistr*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyPotion) /*validPotions*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyPoison) /*validPoisons*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyFortify) /*validFortifyPotions*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyFood) /*validFood*/);
+			static_cast<uint64_t>(AlchemyEffect::kAnyPotion) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPotions*/,
+			static_cast<uint64_t>(AlchemyEffect::kAnyPoison) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPoisons*/,
+			static_cast<uint64_t>(AlchemyEffect::kAnyFortify) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFortifyPotions*/,
+			static_cast<uint64_t>(AlchemyEffect::kAnyFood) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFood*/);
+	}
+	if (Distribution::defaultCustomRule == nullptr) {
+		Distribution::defaultCustomRule = new Distribution::Rule(1 /*version*/, 1 /*type*/, DefaultRuleName, INT_MIN + 1 /*rulePriority*/, true /*allowMixed*/, true /*styleScaling*/, 5 /*maxPotions*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*potion1Chance*/,
+			std::vector<int>{ 20, 30, 40, 50, 60 } /*potion2Chance*/, std::vector<int>{ 10, 20, 30, 40, 50 } /*potion3Chance*/, std::vector<int>{ 5, 15, 25, 35, 45 } /*potion4Chance*/, std::vector<int>{ 0, 10, 20, 30, 40 } /*potionAddChance*/, 0 /*potionTierAdjust*/,
+			5 /*maxFortify*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*fortify1Chance*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*fortify2Chance*/, std::vector<int>{ 20, 30, 40, 50, 60 } /*fortify3Chance*/, std::vector<int>{ 10, 20, 30, 40, 50 } /*fortify4Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*fortifyAddChance*/, 0 /*fortifyTierAdjust*/,
+			5 /*maxPoisons*/, std::vector<int>{ 30, 35, 40, 45, 50 } /*poison1Chance*/, std::vector<int>{ 20, 25, 30, 35, 40 } /*poison2Chance*/, std::vector<int>{ 10, 15, 20, 25, 30 } /*poison3Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*poison4Chance*/,
+			std::vector<int>{ 0, 5, 10, 15, 20 } /*poisonAddChance*/, 0 /*poisonTierAdjust*/,
+			std::vector<int>{ 70, 80, 90, 100, 100 } /*foodChance*/,
+			std::vector<std::tuple<int, AlchemyEffect>>{} /*potionDistr*/,
+			std::vector<std::tuple<int, AlchemyEffect>>{} /*poisonDistr*/,
+			std::vector<std::tuple<int, AlchemyEffect>>{} /*fortifyDistr*/,
+			std::vector<std::tuple<int, AlchemyEffect>>{} /*foodDistr*/,
+			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPotions*/,
+			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPoisons*/,
+			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFortifyPotions*/,
+			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFood*/);
 	}
 
 	if (copyrules.size() > 0) {
@@ -1711,389 +1732,6 @@ void Settings::LoadDistrConfig()
 	}
 }
 
-
-void Settings::ClassifyItems()
-{
-	// resetting all items
-	_itemsInit = false;
-
-	_potionsWeak_main.clear();
-	_potionsWeak_rest.clear();
-	_potionsStandard_main.clear();
-	_potionsStandard_rest.clear();
-	_potionsPotent_main.clear();
-	_potionsPotent_rest.clear();
-	_potionsInsane_main.clear();
-	_potionsInsane_rest.clear();
-	_potionsBlood.clear();
-	_poisonsWeak.clear();
-	_poisonsStandard.clear();
-	_poisonsPotent.clear();
-	_poisonsInsane.clear();
-	_foodmagicka.clear();
-	_foodstamina.clear();
-	_foodhealth.clear();
-	_foodall.clear();
-
-	std::vector<std::tuple<std::string, std::string>> ingredienteffectmap;
-
-	// start sorting items
-
-	auto begin = std::chrono::steady_clock::now();
-	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
-	auto end = hashtable->end();
-	auto iter = hashtable->begin();
-	RE::AlchemyItem* item = nullptr;
-	RE::IngredientItem* itemi = nullptr;
-	while (iter != end) {
-		if ((*iter).second && (*iter).second->IsMagicItem()) {
-			item = (*iter).second->As<RE::AlchemyItem>();
-			if (item) {
-				LOG1_4("{}[Settings] [ClassifyItems] Found AlchemyItem {}", item->GetName());
-				// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
-				if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0 ||
-					std::string(item->GetName()).find(std::string("Dummy")) != std::string::npos ||
-					std::string(item->GetName()).find(std::string("dummy")) != std::string::npos) {
-					iter++;
-					continue;
-				}
-				// check wether item is excluded, or whether it is not whitelisted when in whitelist mode
-				if (!Settings::_CompatibilityWhitelist && Distribution::excludedItems()->contains(item->GetFormID()) ||
-					Settings::_CompatibilityWhitelist && !Distribution::whitelistItems()->contains(item->GetFormID())) {
-					iter++;
-					continue;
-				}
-				// check whether the plugin is excluded
-				if ((item->GetFormID() >> 24) != 0xFE && Distribution::excludedPlugins()->contains(uint8_t(item->GetFormID() >> 24)) == true) {
-					iter++;
-					continue;
-				}
-				// check whether the light plugin is excluded
-				if ((item->GetFormID() >> 24) == 0xFE && Distribution::excludedPluginsLight()->contains((uint16_t)((item->GetFormID() & 0x00FFF000) >> 12)) == true) {
-					iter++;
-					continue;
-				}
-
-				auto clas = ClassifyItem(item);
-				// set medicine flag for those who need it
-				if (item->IsFood() == false && item->IsPoison() == false) { //  && item->IsMedicine() == false
-					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
-					if (EnableLog && LogLevel >= 4) {
-						loginfo("Item: {}", item->GetName());
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
-							loginfo("\tFlag: CostOverride");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kFoodItem)
-							loginfo("\tFlag: FoodItem");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kExtendDuration)
-							loginfo("\tFlag: ExtendedDuration");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kMedicine)
-							loginfo("\tFlag: Medicine");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kPoison)
-							loginfo("\tFlag: Poison");
-					}
-					loginfo("[Settings] [ClassifyItems] [AssignPotionFlag] {}", item->GetName());
-				}
-				
-				// determine the type of item
-				if (std::get<2>(clas) == ItemType::kFood) {
-					// we will only classify food which works on stamina, magicka or health for now
-					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0) {
-						_foodhealth.insert(_foodhealth.end(), { std::get<0>(clas), item });
-					}
-					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-							   (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagickaRate)) > 0) {
-						_foodmagicka.insert(_foodmagicka.end(), { std::get<0>(clas), item });
-					}
-					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
-						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
-						_foodstamina.insert(_foodstamina.end(), { std::get<0>(clas), item });
-					}
-					_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
-				} else if (std::get<2>(clas) == ItemType::kPoison) {
-					switch (std::get<1>(clas)) {
-					case ItemStrength::kWeak:
-						_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
-						break;
-					case ItemStrength::kStandard:
-						_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
-						break;
-					case ItemStrength::kPotent:
-						_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
-						break;
-					case ItemStrength::kInsane:
-						_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
-						break;
-					}
-				} else if (std::get<2>(clas) == ItemType::kPotion) {
-					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
-						_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
-					else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-							 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-							 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
-						switch (std::get<1>(clas)) {
-						case ItemStrength::kWeak:
-							_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kStandard:
-							_potionsStandard_main.insert(_potionsStandard_main.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kPotent:
-							_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kInsane:
-							_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
-							break;
-						}
-					} else if (std::get<0>(clas) != static_cast<uint64_t>(AlchemyEffect::kNone)) {
-						switch (std::get<1>(clas)) {
-						case ItemStrength::kWeak:
-							_potionsWeak_rest.insert(_potionsWeak_rest.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kStandard:
-							_potionsStandard_rest.insert(_potionsStandard_rest.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kPotent:
-							_potionsPotent_rest.insert(_potionsPotent_rest.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kInsane:
-							_potionsInsane_rest.insert(_potionsInsane_rest.end(), { std::get<0>(clas), item });
-							break;
-						}
-					}
-				}
-			}
-
-			itemi = (*iter).second->As<RE::IngredientItem>();
-			if (itemi) {
-				LOG1_4("{}[Settings] [ClassifyItems] Found IngredientItem {}", itemi->GetName());
-				for (int i = 0; i < (int)itemi->effects.size(); i++) {
-					auto sett = itemi->effects[i]->baseEffect;
-					// just retrieve the effects, we will analyze them later
-					if (sett) {
-						ingredienteffectmap.push_back({ itemi->GetName(), Utility::ToString(ConvertToAlchemyEffectPrimary(sett)) });
-					}
-				}
-			}
-		}
-		iter++;
-	}
-	PROF1_1("[PROF] [ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
-
-	// items initialised
-	_itemsInit = true;
-
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsWeak_main {}", potionsWeak_main()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsWeak_rest {}", potionsWeak_rest()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsStandard_main {}", potionsStandard_main()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsStandard_rest {}", potionsStandard_rest()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsPotent_main {}", potionsPotent_main()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsPotent_rest {}", potionsPotent_rest()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsInsane_main {}", potionsInsane_main()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsInsane_rest {}", potionsInsane_rest()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _potionsBlood {}", potionsBlood()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _poisonsWeak {}", poisonsWeak()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _poisonsStandard {}", poisonsStandard()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _poisonsPotent {}", poisonsPotent()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _poisonsInsane {}", poisonsInsane()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _foodmagicka {}", foodmagicka()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _foodstamina {}", foodstamina()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _foodhealth {}", foodhealth()->size());
-	LOG1_1("{}[Settings] [ClassifyItems] _foodall {}", foodall()->size());
-
-	if (EnableLog && LogLevel >= 4) {
-		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\items.txt";
-		std::ofstream out = std::ofstream(path, std::ofstream::out);
-		std::unordered_set<RE::FormID> visited;
-		out << "potionsWeak_main\n";
-		auto it = potionsWeak_main()->begin();
-		while (it != potionsWeak_main()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "potionsStandard_main\n";
-		it = potionsStandard_main()->begin();
-		while (it != potionsStandard_main()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "potionsStandard_rest\n";
-		it = potionsStandard_rest()->begin();
-		while (it != potionsStandard_rest()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "potionsPotent_main\n";
-		it = potionsPotent_main()->begin();
-		while (it != potionsPotent_main()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "potionsInsane_main\n";
-		it = potionsInsane_main()->begin();
-		while (it != potionsInsane_main()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "potionsBlood\n";
-		it = potionsBlood()->begin();
-		while (it != potionsBlood()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "poisonsWeak\n";
-		it = poisonsWeak()->begin();
-		while (it != poisonsWeak()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "poisonsStandard\n";
-		it = poisonsStandard()->begin();
-		while (it != poisonsStandard()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "poisonsPotent\n";
-		it = poisonsPotent()->begin();
-		while (it != poisonsPotent()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "poisonsInsane\n";
-		it = poisonsInsane()->begin();
-		while (it != poisonsInsane()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "foodmagicka\n";
-		it = foodmagicka()->begin();
-		while (it != foodmagicka()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "foodstamina\n";
-		it = foodstamina()->begin();
-		while (it != foodstamina()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "foodhealth\n";
-		it = foodhealth()->begin();
-		while (it != foodhealth()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n" << "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-		out << "foodall\n";
-		it = foodall()->begin();
-		while (it != foodall()->end()) {
-			if (!visited.contains(std::get<1>(*it)->GetFormID()))
-				out << ";" << std::get<1>(*it)->GetName() << "\n"
-					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
-			visited.insert(std::get<1>(*it)->GetFormID());
-			it++;
-		}
-
-		std::string pathing = "Data\\SKSE\\Plugins\\NPCsUsePotions\\ingredients.csv";
-		std::ofstream outing = std::ofstream(pathing, std::ofstream::out);
-		for (int i = 0; i < ingredienteffectmap.size(); i++) {
-			outing << std::get<0>(ingredienteffectmap[i]) << ";" << std::get<1>(ingredienteffectmap[i]) << "\n";
-		}
-
-		/*for (int i = 0; i < potionsWeak_main()->size(); i++) {
-				out << "\t" << std::get<1>(potionsWeak_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsWeak_main()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsWeak_rest\n";
-			for (int i = 0; i < potionsWeak_rest()->size(); i++) {
-				out << "\t" << std::get<1>(potionsWeak_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsWeak_rest()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsStandard_main\n";
-			for (int i = 0; i < potionsStandard_main()->size(); i++) {
-				out << "\t" << std::get<1>(potionsStandard_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsStandard_main()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsStandard_rest\n";
-			for (int i = 0; i < potionsStandard_rest()->size(); i++) {
-				out << "\t" << std::get<1>(potionsStandard_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsStandard_rest()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsPotent_main\n";
-			for (int i = 0; i < potionsPotent_main()->size(); i++) {
-				out << "\t" << std::get<1>(potionsPotent_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsPotent_main()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsPotent_rest\n";
-			for (int i = 0; i < potionsPotent_rest()->size(); i++) {
-				out << "\t" << std::get<1>(potionsPotent_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsPotent_rest()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsInsane_main\n";
-			for (int i = 0; i < potionsInsane_main()->size(); i++) {
-				out << "\t" << std::get<1>(potionsInsane_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsInsane_main()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsInsane_rest\n";
-			for (int i = 0; i < potionsInsane_rest()->size(); i++) {
-				out << "\t" << std::get<1>(potionsInsane_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsInsane_rest()[i])->GetFormEditorID() << "\n";
-			}
-			out << "potionsBlood\n";
-			for (int i = 0; i < potionsBlood()->size(); i++) {
-				out << "\t" << std::get<1>(potionsBlood()[i])->GetFormID() << "\t\t" << std::get<1>(potionsBlood()[i])->GetFormEditorID() << "\n";
-			}
-			out << "poisonsWeak\n";
-			for (int i = 0; i < poisonsWeak()->size(); i++) {
-				out << "\t" << std::get<1>(poisonsWeak()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsWeak()[i])->GetFormEditorID() << "\n";
-			}
-			out << "poisonsStandard\n";
-			for (int i = 0; i < poisonsStandard()->size(); i++) {
-				out << "\t" << std::get<1>(poisonsStandard()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsStandard()[i])->GetFormEditorID() << "\n";
-			}
-			out << "poisonsPotent\n";
-			for (int i = 0; i < poisonsPotent()->size(); i++) {
-				out << "\t" << std::get<1>(poisonsPotent()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsPotent()[i])->GetFormEditorID() << "\n";
-			}
-			out << "poisonsInsane\n";
-			for (int i = 0; i < poisonsInsane()->size(); i++) {
-				out << "\t" << std::get<1>(poisonsInsane()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsInsane()[i])->GetFormEditorID() << "\n";
-			}
-			out << "foodmagicka\n";
-			for (int i = 0; i < foodmagicka()->size(); i++) {
-				out << "\t" << std::get<1>(foodmagicka()[i])->GetFormID() << "\t\t" << std::get<1>(foodmagicka()[i])->GetFormEditorID() << "\n";
-			}
-			out << "foodstamina\n";
-			for (int i = 0; i < foodstamina()->size(); i++) {
-				out << "\t" << std::get<1>(foodstamina()[i])->GetFormID() << "\t\t" << std::get<1>(foodstamina()[i])->GetFormEditorID() << "\n";
-			}
-			out << "foodhealth\n";
-			for (int i = 0; i < foodhealth()->size(); i++) {
-				out << "\t" << std::get<1>(foodhealth()[i])->GetFormID() << "\t\t" << std::get<1>(foodhealth()[i])->GetFormEditorID() << "\n";
-			}
-			out << "foodall\n";
-			for (int i = 0; i < foodall()->size(); i++) {
-				out << "\t" << std::get<1>(foodall()[i])->GetFormID() << "\t\t" << std::get<1>(foodall()[i])->GetFormEditorID() << "\n";
-			}*/
-	}
-}
 
 static bool IsLeveledChar(RE::TESNPC* npc)
 {
@@ -2698,11 +2336,412 @@ void Settings::ApplySkillBoostPerks()
 
 }
 
-std::tuple<uint64_t, ItemStrength, ItemType> Settings::ClassifyItem(RE::AlchemyItem* item)
+void Settings::ClassifyItems()
+{
+	// resetting all items
+	_itemsInit = false;
+
+	_potionsWeak_main.clear();
+	_potionsWeak_rest.clear();
+	_potionsStandard_main.clear();
+	_potionsStandard_rest.clear();
+	_potionsPotent_main.clear();
+	_potionsPotent_rest.clear();
+	_potionsInsane_main.clear();
+	_potionsInsane_rest.clear();
+	_potionsBlood.clear();
+	_poisonsWeak.clear();
+	_poisonsStandard.clear();
+	_poisonsPotent.clear();
+	_poisonsInsane.clear();
+	_foodmagicka.clear();
+	_foodstamina.clear();
+	_foodhealth.clear();
+	_foodall.clear();
+
+	Data* data = Data::GetSingleton();
+	data->ResetAlchItemEffects();
+
+	std::vector<std::tuple<std::string, std::string>> ingredienteffectmap;
+
+	// start sorting items
+
+	auto begin = std::chrono::steady_clock::now();
+	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
+	auto end = hashtable->end();
+	auto iter = hashtable->begin();
+	RE::AlchemyItem* item = nullptr;
+	RE::IngredientItem* itemi = nullptr;
+	while (iter != end) {
+		if ((*iter).second && (*iter).second->IsMagicItem()) {
+			item = (*iter).second->As<RE::AlchemyItem>();
+			if (item) {
+				LOG1_4("{}[Settings] [ClassifyItems] Found AlchemyItem {}", item->GetName());
+				// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
+				if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0 ||
+					std::string(item->GetName()).find(std::string("Dummy")) != std::string::npos ||
+					std::string(item->GetName()).find(std::string("dummy")) != std::string::npos) {
+					iter++;
+					continue;
+				}
+				// check wether item is excluded, or whether it is not whitelisted when in whitelist mode
+				if (!Settings::_CompatibilityWhitelist && Distribution::excludedItems()->contains(item->GetFormID()) ||
+					Settings::_CompatibilityWhitelist && !Distribution::whitelistItems()->contains(item->GetFormID())) {
+					iter++;
+					continue;
+				}
+				// check whether the plugin is excluded
+				if ((item->GetFormID() >> 24) != 0xFE && Distribution::excludedPlugins()->contains(uint8_t(item->GetFormID() >> 24)) == true) {
+					iter++;
+					continue;
+				}
+				// check whether the light plugin is excluded
+				if ((item->GetFormID() >> 24) == 0xFE && Distribution::excludedPluginsLight()->contains((uint16_t)((item->GetFormID() & 0x00FFF000) >> 12)) == true) {
+					iter++;
+					continue;
+				}
+
+				auto clas = ClassifyItem(item);
+				// set medicine flag for those who need it
+				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
+					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+					if (EnableLog && LogLevel >= 4) {
+						loginfo("Item: {}", item->GetName());
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
+							loginfo("\tFlag: CostOverride");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kFoodItem)
+							loginfo("\tFlag: FoodItem");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kExtendDuration)
+							loginfo("\tFlag: ExtendedDuration");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kMedicine)
+							loginfo("\tFlag: Medicine");
+						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kPoison)
+							loginfo("\tFlag: Poison");
+					}
+					loginfo("[Settings] [ClassifyItems] [AssignPotionFlag] {}", item->GetName());
+				}
+
+				// determine the type of item
+				if (std::get<2>(clas) == ItemType::kFood) {
+					// we will only classify food which works on stamina, magicka or health for now
+					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
+						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0) {
+						_foodhealth.insert(_foodhealth.end(), { std::get<0>(clas), item });
+					}
+					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
+						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagickaRate)) > 0) {
+						_foodmagicka.insert(_foodmagicka.end(), { std::get<0>(clas), item });
+					}
+					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0 ||
+						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStaminaRate)) > 0) {
+						_foodstamina.insert(_foodstamina.end(), { std::get<0>(clas), item });
+					}
+					_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
+				} else if (std::get<2>(clas) == ItemType::kPoison) {
+					switch (std::get<1>(clas)) {
+					case ItemStrength::kWeak:
+						_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
+						break;
+					case ItemStrength::kStandard:
+						_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
+						break;
+					case ItemStrength::kPotent:
+						_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
+						break;
+					case ItemStrength::kInsane:
+						_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
+						break;
+					}
+				} else if (std::get<2>(clas) == ItemType::kPotion) {
+					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
+						_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
+					else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
+							 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
+							 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
+						switch (std::get<1>(clas)) {
+						case ItemStrength::kWeak:
+							_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kStandard:
+							_potionsStandard_main.insert(_potionsStandard_main.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kPotent:
+							_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kInsane:
+							_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+							break;
+						}
+					} else if (std::get<0>(clas) != static_cast<uint64_t>(AlchemyEffect::kNone)) {
+						switch (std::get<1>(clas)) {
+						case ItemStrength::kWeak:
+							_potionsWeak_rest.insert(_potionsWeak_rest.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kStandard:
+							_potionsStandard_rest.insert(_potionsStandard_rest.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kPotent:
+							_potionsPotent_rest.insert(_potionsPotent_rest.end(), { std::get<0>(clas), item });
+							break;
+						case ItemStrength::kInsane:
+							_potionsInsane_rest.insert(_potionsInsane_rest.end(), { std::get<0>(clas), item });
+							break;
+						}
+					}
+				}
+				// add item into effect map
+				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas));
+			}
+
+			itemi = (*iter).second->As<RE::IngredientItem>();
+			if (itemi) {
+				LOG1_4("{}[Settings] [ClassifyItems] Found IngredientItem {}", itemi->GetName());
+				for (int i = 0; i < (int)itemi->effects.size(); i++) {
+					auto sett = itemi->effects[i]->baseEffect;
+					// just retrieve the effects, we will analyze them later
+					if (sett) {
+						ingredienteffectmap.push_back({ itemi->GetName(), Utility::ToString(ConvertToAlchemyEffectPrimary(sett)) });
+					}
+				}
+			}
+		}
+		iter++;
+	}
+	PROF1_1("[PROF] [ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+
+	// items initialised
+	_itemsInit = true;
+
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsWeak_main {}", potionsWeak_main()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsWeak_rest {}", potionsWeak_rest()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsStandard_main {}", potionsStandard_main()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsStandard_rest {}", potionsStandard_rest()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsPotent_main {}", potionsPotent_main()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsPotent_rest {}", potionsPotent_rest()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsInsane_main {}", potionsInsane_main()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsInsane_rest {}", potionsInsane_rest()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _potionsBlood {}", potionsBlood()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _poisonsWeak {}", poisonsWeak()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _poisonsStandard {}", poisonsStandard()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _poisonsPotent {}", poisonsPotent()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _poisonsInsane {}", poisonsInsane()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _foodmagicka {}", foodmagicka()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _foodstamina {}", foodstamina()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _foodhealth {}", foodhealth()->size());
+	LOG1_1("{}[Settings] [ClassifyItems] _foodall {}", foodall()->size());
+
+	if (EnableLog && LogLevel >= 4) {
+		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\items.txt";
+		std::ofstream out = std::ofstream(path, std::ofstream::out);
+		std::unordered_set<RE::FormID> visited;
+		out << "potionsWeak_main\n";
+		auto it = potionsWeak_main()->begin();
+		while (it != potionsWeak_main()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "potionsStandard_main\n";
+		it = potionsStandard_main()->begin();
+		while (it != potionsStandard_main()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "potionsStandard_rest\n";
+		it = potionsStandard_rest()->begin();
+		while (it != potionsStandard_rest()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "potionsPotent_main\n";
+		it = potionsPotent_main()->begin();
+		while (it != potionsPotent_main()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "potionsInsane_main\n";
+		it = potionsInsane_main()->begin();
+		while (it != potionsInsane_main()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "potionsBlood\n";
+		it = potionsBlood()->begin();
+		while (it != potionsBlood()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "poisonsWeak\n";
+		it = poisonsWeak()->begin();
+		while (it != poisonsWeak()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "poisonsStandard\n";
+		it = poisonsStandard()->begin();
+		while (it != poisonsStandard()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "poisonsPotent\n";
+		it = poisonsPotent()->begin();
+		while (it != poisonsPotent()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "poisonsInsane\n";
+		it = poisonsInsane()->begin();
+		while (it != poisonsInsane()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "foodmagicka\n";
+		it = foodmagicka()->begin();
+		while (it != foodmagicka()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "foodstamina\n";
+		it = foodstamina()->begin();
+		while (it != foodstamina()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "foodhealth\n";
+		it = foodhealth()->begin();
+		while (it != foodhealth()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+		out << "foodall\n";
+		it = foodall()->begin();
+		while (it != foodall()->end()) {
+			if (!visited.contains(std::get<1>(*it)->GetFormID()))
+				out << ";" << std::get<1>(*it)->GetName() << "\n"
+					<< "1|7|<" << Utility::GetHex(std::get<1>(*it)->GetFormID()) << ",>\n";
+			visited.insert(std::get<1>(*it)->GetFormID());
+			it++;
+		}
+
+		std::string pathing = "Data\\SKSE\\Plugins\\NPCsUsePotions\\ingredients.csv";
+		std::ofstream outing = std::ofstream(pathing, std::ofstream::out);
+		for (int i = 0; i < ingredienteffectmap.size(); i++) {
+			outing << std::get<0>(ingredienteffectmap[i]) << ";" << std::get<1>(ingredienteffectmap[i]) << "\n";
+		}
+
+		/*for (int i = 0; i < potionsWeak_main()->size(); i++) {
+				out << "\t" << std::get<1>(potionsWeak_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsWeak_main()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsWeak_rest\n";
+			for (int i = 0; i < potionsWeak_rest()->size(); i++) {
+				out << "\t" << std::get<1>(potionsWeak_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsWeak_rest()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsStandard_main\n";
+			for (int i = 0; i < potionsStandard_main()->size(); i++) {
+				out << "\t" << std::get<1>(potionsStandard_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsStandard_main()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsStandard_rest\n";
+			for (int i = 0; i < potionsStandard_rest()->size(); i++) {
+				out << "\t" << std::get<1>(potionsStandard_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsStandard_rest()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsPotent_main\n";
+			for (int i = 0; i < potionsPotent_main()->size(); i++) {
+				out << "\t" << std::get<1>(potionsPotent_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsPotent_main()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsPotent_rest\n";
+			for (int i = 0; i < potionsPotent_rest()->size(); i++) {
+				out << "\t" << std::get<1>(potionsPotent_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsPotent_rest()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsInsane_main\n";
+			for (int i = 0; i < potionsInsane_main()->size(); i++) {
+				out << "\t" << std::get<1>(potionsInsane_main()[i])->GetFormID() << "\t\t" << std::get<1>(potionsInsane_main()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsInsane_rest\n";
+			for (int i = 0; i < potionsInsane_rest()->size(); i++) {
+				out << "\t" << std::get<1>(potionsInsane_rest()[i])->GetFormID() << "\t\t" << std::get<1>(potionsInsane_rest()[i])->GetFormEditorID() << "\n";
+			}
+			out << "potionsBlood\n";
+			for (int i = 0; i < potionsBlood()->size(); i++) {
+				out << "\t" << std::get<1>(potionsBlood()[i])->GetFormID() << "\t\t" << std::get<1>(potionsBlood()[i])->GetFormEditorID() << "\n";
+			}
+			out << "poisonsWeak\n";
+			for (int i = 0; i < poisonsWeak()->size(); i++) {
+				out << "\t" << std::get<1>(poisonsWeak()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsWeak()[i])->GetFormEditorID() << "\n";
+			}
+			out << "poisonsStandard\n";
+			for (int i = 0; i < poisonsStandard()->size(); i++) {
+				out << "\t" << std::get<1>(poisonsStandard()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsStandard()[i])->GetFormEditorID() << "\n";
+			}
+			out << "poisonsPotent\n";
+			for (int i = 0; i < poisonsPotent()->size(); i++) {
+				out << "\t" << std::get<1>(poisonsPotent()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsPotent()[i])->GetFormEditorID() << "\n";
+			}
+			out << "poisonsInsane\n";
+			for (int i = 0; i < poisonsInsane()->size(); i++) {
+				out << "\t" << std::get<1>(poisonsInsane()[i])->GetFormID() << "\t\t" << std::get<1>(poisonsInsane()[i])->GetFormEditorID() << "\n";
+			}
+			out << "foodmagicka\n";
+			for (int i = 0; i < foodmagicka()->size(); i++) {
+				out << "\t" << std::get<1>(foodmagicka()[i])->GetFormID() << "\t\t" << std::get<1>(foodmagicka()[i])->GetFormEditorID() << "\n";
+			}
+			out << "foodstamina\n";
+			for (int i = 0; i < foodstamina()->size(); i++) {
+				out << "\t" << std::get<1>(foodstamina()[i])->GetFormID() << "\t\t" << std::get<1>(foodstamina()[i])->GetFormEditorID() << "\n";
+			}
+			out << "foodhealth\n";
+			for (int i = 0; i < foodhealth()->size(); i++) {
+				out << "\t" << std::get<1>(foodhealth()[i])->GetFormID() << "\t\t" << std::get<1>(foodhealth()[i])->GetFormEditorID() << "\n";
+			}
+			out << "foodall\n";
+			for (int i = 0; i < foodall()->size(); i++) {
+				out << "\t" << std::get<1>(foodall()[i])->GetFormID() << "\t\t" << std::get<1>(foodall()[i])->GetFormEditorID() << "\n";
+			}*/
+	}
+}
+
+std::tuple<uint64_t, ItemStrength, ItemType, int, float> Settings::ClassifyItem(RE::AlchemyItem* item)
 {
 	RE::EffectSetting* sett = nullptr;
 	if ((item->avEffectSetting) == nullptr && item->effects.size() == 0) {
-		return { 0, ItemStrength::kStandard, ItemType::kFood };
+		return { 0, ItemStrength::kStandard, ItemType::kFood, 0, 0.0f};
 	}
 	// we look at max 4 effects
 	AlchemyEffectBase av[4]{
@@ -2774,9 +2813,8 @@ std::tuple<uint64_t, ItemStrength, ItemType> Settings::ClassifyItem(RE::AlchemyI
 	AlchemyEffectBase alch = 0;
 	ItemStrength str = ItemStrength::kWeak;
 	float maxmag = 0;
+	int maxdur = 0;
 	for (int i = 0; i < 4; i++) {
-		if (dur[i] > 10)
-			dur[i] = 10;
 		if ((av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth)) > 0 ||
 			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagicka)) > 0 ||
 			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStamina)) > 0 ||
@@ -2786,8 +2824,10 @@ std::tuple<uint64_t, ItemStrength, ItemType> Settings::ClassifyItem(RE::AlchemyI
 			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealRateMult)) > 0 ||
 			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagickaRateMult)) > 0 ||
 			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStaminaRateMult)) > 0) {
-			if (mag[i] * dur[i] > maxmag)
+			if (mag[i] * dur[i] > maxmag) {
 				maxmag = mag[i] * dur[i];
+				maxdur = dur[i];
+			}
 		}
 		alch |= av[i];
 	}
@@ -2819,13 +2859,19 @@ std::tuple<uint64_t, ItemStrength, ItemType> Settings::ClassifyItem(RE::AlchemyI
 		alch = static_cast<uint64_t>(AlchemyEffect::kBlood);
 	}
 
-	ItemType t = ItemType::kPotion;
+	ItemType type = ItemType::kPotion;
 	if (item->IsFood())
-		t = ItemType::kFood;
+		type = ItemType::kFood;
 	else if (item->IsPoison())
-		t = ItemType::kPoison;
+		type = ItemType::kPoison;
 
-	return { alch, str, t };
+	return {
+		alch,
+		str,
+		type,
+		maxdur,
+		maxmag
+	};
 }
 
 #pragma endregion

@@ -5,6 +5,7 @@
 #include "Utility.h"
 #include "Distribution.h"
 #include "BufferOperations.h"
+#include "ActorManipulation.h"
 
 ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
 {
@@ -16,12 +17,20 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 	durFortify = _durFortify;
 	durRegeneration = _durRegeneration;
 	citems = new CustomItems();
+	if (_actor) {
+		formid = _actor->GetFormID();
+		name = std::string(_actor->GetName());
+		pluginname = std::string(Utility::GetPluginName(actor));
+		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
+			_automaton = true;
+	}
 	CalcCustomItems();
 }
 
 ActorInfo::ActorInfo()
 {
 	actor = nullptr;
+	formid = 0;
 	citems = new CustomItems();
 }
 
@@ -47,12 +56,25 @@ std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> Actor
 			continue;
 		uint64_t cond1 = std::get<3>(itms[i]);
 		uint64_t cond2 = std::get<4>(itms[i]);
-		bool valid = true;
-		if ((cond1 & static_cast<uint64_t>(CustomItemConditions::IsBoss))) 
-			if (IsBoss() == false)
-				valid = false;
+		bool valid = CalcDistrConditions(cond1, cond2);
+		if (valid == true)
+			dist.push_back(itms[i]);
+	}
+	return dist;
+}
 
-
+std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> ActorInfo::FilterCustomConditionsUsage(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms)
+{
+	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
+	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> dist;
+	for (int i = 0; i < itms.size(); i++) {
+		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0) {
+			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr] error");
+			continue;
+		}
+		uint64_t cond1 = std::get<3>(itms[i]);
+		uint64_t cond2 = std::get<4>(itms[i]);
+		bool valid = CalcUsageConditions(cond1, cond2);
 		if (valid == true)
 			dist.push_back(itms[i]);
 	}
@@ -64,16 +86,13 @@ std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, boo
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems]");
 	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> dist;
 	for (int i = 0; i < itms.size(); i++) {
-		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0)
+		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0) {
+			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems] error");
 			continue;
+		}
 		uint64_t cond1 = std::get<3>(itms[i]);
 		uint64_t cond2 = std::get<4>(itms[i]);
-		bool valid = true;
-		if ((cond1 & static_cast<uint64_t>(CustomItemConditions::IsBoss))) {
-			if (IsBoss() == false)
-				valid = false;
-		}
-
+		bool valid = CalcDistrConditions(cond1, cond2);
 		if (valid == true)
 			dist.push_back(itms[i]);
 	}
@@ -94,61 +113,41 @@ bool ActorInfo::CanUsePotion(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUsePotion]");
 	auto itr = citems->potionsset.find(item);
-	if (itr->second < 0 || itr->second > citems->potions.size())
+	if (itr == citems->potionsset.end() || itr->second < 0 || itr->second > citems->potions.size())
 		return false;
 	uint64_t cond1 = std::get<3>(citems->potions[itr->second]);
 	uint64_t cond2 = std::get<4>(citems->potions[itr->second]);
-	bool valid = true;
-
-	//if (cond1 & CV(CustomItemConditions::None)) {
-	//
-	//}
-	return valid;
+	return CalcUsageConditions(cond1, cond2);
 }
 bool ActorInfo::CanUsePoison(RE::FormID item) 
 {
 	LOG_3("{}[ActorInfo] [CanUsePoison]");
 	auto itr = citems->poisonsset.find(item);
-	if (itr->second < 0 || itr->second > citems->poisons.size())
+	if (itr == citems->poisonsset.end() || itr->second < 0 || itr->second > citems->poisons.size())
 		return false;
 	uint64_t cond1 = std::get<3>(citems->poisons[itr->second]);
 	uint64_t cond2 = std::get<4>(citems->poisons[itr->second]);
-	bool valid = true;
-
-	//if (cond1 & CV(CustomItemConditions::None)) {
-	//
-	//}
-	return valid;
+	return CalcUsageConditions(cond1, cond2);
 }
 bool ActorInfo::CanUseFortify(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFortify]");
 	auto itr = citems->fortifyset.find(item);
-	if (itr->second < 0 || itr->second > citems->fortify.size())
+	if (itr == citems->fortifyset.end() || itr->second < 0 || itr->second > citems->fortify.size())
 		return false;
 	uint64_t cond1 = std::get<3>(citems->fortify[itr->second]);
 	uint64_t cond2 = std::get<4>(citems->fortify[itr->second]);
-	bool valid = true;
-
-	//if (cond1 & CV(CustomItemConditions::None)) {
-	//
-	//}
-	return valid;
+	return CalcUsageConditions(cond1, cond2);
 }
 bool ActorInfo::CanUseFood(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFood]");
 	auto itr = citems->foodset.find(item);
-	if (itr->second < 0 || itr->second > citems->food.size())
+	if (itr == citems->foodset.end() || itr->second < 0 || itr->second > citems->food.size())
 		return false;
 	uint64_t cond1 = std::get<3>(citems->food[itr->second]);
 	uint64_t cond2 = std::get<4>(citems->food[itr->second]);
-	bool valid = true;
-
-	//if (cond1 & CV(CustomItemConditions::None)) {
-	//
-	//}
-	return valid;
+	return CalcUsageConditions(cond1, cond2);
 }
 
 bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
@@ -168,6 +167,33 @@ bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
 		return true;
 	return false;
 }
+bool ActorInfo::IsCustomPotion(RE::AlchemyItem* item)
+{
+	LOG_3("{}[ActorInfo] [IsCustomPotion]");
+	auto itr = citems->potionsset.find(item->GetFormID());
+	if (itr != citems->potionsset.end())
+		return true;
+	itr = citems->fortifyset.find(item->GetFormID());
+	if (itr != citems->fortifyset.end())
+		return true;
+	return false;
+}
+bool ActorInfo::IsCustomPoison(RE::AlchemyItem* item)
+{
+	LOG_3("{}[ActorInfo] [IsCustomPoison]");
+	auto itr = citems->poisonsset.find(item->GetFormID());
+	if (itr != citems->poisonsset.end())
+		return true;
+	return false;
+}
+bool ActorInfo::IsCustomFood(RE::AlchemyItem* item)
+{
+	LOG_3("{}[ActorInfo] [IsCustomFood]");
+	auto itr = citems->foodset.find(item->GetFormID());
+	if (itr != citems->foodset.end())
+		return true;
+	return false;
+}
 bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 {
 	LOG_3("{}[ActorInfo] [IsCustomItem]");
@@ -175,6 +201,101 @@ bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 	if (itr != citems->itemsset.end())
 		return true;
 	return false;
+}
+
+bool ActorInfo::CalcUsageConditions(uint64_t conditionsall, uint64_t conditionsany)
+{
+	LOG_3("{}[ActorInfo] [CalcUsageConditions]");
+	// obligatory conditions (all must be fulfilled)
+	// only if there are conditions
+	if ((conditionsall & CV(CustomItemConditionsAll::kAllUsage)) != 0) {
+		if (conditionsall & CV(CustomItemConditionsAll::kIsBoss)) {
+			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kIsBossAll]");
+			if (!_boss)  // not a boss
+				return false;
+		}
+		if (conditionsall & CV(CustomItemConditionsAll::kHealthThreshold)) {
+			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kHTAll]");
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) > Settings::_healthThreshold)  // over health threshold
+				return false;
+		}
+		if (conditionsall & CV(CustomItemConditionsAll::kMagickaThreshold)) {
+			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kMTAll]");
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) > Settings::_magickaThreshold)  // over magicka threshold
+				return false;
+		}
+		if (conditionsall & CV(CustomItemConditionsAll::kStaminaThreshold)) {
+			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kSTAll]");
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) > Settings::_staminaThreshold)  // over stamina threshold
+				return false;
+		}
+		if (conditionsall & CV(CustomItemConditionsAll::kActorTypeDwarven)) {
+			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kActAutAll]");
+			if (!_automaton)  // not an automaton
+				return false;
+		}
+	}
+
+	// any conditions (one must be fulfilled)
+	if ((conditionsany & CV(CustomItemConditionsAny::kAllUsage)) == 0) {
+		// no conditions at all
+		return true;
+	}
+	if (conditionsany & CV(CustomItemConditionsAny::kIsBoss)) {
+		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kIsBossAny]");
+		if (_boss)
+			return true;
+	}
+	if (conditionsany & CV(CustomItemConditionsAll::kHealthThreshold)) {
+		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kHTAny]");
+		if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) <= Settings::_healthThreshold)  // under health threshold
+			return true;
+	}
+	if (conditionsany & CV(CustomItemConditionsAll::kMagickaThreshold)) {
+		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kMTAny]");
+		if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) <= Settings::_magickaThreshold)  // under magicka threshold
+			return true;
+	}
+	if (conditionsany & CV(CustomItemConditionsAll::kStaminaThreshold)) {
+		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kSTAny]");
+		if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) <= Settings::_staminaThreshold)  // under stamina threshold
+			return true;
+	}
+	if (conditionsall & CV(CustomItemConditionsAll::kActorTypeDwarven)) {
+		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kActAutAny]");
+		if (_automaton)  // an automaton
+			return true;
+	}
+	return false;
+}
+
+bool ActorInfo::CalcDistrConditions(uint64_t conditionsall, uint64_t conditionsany)
+{
+	LOG_3("{}[ActorInfo] [CalcDistrConditions]");
+	// only check these if there are conditions
+	if ((conditionsall & CV(CustomItemConditionsAny::kAllDistr)) != 0) {
+		if (conditionsall & CV(CustomItemConditionsAll::kIsBoss)) {
+			LOG_3("{}[ActorInfo] [CalcDistrConditions] [kIsBossAll]");
+			if (!_boss)
+				return false;
+		}
+	}
+
+	if ((conditionsany & CV(CustomItemConditionsAny::kAllDistr)) == 0) {
+		// no conditions at all
+		return true;
+	}
+	if (conditionsany & CV(CustomItemConditionsAny::kIsBoss)) {
+		LOG_3("{}[ActorInfo] [CalcDistrConditions] [kIsBossAny]");
+		if (_boss)
+			return true;
+	}
+	return false;
+}
+
+bool ActorInfo::IsFollower()
+{
+	return actor->IsInFaction(Settings::CurrentFollowerFaction);
 }
 
 void ActorInfo::CustomItems::CreateMaps()
@@ -245,11 +366,11 @@ int32_t ActorInfo::GetDataSize()
 	// actor id
 	//size += 4;
 	// pluginname
-	size += Buffer::CalcStringLength(std::string(Utility::GetPluginName(actor)));
+	size += Buffer::CalcStringLength(pluginname);
 	// durHealth, durMagicka, durStamina, durFortify, durRegeneration
 	//size += 20;
 	// nextFoodTime
-	//size ´+= 4;
+	//size += 4;
 	// lastDistrTime
 	//size += 4;
 	// distributedCustomItems
@@ -274,16 +395,15 @@ int32_t ActorInfo::GetMinDataSize(int32_t vers)
 	}
 }
 
-void ActorInfo::WriteData(unsigned char* buffer, int offset)
+bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 {
 	int addoff = 0;
 	// version
 	Buffer::Write(version, buffer, offset);
 	// actor id
-	Buffer::Write(actor->GetFormID(), buffer, offset);
+	Buffer::Write(formid, buffer, offset);
 	// pluginname
-	Buffer::Write(std::string(Utility::GetPluginName(actor)), buffer, offset);
-	std::string tmp = std::string(Utility::GetPluginName(actor));
+	Buffer::Write(pluginname, buffer, offset);
 	// durHealth
 	Buffer::Write(durHealth, buffer, offset);
 	// durMagicka
@@ -306,6 +426,7 @@ void ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(static_cast<uint32_t>(itemStrength), buffer, offset);
 	// _boss
 	Buffer::Write(_boss, buffer, offset);
+	return true;
 }
 
 bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
@@ -321,14 +442,15 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				uint32_t actorid = Buffer::ReadUInt32(buffer, offset);
-				std::string pluginname = Buffer::ReadString(buffer, offset);
-				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), actorid, pluginname);
+				formid = Buffer::ReadUInt32(buffer, offset);
+				pluginname = Buffer::ReadString(buffer, offset);
+				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
 				if (!form)
 					return false;
 				actor = form->As<RE::Actor>();
 				if (!actor)
 					return false;
+				name = actor->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);
 				durStamina = Buffer::ReadInt32(buffer, offset);

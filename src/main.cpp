@@ -5,6 +5,7 @@
 #include "Game.h"
 #include "NUPInterface.h"
 #include "DataStorage.h"
+#include "ActorManipulation.h"
 
 namespace
 {
@@ -37,8 +38,8 @@ namespace
 	}
 }
 
-#ifdef SKYRIM_SUPPORT_AE
-// AE
+#if defined(SKYRIM_SUPPORT_AE353)
+	// AE
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
 	SKSE::PluginVersionData v;
 
@@ -50,6 +51,23 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
 
 	return v;
 }();
+
+#elif defined(SKYRIM_SUPPORT_AE)
+
+// AE after to 1.6.353
+extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
+	SKSE::PluginVersionData v;
+
+	v.PluginVersion(Plugin::VERSION);
+	v.PluginName(Plugin::NAME);
+
+	v.UsesAddressLibrary();
+	v.UsesUpdatedStructs();
+	v.CompatibleVersions({ SKSE::RUNTIME_LATEST });
+
+	return v;
+}();
+
 #else
 // SSE
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * a_skse, SKSE::PluginInfo * a_info)
@@ -70,7 +88,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
 		return false;
 	}
 	return true;
-}
+} 
 #endif
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
@@ -79,6 +97,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// load settings
 		Settings::Load(); // also resaves the file
 		logger::info("Settings loaded");
+		// init ACM data access
+		ACM::Init();
 		// load distribution settings
 		Settings::LoadDistrConfig();
 		logger::info("Distribution configuration loaded");

@@ -37,6 +37,12 @@ AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect)
 	if (effect) {
 		AlchemyEffect eff = AlchemyEffect::kNone;
 		RE::FormID id = effect->GetFormID();
+		if (id == 0x3EAF3)  // FortifyHealth
+			eff = AlchemyEffect::kFortifyHealth;
+		if (id == 0x3EAF8)  // FortifyMagicka
+			eff = AlchemyEffect::kFortifyMagicka;
+		if (id == 0x3EAF9)  // FortifyStamina
+			eff = AlchemyEffect::kFortifyStamina;
 		if (id == 0x73F30)  // Paralysis
 			eff = AlchemyEffect::kParalysis;
 		if (id == 0xAE722)  // CureDisease
@@ -412,5 +418,19 @@ RE::ActorValue ConvertAlchemyEffect(AlchemyEffect eff)
 	default:
 		return RE::ActorValue::kNone;
 		break;
+	}
+}
+
+
+namespace AlchEff
+{
+
+	bool IsPotion(AlchemyEffectBase effects)
+	{
+		return effects & static_cast<AlchemyEffectBase>(AlchemyEffect::kAnyPotion);
+	}
+	bool IsFortify(AlchemyEffectBase effects)
+	{
+		return effects & static_cast<AlchemyEffectBase>(AlchemyEffect::kAnyFortify);
 	}
 }

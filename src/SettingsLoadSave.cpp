@@ -1,6 +1,50 @@
 #include "Settings.h"
 #include "Logging.h"
 
+/// <summary>
+/// changes the output model of all consumable sounds to third person
+/// </summary>
+void Settings::FixConsumables()
+{
+	RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
+	RE::TESForm* SOM_verb = RE::TESForm::LookupByID(0xd78b4);
+
+	if (SOM_player1st && SOM_verb) {
+		RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
+		RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
+
+		RE::BGSSoundDescriptor* sounddesc = nullptr;
+		RE::BGSStandardSoundDef* soundOM = nullptr;
+
+		// get all alchemyitems and then fix their consumption sounds
+		auto datahandler = RE::TESDataHandler::GetSingleton();
+		auto alchs = datahandler->GetFormArray<RE::AlchemyItem>();
+		for (auto& alch : alchs) {
+			if (alch && alch->GetFormID() != 0x7) {
+				if (alch->data.consumptionSound) {
+					// consumption sound is non-empty
+					sounddesc = alch->data.consumptionSound->soundDescriptor;
+					soundOM = (RE::BGSStandardSoundDef*)sounddesc;
+					if (Settings::_ForceFixPotionSounds) {
+						soundOM->outputModel = SOMMono01400_verb;
+						LOG1_4("{}[Settings] [FixConsumables] forcefully set output model for sound {}", alch->data.consumptionSound->GetFormID());
+					}
+					else if (soundOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
+						soundOM->outputModel = SOMMono01400_verb;
+						LOG1_4("{}[Settings] [FixConsumables] changed output model for sound {}", alch->data.consumptionSound->GetFormID());
+					}
+				}
+			}
+		}
+		// get ITMPoisonUse as sound for applying poisons
+		// ITMPoisonUse
+		RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x106614);
+		PoisonUse = nullptr;
+		if (PoisonUseF)
+			PoisonUse = PoisonUseF->As<RE::BGSSoundDescriptorForm>();
+	}
+}
+
 void Settings::Load()
 {
 	constexpr auto path = L"Data/SKSE/Plugins/NPCsUsePotions.ini";
@@ -32,15 +76,19 @@ void Settings::Load()
 	loginfo("[SETTINGS] {} {}", "EnablePlayerPoisonUsage", std::to_string(_playerUsePoisons));
 	_playerUseFortifyPotions = ini.GetValue("Features", "EnablePlayerFortifyPotionUsage") ? ini.GetBoolValue("Features", "EnablePlayerFortifyPotionUsage") : false;
 	loginfo("[SETTINGS] {} {}", "EnablePlayerFortifyPotionUsage", std::to_string(_playerUseFortifyPotions));
+	_playerUseFood = ini.GetBoolValue("Features", "EnablePlayerFoodUsage", false);
+	loginfo("[SETTINGS] {} {}", "EnablePlayerFoodUsage", std::to_string(_playerUseFood));
 
-	_featDistributePotions = ini.GetValue("Features", "DistributePotions") ? ini.GetBoolValue("Features", "DistributePotions") : true;
+	_featDistributePotions = ini.GetBoolValue("Features", "DistributePotions", true);
 	loginfo("[SETTINGS] {} {}", "DistributePotions", std::to_string(_featDistributePotions));
-	_featDistributePoisons = ini.GetValue("Features", "DistributePoisons") ? ini.GetBoolValue("Features", "DistributePoisons") : true;
+	_featDistributePoisons = ini.GetBoolValue("Features", "DistributePoisons", true);
 	loginfo("[SETTINGS] {} {}", "DistributePoisons", std::to_string(_featDistributePoisons));
-	_featDistributeFood = ini.GetValue("Features", "DistributeFood") ? ini.GetBoolValue("Features", "DistributeFood") : true;
+	_featDistributeFood = ini.GetBoolValue("Features", "DistributeFood", true);
 	loginfo("[SETTINGS] {} {}", "DistributeFood", std::to_string(_featDistributeFood));
-	_featDistributeFortifyPotions = ini.GetValue("Features", "DistributeFortifyPotions") ? ini.GetBoolValue("Features", "DistributeFortifyPotions") : true;
+	_featDistributeFortifyPotions = ini.GetBoolValue("Features", "DistributeFortifyPotions", true);
 	loginfo("[SETTINGS] {} {}", "DistributeFortifyPotions", std::to_string(_featDistributeFortifyPotions));
+	_featDistributeCustomItems = ini.GetBoolValue("Features", "DistributeCustomItems", true);
+	loginfo("[SETTINGS] {} {}", "DistributeCustomItems", std::to_string(_featDistributeCustomItems));
 
 	_featRemoveItemsOnDeath = ini.GetValue("Features", "RemoveItemsOnDeath") ? ini.GetBoolValue("Features", "RemoveItemsOnDeath") : true;
 	loginfo("[SETTINGS] {} {}", "RemoveItemsOnDeath", std::to_string(_featRemoveItemsOnDeath));
@@ -48,9 +96,16 @@ void Settings::Load()
 	_featDisableItemUsageWhileStaggered = ini.GetValue("Features", "DisableItemUsageWhileStaggered") ? ini.GetBoolValue("Features", "DisableItemUsageWhileStaggered") : false;
 	loginfo("[SETTINGS] {} {}", "DisableItemUsageWhileStaggered", std::to_string(_featDisableItemUsageWhileStaggered));
 
+	_featDisableNonFollowerNPCs = ini.GetBoolValue("Features", "DisableNonFollowerNPCs", false);
+	loginfo("[SETTINGS] {} {}", "DisableNonFollowerNPCs", std::to_string(_featDisableNonFollowerNPCs));
+	_featDisableOutOfCombatProcessing = ini.GetBoolValue("Features", "DisableOutOfCombatProcessing", false);
+	loginfo("[SETTINGS] {} {}", "DisableOutOfCombatProcessing", std::to_string(_featDisableOutOfCombatProcessing));
+
 	// fixes
 	_ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", true);
 	loginfo("[SETTINGS] {} {}", "ApplySkillBoostPerks", std::to_string(_ApplySkillBoostPerks));
+	_ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", true);
+	loginfo("[SETTINGS] {} {}", "ForceFixPotionSounds", std::to_string(_ForceFixPotionSounds));
 
 	// compatibility
 	_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
@@ -243,100 +298,7 @@ void Settings::Load()
 	}
 	loginfo("[SETTINGS] checking for plugins end");
 
-	// change potion sound output model to not always play on the player
-	{
-		RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
-		RE::TESForm* SOM_verb = RE::TESForm::LookupByID(0xd78b4);
-		if (SOM_player1st && SOM_verb) {
-			RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
-			RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
-			// ITMPotionUse
-			RE::TESForm* PotionUseF = RE::TESForm::LookupByID(0xB6435);
-			PotionUse = nullptr;
-			if (PotionUseF)
-				PotionUse = PotionUseF->As<RE::BGSSoundDescriptorForm>();
-			if (PotionUse) {
-				RE::BGSSoundDescriptor* PotionUseSD = PotionUse->soundDescriptor;
-				RE::BGSStandardSoundDef* PotionUseOM = (RE::BGSStandardSoundDef*)PotionUseSD;
-				//LOG1_1("{}{}", (PotionUseOM->outputModel->GetFormID()));
-				if (PotionUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-					PotionUseOM->outputModel = SOMMono01400_verb;
-					loginfo("[SETTINGS] changed output model for ITMPotionUse sound effect");
-				}
-				if (PotionUseOM->outputModel->GetFormID() != SOMMono01400Player1st->GetFormID()) {
-					FixedPotionUse = true;
-					loginfo("[SETTINGS] enabled sound playing for ITMPotionUse");
-				}
-			}
-
-			//----Pickup Sounds only----
-			//// ITMPotionDownSD
-			//RE::TESForm* PotionDownF = RE::TESForm::LookupByID(0x3EDC0);
-			//RE::BGSSoundDescriptorForm* PotionDown = nullptr;
-			//if (PotionDownF)
-			//	PotionDown = PotionDownF->As<RE::BGSSoundDescriptorForm>();
-			//if (PotionDown) {
-			//	RE::BGSSoundDescriptor* PotionDownSD = PotionDown->soundDescriptor;
-			//	RE::BGSStandardSoundDef* PotionDownOM = (RE::BGSStandardSoundDef*)PotionDownSD;
-			//	if (PotionDownOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-			//		PotionDownOM->outputModel = SOMMono01400_verb;
-			//		loginfo("[SETTINGS] changed output model for ITMPotionDownSD sound effect");
-			//	}
-			//}
-			//// ITMPotionUpSD
-			//RE::TESForm* PotionUpF = RE::TESForm::LookupByID(0x3EDBD);
-			//RE::BGSSoundDescriptorForm* PotionUp = nullptr;
-			//if (PotionUpF)
-			//	PotionUp = PotionUpF->As<RE::BGSSoundDescriptorForm>();
-			//if (PotionUp) {
-			//	RE::BGSSoundDescriptor* PotionUpSD = PotionUp->soundDescriptor;
-			//	RE::BGSStandardSoundDef* PotionUpOM = (RE::BGSStandardSoundDef*)PotionUpSD;
-			//	if (PotionUpOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-			//		PotionUpOM->outputModel = SOMMono01400_verb;
-			//		loginfo("[SETTINGS] changed output model for ITMPotionUpSD sound effect");
-			//	}
-			//}
-			// -------------------------
-
-			// remove poisons, since they aren't "used", but applied and then removed from inventory, so no sounds would play anyway
-
-			// ITMPoisonUse
-			RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x106614);
-			PoisonUse = nullptr;
-			if (PoisonUseF)
-				PoisonUse = PoisonUseF->As<RE::BGSSoundDescriptorForm>();
-			if (PoisonUse) {
-				RE::BGSSoundDescriptor* PoisonUseSD = PoisonUse->soundDescriptor;
-				RE::BGSStandardSoundDef* PoisonUseOM = (RE::BGSStandardSoundDef*)PoisonUseSD;
-				if (PoisonUseOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-					PoisonUseOM->outputModel = SOMMono01400_verb;
-					FixedPoisonUse = true;
-					loginfo("[SETTINGS] changed output model for ITMPoisonUse sound effect");
-				}
-				if (PoisonUseOM->outputModel->GetFormID() != SOMMono01400Player1st->GetFormID()) {
-					FixedPoisonUse = true;
-					loginfo("[SETTINGS] enabled sound playing for ITMPoisonUse");
-				}
-			}
-			// ITMFoodEat
-			RE::TESForm* FoodEatF = RE::TESForm::LookupByID(0xCAF94);
-			FoodEat = nullptr;
-			if (FoodEatF)
-				FoodEat = FoodEatF->As<RE::BGSSoundDescriptorForm>();
-			if (FoodEat) {
-				RE::BGSSoundDescriptor* FoodEatSD = FoodEat->soundDescriptor;
-				RE::BGSStandardSoundDef* FoodEatOM = (RE::BGSStandardSoundDef*)FoodEatSD;
-				if (FoodEatOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-					FoodEatOM->outputModel = SOMMono01400_verb;
-					loginfo("[SETTINGS] changed output model for ITMFoodEat sound effect");
-				}
-				if (FoodEatOM->outputModel->GetFormID() != SOMMono01400Player1st->GetFormID()) {
-					FixedFoodEat = true;
-					loginfo("[SETTINGS] enabled sound playing for ITMFoodEat");
-				}
-			}
-		}
-	}
+	FixConsumables();
 }
 
 
@@ -359,17 +321,23 @@ void Settings::Save()
 	ini.SetBoolValue("Features", "EnablePlayerRestoration", _playerRestorationEnabled, ";All activated restoration features are applied to the player, while they are in Combat.");
 	ini.SetBoolValue("Features", "EnablePlayerPoisonUsage", _playerUsePoisons, ";Player will automatically use poisons.");
 	ini.SetBoolValue("Features", "EnablePlayerFortifyPotionUsage", _playerUseFortifyPotions, ";Player will use fortify potions the way followers do.");
+	ini.SetBoolValue("Features", "EnablePlayerFoodUsage", _playerUseFood, ";Player will use food the way npcs do.");
 
 	ini.SetBoolValue("Features", "DistributePotions", _featDistributePotions, ";NPCs are given potions when they enter combat.");
 	ini.SetBoolValue("Features", "DistributePoisons", _featDistributePoisons, ";NPCs are give poisons when they enter combat.");
 	ini.SetBoolValue("Features", "DistributeFood", _featDistributeFood, ";NPCs are given food items when they enter combat, and will use them immediately.");
 	ini.SetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions, ";NPCs are give fortify potions when they enter combat.");
+	ini.SetBoolValue("Features", "DistributeCustomItems", _featDistributeCustomItems, ";NPCs are given custom items definable with rules. This does not affect custom potions, poisons, fortify potions and food. Leave enabled if you do not ");
 	ini.SetBoolValue("Features", "RemoveItemsOnDeath", _featRemoveItemsOnDeath, ";Remove items from NPCs after they died.");
 
 	ini.SetBoolValue("Features", "DisableItemUsageWhileStaggered", _featDisableItemUsageWhileStaggered, ";NPCs that are staggered aren't able to use any potions and poisons.");
 
+	ini.SetBoolValue("Features", "DisableNonFollowerNPCs", _featDisableNonFollowerNPCs, ";NPCs that are not currently followers of the player won't use potions, etc.");
+	ini.SetBoolValue("Features", "DisableOutOfCombatProcessing", _featDisableOutOfCombatProcessing, ";NPCs are only handled when they are fighting -> Old handling method until version 3.");
+
 	// fixes
 	ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", _ApplySkillBoostPerks, ";Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply.");
+	ini.SetBoolValue("Fixes", "ForceFixPotionSounds", _ForceFixPotionSounds, ";Forcefully fixes all sounds used by consumables in the game without regard for other mods changes. If deactivate the changes of other mods that should have the same effect are respected.");
 
 	// compatibility
 	ini.SetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. Only uses compatibility mode for Health, Stamina and Magicka Potions");

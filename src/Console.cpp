@@ -26,16 +26,16 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
 	//logger::info("console 4");
 
-	std::string tmp = "Displaying stats for Actor:\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::GetHex(actor->GetFormID());
+	std::string tmp = "Displaying stats for Actor:\t\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::GetHex(actor->GetFormID());
 	//logger::info("console 5");
 	console->Print(tmp.c_str());
 	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetRace()->GetFormID()) + "\t" + std::string(actor->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
-	tmp = "ActorBase:\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetName());
+	tmp = "ActorBase:\t\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetName());
 	console->Print(tmp.c_str());
 	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetRace()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
-	tmp = "Excluded:\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(actor));
+	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(actor));
 	console->Print(tmp.c_str());
 	//logger::info("console 6");
 	tmp = "Strength of Actor:\t\t\t" + Utility::ToString(acs);
@@ -80,39 +80,126 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print("Current Actor Info");
 	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
 	// durHealth
-	tmp = "Duration Health:\t\t" + std::to_string(acinfo->durHealth);
+	tmp = "Duration Health:\t\t\t\t" + std::to_string(acinfo->durHealth);
 	console->Print(tmp.c_str());
 	// durMagicka
-	tmp = "Duration Magicka:\t\t" + std::to_string(acinfo->durMagicka);
+	tmp = "Duration Magicka:\t\t\t" + std::to_string(acinfo->durMagicka);
 	console->Print(tmp.c_str());
 	// durStamina
-	tmp = "Duration Stamina:\t\t" + std::to_string(acinfo->durStamina);
+	tmp = "Duration Stamina:\t\t\t" + std::to_string(acinfo->durStamina);
 	console->Print(tmp.c_str());
 	// durFortify
-	tmp = "Duration Fortify:\t\t" + std::to_string(acinfo->durFortify);
+	tmp = "Duration Fortify:\t\t\t\t" + std::to_string(acinfo->durFortify);
 	console->Print(tmp.c_str());
 	// durRegeneration
-	tmp = "Duration Regen:\t\t" + std::to_string(acinfo->durRegeneration);
+	tmp = "Duration Regen:\t\t\t\t" + std::to_string(acinfo->durRegeneration);
 	console->Print(tmp.c_str());
 	// nextFoodTime
-	tmp = "Next Food Time:\t\t" + std::to_string(acinfo->nextFoodTime);
+	tmp = "Next Food Time:\t\t\t\t" + std::to_string(acinfo->nextFoodTime);
 	console->Print(tmp.c_str());
 	// lastDistrTime
-	tmp = "Last Distribution Time:\t" + std::to_string(acinfo->lastDistrTime);
+	tmp = "Last Distribution Time:\t\t\t" + std::to_string(acinfo->lastDistrTime);
 	console->Print(tmp.c_str());
 	// distributedCustomItems
-	tmp = "Distributed Custom Items:\t" + std::to_string(acinfo->_distributedCustomItems);
+	tmp = "Distributed Custom Items:\t\t" + std::to_string(acinfo->_distributedCustomItems);
 	console->Print(tmp.c_str());
 	// actorStrength
-	tmp = "Actor Strength:\t\t" + Utility::ToString(acinfo->actorStrength);
+	tmp = "Actor Strength:\t\t\t\t" + Utility::ToString(acinfo->actorStrength);
 	console->Print(tmp.c_str());
 	// itemStrength
-	tmp = "Item Strength:\t\t" + Utility::ToString(acinfo->itemStrength);
+	tmp = "Item Strength:\t\t\t\t" + Utility::ToString(acinfo->itemStrength);
 	console->Print(tmp.c_str());
 	// boss
-	tmp = "Boss:\t\t\t" + std::to_string(acinfo->_boss);
+	tmp = "Boss:\t\t\t\t\t" + std::to_string(acinfo->_boss);
 	console->Print(tmp.c_str());
 
+	console->Print("CustomItems");
+	console->Print("\titems");
+	for (int i = 0; i < acinfo->citems->items.size(); i++) {
+		auto tup = acinfo->citems->items[i];
+		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		console->Print(tmp.c_str());
+	}
+	console->Print("\tdeath items");
+	for (int i = 0; i < acinfo->citems->death.size(); i++) {
+		auto tup = acinfo->citems->death[i];
+		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		console->Print(tmp.c_str());
+	}
+	console->Print("\tpoisons");
+	for (int i = 0; i < acinfo->citems->poisons.size(); i++) {
+		auto tup = acinfo->citems->poisons[i];
+		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		console->Print(tmp.c_str());
+	}
+	console->Print("\tpotions");
+	for (int i = 0; i < acinfo->citems->potions.size(); i++) {
+		auto tup = acinfo->citems->potions[i];
+		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		console->Print(tmp.c_str());
+	}
+	console->Print("\tfortify");
+	for (int i = 0; i < acinfo->citems->fortify.size(); i++) {
+		auto tup = acinfo->citems->fortify[i];
+		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		console->Print(tmp.c_str());
+	}
+	console->Print("\tfood");
+	for (int i = 0; i < acinfo->citems->food.size(); i++) {
+		auto tup = acinfo->citems->food[i];
+		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		console->Print(tmp.c_str());
+	}
+	/*
+	console->Print("Storage");
+	auto itr = Distribution::customItems()->begin();
+	while (itr != Distribution::customItems()->end()) {
+		console->Print("\tNext Storage");
+		for (int x = 0; x < itr->second.size(); x++) {
+			auto citems = itr->second[x];
+			if (citems != nullptr) {
+				console->Print("\titer");
+				console->Print("\t\titems");
+				for (int i = 0; i < citems->items.size(); i++) {
+					auto tup = citems->items[i];
+					tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
+					console->Print(tmp.c_str());
+				}
+				console->Print("\t\tdeath items");
+				for (int i = 0; i < citems->death.size(); i++) {
+					auto tup = citems->death[i];
+					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
+					console->Print(tmp.c_str());
+				}
+				console->Print("\t\tpoisons");
+				for (int i = 0; i < citems->poisons.size(); i++) {
+					auto tup = citems->poisons[i];
+					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
+					console->Print(tmp.c_str());
+				}
+				console->Print("\t\tpotions");
+				for (int i = 0; i < citems->potions.size(); i++) {
+					auto tup = citems->potions[i];
+					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
+					console->Print(tmp.c_str());
+				}
+				console->Print("\t\tfortify");
+				for (int i = 0; i < citems->fortify.size(); i++) {
+					auto tup = citems->fortify[i];
+					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
+					console->Print(tmp.c_str());
+				}
+				console->Print("\t\tfood");
+				for (int i = 0; i < citems->food.size(); i++) {
+					auto tup = citems->food[i];
+					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
+					console->Print(tmp.c_str());
+				}
+			}
+		}
+		itr++;
+	}
+	*/
 	console->Print("");
 
 	return true;

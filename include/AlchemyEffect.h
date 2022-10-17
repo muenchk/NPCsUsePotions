@@ -63,6 +63,9 @@ enum class AlchemyEffect : unsigned __int64
 	kCarryWeight = (unsigned __int64)1 << 49,       // 2000000000000
 	kPersuasion = (unsigned __int64)1 << 50,        // 4000000000000
 	kAlchemy = (unsigned __int64)1 << 51,           // 8000000000000
+	kFortifyHealth = (unsigned __int64)1 << 52,     // 10000000000000
+	kFortifyMagicka = (unsigned __int64)1 << 53,    // 20000000000000
+	kFortifyStamina = (unsigned __int64)1 << 54,    // 40000000000000
 	kCustom = (unsigned __int64)1 << 63,            // 4000000000000000
 	// 2000007
 	kAnyPotion = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kInvisibility),
@@ -92,3 +95,9 @@ AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val);
 /// <param name="eff"></param>
 /// <returns></returns>
 RE::ActorValue ConvertAlchemyEffect(AlchemyEffect eff);
+
+namespace AlchEff
+{
+	bool IsPotion(AlchemyEffectBase effects);
+	bool IsFortify(AlchemyEffectBase effects);
+}

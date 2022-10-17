@@ -733,21 +733,24 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 						chance = 100;
 					}
 				}
-				if (flags == "" || ToLower(flags) == "object") {
+				if (flags == std::string("") || ToLower(flags) == std::string("object")) {
 					flag = CustomItemFlag::Object;
-				} else if (ToLower(flags) == "potion") {
+				} else if (ToLower(flags) == std::string("potion")) {
 					flag = CustomItemFlag::Potion;
-				} else if (ToLower(flags) == "poison") {
+				} else if (ToLower(flags) == std::string("poison")) {
 					flag = CustomItemFlag::Poison;
-				} else if (ToLower(flags) == "food") {
+				} else if (ToLower(flags) == std::string("food")) {
 					flag = CustomItemFlag::Food;
-				} else if (ToLower(flags) == "fortify") {
+				} else if (ToLower(flags) == std::string("fortify")) {
 					flag = CustomItemFlag::Fortify;
-				} else if (ToLower(flags) == "death") {
+				} else if (ToLower(flags) == std::string("death")) {
 					flag = CustomItemFlag::DeathObject;
 				} else {
 					flag = CustomItemFlag::Object;
 				}
+				LOG1_3("{}[Utility] [ParseAssocObjectsChance] Flag: \t\t{}", flags);
+				LOG1_3("{}[Utility] [ParseAssocObjectsChance] Flag converted: {}", static_cast<uint64_t>(flag));
+
 				if (pluginname.size() != 0) {
 					if (form) {
 						tmp = datahandler->LookupForm(formid, std::string_view{ pluginname });

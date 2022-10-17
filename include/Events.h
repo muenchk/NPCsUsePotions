@@ -14,6 +14,7 @@ namespace Events
 		public RE::BSTEventSink<RE::TESLoadGameEvent>,
 		public RE::BSTEventSink<RE::TESDeathEvent>,
 		public RE::BSTEventSink<RE::BGSActorCellEvent>,
+		public RE::BSTEventSink<RE::TESCellAttachDetachEvent>,
 		public RE::BSTEventSink<RE::TESEquipEvent>
 	{
 	public:
@@ -66,6 +67,13 @@ namespace Events
 		/// <param name="a_eventSource"></param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for Actors being attached / detached
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::TESCellAttachDetachEvent* a_event, RE::BSTEventSource<RE::TESCellAttachDetachEvent>* a_eventSource) override;
 		/// <summary>
 		/// EventHandler for Debug purposes. It calculates the distribution rules for all npcs in the cell
 		/// </summary>

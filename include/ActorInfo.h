@@ -1,3 +1,5 @@
+#include "NUPInterface.h"
+
 #pragma once
 /// <summary>
 /// Determines the strength of an Item
@@ -37,15 +39,30 @@ enum CustomItemFlag
 /// <summary>
 /// Specifies conditions for distribution and usage for custom items
 /// </summary>
-enum class CustomItemConditions : unsigned __int64
+enum class CustomItemConditionsAll : unsigned __int64
 {
-	None = 0,
-	IsBoss = 1, // distribution condition
+	kNone = 0,
+	kIsBoss = 1 << 0,				// 1	// distribution & usage condition
+	kHealthThreshold = 1 << 1,		// 2	// usage
+	kMagickaThreshold = 1 << 2,		// 4	// usage
+	kStaminaThreshold = 1 << 3,		// 8	// usage
+	kActorTypeDwarven = 1 << 4,		// 10	// usage
+
+	kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven,
+	kAllDistr = kIsBoss,
 };
 
-enum class CustomItemConditions2 : unsigned __int64
+enum class CustomItemConditionsAny : unsigned __int64
 {
+	kNone = 0,
+	kIsBoss = 1 << 0,				// 1	// distribution & usage  condition
+	kHealthThreshold = 1 << 1,		// 2	// usage
+	kMagickaThreshold = 1 << 2,		// 4	// usage
+	kStaminaThreshold = 1 << 3,		// 8	// usage
+	kActorTypeDwarven = 1 << 4,		// 10	// usage
 
+	kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven,
+	kAllDistr = kIsBoss,
 };
 
 /// <summary>
@@ -54,6 +71,8 @@ enum class CustomItemConditions2 : unsigned __int64
 class ActorInfo
 {
 public:
+
+	std::vector<NPCsUsePotions::NUPActorInfoHandle*> handles;
 
 	class CustomItems
 	{
@@ -105,6 +124,18 @@ public:
 	/// </summary>
 	RE::Actor* actor;
 	/// <summary>
+	/// form id of the actor
+	/// </summary>
+	RE::FormID formid;
+	/// <summary>
+	/// pluginname the actor is defined in
+	/// </summary>
+	std::string pluginname;
+	/// <summary>
+	/// name of the actor
+	/// </summary>
+	std::string name;
+	/// <summary>
 	/// Current remaining cooldown on health potions
 	/// </summary>
 	int durHealth = 0;
@@ -142,8 +173,9 @@ public:
 	ItemStrength itemStrength = ItemStrength::kWeak;
 
 	bool _boss = false;
+	bool _automaton = false;
 
-	const uint32_t version = 0x00000001;
+	static inline const uint32_t version = 0x00000001;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
 	ActorInfo();
@@ -156,6 +188,13 @@ public:
 		try {
 			delete citems;
 		} catch (std::exception&) {}
+
+		for (int i = 0; i < handles.size(); i++) {
+			try {
+				if (handles[i] != nullptr)
+					handles[i]->Invalidate();
+			} catch (std::exception&) {}
+		}
 	}
 
 public:
@@ -163,6 +202,7 @@ public:
 	bool IsBoss() { return _boss; }
 
 	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> FilterCustomConditionsDistr(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms);
+	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> FilterCustomConditionsUsage(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms);
 	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> itms);
 	bool CanUseItem(RE::FormID item);
 	bool CanUsePot(RE::FormID item);
@@ -171,12 +211,20 @@ public:
 	bool CanUseFortify(RE::FormID item);
 	bool CanUseFood(RE::FormID item);
 	bool IsCustomAlchItem(RE::AlchemyItem* item);
+	bool IsCustomPotion(RE::AlchemyItem* item);
+	bool IsCustomPoison(RE::AlchemyItem* item);
+	bool IsCustomFood(RE::AlchemyItem* item);
 	bool IsCustomItem(RE::TESBoundObject* item);
 
-	uint32_t GetVersion();
+	bool CalcUsageConditions(uint64_t conditionsall, uint64_t conditionsany);
+	bool CalcDistrConditions(uint64_t conditionsall, uint64_t conditionsany);
+
+	bool IsFollower();
+
+	static uint32_t GetVersion();
 
 	int32_t GetDataSize();
 	int32_t GetMinDataSize(int32_t version);
-	void WriteData(unsigned char* buffer, int offset);
+	bool WriteData(unsigned char* buffer, int offset);
 	bool ReadData(unsigned char* buffer, int offset, int length);
 };

@@ -12,6 +12,14 @@
 #define logcritical(...) \
 	static_cast<void>(logger::critical(__VA_ARGS__));
 
+#ifndef NDEBUG
+#define logdebug(...) \
+	((void)0);
+#else
+#define logdebug(...) \
+	static_cast<void>(logger::debug(__VA_ARGS__));
+#endif
+
 
 #define LOGE_1(...) \
 	if (Logging::EnableLog) \
@@ -189,6 +197,14 @@
 #define PROF1_3(s, t)                                             \
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 2) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+
+#ifdef NDEBUG
+#	define LogConsole(c_str) \
+		RE::ConsoleLog::GetSingleton()->Print(c_str);
+#else
+#	define LogConsole(c_str) \
+		((void)0);
+#endif
 
 class Logging
 {

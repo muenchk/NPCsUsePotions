@@ -643,71 +643,160 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
 	std::vector<RE::TESBoundObject*> ret;
-	if (Settings::_featDistributePotions) {
-		auto ritems = rule->GetRandomPotions(acinfo);
-		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching potions");
-		auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			ritems.resize(diff);
-			LOG1_4("{}[SettingsDistribution] [GetDistrItems] potions size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
+	if (rule == Distribution::emptyRule) {
+		// if there is no rule, we have to check for cutsom items anyway, so assign a default rule that 
+		auto items = ACM::GetCustomAlchItems(acinfo);
+		int diff = 0;
+		if (Settings::_featDistributePotions) {
+			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->potions);
+			std::vector<RE::TESBoundObject*> vec;
+			for (int i = 0; i < ritems.size(); i++) {
+				auto item = ritems[i];
+				if (acinfo->CalcDistrConditions(std::get<3>(item), std::get<4>(item)) == false)
+					continue;
+				for (int x = 0; x < std::get<2>(item); x++) {
+					if (rand100(randi) < std::get<1>(item)) {
+						vec.push_back(std::get<0>(item));
+					}
+				}
+			}
+			diff = (int)(items[1].size()) - (int)vec.size();
+			// if there are more items to be distributed than present give some
+			if (diff < 0) {
+				vec.resize(-diff);
+				ret.insert(ret.end(), vec.begin(), vec.end());
+			}
 		}
-		//logger::info("potions to give:\t{}", ritems.size());
+		if (Settings::_featDistributePoisons) {
+			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->poisons);
+			std::vector<RE::TESBoundObject*> vec;
+			for (int i = 0; i < ritems.size(); i++) {
+				auto item = ritems[i];
+				if (acinfo->CalcDistrConditions(std::get<3>(item), std::get<4>(item)) == false)
+					continue;
+				for (int x = 0; x < std::get<2>(item); x++) {
+					if (rand100(randi) < std::get<1>(item)) {
+						vec.push_back(std::get<0>(item));
+					}
+				}
+			}
+			diff = (int)(items[2].size()) - (int)vec.size();
+			// if there are more items to be distributed than present give some
+			if (diff < 0) {
+				vec.resize(-diff);
+				ret.insert(ret.end(), vec.begin(), vec.end());
+			}
+		}
+		if (Settings::_featDistributeFortifyPotions) {
+			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->fortify);
+			std::vector<RE::TESBoundObject*> vec;
+			for (int i = 0; i < ritems.size(); i++) {
+				auto item = ritems[i];
+				if (acinfo->CalcDistrConditions(std::get<3>(item), std::get<4>(item)) == false)
+					continue;
+				for (int x = 0; x < std::get<2>(item); x++) {
+					if (rand100(randi) < std::get<1>(item)) {
+						vec.push_back(std::get<0>(item));
+					}
+				}
+			}
+			diff = (int)(items[3].size()) - (int)vec.size();
+			// if there are more items to be distributed than present give some
+			if (diff < 0) {
+				vec.resize(-diff);
+				ret.insert(ret.end(), vec.begin(), vec.end());
+			}
+		}
+		if (Settings::_featDistributeFortifyPotions) {
+			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->food);
+			std::vector<RE::TESBoundObject*> vec;
+			for (int i = 0; i < ritems.size(); i++) {
+				auto item = ritems[i];
+				if (acinfo->CalcDistrConditions(std::get<3>(item), std::get<4>(item)) == false)
+					continue;
+				for (int x = 0; x < std::get<2>(item); x++) {
+					if (rand100(randi) < std::get<1>(item)) {
+						vec.push_back(std::get<0>(item));
+					}
+				}
+			}
+			diff = (int)(items[4].size()) - (int)vec.size();
+			// if there are more items to be distributed than present give some
+			if (diff < 0) {
+				vec.resize(-diff);
+				ret.insert(ret.end(), vec.begin(), vec.end());
+			}
+		}
 	}
-	if (Settings::_featDistributePoisons) {
-		auto ritems = rule->GetRandomPoisons(acinfo);
-		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching poisons");
-		auto items = ACM::GetMatchingPoisons(acinfo, rule->validPoisons);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			ritems.resize(diff);
-			LOG1_4("{}[SettingsDistribution] [GetDistrItems] poisons size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
+	{
+		if (Settings::_featDistributePotions) {
+			auto ritems = rule->GetRandomPotions(acinfo);
+			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching potions");
+			auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
+			// if the number of found items is less then the number of items to add
+			// then add the difference in numbers
+			if (diff > 0) {
+				ritems.resize(diff);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] potions size: {}", std::to_string(ritems.size()));
+				ret.insert(ret.end(), ritems.begin(), ritems.end());
+			}
+			//logger::info("potions to give:\t{}", ritems.size());
 		}
-		//logger::info("poisons to give:\t{}", ritems.size());
-	}
-	if (Settings::_featDistributeFortifyPotions) {
-		auto ritems = rule->GetRandomFortifyPotions(acinfo);
-		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching fortify");
-		auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			ritems.resize(diff);
-			LOG1_4("{}[SettingsDistribution] [GetDistrItems] fortify size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
+		if (Settings::_featDistributePoisons) {
+			auto ritems = rule->GetRandomPoisons(acinfo);
+			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching poisons");
+			auto items = ACM::GetMatchingPoisons(acinfo, rule->validPoisons);
+			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
+			// if the number of found items is less then the number of items to add
+			// then add the difference in numbers
+			if (diff > 0) {
+				ritems.resize(diff);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] poisons size: {}", std::to_string(ritems.size()));
+				ret.insert(ret.end(), ritems.begin(), ritems.end());
+			}
+			//logger::info("poisons to give:\t{}", ritems.size());
 		}
-		//logger::info("fortify potions to give:\t{}", ritems.size());
-	}
-	if (Settings::_featDistributeFood) {
-		auto ritems = rule->GetRandomFood(acinfo);
-		LOG_4("{}[SettingsDistribution] [GetDistrItems] matching food");
-		auto items = ACM::GetMatchingFood(acinfo, rule->validFood, false);
-		int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
-		LOG1_4("{}[SettingsDistribution] [GetDistrItems] diff: {}", diff);
-		// if the number of found items is less then the number of items to add
-		// then add the difference in numbers
-		if (diff > 0) {
-			LOG_4("{}[SettingsDistribution] [GetDistrItems] diff greater 0");
-			ritems.resize(diff);
-			LOG1_4("{}[SettingsDistribution] [GetDistrItems] food size: {}", std::to_string(ritems.size()));
-			ret.insert(ret.end(), ritems.begin(), ritems.end());
+		if (Settings::_featDistributeFortifyPotions) {
+			auto ritems = rule->GetRandomFortifyPotions(acinfo);
+			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching fortify");
+			auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
+			// if the number of found items is less then the number of items to add
+			// then add the difference in numbers
+			if (diff > 0) {
+				ritems.resize(diff);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] fortify size: {}", std::to_string(ritems.size()));
+				ret.insert(ret.end(), ritems.begin(), ritems.end());
+			}
+			//logger::info("fortify potions to give:\t{}", ritems.size());
 		}
-		//logger::info("food to give:\t{}", ritems.size());
+		if (Settings::_featDistributeFood) {
+			auto ritems = rule->GetRandomFood(acinfo);
+			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching food");
+			auto items = ACM::GetMatchingFood(acinfo, rule->validFood, false);
+			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] diff: {}", diff);
+			// if the number of found items is less then the number of items to add
+			// then add the difference in numbers
+			if (diff > 0) {
+				LOG_4("{}[SettingsDistribution] [GetDistrItems] diff greater 0");
+				ritems.resize(diff);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] food size: {}", std::to_string(ritems.size()));
+				ret.insert(ret.end(), ritems.begin(), ritems.end());
+			}
+			//logger::info("food to give:\t{}", ritems.size());
+		}
 	}
 	// custom generic items are distributed whenever one of the options above is used
-	if (Settings::_featDistributeFood || Settings::_featDistributePoisons || Settings::_featDistributePotions) {
+	if (Settings::_featDistributeCustomItems) {
 		std::unordered_map<uint32_t, int> items = ACM::GetCustomItems(acinfo);
 		auto ritems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->items);
 		for (int i = 0; i < ritems.size(); i++) {
 			auto item = ritems[i];
-			if (std::get<5>(item) == true && acinfo->_distributedCustomItems) // if item is only given once and we already gave items: skip
+			if (std::get<5>(item) == true && acinfo->_distributedCustomItems)  // if item is only given once and we already gave items: skip
+				continue;
+			if (acinfo->CalcDistrConditions(std::get<3>(item), std::get<4>(item)) == false)
 				continue;
 			auto itr = items.find(std::get<0>(item)->GetFormID());
 			if (itr == items.end()) {

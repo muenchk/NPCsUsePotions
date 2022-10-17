@@ -72,6 +72,20 @@
       },
       "inherits": "vs2022-windows",
       "name": "ae"
+    },
+    {
+      "cacheVariables": {
+        "SKYRIM_SUPPORT_AE": {
+          "type": "BOOL",
+          "value": true
+        },
+        "SKYRIM_SUPPORT_AE353": {
+          "type": "BOOL",
+          "value": true
+        }
+      },
+      "inherits": "vs2022-windows",
+      "name": "ae353"
     }
   ],
   "version": 3

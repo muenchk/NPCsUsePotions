@@ -83,31 +83,9 @@ namespace Storage
 		uint32_t version = 0;
 		uint32_t length = 0;
 
-		int accounter = 0;
-		int acfcounter = 0;
-
 		loginfo("[DataStorage] [ReadData] Beginning data load...");
-		while (a_intfc->GetNextRecordInfo(type, version, length)) {
-			loginfo("[DataStorage] found record with type {} and length {}", type, length);
-			switch (type) {
-			case 'ACIF':  // ActorInfo
-				unsigned char* buffer = new unsigned char[length];
-				a_intfc->ReadRecordData(buffer, length);
-				ActorInfo* acinfo = new ActorInfo();
-				if (acinfo->ReadData(buffer, 0, length) == false) {
-					acfcounter++;
-					logwarn("[DataStorage] Couldn't read ActorInfo");
-				} else {
-					accounter++;
-					data->ActorInfoMap()->insert_or_assign(acinfo->actor->GetFormID(), acinfo);
-					loginfo("[DataStorage] read ActorInfo. id: {}, name: {}", Utility::GetHex(acinfo->actor->GetFormID()), acinfo->actor->GetName());
-				}
-				break;
-			}
-		}
-
-		loginfo("[DataStorage] [ReadData] Read {} ActorInfos", accounter);
-		loginfo("[DataStorage] [ReadData] Failed to read {} ActorInfos", acfcounter);
+		
+		data->ReadActorInfoMap(a_intfc);
 
 		loginfo("[DataStorage] [ReadData] Finished loading data");
 		if (preproc) {  // if processing was enabled before locking
@@ -122,25 +100,7 @@ namespace Storage
 
 		loginfo("[DataStorage] [WriteData] Beginning to write data...");
 		
-		loginfo("[DataStorage] [WriteData] Writing ActorInfo");
-		auto itr = data->ActorInfoMap()->begin();
-		while (itr != data->ActorInfoMap()->end()) {
-			if (itr->second && itr->second->actor && itr->second->actor->IsDead() == false) {
-				// open skse record
-				if (a_intfc->OpenRecord('ACIF', 0)) {
-					// get entry length
-					int length = itr->second->GetDataSize();
-					// create buffer
-					unsigned char* buffer = new unsigned char[length];
-					// fill buffer
-					itr->second->WriteData(buffer, 0);
-					// write record
-					a_intfc->WriteRecordData(buffer, length);
-				} else
-					logwarn("[DataStorage] [WriteData] failed to write ActorInfo record for {}", Utility::GetHex(itr->second->actor->GetFormID()));
-			}
-			itr++;
-		}
+		data->SaveActorInfoMap(a_intfc);
 
 		loginfo("[DataStorage] [WriteData] Finished writing data");
 
@@ -155,15 +115,7 @@ namespace Storage
 		bool preproc = Events::LockProcessing();
 
 		loginfo("[DataStorage] [RevertData] Reverting ActorInfo");
-		auto itr = data->ActorInfoMap()->begin();
-		while (itr != data->ActorInfoMap()->end()) {
-			if (itr->second)
-				try {
-					delete itr->second;
-				} catch (std::exception&) {}
-			itr++;
-		}
-		data->ActorInfoMap()->clear();
+		data->DeleteActorInfoMap();
 
 		loginfo("[DataStorage] [RevertData] Finished reverting");
 

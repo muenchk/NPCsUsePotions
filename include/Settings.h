@@ -77,6 +77,11 @@ public:
 	/// </summary>
 	static void ApplySkillBoostPerks();
 
+	/// <summary>
+	/// changes the output model of all consumable sounds to third person
+	/// </summary>
+	static void FixConsumables();
+
 	static inline int _MaxDuration = 10000;
 	static inline int _MaxFortifyDuration = 180000;
 
@@ -95,13 +100,17 @@ public:
 	static inline bool _featUseFood = true;				// enables automatic usage of food for npcs
 	static inline bool _playerUsePoisons = false;          // enables automatic usage of poisons for player
 	static inline bool _playerUseFortifyPotions = false;   // enables automatic usage of fortify potions for player
+	static inline bool _playerUseFood = false;				// enables automatic usage of food for player
 	static inline bool _featDistributePoisons = true;			// player is excluded from distribution options, as well as followers
 	static inline bool _featDistributePotions = true;			// player is excluded from distribution options, as well as followers
 	static inline bool _featDistributeFortifyPotions = true;	// player is excluded from distribution options, as well as followers
 	static inline bool _featDistributeFood = true;				// player is excluded from distribution options, as well as followers
+	static inline bool _featDistributeCustomItems = true;		// distributes custom items/death items to actor, does not affect custom potions etc.
 	static inline bool _featUseDeathItems = true;				// the npc will be given potions that may appear in their deathItems if available
 	static inline bool _featRemoveItemsOnDeath = true;		// remove unused items on death, if activated chances for removal can be set
 	static inline bool _featDisableItemUsageWhileStaggered = false;		// disables potion and poison usage while the npc is staggered
+	static inline bool _featDisableNonFollowerNPCs = false;		// disable item usage for npcs that aren't followers or the player.
+	static inline bool _featDisableOutOfCombatProcessing = false; // disables npc processing if they are out-of-combat
 
 	// compatibility
 	static inline bool _CompatibilityMode = false;								// Use Items with Papyrus, needs the plugin
@@ -115,6 +124,7 @@ public:
 	static inline bool _CompatibilityRemoveItemsStartup = false;				// removes items from actors at startup
 	static inline bool _CompatibilityRemoveItemsStartup_OnlyExcluded = false;	// removes only excluded items shortly after loading a game
 	static inline bool _ApplySkillBoostPerks = true;							// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
+	static inline bool _ForceFixPotionSounds = true;
 	static inline bool _CompatibilityCACO = false;	// automatic
 	static inline bool _CompatibilityApothecary = false; // automatic
 
@@ -237,12 +247,12 @@ public:
 	static inline RE::BGSPerk* AlchemySkillBoosts;
 	static inline RE::BGSPerk* PerkSkillBoosts;
 
-	static inline RE::BGSSoundDescriptorForm* PotionUse;
+	[[deprecated]] static inline RE::BGSSoundDescriptorForm* PotionUse;
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
-	static inline RE::BGSSoundDescriptorForm* FoodEat;
-	static inline bool FixedPotionUse = true;
-	static inline bool FixedPoisonUse = true;
-	static inline bool FixedFoodEat = true;
+	[[deprecated]] static inline RE::BGSSoundDescriptorForm* FoodEat;
+	[[deprecated]] static inline bool FixedPotionUse = true;
+	[[deprecated]] static inline bool FixedPoisonUse = true;
+	[[deprecated]] static inline bool FixedFoodEat = true;
 
 	/// <summary>
 	/// Loads the plugin configuration
@@ -287,8 +297,8 @@ public:
 	/// classifies a single item based on its effects
 	/// </summary>
 	/// <param name="item"></param>
-	/// <returns></returns>
-	static std::tuple<uint64_t, ItemStrength, ItemType> ClassifyItem(RE::AlchemyItem* item);
+	/// <returns>effects, strength, type, duration, magnitude</returns>
+	static std::tuple<uint64_t, ItemStrength, ItemType, int, float> ClassifyItem(RE::AlchemyItem* item);
 
 	/// <summary>
 	/// classifies all AlchemyItems in the game according to its effects

@@ -5,6 +5,7 @@
 #include <random>
 #include <stdlib.h>
 #include "Utility.h"
+#include "Data.h"
 
 
 /// <summary>
@@ -12,8 +13,14 @@
 /// </summary>
 class ACM
 {
+	static inline Data* data;
 
 public:
+
+	/// <summary>
+	/// inits data access
+	/// </summary>
+	static void Init();
 
 	#pragma region AVFunctions
 	/// <summary>
@@ -123,6 +130,10 @@ public:
 	/// Returns the custom items that an actor posseses
 	/// </summary>
 	static std::unordered_map<uint32_t, int> GetCustomItems(ActorInfo* acinfo);
+	/// <summary>
+	/// Returns a vector of [5] maps that contain [all], [potion], [poison], [fortify], [food] CustomAlchItems in the inventory
+	/// </summary>
+	static std::vector<std::unordered_map<uint32_t, int>> GetCustomAlchItems(ActorInfo* acinfo);
 
 	/// <summary>
 	/// tries to use a potion with the given effect [eff]

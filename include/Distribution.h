@@ -25,6 +25,8 @@ public:
 
 	class CustomItemStorage;
 
+#define RandomRange 1000
+
 	/// <summary>
 	/// A distribution rule
 	/// </summary>
@@ -202,7 +204,16 @@ public:
 			validPoisons{ _validPoisons },
 			validFortifyPotions{ _validFortifyPotions },
 			validFood{ _validFood }
-		{}
+		{
+			potionDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_potionDistr);
+			potionDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
+			poisonDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_poisonDistr);
+			poisonDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
+			fortifyDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_fortifyDistr);
+			fortifyDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
+			foodDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_foodDistr);
+			foodDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
+		}
 		Rule() {}
 		/// <summary>
 		/// initializes an empty rule
@@ -533,8 +544,6 @@ public:
 	/// </summary>
 	static inline std::unordered_map<RE::FormID, int>* actorStrengthMap() { return initialised ? &_actorStrengthMap : &_dummyMap4; }
 
-#define RandomRange 1000
-
 	static std::vector<std::tuple<int, AlchemyEffect>> GetVector(int i, AlchemyEffect alch)
 	{
 		std::vector<std::tuple<int, AlchemyEffect>> vec;
@@ -548,6 +557,10 @@ public:
 	/// Active default distribution rule
 	/// </summary>
 	static inline Rule* defaultRule = nullptr;
+	/// <summary>
+	/// Default rule, in case custom items should be distributed but no rules apply to an actor
+	/// </summary>
+	static inline Rule* defaultCustomRule = nullptr;
 	/// <summary>
 	/// Generic empty rule
 	/// </summary>
