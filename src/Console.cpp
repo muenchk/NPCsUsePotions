@@ -116,38 +116,38 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print("CustomItems");
 	console->Print("\titems");
 	for (int i = 0; i < acinfo->citems->items.size(); i++) {
-		auto tup = acinfo->citems->items[i];
-		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		auto cit = acinfo->citems->items[i];
+		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tdeath items");
 	for (int i = 0; i < acinfo->citems->death.size(); i++) {
-		auto tup = acinfo->citems->death[i];
-		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		auto cit = acinfo->citems->death[i];
+		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tpoisons");
 	for (int i = 0; i < acinfo->citems->poisons.size(); i++) {
-		auto tup = acinfo->citems->poisons[i];
-		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		auto cit = acinfo->citems->poisons[i];
+		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tpotions");
 	for (int i = 0; i < acinfo->citems->potions.size(); i++) {
-		auto tup = acinfo->citems->potions[i];
-		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		auto cit = acinfo->citems->potions[i];
+		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tfortify");
 	for (int i = 0; i < acinfo->citems->fortify.size(); i++) {
-		auto tup = acinfo->citems->fortify[i];
-		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		auto cit = acinfo->citems->fortify[i];
+		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tfood");
 	for (int i = 0; i < acinfo->citems->food.size(); i++) {
-		auto tup = acinfo->citems->food[i];
-		tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup)) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(std::get<3>(tup), std::get<4>(tup)));
+		auto cit = acinfo->citems->food[i];
+		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	/*

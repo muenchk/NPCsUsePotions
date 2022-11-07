@@ -1,6 +1,7 @@
 #pragma once
 
-#include <AlchemyEffect.h>
+#include "AlchemyEffect.h"
+#include "CustomItem.h"
 
 	/// <summary>
 /// Class handling all functions related to item distribution
@@ -78,6 +79,7 @@ public:
 		//std::string			assocRuleName;
 		//std::string			assocExclusions;
 
+		// distributions for different item types
 		std::vector<std::tuple<int, AlchemyEffect>> potionDistr;
 		std::vector<std::tuple<int, AlchemyEffect>> potionDistrChance;
 		std::vector<std::tuple<int, AlchemyEffect>> poisonDistr;
@@ -86,6 +88,12 @@ public:
 		std::vector<std::tuple<int, AlchemyEffect>> fortifyDistrChance;
 		std::vector<std::tuple<int, AlchemyEffect>> foodDistr;
 		std::vector<std::tuple<int, AlchemyEffect>> foodDistrChance;
+
+		// raw effect maps for the item types
+		std::map<AlchemyEffect, float> potionEffectMap;
+		std::map<AlchemyEffect, float> poisonEffectMap;
+		std::map<AlchemyEffect, float> fortifyEffectMap;
+		std::map<AlchemyEffect, float> foodEffectMap;
 
 		uint64_t validPotions = 0;
 		uint64_t validPoisons = 0;
@@ -116,6 +124,11 @@ public:
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns>A randomly chosen food according to the rule</returns>
 		std::vector<RE::AlchemyItem*> GetRandomFood(ActorInfo* acinfo);
+
+		/// <summary>
+		/// Returns a distribution scaled according to the number of custom items of an actor and their combat style
+		/// </summary>
+		std::vector<std::tuple<int, AlchemyEffect>> GetScaledDistribution(Settings::ItemType type, ActorInfo* acinfo);
 
 #define COPY(vec1, vec2)       \
 	vec2.reserve(vec1.size()); \
@@ -348,6 +361,12 @@ public:
 		/// <returns></returns>
 		AlchemyEffect GetRandomEffect(Settings::ItemType type);
 		/// <summary>
+		/// Returns a random effect according to the given distribution
+		/// </summary>
+		/// <param name="distribution">distribution to pull effect from</param>
+		/// <returns></returns>
+		AlchemyEffect GetRandomEffect(std::vector<std::tuple<int, AlchemyEffect>> distribution);
+		/// <summary>
 		/// Returns a random effect accoring to the rules item effect properties with additional custom item chance
 		/// </summary>
 		/// <param name="type">Determines which items effect property is consulted</param>
@@ -393,12 +412,12 @@ public:
 		/// <summary>
 		/// items associated with the objects above
 		/// </summary>
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> items;
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> death;
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> potions;
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> fortify;
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> poisons;
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> food;
+		std::vector<CustomItem*> items;
+		std::vector<CustomItem*> death;
+		std::vector<CustomItemAlch*> potions;
+		std::vector<CustomItemAlch*> fortify;
+		std::vector<CustomItemAlch*> poisons;
+		std::vector<CustomItemAlch*> food;
 	};
 
 private:

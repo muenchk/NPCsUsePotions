@@ -6,6 +6,7 @@
 #include "Distribution.h"
 #include "BufferOperations.h"
 #include "ActorManipulation.h"
+#include "Data.h"
 
 ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
 {
@@ -47,52 +48,46 @@ void ActorInfo::CalcCustomItems()
 
 #define CV(x) static_cast<uint64_t>(x)
 
-std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> ActorInfo::FilterCustomConditionsDistr(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms)
+std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> dist;
+	std::vector<CustomItemAlch*> dist;
 	for (int i = 0; i < itms.size(); i++) {
-		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0)
+		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0)
 			continue;
-		uint64_t cond1 = std::get<3>(itms[i]);
-		uint64_t cond2 = std::get<4>(itms[i]);
-		bool valid = CalcDistrConditions(cond1, cond2);
+		bool valid = CalcDistrConditions(itms[i]);
 		if (valid == true)
 			dist.push_back(itms[i]);
 	}
 	return dist;
 }
 
-std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> ActorInfo::FilterCustomConditionsUsage(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms)
+std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> dist;
+	std::vector<CustomItemAlch*> dist;
 	for (int i = 0; i < itms.size(); i++) {
-		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0) {
+		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
 			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr] error");
 			continue;
 		}
-		uint64_t cond1 = std::get<3>(itms[i]);
-		uint64_t cond2 = std::get<4>(itms[i]);
-		bool valid = CalcUsageConditions(cond1, cond2);
+		bool valid = CalcUsageConditions(itms[i]);
 		if (valid == true)
 			dist.push_back(itms[i]);
 	}
 	return dist;
 }
 
-std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> ActorInfo::FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> itms)
+std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems]");
-	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> dist;
+	std::vector<CustomItem*> dist;
 	for (int i = 0; i < itms.size(); i++) {
-		if (std::get<0>(itms[i]) == nullptr || std::get<0>(itms[i])->GetFormID() == 0) {
+		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
 			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems] error");
 			continue;
 		}
-		uint64_t cond1 = std::get<3>(itms[i]);
-		uint64_t cond2 = std::get<4>(itms[i]);
-		bool valid = CalcDistrConditions(cond1, cond2);
+		bool valid = CalcDistrConditions(itms[i]);
 		if (valid == true)
 			dist.push_back(itms[i]);
 	}
@@ -115,9 +110,7 @@ bool ActorInfo::CanUsePotion(RE::FormID item)
 	auto itr = citems->potionsset.find(item);
 	if (itr == citems->potionsset.end() || itr->second < 0 || itr->second > citems->potions.size())
 		return false;
-	uint64_t cond1 = std::get<3>(citems->potions[itr->second]);
-	uint64_t cond2 = std::get<4>(citems->potions[itr->second]);
-	return CalcUsageConditions(cond1, cond2);
+	return CalcUsageConditions(citems->potions[itr->second]);
 }
 bool ActorInfo::CanUsePoison(RE::FormID item) 
 {
@@ -125,9 +118,7 @@ bool ActorInfo::CanUsePoison(RE::FormID item)
 	auto itr = citems->poisonsset.find(item);
 	if (itr == citems->poisonsset.end() || itr->second < 0 || itr->second > citems->poisons.size())
 		return false;
-	uint64_t cond1 = std::get<3>(citems->poisons[itr->second]);
-	uint64_t cond2 = std::get<4>(citems->poisons[itr->second]);
-	return CalcUsageConditions(cond1, cond2);
+	return CalcUsageConditions(citems->poisons[itr->second]);
 }
 bool ActorInfo::CanUseFortify(RE::FormID item)
 {
@@ -135,9 +126,7 @@ bool ActorInfo::CanUseFortify(RE::FormID item)
 	auto itr = citems->fortifyset.find(item);
 	if (itr == citems->fortifyset.end() || itr->second < 0 || itr->second > citems->fortify.size())
 		return false;
-	uint64_t cond1 = std::get<3>(citems->fortify[itr->second]);
-	uint64_t cond2 = std::get<4>(citems->fortify[itr->second]);
-	return CalcUsageConditions(cond1, cond2);
+	return CalcUsageConditions(citems->fortify[itr->second]);
 }
 bool ActorInfo::CanUseFood(RE::FormID item)
 {
@@ -145,9 +134,7 @@ bool ActorInfo::CanUseFood(RE::FormID item)
 	auto itr = citems->foodset.find(item);
 	if (itr == citems->foodset.end() || itr->second < 0 || itr->second > citems->food.size())
 		return false;
-	uint64_t cond1 = std::get<3>(citems->food[itr->second]);
-	uint64_t cond2 = std::get<4>(citems->food[itr->second]);
-	return CalcUsageConditions(cond1, cond2);
+	return CalcUsageConditions(citems->food[itr->second]);
 }
 
 bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
@@ -203,99 +190,165 @@ bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 	return false;
 }
 
-bool ActorInfo::CalcUsageConditions(uint64_t conditionsall, uint64_t conditionsany)
+bool ActorInfo::CalcUsageConditions(CustomItem* item)
 {
 	LOG_3("{}[ActorInfo] [CalcUsageConditions]");
 	// obligatory conditions (all must be fulfilled)
 	// only if there are conditions
-	if ((conditionsall & CV(CustomItemConditionsAll::kAllUsage)) != 0) {
-		if (conditionsall & CV(CustomItemConditionsAll::kIsBoss)) {
-			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kIsBossAll]");
-			if (!_boss)  // not a boss
+	for (int i = 0; i < item->conditionsall.size(); i++)
+	{
+		switch (std::get<0>(item->conditionsall[i]))
+		{
+		case CustomItemConditionsAll::kIsBoss:
+			if (!_boss)
 				return false;
-		}
-		if (conditionsall & CV(CustomItemConditionsAll::kHealthThreshold)) {
-			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kHTAll]");
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) > Settings::_healthThreshold)  // over health threshold
+			break;
+		case CustomItemConditionsAll::kActorTypeDwarven:
+			if (!_automaton)
 				return false;
-		}
-		if (conditionsall & CV(CustomItemConditionsAll::kMagickaThreshold)) {
-			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kMTAll]");
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) > Settings::_magickaThreshold)  // over magicka threshold
+			break;
+		case CustomItemConditionsAll::kHealthThreshold:
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) > Settings::_healthThreshold)  // over plugin health threshold
 				return false;
-		}
-		if (conditionsall & CV(CustomItemConditionsAll::kStaminaThreshold)) {
-			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kSTAll]");
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) > Settings::_staminaThreshold)  // over stamina threshold
+			break;
+		case CustomItemConditionsAll::kMagickaThreshold:
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) > Settings::_magickaThreshold)  // over plugin magicka threshold
 				return false;
-		}
-		if (conditionsall & CV(CustomItemConditionsAll::kActorTypeDwarven)) {
-			LOG_3("{}[ActorInfo] [CalcUsageConditions] [kActAutAll]");
-			if (!_automaton)  // not an automaton
+			break;
+		case CustomItemConditionsAll::kStaminaThreshold:
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) > Settings::_staminaThreshold)  // over plugin stamina threshold
 				return false;
+			break;
+		case CustomItemConditionsAll::kHasMagicEffect:
+			{
+				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp == nullptr || actor->HasMagicEffect(tmp) == false)
+					return false;
+			}
+			break;
+		case CustomItemConditionsAll::kHasPerk:
+			{
+				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp == nullptr || actor->HasPerk(tmp) == false)
+					return false;
+			}
+			break;
 		}
 	}
 
-	// any conditions (one must be fulfilled)
-	if ((conditionsany & CV(CustomItemConditionsAny::kAllUsage)) == 0) {
-		// no conditions at all
+	if (item->conditionsany.size() == 0)
 		return true;
-	}
-	if (conditionsany & CV(CustomItemConditionsAny::kIsBoss)) {
-		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kIsBossAny]");
-		if (_boss)
-			return true;
-	}
-	if (conditionsany & CV(CustomItemConditionsAll::kHealthThreshold)) {
-		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kHTAny]");
-		if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) <= Settings::_healthThreshold)  // under health threshold
-			return true;
-	}
-	if (conditionsany & CV(CustomItemConditionsAll::kMagickaThreshold)) {
-		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kMTAny]");
-		if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) <= Settings::_magickaThreshold)  // under magicka threshold
-			return true;
-	}
-	if (conditionsany & CV(CustomItemConditionsAll::kStaminaThreshold)) {
-		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kSTAny]");
-		if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) <= Settings::_staminaThreshold)  // under stamina threshold
-			return true;
-	}
-	if (conditionsall & CV(CustomItemConditionsAll::kActorTypeDwarven)) {
-		LOG_3("{}[ActorInfo] [CalcUsageConditions] [kActAutAny]");
-		if (_automaton)  // an automaton
-			return true;
+
+	for (int i = 0; i < item->conditionsany.size(); i++)
+	{
+		switch (std::get<0>(item->conditionsany[i]))
+		{
+		case CustomItemConditionsAny::kIsBoss:
+			if (_boss)
+				return true;
+			break;
+		case CustomItemConditionsAny::kActorTypeDwarven:
+			if (_automaton)
+				return true;
+			break;
+		case CustomItemConditionsAny::kHealthThreshold:
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) <= Settings::_healthThreshold)  // under health threshold
+				return true;
+			break;
+		case CustomItemConditionsAny::kMagickaThreshold:
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) <= Settings::_magickaThreshold)  // under magicka threshold
+				return true;
+			break;
+		case CustomItemConditionsAny::kStaminaThreshold:
+			if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) <= Settings::_staminaThreshold)  // under stamina threshold
+				return true;
+			break;
+		case CustomItemConditionsAll::kHasMagicEffect:
+			{
+				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp != nullptr && actor->HasMagicEffect(tmp) == true)
+					return true;
+			}
+			break;
+		case CustomItemConditionsAll::kHasPerk:
+			{
+				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp != nullptr && actor->HasPerk(tmp) == true)
+					return true;
+			}
+			break;
+		}
 	}
 	return false;
 }
 
-bool ActorInfo::CalcDistrConditions(uint64_t conditionsall, uint64_t conditionsany)
+bool ActorInfo::CalcDistrConditions(CustomItem* item)
 {
 	LOG_3("{}[ActorInfo] [CalcDistrConditions]");
 	// only check these if there are conditions
-	if ((conditionsall & CV(CustomItemConditionsAny::kAllDistr)) != 0) {
-		if (conditionsall & CV(CustomItemConditionsAll::kIsBoss)) {
-			LOG_3("{}[ActorInfo] [CalcDistrConditions] [kIsBossAll]");
+	for (int i = 0; i < item->conditionsall.size(); i++) {
+		switch (std::get<0>(item->conditionsall[i])) {
+		case CustomItemConditionsAll::kActorTypeDwarven:
+			if (!_automaton)
+				return false;
+			break;
+		case CustomItemConditionsAll::kIsBoss:
 			if (!_boss)
 				return false;
+			break;
+		case CustomItemConditionsAll::kHasMagicEffect:
+			{
+				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp == nullptr || actor->HasMagicEffect(tmp) == false)
+					return false;
+			}
+			break;
+		case CustomItemConditionsAll::kHasPerk:
+			{
+				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp == nullptr || actor->HasPerk(tmp) == false)
+					return false;
+			}
+			break;
 		}
 	}
 
-	if ((conditionsany & CV(CustomItemConditionsAny::kAllDistr)) == 0) {
-		// no conditions at all
+	// no conditions at all
+	if (item->conditionsany.size() == 0)
 		return true;
-	}
-	if (conditionsany & CV(CustomItemConditionsAny::kIsBoss)) {
-		LOG_3("{}[ActorInfo] [CalcDistrConditions] [kIsBossAny]");
-		if (_boss)
-			return true;
+
+	for (int i = 0; i < item->conditionsany.size(); i++) {
+		switch (std::get<0>(item->conditionsany[i])) {
+		case CustomItemConditionsAny::kActorTypeDwarven:
+			if (_automaton)
+				return true;
+			break;
+		case CustomItemConditionsAny::kIsBoss:
+			if (_boss)
+				return true;
+			break;
+		case CustomItemConditionsAll::kHasMagicEffect:
+			{
+				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp != nullptr && actor->HasMagicEffect(tmp) == true)
+					return true;
+			}
+			break;
+		case CustomItemConditionsAll::kHasPerk:
+			{
+				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp != nullptr && actor->HasPerk(tmp) == true)
+					return true;
+			}
+			break;
+		}
 	}
 	return false;
 }
 
 bool ActorInfo::IsFollower()
 {
-	return actor->IsInFaction(Settings::CurrentFollowerFaction);
+	return actor->IsInFaction(Settings::CurrentFollowerFaction) | actor->IsInFaction(Settings::CurrentHirelingFaction);
 }
 
 void ActorInfo::CustomItems::CreateMaps()
@@ -304,32 +357,32 @@ void ActorInfo::CustomItems::CreateMaps()
 	// items map
 	itemsset.clear();
 	for (int i = 0; i < items.size(); i++) {
-		itemsset.insert_or_assign(std::get<0>(items[i])->GetFormID(), i);
+		itemsset.insert_or_assign(items[i]->object->GetFormID(), i);
 	}
 	// death map
 	deathset.clear();
 	for (int i = 0; i < death.size(); i++) {
-		deathset.insert_or_assign(std::get<0>(death[i])->GetFormID(), i);
+		deathset.insert_or_assign(death[i]->object->GetFormID(), i);
 	}
 	// potions map
 	potionsset.clear();
 	for (int i = 0; i < potions.size(); i++) {
-		potionsset.insert_or_assign(std::get<0>(potions[i])->GetFormID(), i);
+		potionsset.insert_or_assign(potions[i]->object->GetFormID(), i);
 	}
 	// poisons map
 	poisonsset.clear();
 	for (int i = 0; i < poisons.size(); i++) {
-		poisonsset.insert_or_assign(std::get<0>(poisons[i])->GetFormID(), i);
+		poisonsset.insert_or_assign(poisons[i]->object->GetFormID(), i);
 	}
 	// food map
 	foodset.clear();
 	for (int i = 0; i < food.size(); i++) {
-		foodset.insert_or_assign(std::get<0>(food[i])->GetFormID(), i);
+		foodset.insert_or_assign(food[i]->object->GetFormID(), i);
 	}
 	// fortify map
 	fortifyset.clear();
 	for (int i = 0; i < fortify.size(); i++) {
-		fortifyset.insert_or_assign(std::get<0>(fortify[i])->GetFormID(), i);
+		fortifyset.insert_or_assign(fortify[i]->object->GetFormID(), i);
 	}
 }
 

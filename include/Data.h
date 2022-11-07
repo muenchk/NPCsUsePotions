@@ -18,6 +18,11 @@ private:
 	/// </summary>
 	std::unordered_map<uint32_t, std::tuple<AlchemyEffectBase, int, float>> alchitemEffectMap;
 
+	/// <summary>
+	/// map that contains game objects that are used in custom object conditions, for fast access
+	/// </summary>
+	std::unordered_map<uint32_t, RE::TESForm*> customItemFormMap;
+
 public:
 	/// <summary>
 	/// returns a pointer to a static Data object
@@ -70,4 +75,26 @@ public:
 	/// Resets all saved AlchemyItem effects
 	/// </summary>
 	void ResetAlchItemEffects();
+
+	/// <summary>
+	/// Returns the TESForm associated with the formid from an internal buffer
+	/// </summary>
+	/// <param name="formid"></param>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
+	RE::TESForm* FindForm(uint32_t formid, std::string pluginname);
+	/// <summary>
+	/// Returns the MagicEffect associated with the formid from an internal buffer
+	/// </summary>
+	/// <param name="formid"></param>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
+	RE::EffectSetting* FindMagicEffect(uint32_t formid, std::string pluginname);
+	/// <summary>
+	/// Returns the Perk associated with the formid from an internal buffer
+	/// </summary>
+	/// <param name="formid"></param>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
+	RE::BGSPerk* FindPerk(uint32_t formid, std::string pluginname);
 }; 

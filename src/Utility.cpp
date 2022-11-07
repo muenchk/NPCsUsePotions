@@ -615,10 +615,10 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID>> Utility::ParseAssoc
 	return ret;
 }
 
-std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t, bool>> Utility::ParseCustomObjects(std::string input, bool& error, std::string file, std::string line)
+std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> Utility::ParseCustomObjects(std::string input, bool& error, std::string file, std::string line)
 {
 	LOG_3("{}[Utility] [ParseAssocObjectsChance]");
-	std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t, bool>> ret;
+	std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> ret;
 	try {
 		auto datahandler = RE::TESDataHandler::GetSingleton();
 		size_t pos;
@@ -633,9 +633,12 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 		std::string flags;
 		std::string numitems;
 		bool exclude = false;
+		uint64_t tmp1;
+		uint64_t tmp2;
+		std::string tmp3;
 		bool giveonce = false;
-		uint64_t conditions1;
-		uint64_t conditions2;
+		std::vector<std::tuple<uint64_t, uint32_t, std::string>> conditionsall;
+		std::vector<std::tuple<uint64_t, uint32_t, std::string>> conditionsany;
 		int8_t num;
 		CustomItemFlag flag;
 		int32_t chance = 100;
@@ -673,6 +676,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 				}
 				pluginname = entry.substr(0, pos);
 				entry.erase(0, pos + 1);
+				// num items
 				if ((pos = entry.find(',')) == std::string::npos) {
 					error = true;
 					return ret;
@@ -683,6 +687,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 					num = (int8_t)(std::stol(numitems));
 				} catch (std::exception&) {
 				}
+				// exclude
 				if ((pos = entry.find(',')) == std::string::npos) {
 					error = true;
 					return ret;
@@ -690,6 +695,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 				if (entry.substr(0, pos) == "1")
 					exclude = true;
 				entry.erase(0, pos + 1);
+				// give once
 				if ((pos = entry.find(',')) == std::string::npos) {
 					error = true;
 					return ret;
@@ -697,24 +703,97 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 				if (entry.substr(0, pos) == "1")
 					giveonce = true;
 				entry.erase(0, pos + 1);
+
+				// conditionsall
 				if ((pos = entry.find(',')) == std::string::npos) {
 					error = true;
 					return ret;
 				}
-				try {
-					conditions1 = static_cast<uint32_t>(std::stol(entry.substr(0, pos), nullptr, 16));
-				} catch (std::exception&) {
-				}
+				std::string condall = entry.substr(0, pos);
 				entry.erase(0, pos + 1);
+				// we have to parse a substr of variable length
+				// ; - separates entries
+				// : - separates first and second argument
+				std::vector<std::string> splits;
+				while ((pos = condall.find(';')) != std::string::npos) {
+					splits.push_back(condall.substr(0, pos));
+					condall.erase(0, pos + 1);
+				}
+				splits.push_back(condall);
+				for (int x = 0; x < splits.size(); x++) {
+					tmp3 = splits[x];
+					if ((pos = tmp3.find(':')) != std::string::npos) {
+						try {
+							tmp1 = std::stoull(tmp3.substr(0, pos), nullptr);
+						} catch (std::exception&) {
+							continue;
+						}
+						tmp3.erase(0, pos+1);
+						if ((pos = splits[x].find(':')) != std::string::npos) {
+							try {
+								tmp2 = std::stoull(tmp3.substr(0, pos), nullptr);
+							} catch (std::exception&) {
+								continue;
+							}
+							tmp3.erase(0, pos + 1);
+						}
+						else
+						{
+							try {
+								tmp2 = std::stoull(tmp3, nullptr);
+							} catch (std::exception&) {
+								continue;
+							}
+							tmp3 = "";
+						}
+						conditionsall.push_back({ tmp1, (uint32_t)tmp2, tmp3 });
+					}
+				}
+				splits.clear();
+				// conditionsany
 				if ((pos = entry.find(',')) == std::string::npos) {
 					error = true;
 					return ret;
 				}
-				try {
-					conditions2 = static_cast<uint32_t>(std::stol(entry.substr(0, pos), nullptr, 16));
-				} catch (std::exception&) {
+				std::string condany = entry.substr(0, pos);
+				entry.erase(0, pos + 1);// we have to parse a substr of variable length
+				// ; - separates entries
+				// : - separates first and second argument
+				while ((pos = condany.find(';')) != std::string::npos) {
+					splits.push_back(condany.substr(0, pos));
+					condany.erase(0, pos + 1);
 				}
-				entry.erase(0, pos + 1);
+				splits.push_back(condany);
+				for (int x = 0; x < splits.size(); x++) {
+					tmp3 = splits[x];
+					if ((pos = tmp3.find(':')) != std::string::npos) {
+						try {
+							tmp1 = std::stoull(tmp3.substr(0, pos), nullptr);
+						} catch (std::exception&) {
+							continue;
+						}
+						tmp3.erase(0, pos + 1);
+						if ((pos = splits[x].find(':')) != std::string::npos) {
+							try {
+								tmp2 = std::stoull(tmp3.substr(0, pos), nullptr);
+							} catch (std::exception&) {
+								continue;
+							}
+							tmp3.erase(0, pos + 1);
+						} else {
+							try {
+								tmp2 = std::stoull(tmp3, nullptr);
+							} catch (std::exception&) {
+								continue;
+							}
+							tmp3 = "";
+						}
+						conditionsall.push_back({ tmp1, (uint32_t)tmp2, tmp3 });
+					}
+				}
+				splits.clear();
+
+				// flags
 				if ((pos = entry.find(',')) == std::string::npos) {
 					// the rest is the item flag
 					flags = entry;
@@ -769,7 +848,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 				if (tmp != nullptr) {
 					type = MatchValidFormType(tmp->GetFormType(), valid);
 					if (valid) {
-						ret.push_back({ type, tmp->GetFormID(), chance, flag, num, exclude, conditions1, conditions2, giveonce });
+						ret.push_back({ type, tmp->GetFormID(), chance, flag, num, exclude, conditionsall, conditionsany, giveonce });
 					} else {
 						logger::warn("[Utility] [ParseAssocObjectsChance] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
 					}
@@ -891,6 +970,8 @@ std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::vector
 {
 	LOG_3("{}[Utility] [GetDistribution]");
 	std::vector<std::tuple<int, AlchemyEffect>> ret;
+	if (effectmap.size() == 0)
+		return ret;
 	uint64_t tmp = 0;
 	std::map<AlchemyEffect, float> map;
 	// iterate over all effects in effect map
@@ -922,6 +1003,48 @@ std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::vector
 		ret.push_back({ (int)std::ceil(currval), entry.first });
 	}
 	return ret;
+}
+
+std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::map<AlchemyEffect, float> map, int range)
+{
+	LOG_3("{}[Utility] [GetDistributionMap]");
+	std::vector<std::tuple<int, AlchemyEffect>> ret;
+	if (map.size() == 0)
+		return ret;
+	// get the weighted sum of all modifiers over all effects and do multiply mashed up effects with the number of contained effects
+	float sum = 0.0f;
+	for (auto entry : map) {
+		sum = sum + entry.second;
+	}
+	// get the slice size for each individual effect
+	float slicesize = range / sum;
+	// value for current effect
+	float currval = 0.0f;
+	for (auto entry : map) {
+		// compute current upper bound from slicesize and our modifier
+		currval += slicesize * entry.second;
+		// insert bound effect mapping
+		ret.push_back({ (int)std::ceil(currval), entry.first });
+	}
+	return ret;
+}
+
+std::map<AlchemyEffect, float> Utility::UnifyEffectMap(std::vector<std::tuple<uint64_t, float>> effectmap)
+{
+	LOG_3("{}[Utility] [UnifyEffectMap]");
+	uint64_t tmp = 0;
+	std::map<AlchemyEffect, float> map;
+	// iterate over all effects in effect map
+	for (int i = 0; i < effectmap.size(); i++) {
+		// iterate over all effects that could be mashed up in the effect map we can only iterate until c 62 so as to avoid
+		// an overflow error
+		for (uint64_t c = 1; c < 4611686018427387905; c = c << 1) {
+			if ((tmp = (std::get<0>(effectmap[i]) & c)) > 0) {
+				map.insert_or_assign(static_cast<AlchemyEffect>(tmp), std::get<1>(effectmap[i]));
+			}
+		}
+	}
+	return map;
 }
 
 uint64_t Utility::SumAlchemyEffects(std::vector<std::tuple<int, AlchemyEffect>> list, bool chance)

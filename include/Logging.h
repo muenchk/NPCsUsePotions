@@ -20,6 +20,7 @@
 	static_cast<void>(logger::debug(__VA_ARGS__));
 #endif
 
+// logging without time stamps
 
 #define LOGE_1(...) \
 	if (Logging::EnableLog) \
@@ -64,6 +65,123 @@
 #define LOGE5_2(s, t, u, v, x, y)                       \
 	if (Logging::EnableLog && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, t, u, v, x, y));
+
+// load logging with / without time stamps
+
+#define LOGL_1(s)           \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
+
+#define LOGL1_1(s, t)        \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+
+#define LOGL2_1(s, t, u)     \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
+
+#define LOGL3_1(s, t, u, v)  \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v));
+
+#define LOGL4_1(s, t, u, v, w) \
+	if (Logging::EnableLoadLog)   \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
+
+#define LOGL5_1(s, t, u, v, w, x) \
+	if (Logging::EnableLoadLog)      \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x));
+
+#define LOGL_2(s)                                      \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
+
+#define LOGL1_2(s, t)                                  \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+
+#define LOGL2_2(s, t, u)                               \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
+
+#define LOGL3_2(s, t, u, v)                            \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
+
+#define LOGL4_2(s, t, u, v, w)                         \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
+
+#define LOGL_3(s)                                      \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 2) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
+
+#define LOGL1_3(s, t)                                  \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 2) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+
+#define LOGL2_3(s, t, u)                               \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 2) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
+
+#define LOGL_4(s)                                      \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 3) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
+
+#define LOGL1_4(s, t)                                  \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 3) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+
+#define LOGL2_4(s, t, u)                               \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 3) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
+
+#define LOGLE_1(...)         \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(__VA_ARGS__));
+
+#define LOGLE1_1(s, t)       \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(s, t));
+
+#define LOGLE2_1(s, t, u)    \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(s, t, u));
+
+#define LOGLE2_1(s, t, u, v) \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logger::info(s, t, u, v));
+
+#define LOGLE2_1(s, t, u, v, w) \
+	if (Logging::EnableLoadLog)    \
+		static_cast<void>(logger::info(s, t, u, v, w));
+
+#define LOGLE_2(...)                                   \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(__VA_ARGS__));
+
+#define LOGLE1_2(s, t)                                 \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, t));
+
+#define LOGLE2_2(s, t, u)                              \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, t, u));
+
+#define LOGLE3_2(s, t, u, v)                           \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, t, u, v));
+
+#define LOGLE4_2(s, t, u, v, w)                        \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, t, u, v, w));
+
+#define LOGLE5_2(s, t, u, v, x, y)                     \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, t, u, v, x, y));
+
+
+// regular logging with timestamps
 
 #define LOG_1(s)             \
 	if (Logging::EnableLog) \
@@ -226,6 +344,7 @@ public:
 	}
 
 	static inline bool EnableLog = false;
+	static inline bool EnableLoadLog = false;
 	static inline bool EnableProfiling = false;
 	static inline int LogLevel = 0;
 	static inline int ProfileLevel = 0;

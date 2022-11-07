@@ -131,7 +131,8 @@ public:
 	static inline bool _CompatibilityWhitelist = false;
 
 	// debug
-	static inline bool EnableLog = false;
+	static inline bool EnableLog = false;			// Enables general logging
+	static inline bool EnableLoadLog = false;		// Enables logging for plugin load
 	static inline int LogLevel = 0;					// 0 - only highest level
 													// 1 - highest to layer 1 function logging
 													// 2 - highest to layer 2 function logging
@@ -154,6 +155,8 @@ public:
 	static inline int _MaxMagnitudeStandard = 60;	// max potion / poison magnitude to be considered "standard"
 	static inline int _MaxMagnitudePotent = 150;	// max potion / poison magnitude to be considered "potent"
 													// anything above this won't be distributed
+	static inline float _StyleScalingPrimary = 1.20f;	// base scaling factor applied to potions etc. that are considered useful for the the primary combattype of an actor
+	static inline float _StyleScalingSecondary = 1.10f;  // base scaling factor applied to potions etc. that are considered useful for the secondary combattype of an actor
 
 	// potion usage
 	static inline float _healthThreshold = 0.5f;

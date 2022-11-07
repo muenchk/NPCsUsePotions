@@ -41,32 +41,32 @@ namespace NPCsUsePotions
 		/// <summary>
 		/// returns custom items that may be distributed to the actor on combat enter
 		/// </summary>
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> CustomItems();
+		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> CustomItems();
 		std::unordered_map<uint32_t, int> CustomItemsset();
 		/// <summary>
 		/// returns custom items that may be distributed to the actor upon their death
 		/// </summary>
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> CustomDeath();
+		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> CustomDeath();
 		std::unordered_map<uint32_t, int> CustomDeathset();
 		/// <summary>
 		/// returns custom potions that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> CustomPotions();
+		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> CustomPotions();
 		std::unordered_map<uint32_t, int> CustomPotionsset();
 		/// <summary>
 		/// returns custom fortify potions that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> CustomFortify();
+		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> CustomFortify();
 		std::unordered_map<uint32_t, int> CustomFortifyset();
 		/// <summary>
 		/// returns custom poisons that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> CustomPoisons();
+		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> CustomPoisons();
 		std::unordered_map<uint32_t, int> CustomPoisonsset();
 		/// <summary>
 		/// returns custom food that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> CustomFood();
+		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> CustomFood();
 		std::unordered_map<uint32_t, int> CustomFoodset();
 
 		/// <summary>

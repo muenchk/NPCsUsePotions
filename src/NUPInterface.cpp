@@ -205,52 +205,94 @@ namespace NPCsUsePotions
 			return nullptr;
 	}
 
-	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> NUPActorInfoHandle::CustomItems()
+	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> NUPActorInfoHandle::CustomItems()
 	{
-		if (valid)
-			return ((ActorInfo*)acinfo)->citems->items;
+		if (valid) {
+			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> ret;
+			CustomItem* cit;
+			for (int i = 0; i < ((ActorInfo*)acinfo)->citems->items.size(); i++) {
+				cit = ((ActorInfo*)acinfo)->citems->items[i];
+				ret.push_back({ cit->object, cit->num, cit->chance, cit->conditionsall, cit->conditionsany, cit->giveonce });
+			}
+			return ret;
+		}
 		else
-			return std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>>{};
+			return std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>>{};
 	}
 
-	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> NUPActorInfoHandle::CustomDeath()
+	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> NUPActorInfoHandle::CustomDeath()
 	{
-		if (valid)
-			return ((ActorInfo*)acinfo)->citems->death;
+		if (valid) {
+			std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> ret;
+			CustomItem* cit;
+			for (int i = 0; i < ((ActorInfo*)acinfo)->citems->death.size(); i++) {
+				cit = ((ActorInfo*)acinfo)->citems->death[i];
+				ret.push_back({ cit->object, cit->num, cit->chance, cit->conditionsall, cit->conditionsany, cit->giveonce });
+			}
+			return ret;
+		}
 		else
-			return std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>>{};
+			return std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>>{};
 	}
 
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> NUPActorInfoHandle::CustomPotions()
+	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> NUPActorInfoHandle::CustomPotions()
 	{
-		if (valid)
-			return ((ActorInfo*)acinfo)->citems->potions;
+		if (valid) {
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> ret;
+			CustomItem* cit;
+			for (int i = 0; i < ((ActorInfo*)acinfo)->citems->potions.size(); i++) {
+				cit = ((ActorInfo*)acinfo)->citems->potions[i];
+				ret.push_back({ cit->object->As<RE::AlchemyItem>(), cit->num, cit->chance, cit->conditionsall, cit->conditionsany });
+			}
+			return ret;
+		}
 		else
-			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>>{};
+			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>>{};
 	}
 
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> NUPActorInfoHandle::CustomFortify()
+	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> NUPActorInfoHandle::CustomFortify()
 	{
-		if (valid)
-			return ((ActorInfo*)acinfo)->citems->fortify;
+		if (valid) {
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> ret;
+			CustomItem* cit;
+			for (int i = 0; i < ((ActorInfo*)acinfo)->citems->fortify.size(); i++) {
+				cit = ((ActorInfo*)acinfo)->citems->fortify[i];
+				ret.push_back({ cit->object->As<RE::AlchemyItem>(), cit->num, cit->chance, cit->conditionsall, cit->conditionsany });
+			}
+			return ret;
+		}
 		else
-			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>>{};
+			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>>{};
 	}
 
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> NUPActorInfoHandle::CustomPoisons()
+	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> NUPActorInfoHandle::CustomPoisons()
 	{
-		if (valid)
-			return ((ActorInfo*)acinfo)->citems->poisons;
+		if (valid) {
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> ret;
+			CustomItem* cit;
+			for (int i = 0; i < ((ActorInfo*)acinfo)->citems->poisons.size(); i++) {
+				cit = ((ActorInfo*)acinfo)->citems->poisons[i];
+				ret.push_back({ cit->object->As<RE::AlchemyItem>(), cit->num, cit->chance, cit->conditionsall, cit->conditionsany });
+			}
+			return ret;
+		}
 		else
-			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>>{};
+			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>>{};
 	}
 
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> NUPActorInfoHandle::CustomFood()
+	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> NUPActorInfoHandle::CustomFood()
 	{
-		if (valid)
-			return ((ActorInfo*)acinfo)->citems->food;
+		if (valid) {
+			std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>> ret;
+			CustomItem* cit;
+			for (int i = 0; i < ((ActorInfo*)acinfo)->citems->food.size(); i++) {
+				cit = ((ActorInfo*)acinfo)->citems->food[i];
+				ret.push_back({ cit->object->As<RE::AlchemyItem>(), cit->num, cit->chance, cit->conditionsall, cit->conditionsany });
+			}
+			return ret;
+		}
 		else
-			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>>{};
+			return std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>>>{};
 	}
 
 	std::unordered_map<uint32_t, int> NUPActorInfoHandle::CustomItemsset()

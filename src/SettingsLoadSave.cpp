@@ -148,6 +148,11 @@ void Settings::Load()
 	_MaxMagnitudePotent = ini.GetValue("Distribution", "MaxMagnitudePotent") ? ini.GetLongValue("Distribution", "MaxMagnitudePotent") : _MaxMagnitudePotent;
 	loginfo("[SETTINGS] {} {}", "MaxMagnitudePotent", std::to_string(_MaxMagnitudePotent));
 
+	_StyleScalingPrimary = (float)ini.GetDoubleValue("Distribution", "StyleScalingPrimary", _StyleScalingPrimary);
+	loginfo("[SETTINGS] {} {}", "_StyleScalingPrimary", std::to_string(_StyleScalingPrimary));
+	_StyleScalingSecondary = (float)ini.GetDoubleValue("Distribution", "StyleScalingSecondary", _StyleScalingSecondary);
+	loginfo("[SETTINGS] {} {}", "StyleScalingSecondary", std::to_string(_StyleScalingSecondary));
+
 	// Restoration Thresholds
 	_healthThreshold = ini.GetValue("Restoration", "HealthThresholdPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdPercent")) : _healthThreshold;
 	_healthThreshold = ini.GetValue("Restoration", "HealthThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdLowerPercent")) : _healthThreshold;
@@ -201,6 +206,9 @@ void Settings::Load()
 	EnableLog = ini.GetValue("Debug", "EnableLogging") ? ini.GetBoolValue("Debug", "EnableLogging") : false;
 	Logging::EnableLog = EnableLog;
 	loginfo("[SETTINGS] {} {}", "EnableLogging", std::to_string(EnableLog));
+	EnableLoadLog = ini.GetBoolValue("Debug", "EnableLoadLogging", false);
+	Logging::EnableLoadLog = EnableLoadLog;
+	loginfo("[SETTINGS] {} {}", "EnableLoadLogging", std::to_string(EnableLoadLog));
 	LogLevel = ini.GetValue("Debug", "LogLevel") ? ini.GetLongValue("Debug", "LogLevel") : 0;
 	Logging::LogLevel = LogLevel;
 	loginfo("[SETTINGS] {} {}", "LogLevel", std::to_string(LogLevel));
@@ -358,6 +366,9 @@ void Settings::Save()
 	ini.SetLongValue("Distribution", "MaxMagnitudeStandard", _MaxMagnitudeStandard, ";Items with this or lower magnitude*duration are considered normal.");
 	ini.SetLongValue("Distribution", "MaxMagnitudePotent", _MaxMagnitudePotent, ";Items with this or lower magnitude*duration are considered potent. Everything above this is considered Insane tier");
 
+	ini.SetDoubleValue("Distribution", "StyleScalingPrimary", _StyleScalingPrimary, ";Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the primary combat type of an npc.");
+	ini.SetDoubleValue("Distribution", "StyleScalingSecondary", _StyleScalingSecondary, ";Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the secondary combat type of an npc.");
+
 	// potion options
 	ini.SetDoubleValue("Restoration", "HealthThresholdPercent", _healthThreshold, ";Upon reaching this threshold, NPCs will start to use health potions");
 	ini.SetDoubleValue("Restoration", "MagickaThresholdPercent", _magickaThreshold, ";Upon reaching this threshold, NPCs will start to use magicka potions");
@@ -388,6 +399,7 @@ void Settings::Save()
 
 	// debugging
 	ini.SetBoolValue("Debug", "EnableLogging", EnableLog, ";Enables logging output. Use with care as log may get very large");
+	ini.SetBoolValue("Debug", "EnableLoadLogging", EnableLoadLog, ";Enables logging output for plugin load, use if you want to log rule issues");
 	ini.SetLongValue("Debug", "LogLevel", LogLevel, ";1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, 4 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions. ");
 	ini.SetBoolValue("Debug", "EnableProfiling", EnableProfiling, ";Enables profiling output.");
 	ini.SetLongValue("Debug", "ProfileLevel", ProfileLevel, ";1 - only highest level functions write their executions times to the log, 2 - lower level functions are written, 3 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");

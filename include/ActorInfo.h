@@ -1,4 +1,6 @@
 #include "NUPInterface.h"
+#include "CustomItem.h"
+#include "AlchemyEffect.h"
 
 #pragma once
 /// <summary>
@@ -36,34 +38,6 @@ enum CustomItemFlag
 	Object = 1 << 30,
 };
 
-/// <summary>
-/// Specifies conditions for distribution and usage for custom items
-/// </summary>
-enum class CustomItemConditionsAll : unsigned __int64
-{
-	kNone = 0,
-	kIsBoss = 1 << 0,				// 1	// distribution & usage condition
-	kHealthThreshold = 1 << 1,		// 2	// usage
-	kMagickaThreshold = 1 << 2,		// 4	// usage
-	kStaminaThreshold = 1 << 3,		// 8	// usage
-	kActorTypeDwarven = 1 << 4,		// 10	// usage
-
-	kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven,
-	kAllDistr = kIsBoss,
-};
-
-enum class CustomItemConditionsAny : unsigned __int64
-{
-	kNone = 0,
-	kIsBoss = 1 << 0,				// 1	// distribution & usage  condition
-	kHealthThreshold = 1 << 1,		// 2	// usage
-	kMagickaThreshold = 1 << 2,		// 4	// usage
-	kStaminaThreshold = 1 << 3,		// 8	// usage
-	kActorTypeDwarven = 1 << 4,		// 10	// usage
-
-	kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven,
-	kAllDistr = kIsBoss,
-};
 
 /// <summary>
 /// Stores information about an actor.
@@ -80,32 +54,32 @@ public:
 		/// <summary>
 		/// contains custom items that may be distributed to the actor on combat enter
 		/// </summary>
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> items;
+		std::vector<CustomItem*> items;
 		std::unordered_map<uint32_t, int> itemsset;
 		/// <summary>
 		/// contains custom items that may be distributed to the actor upon their death
 		/// </summary>
-		std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> death;
+		std::vector<CustomItem*> death;
 		std::unordered_map<uint32_t, int> deathset;
 		/// <summary>
 		/// contains custom potions that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> potions;
+		std::vector<CustomItemAlch*> potions;
 		std::unordered_map<uint32_t, int> potionsset;
 		/// <summary>
 		/// contains custom fortify potions that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> fortify;
+		std::vector<CustomItemAlch*> fortify;
 		std::unordered_map<uint32_t, int> fortifyset;
 		/// <summary>
 		/// contains custom poisons that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> poisons;
+		std::vector<CustomItemAlch*> poisons;
 		std::unordered_map<uint32_t, int> poisonsset;
 		/// <summary>
 		/// contains custom food that may be distributed to the actor
 		/// </summary>
-		std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> food;
+		std::vector<CustomItemAlch*> food;
 		std::unordered_map<uint32_t, int> foodset;
 		/// <summary>
 		/// whether the custom items have been calculated once
@@ -197,13 +171,18 @@ public:
 		}
 	}
 
+	std::vector<std::tuple<int, AlchemyEffect>> potionDistr;
+	std::vector<std::tuple<int, AlchemyEffect>> poisonDistr;
+	std::vector<std::tuple<int, AlchemyEffect>> foodDistr;
+	std::vector<std::tuple<int, AlchemyEffect>> fortifyDistf;
+
 public:
 	void CalcCustomItems();
 	bool IsBoss() { return _boss; }
 
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> FilterCustomConditionsDistr(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms);
-	std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> FilterCustomConditionsUsage(std::vector<std::tuple<RE::AlchemyItem*, int, int8_t, uint64_t, uint64_t>> itms);
-	std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> FilterCustomConditionsDistrItems(std::vector<std::tuple<RE::TESBoundObject*, int, int8_t, uint64_t, uint64_t, bool>> itms);
+	std::vector<CustomItemAlch*> FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms);
+	std::vector<CustomItemAlch*> FilterCustomConditionsUsage(std::vector<CustomItemAlch*> itms);
+	std::vector<CustomItem*> FilterCustomConditionsDistrItems(std::vector<CustomItem*> itms);
 	bool CanUseItem(RE::FormID item);
 	bool CanUsePot(RE::FormID item);
 	bool CanUsePotion(RE::FormID item);
@@ -216,8 +195,8 @@ public:
 	bool IsCustomFood(RE::AlchemyItem* item);
 	bool IsCustomItem(RE::TESBoundObject* item);
 
-	bool CalcUsageConditions(uint64_t conditionsall, uint64_t conditionsany);
-	bool CalcDistrConditions(uint64_t conditionsall, uint64_t conditionsany);
+	bool CalcUsageConditions(CustomItem*);
+	bool CalcDistrConditions(CustomItem*);
 
 	bool IsFollower();
 

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
 #include "Settings.h"
 #include "Distribution.h"
 #include <tuple>
@@ -519,7 +520,7 @@ public:
 	/// <param name="file">the relative path of the file that contains the string</param>
 	/// <param name="line">the line in the file that contains the string</param>
 	/// <returns>a vector of parsed and validated objects and their chances</returns>
-	static std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, uint64_t, uint64_t, bool>> ParseCustomObjects(std::string input, bool& error, std::string file, std::string line);
+	static std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> ParseCustomObjects(std::string input, bool& error, std::string file, std::string line);
 
 	/// <summary>
 	/// Returns an AssocType for the given RE::FormType. If the RE::FormType is not supported, [valid] is set to true
@@ -546,6 +547,20 @@ public:
 	static std::vector<std::tuple<int, AlchemyEffect>> GetDistribution(std::vector<std::tuple<uint64_t, float>> effectmap, int range, bool chance = false);
 
 	/// <summary>
+	/// Computes a distribution from a unified effect map
+	/// <param name="map">unified effect map the distribution is calculated from</param>
+	/// <param name="range">range the distribution chances are computed for</param>
+	/// </summary>
+	static std::vector<std::tuple<int, AlchemyEffect>> GetDistribution(std::map<AlchemyEffect, float> map, int range);
+
+	/// <summary>
+	/// Calculates a unified effect map, that contains at most one entry per AlchemyEffect present
+	/// </summary>
+	/// <param name="effectmap">effectmap containing effects and weights that shal be unified</param>
+	/// <returns>map with alchemyeffects and their weights</returns>
+	static std::map<AlchemyEffect, float> UnifyEffectMap(std::vector<std::tuple<uint64_t, float>> effectmap);
+
+	/// <summary>
 	/// Sums the Alchemyeffects in [list]
 	/// </summary>
 	/// <param name="list">list with AlchemyEffects to sum</param>
@@ -565,7 +580,33 @@ public:
 	/// </summary>
 	static bool VerifyActorInfo(ActorInfo* acinfo);
 
+	/// <summary>
+	/// Returns the pluginname the form is defined in
+	/// </summary>
 	static const char* GetPluginName(RE::TESForm* form);
+
+	template <class T>
+	static std::vector<T*> GetFormsInPlugin(std::string pluginname)
+	{
+		auto datahandler = RE::TESDataHandler::GetSingleton();
+		const RE::TESFile* file = datahandler->LookupLoadedModByName(pluginname);
+		std::vector<T*> ret;
+		uint32_t mask = 0;
+		uint32_t index = 0;
+		if (file->IsLight()) {
+			mask = 0xFFFFF000;
+			index = file->GetPartialIndex() << 12;
+		} else {
+			mask = 0xFF000000;
+			index = file->GetPartialIndex() << 24;
+		}
+		auto forms = datahandler->GetFormArray<T>();
+		for (int i = 0; i < (int)forms.size(); i++) {
+			if ((forms[i]->GetFormID() & mask) == index)
+				ret.push_back(forms[i]);
+		}
+		return ret;
+	}
 	#pragma endregion
 
 };

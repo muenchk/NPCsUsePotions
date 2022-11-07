@@ -284,3 +284,44 @@ void Data::ResetAlchItemEffects()
 {
 	alchitemEffectMap.clear();
 }
+
+RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
+
+RE::TESForm* Data::FindForm(uint32_t formid, std::string pluginname)
+{
+	auto itr = customItemFormMap.find(formid);
+	if (itr != customItemFormMap.end())
+		return itr->second;
+	RE::TESForm* form = Utility::GetTESForm(datahandler, formid, pluginname, "");
+	if (form != nullptr) {
+		customItemFormMap.insert_or_assign(formid, form);
+		return form;
+	}
+	return nullptr;
+}
+
+RE::EffectSetting* Data::FindMagicEffect(uint32_t formid, std::string pluginname)
+{
+	auto itr = customItemFormMap.find(formid);
+	if (itr != customItemFormMap.end())
+		return itr->second->As<RE::EffectSetting>();
+	RE::TESForm* form = Utility::GetTESForm(datahandler, formid, pluginname, "");
+	if (form != nullptr) {
+		customItemFormMap.insert_or_assign(formid, form);
+		return form->As<RE::EffectSetting>();
+	}
+	return nullptr;
+}
+
+RE::BGSPerk* Data::FindPerk(uint32_t formid, std::string pluginname)
+{
+	auto itr = customItemFormMap.find(formid);
+	if (itr != customItemFormMap.end())
+		return itr->second->As<RE::BGSPerk>();
+	RE::TESForm* form = Utility::GetTESForm(datahandler, formid, pluginname, "");
+	if (form != nullptr) {
+		customItemFormMap.insert_or_assign(formid, form);
+		return form->As<RE::BGSPerk>();
+	}
+	return nullptr;
+}
