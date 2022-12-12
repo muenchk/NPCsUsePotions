@@ -112,6 +112,9 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	// boss
 	tmp = "Boss:\t\t\t\t\t" + std::to_string(acinfo->_boss);
 	console->Print(tmp.c_str());
+	// IsFollower
+	tmp = "IsFollowe:\t\t\t\t" + std::to_string(acinfo->IsFollower());
+	console->Print(tmp.c_str());
 
 	console->Print("CustomItems");
 	console->Print("\titems");

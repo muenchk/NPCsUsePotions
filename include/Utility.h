@@ -585,28 +585,43 @@ public:
 	/// </summary>
 	static const char* GetPluginName(RE::TESForm* form);
 
+	/// <summary>
+	/// Returns a vector with all forms of the given type in the plugin
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
 	template <class T>
 	static std::vector<T*> GetFormsInPlugin(std::string pluginname)
 	{
 		auto datahandler = RE::TESDataHandler::GetSingleton();
 		const RE::TESFile* file = datahandler->LookupLoadedModByName(pluginname);
 		std::vector<T*> ret;
-		uint32_t mask = 0;
-		uint32_t index = 0;
-		if (file->IsLight()) {
-			mask = 0xFFFFF000;
-			index = file->GetPartialIndex() << 12;
-		} else {
-			mask = 0xFF000000;
-			index = file->GetPartialIndex() << 24;
-		}
-		auto forms = datahandler->GetFormArray<T>();
-		for (int i = 0; i < (int)forms.size(); i++) {
-			if ((forms[i]->GetFormID() & mask) == index)
-				ret.push_back(forms[i]);
+		if (file != nullptr) {
+			uint32_t mask = 0;
+			uint32_t index = 0;
+			if (file->IsLight()) {
+				mask = 0xFFFFF000;
+				index = file->GetPartialIndex() << 12;
+			} else {
+				mask = 0xFF000000;
+				index = file->GetPartialIndex() << 24;
+			}
+			auto forms = datahandler->GetFormArray<T>();
+			for (int i = 0; i < (int)forms.size(); i++) {
+				if ((forms[i]->GetFormID() & mask) == index)
+					ret.push_back(forms[i]);
+			}
 		}
 		return ret;
 	}
+
+	/// <summary>
+	/// Returns whether an actor is valid and safe to work with
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static bool ValidateActor(RE::Actor* actor);
 	#pragma endregion
 
 };

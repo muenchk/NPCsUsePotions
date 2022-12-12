@@ -138,6 +138,10 @@ namespace Events
 	/// </summary>
 	static bool actorhandlerrunning = false;
 	/// <summary>
+	/// [true] if the actorhandler is in an active iteration, [false] if it is sleeping
+	/// </summary>
+	static bool actorhandlerworking = false;
+	/// <summary>
 	/// thread running the CheckActors function
 	/// </summary>
 	static std::thread* actorhandler = nullptr;
@@ -367,24 +371,28 @@ namespace Events
 		ActorInfo* acinfo = nullptr;
 		logwarn("[UpdateAcSet] remove {}", acremove.size());
 		auto itr = acremove.begin();
-		while (itr != acremove.end() && *itr != nullptr) {
-			logwarn("[UpdateAcSet] remove actor {}", Utility::GetHex((*itr)->GetFormID()));
-			acinfo = data->FindActor(*itr);
-			acset.erase(acinfo);
-			acinfo->durHealth = 0;
-			acinfo->durMagicka = 0;
-			acinfo->durStamina = 0;
-			acinfo->durFortify = 0;
-			acinfo->durRegeneration = 0;
+		while (itr != acremove.end()) {
+			if (Utility::ValidateActor(*itr)) {
+				logwarn("[UpdateAcSet] remove actor {}", Utility::GetHex((*itr)->GetFormID()));
+				acinfo = data->FindActor(*itr);
+				acset.erase(acinfo);
+				acinfo->durHealth = 0;
+				acinfo->durMagicka = 0;
+				acinfo->durStamina = 0;
+				acinfo->durFortify = 0;
+				acinfo->durRegeneration = 0;
+			}
 			itr++;
 		}
 		acremove.clear();
 		logwarn("[UpdateAcSet] insert {}", acinsert.size());
 		auto itra = acinsert.begin();
-		while (itra != acinsert.end() && *itra != nullptr) {
-			logwarn("[UpdateAcSet] insert actor {}", Utility::GetHex((*itra)->GetFormID()));
-			acinfo = data->FindActor(*itra);
-			acset.insert(acinfo);
+		while (itra != acinsert.end()) {
+			if (Utility::ValidateActor(*itra)) {
+				logwarn("[UpdateAcSet] insert actor {}", Utility::GetHex((*itra)->GetFormID()));
+				acinfo = data->FindActor(*itra);
+				acset.insert(acinfo);
+			}
 			itra++;
 		}
 		acinsert.clear();
@@ -433,6 +441,8 @@ namespace Events
 			EvalProcessing();
 			// update active actors
 			UpdateAcSet();
+			actorhandlerworking = true;
+
 			// current actor
 			ActorInfo* curr;
 			ReEvalPlayerDeath;
@@ -460,7 +470,7 @@ namespace Events
 				int actorsincombat = 0;
 				while (iterset != acset.end()) {
 					curr = *iterset;
-					if (curr == nullptr || curr->actor == nullptr || curr->actor->GetFormID() == 0) {
+					if (curr == nullptr || !Utility::ValidateActor(curr->actor)) {
 						acset.erase(iterset);
 						iterset--;
 						continue;
@@ -474,7 +484,7 @@ namespace Events
 					EvalProcessing();
 					CheckDeadCheckHandlerLoop;
 					curr = *iterset;
-					if (curr == nullptr || curr->actor == nullptr || curr->actor->GetFormID() == 0) {
+					if (curr == nullptr || !Utility::ValidateActor(curr->actor)) {
 						acset.erase(iterset);
 						iterset--;
 						continue;
@@ -520,6 +530,8 @@ namespace Events
 
 						// check for out-of-combat option
 						if (curr->actor->IsInCombat() == false) {
+							// reset time spent in combat
+							curr->durCombat = 0;
 							if (Settings::_featDisableOutOfCombatProcessing == false) {
 								// option deactivated -> do someting, otherwise don't do anything
 								// we are only checking for health here
@@ -533,6 +545,9 @@ namespace Events
 								}
 							}
 						} else {
+							// increase time spent in combat
+							curr->durCombat += 1000;
+
 							// handle potions
 
 							// potions used this cycle
@@ -708,23 +723,7 @@ namespace Events
 												}
 											} else {
 												// we dont have a target so just use any poison
-												effects |= static_cast<uint64_t>(AlchemyEffect::kHealth) |
-												           static_cast<uint64_t>(AlchemyEffect::kMagicka) |
-												           static_cast<uint64_t>(AlchemyEffect::kMagickaRate) |
-												           static_cast<uint64_t>(AlchemyEffect::kMagickaRateMult) |
-												           static_cast<uint64_t>(AlchemyEffect::kHealRate) |
-												           static_cast<uint64_t>(AlchemyEffect::kHealRateMult) |
-												           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-												           static_cast<uint64_t>(AlchemyEffect::kDamageResist) |
-												           static_cast<uint64_t>(AlchemyEffect::kPoisonResist) |
-												           static_cast<uint64_t>(AlchemyEffect::kFrenzy) |
-												           static_cast<uint64_t>(AlchemyEffect::kFear) |
-												           static_cast<uint64_t>(AlchemyEffect::kParalysis) |
-												           static_cast<uint64_t>(AlchemyEffect::kStamina) |
-												           static_cast<uint64_t>(AlchemyEffect::kStaminaRate) |
-												           static_cast<uint64_t>(AlchemyEffect::kStaminaRateMult) |
-												           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-												           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult);
+												effects |= static_cast<uint64_t>(AlchemyEffect::kAnyPoison);
 											}
 											LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects);
 											auto tup = ACM::ActorUsePoison(curr, effects);
@@ -798,7 +797,8 @@ SkipFortify:;
 
 							if (Settings::_featUseFood &&
 								RE::Calendar::GetSingleton()->GetDaysPassed() >= curr->nextFoodTime &&
-								(!curr->actor->IsPlayerRef() || Settings::_playerUseFood)) {
+								(!curr->actor->IsPlayerRef() || Settings::_playerUseFood) && 
+								(Settings::_RestrictFoodToCombatStart == false || curr->durCombat < 2000)) {
 								// use food at the beginning of the fight to simulate the npc having eaten
 								// calc effects that we want to be applied
 								AlchemyEffectBase effects = 0;
@@ -844,6 +844,10 @@ SkipFortify:;
 			} else {
 				LOG_1("{}[Events] [CheckActors] Skip round.")
 			}
+			actorhandlerworking = false;
+			// update the set again before sleeping, to account for all stuff that happended while we were busy
+			// otherwise we may encounter already deleted actors and such dangerous stuff
+			UpdateAcSet();
 			std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::_cycletime));
 		}
 		LOG_1("{}[Events] [CheckActors] Exit.");
@@ -1124,7 +1128,7 @@ SkipFortify:;
 				EvalProcessing();
 				if ((*iter).second) {
 					actor = ((*iter).second)->As<RE::Actor>();
-					if (actor) {
+					if (Utility::ValidateActor(actor)) {
 						ActorInfo* acinfo = data->FindActor(actor);
 						auto items = ACM::GetAllPotions(acinfo);
 						auto it = items.begin();
@@ -1175,10 +1179,12 @@ SkipFortify:;
 
 	void RegisterNPC(RE::Actor* actor)
 	{
-		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", actor->GetName());
-
-		ActorInfo* acinfo = data->FindActor(actor);
 		EvalProcessing();
+		// exit if the actor is unsafe / not valid
+		if (Utility::ValidateActor(actor) == false)
+			return;
+		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", actor->GetName());
+		ActorInfo* acinfo = data->FindActor(actor);
 		// find out whether to insert the actor, if yes insert him into the temp insert list
 		sem.acquire();
 		if (!acset.contains(acinfo)) {
@@ -1202,16 +1208,129 @@ SkipFortify:;
 
 	void UnregisterNPC(RE::Actor* actor)
 	{
-		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", actor->GetName());
 		EvalProcessing();
+		// exit if actor is unsafe / not valid
+		if (Utility::ValidateActor(actor) == false)
+			return;
+		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", actor->GetName());
 		ActorInfo* acinfo = data->FindActor(actor);
 		sem.acquire();
-		if (acset.contains(acinfo) || acinsert.contains(actor)) {
-			acinsert.erase(actor);
-			acremove.insert(actor);
+		if (actorhandlerworking) {
+			if (acset.contains(acinfo) || acinsert.contains(actor)) {
+				acinsert.erase(actor);
+				acremove.insert(actor);
+			}
+		} else {
+			acset.erase(acinfo);
+			acinfo->durHealth = 0;
+			acinfo->durMagicka = 0;
+			acinfo->durStamina = 0;
+			acinfo->durFortify = 0;
+			acinfo->durRegeneration = 0;
 		}
 		sem.release();
 		LOG_1("{}[Events] [UnregisterNPC] Unregistered NPC");
+	}
+
+	void UnregisterNPC(ActorInfo* acinfo)
+	{
+		EvalProcessing();
+		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", acinfo->name);
+		sem.acquire();
+		// if the actorhandler is currently running 
+		if (actorhandlerworking) {
+			if (acset.contains(acinfo) || acinsert.contains(acinfo->actor)) {
+				acinsert.erase(acinfo->actor);
+				acremove.insert(acinfo->actor);
+			}
+		} else {
+			acset.erase(acinfo);
+			acinfo->durHealth = 0;
+			acinfo->durMagicka = 0;
+			acinfo->durStamina = 0;
+			acinfo->durFortify = 0;
+			acinfo->durRegeneration = 0;
+		}
+		sem.release();
+	}
+
+	void LoadGameSub()
+	{
+		LOG_1("{}[Events] [LoadGameSub]");
+		// if we canceled the main thread, reset that
+		stopactorhandler = false;
+		initialized = false;
+		if (actorhandlerrunning == false) {
+			if (actorhandler != nullptr) {
+				// if the thread is there, then destroy and delete it
+				// if it is joinable and not running it has already finished, but needs to be joined before
+				// it can be destroyed savely
+				actorhandler->~thread();
+				delete actorhandler;
+				actorhandler = nullptr;
+			}
+			actorhandler = new std::thread(CheckActors);
+			actorhandler->detach();
+			LOG_1("{}[Events] [LoadGameSub] Started CheckActors");
+		}
+		// reset the list of actors that died
+		deads.clear();
+		// set player to alive
+		ReEvalPlayerDeath;
+
+		enableProcessing = true;
+
+		if (Settings::_Test) {
+			if (testhandler == nullptr) {
+				testhandler = new std::thread(TestAllCells);
+				LOG_1("{}[Events] [LoadGameSub] Started TestHandler");
+			}
+		}
+
+		if (Settings::_CompatibilityRemoveItemsStartup) {
+			if (removeitemshandler == nullptr) {
+				removeitemshandler = new std::thread(RemoveItemsOnStartup);
+				LOG_1("{}[Events] [LoadGameSub] Started RemoveItemsHandler");
+			}
+		}
+
+		// when loading the game, the attach detach events for actors aren't fired until cells have been changed
+		// thus we need to get all currently loaded npcs manually
+		RE::TESObjectCELL* cell = nullptr;
+		std::vector<RE::TESObjectCELL*> gamecells;
+		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+		{
+			const RE::BSReadLockGuard locker{ lock };
+			auto iter = hashtable->begin();
+			while (iter != hashtable->end()) {
+				if ((*iter).second) {
+					cell = ((*iter).second)->As<RE::TESObjectCELL>();
+					if (cell) {
+						gamecells.push_back(cell);
+					}
+				}
+				iter++;
+			}
+		}
+		LOG1_1("{}[Events] [LoadGameSub] found {} cells", std::to_string(gamecells.size()));
+		for (int i = 0; i < (int)gamecells.size(); i++) {
+			if (gamecells[i]->IsAttached()) {
+				auto itr = gamecells[i]->references.begin();
+				while (itr != gamecells[i]->references.end()) {
+					if (itr->get()) {
+						RE::Actor* actor = itr->get()->As<RE::Actor>();
+						if (actor && actor->GetFormID() != 0 && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
+							RegisterNPC(actor);
+						}
+					}
+					itr++;
+				}
+			}
+		}
+
+		InitializeCompatibilityObjects();
+
+		LOG_1("{}[Events] [LoadGameSub] end");
 	}
 
 	/// <summary>
@@ -1226,14 +1345,24 @@ SkipFortify:;
 	{
 		LOG_1("{}[Events] [TESDeathEvent]");
 		InitializeCompatibilityObjects();
+		if (a_event == nullptr || a_event->actorDying == nullptr) {
+			LOG_4("{}[Events] [TESDeathEvent] Died due to invalid event");
+			return EventResult::kContinue;
+		}
 		auto actor = a_event->actorDying->As<RE::Actor>();
+		if (!Utility::ValidateActor(actor)) {
+			LOG_4("{}[Events] [TESDeathEvent] Died due to actor validation fail");
+			return EventResult::kContinue;
+		}
 		if (actor->IsPlayerRef()) {
+			LOG_4("{}[Events] [TESDeathEvent] player died");
 			playerdied = true;
-		} else if (actor && actor != RE::PlayerCharacter::GetSingleton()) {
+		} else {
 			// as with potion distribution, exlude excluded actors and potential followers
 			if (!Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false) {
 				// create and insert new event
 				EvalProcessingEvent();
+				UnregisterNPC(actor);
 				ActorInfo* acinfo = data->FindActor(actor);
 				deads.insert(actor->GetFormID());
 				LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
@@ -1275,6 +1404,8 @@ SkipFortify:;
 						actor->AddObjectToContainer(ditems[i]->object, extra, ditems[i]->num, nullptr);
 					}
 				}
+			} else {
+				LOG_4("{}[Events] [TESDeathEvent] actor is excluded or already dead");
 			}
 			// delete actor from data
 			data->DeleteActor(actor->GetFormID());
@@ -1314,7 +1445,7 @@ SkipFortify:;
 		EvalProcessingEvent();
 		InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
-		if (actor && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+		if (actor && actor->GetFormID() != 0 && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				RegisterNPC(actor);
 			} else {
@@ -1341,7 +1472,7 @@ SkipFortify:;
 
 		if (a_event && a_event->reference) {
 			RE::Actor* actor = a_event->reference->As<RE::Actor>();
-			if (actor && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
+			if (actor && actor->GetFormID() != 0 && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
 				if (a_event->attached) {
 					RegisterNPC(actor);
 				} else {
@@ -1400,6 +1531,8 @@ SkipFortify:;
 		return EventResult::kContinue;
 	}
 
+	bool loadgamefired = false;
+
 	/// <summary>
 	/// EventHandler for TESLoadGameEvent. Loads main thread
 	/// </summary>
@@ -1409,86 +1542,24 @@ SkipFortify:;
 	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent*, RE::BSTEventSource<RE::TESLoadGameEvent>*)
 	{
 		LOG_1("{}[Events] [LoadGameEvent]");
-		// if we canceled the main thread, reset that
-		stopactorhandler = false;
-		initialized = false;
-		if (actorhandlerrunning == false) {
-			if (actorhandler != nullptr) {
-				// if the thread is there, then destroy and delete it
-				// if it is joinable and not running it has already finished, but needs to be joined before
-				// it can be destroyed savely
-				actorhandler->~thread();
-				delete actorhandler;
-				actorhandler = nullptr;
-			}
-			actorhandler = new std::thread(CheckActors);
-			actorhandler->detach();
-			LOG_1("{}[Events] [LoadGameEvent] Started CheckActors");
+		if (loadgamefired == false) {
+			loadgamefired = true;
+			LoadGameSub();
 		}
-		// reset the list of actors that died
-		deads.clear();
-		// set player to alive
-		ReEvalPlayerDeath;
-
-		enableProcessing = true;
-
-		if (Settings::_Test) {
-			if (testhandler == nullptr) {
-				testhandler = new std::thread(TestAllCells);
-				LOG_1("{}[Events] [LoadGameEvent] Started TestHandler");
-			}
-		}
-
-		if (Settings::_CompatibilityRemoveItemsStartup) {
-			if (removeitemshandler == nullptr) {
-				removeitemshandler = new std::thread(RemoveItemsOnStartup);
-				LOG_1("{}[Events] [LoadGameEvent] Started RemoveItemsHandler");
-			}
-		}
-
-		// when loading the game, the attach detach events for actors aren't fired until cells have been changed
-		// thus we need to get all currently loaded npcs manually
-		RE::TESObjectCELL* cell = nullptr;
-		std::vector<RE::TESObjectCELL*> gamecells;
-		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
-		{
-			const RE::BSReadLockGuard locker{ lock };
-			auto iter = hashtable->begin();
-			while (iter != hashtable->end()) {
-				if ((*iter).second) {
-					cell = ((*iter).second)->As<RE::TESObjectCELL>();
-					if (cell) {
-						gamecells.push_back(cell);
-					}
-				}
-				iter++;
-			}
-		}
-		LOG1_1("{}[Events] [LoadGameEvent] found {} cells", std::to_string(gamecells.size()));
-		for (int i = 0; i < (int)gamecells.size(); i++) {
-			if (gamecells[i]->IsAttached())
-			{
-				auto itr = gamecells[i]->references.begin();
-				while (itr != gamecells[i]->references.end())
-				{
-					if (itr->get())
-					{
-						RE::Actor* actor = itr->get()->As<RE::Actor>();
-						if (actor && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef())
-						{
-							RegisterNPC(actor);
-						}
-					}
-					itr++;
-				}
-			}
-		}
-
-		InitializeCompatibilityObjects();
-
-		LOG_1("{}[Events] [LoadGameEvent] end");
 
 		return EventResult::kContinue;
+	}
+
+	void LoadGameFallback()
+	{
+		std::this_thread::sleep_for(5s);
+		if (loadgamefired == false) {
+			loadgamefired = true;
+			LOG_1("{}[Events] [LoadGameFallback] Forcing Load Game to process");
+			LoadGameSub();
+		} else {
+			LOG_1("{}[Events] [LoadGameFallback] loadgameevent already fired");
+		}
 	}
 
 	void SaveGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
@@ -1500,12 +1571,14 @@ SkipFortify:;
 	void LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [LoadGameCallback]");
+		new std::thread(LoadGameFallback);
 	}
 
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [RevertGameCallback]");
 		enableProcessing = false;
+		loadgamefired = false;
 		stopactorhandler = true;
 		std::this_thread::sleep_for(10ms);
 		if (actorhandler != nullptr)

@@ -233,6 +233,14 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 					return false;
 			}
 			break;
+		case CustomItemConditionsAll::kHasKeyword:
+			{
+				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+				if (kwd == nullptr || (actor->HasKeyword(kwd) == false && actor->GetRace()->HasKeyword(kwd) == false))
+					return false;	
+			}
+			break;
 		}
 	}
 
@@ -263,18 +271,26 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 			if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) <= Settings::_staminaThreshold)  // under stamina threshold
 				return true;
 			break;
-		case CustomItemConditionsAll::kHasMagicEffect:
+		case CustomItemConditionsAny::kHasMagicEffect:
 			{
 				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
 				if (tmp != nullptr && actor->HasMagicEffect(tmp) == true)
 					return true;
 			}
 			break;
-		case CustomItemConditionsAll::kHasPerk:
+		case CustomItemConditionsAny::kHasPerk:
 			{
 				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
 				if (tmp != nullptr && actor->HasPerk(tmp) == true)
 					return true;
+			}
+			break;
+		case CustomItemConditionsAny::kHasKeyword:
+			{
+				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+				if (kwd != nullptr && (actor->HasKeyword(kwd) || actor->GetRace()->HasKeyword(kwd)))
+					return true;	
 			}
 			break;
 		}
@@ -310,6 +326,14 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 					return false;
 			}
 			break;
+		case CustomItemConditionsAll::kHasKeyword:
+			{
+				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+				if (kwd == nullptr || (actor->HasKeyword(kwd) == false && actor->GetRace()->HasKeyword(kwd) == false))
+					return false;	
+			}
+			break;
 		}
 	}
 
@@ -327,18 +351,26 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 			if (_boss)
 				return true;
 			break;
-		case CustomItemConditionsAll::kHasMagicEffect:
+		case CustomItemConditionsAny::kHasMagicEffect:
 			{
 				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
 				if (tmp != nullptr && actor->HasMagicEffect(tmp) == true)
 					return true;
 			}
 			break;
-		case CustomItemConditionsAll::kHasPerk:
+		case CustomItemConditionsAny::kHasPerk:
 			{
 				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
 				if (tmp != nullptr && actor->HasPerk(tmp) == true)
 					return true;
+			}
+			break;
+		case CustomItemConditionsAny::kHasKeyword:
+			{
+				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+				if (kwd != nullptr && (actor->HasKeyword(kwd) || actor->GetRace()->HasKeyword(kwd)))
+					return true;	
 			}
 			break;
 		}
@@ -348,7 +380,16 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 
 bool ActorInfo::IsFollower()
 {
-	return actor->IsInFaction(Settings::CurrentFollowerFaction) | actor->IsInFaction(Settings::CurrentHirelingFaction);
+	bool follower = actor->IsInFaction(Settings::CurrentFollowerFaction) | actor->IsInFaction(Settings::CurrentHirelingFaction);
+	if (follower)
+		return true;
+	auto itr = actor->GetActorBase()->factions.begin();
+	while (itr != actor->GetActorBase()->factions.end()) {
+		if (Distribution::followerFactions()->contains(itr->faction->GetFormID()) && itr->rank >= 0)
+			return true;
+		itr++;
+	}
+	return false;
 }
 
 void ActorInfo::CustomItems::CreateMaps()

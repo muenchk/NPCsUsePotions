@@ -184,111 +184,111 @@
 // regular logging with timestamps
 
 #define LOG_1(s)             \
-	if (Logging::EnableLog) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
 
 #define LOG1_1(s, t)         \
-	if (Logging::EnableLog) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
 
 #define LOG2_1(s, t, u)      \
-	if (Logging::EnableLog) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
 
 #define LOG3_1(s, t, u, v)   \
-	if (Logging::EnableLog) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v));
 
 #define LOG4_1(s, t, u, v, w)  \
-	if (Logging::EnableLog) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
 #define LOG5_1(s, t, u, v, w, x) \
-	if (Logging::EnableLog)     \
+	if (Logging::EnableLog && Logging::EnableGenericLogging)     \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x));
 
 #define LOG_2(s)                                        \
-	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
 
 #define LOG1_2(s, t)                                    \
-	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
 
 #define LOG2_2(s, t, u)                                 \
-	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
 
 #define LOG3_2(s, t, u, v)                               \
-	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
 #define LOG4_2(s, t, u, v, w)                               \
-	if (Logging::EnableLog && Logging::LogLevel >= 1) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
 #define LOG_3(s)                                        \
-	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 2) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
 
 #define LOG1_3(s, t)                                    \
-	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 2) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
 
 #define LOG2_3(s, t, u)                                  \
-	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 2) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
 
 #define LOG3_3(s, t, u, v)                                  \
-	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 2) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v));
 
 #define LOG4_3(s, t, u, v, w)                                  \
-	if (Logging::EnableLog && Logging::LogLevel >= 2) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 2) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
 #define LOG_4(s)                                        \
-	if (Logging::EnableLog && Logging::LogLevel >= 3) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
 
 #define LOG1_4(s, t)                                    \
-	if (Logging::EnableLog && Logging::LogLevel >= 3) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
 
 #define LOG2_4(s, t, u)                                 \
-	if (Logging::EnableLog && Logging::LogLevel >= 3) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
 
 #define LOG3_4(s, t, u, v)                               \
-	if (Logging::EnableLog && Logging::LogLevel >= 3) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v));
 
 #define LOG4_4(s, t, u, v, w)                                    \
-	if (Logging::EnableLog && Logging::LogLevel >= 3) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
 #define LOG4_4(s, t, u, v, w)                           \
-	if (Logging::EnableLog && Logging::LogLevel >= 3) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
 #define LOG_5(s)                                      \
-	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
 
 #define LOG1_5(s, t)                                  \
-	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
 
 #define LOG2_5(s, t, u)                                  \
-	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u));
 
 #define LOG3_5(s, t, u, v)                                  \
-	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v));
 
 #define LOG4_5(s, t, u, v, w)                                  \
-	if (Logging::EnableLog && Logging::LogLevel >= 4) \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
 
@@ -346,6 +346,7 @@ public:
 	static inline bool EnableLog = false;
 	static inline bool EnableLoadLog = false;
 	static inline bool EnableProfiling = false;
+	static inline bool EnableGenericLogging = true;
 	static inline int LogLevel = 0;
 	static inline int ProfileLevel = 0;
 };

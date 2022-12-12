@@ -174,6 +174,9 @@ public:
 	static inline int _EnemyNumberThresholdFortify = 5;             // how many npcs must be fighting, for followers to use fortify potions regardless of the enemies level
 	static inline int _UseFortifyPotionChance = 100;				// Chance that a fortify potion will be used when possible
 
+	// food usage
+	static inline bool _RestrictFoodToCombatStart = false;			// restricts the usage of food to the beginning of the combat
+
 	// removal
 	static inline int _ChanceToRemoveItem = 90;		// chance for an item to be removed
 	static inline int _MaxItemsLeft = 2;			// maximum number of items that may remain, from those to be removed

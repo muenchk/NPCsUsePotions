@@ -19,6 +19,8 @@ std::binary_semaphore lockdata{ 1 };
 
 ActorInfo* Data::FindActor(RE::Actor* actor)
 {
+	if (Utility::ValidateActor(actor) == false)
+		return nullptr; // worst case, should not be necessary here
 	ActorInfo* acinfo = nullptr;
 	lockdata.acquire();
 	auto itr = actorinfoMap.find(actor->GetFormID());

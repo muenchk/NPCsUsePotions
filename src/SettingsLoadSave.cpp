@@ -27,11 +27,11 @@ void Settings::FixConsumables()
 					soundOM = (RE::BGSStandardSoundDef*)sounddesc;
 					if (Settings::_ForceFixPotionSounds) {
 						soundOM->outputModel = SOMMono01400_verb;
-						LOG1_4("{}[Settings] [FixConsumables] forcefully set output model for sound {}", alch->data.consumptionSound->GetFormID());
+						LOGL1_4("{}[Settings] [FixConsumables] forcefully set output model for sound {}", alch->data.consumptionSound->GetFormID());
 					}
 					else if (soundOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						soundOM->outputModel = SOMMono01400_verb;
-						LOG1_4("{}[Settings] [FixConsumables] changed output model for sound {}", alch->data.consumptionSound->GetFormID());
+						LOGL1_4("{}[Settings] [FixConsumables] changed output model for sound {}", alch->data.consumptionSound->GetFormID());
 					}
 				}
 			}

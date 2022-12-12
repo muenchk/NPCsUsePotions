@@ -20,8 +20,8 @@ std::tuple<bool, float, int, AlchemyEffectBase> ACM::HasAlchemyEffect(RE::Alchem
 	auto [mapf, eff, dur, mag] = data->GetAlchItemEffects(item->GetFormID());
 	if (mapf) {
 		if ((eff & alchemyEffect) != 0) {
-			return { true, mag, dur, eff };
 			LOG_4("{}[ActorManipulation] [HasAlchemyEffect] fast success");
+			return { true, mag, dur, eff };
 		}
 		else {
 			LOG_4("{}[ActorManipulation] [HasAlchemyEffect] fast fail: does not match effect");
@@ -419,7 +419,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 	LOG_2("{}[ActorManipulation] [ActorUsePotion] list bound");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		if (ls.size() > 0 && std::get<2>(ls.front())) {
-			LOG_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion");
+			LOG1_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {}", std::get<2>(ls.front())->GetName());
 			LOG1_3("{}[ActorManipulation] [ActorUsePotion] use potion on: {}", Utility::GetHex(acinfo->actor->GetFormID()));
 			if (Settings::CompatibilityPotionPapyrus() || compatibility) {
 				LOG_3("{}[ActorManipulation] [ActorUsePotion] Compatibility Mode");

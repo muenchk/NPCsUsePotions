@@ -482,6 +482,10 @@ private:
 	/// map that contains rule based actor strength associations
 	/// </summary>
 	static inline std::unordered_map<RE::FormID, int> _actorStrengthMap;
+	/// <summary>
+	/// set that contains factions, whichs members are considered followers of the player
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _followerFactions;
 
 public:
 	static inline std::vector<Rule*> _dummyVecR;
@@ -562,6 +566,10 @@ public:
 	/// returns the map that contains rule based actor strength associations
 	/// </summary>
 	static inline std::unordered_map<RE::FormID, int>* actorStrengthMap() { return initialised ? &_actorStrengthMap : &_dummyMap4; }
+	/// <summary>
+	/// returns the set that contains factions whichs members are considered followers of the player
+	/// </summary>
+	static inline std::unordered_set<RE::FormID>* followerFactions() { return initialised ? &_followerFactions : &_dummySet1; }
 
 	static std::vector<std::tuple<int, AlchemyEffect>> GetVector(int i, AlchemyEffect alch)
 	{

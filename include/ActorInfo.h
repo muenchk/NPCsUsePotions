@@ -45,7 +45,6 @@ enum CustomItemFlag
 class ActorInfo
 {
 public:
-
 	std::vector<NPCsUsePotions::NUPActorInfoHandle*> handles;
 
 	class CustomItems
@@ -137,6 +136,10 @@ public:
 	/// Time the npc was last given items
 	/// </summary>
 	float lastDistrTime = 0.0f;
+	/// <summary>
+	/// Current time spent in combat
+	/// </summary>
+	int durCombat = 0;
 
 	/// <summary>
 	/// whether custom items have already been given to the npc

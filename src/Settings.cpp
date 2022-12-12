@@ -34,13 +34,16 @@ void Settings::LoadDistrConfig()
 	// set to false, to avoid other funcions running stuff on our variables
 	Distribution::initialised = false;
 
+	// disable generic logging, if load logging is disabled
+	if (Logging::EnableLoadLog == false)
+		Logging::EnableGenericLogging = false;
+
 	std::vector<std::string> files;
 	auto constexpr folder = R"(Data\SKSE\Plugins\)";
 	for (const auto& entry : std::filesystem::directory_iterator(folder)) {
 		if (entry.exists() && !entry.path().empty() && entry.path().extension() == ".ini") {
 			if (auto path = entry.path().string(); path.rfind("NUP_DIST") != std::string::npos) {
 				files.push_back(path);
-				loginfo("[SETTINGS] [LoadDistrRules] found Distribution configuration file: {}", entry.path().filename().string());
 			}
 		}
 	}
@@ -49,6 +52,23 @@ void Settings::LoadDistrConfig()
 	}
 	// init datahandler
 	auto datahandler = RE::TESDataHandler::GetSingleton();
+
+	// change order of files handled, so that files that include "default" are loaded first, so other rules may override them
+	int defind = 0;
+	for (int k = 0; k < files.size(); k++)
+	{
+		if (Utility::ToLower(files[k]).find("default") != std::string::npos)
+		{
+			std::string tmp = files[defind];
+			files[defind] = files[k];
+			files[k] = tmp;
+			defind++;
+		}
+	}
+	for (int k = 0; k < files.size(); k++)
+	{
+		loginfo("[SETTINGS] [LoadDistrRules] found Distribution configuration file: {}", files[k]);
+	}
 
 	// vector of splits, filename and line
 	std::vector<std::tuple<std::vector<std::string>*, std::string, std::string>> attachments;
@@ -340,7 +360,7 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 
 									// parse the associated objects
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, line);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp);
 
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
@@ -885,6 +905,27 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
+							case 13: // follower detection
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									for (int i = 0; i < items.size(); i++)
+									{
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kFaction:
+											Distribution::_followerFactions.insert(std::get<1>(items[i]));
+											break;
+										}
+									}
+									delete splits;
+								}
+								break;
 							default:
 								logwarn("[Settings] [LoadDistrRules] Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;
@@ -1193,7 +1234,7 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 
 									// parse the associated objects
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, line);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp);
 
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
@@ -1800,6 +1841,9 @@ void Settings::LoadDistrConfig()
 			iter++;
 		}*/
 	}
+
+	// reactivate generic logging
+	Logging::EnableGenericLogging = true;
 }
 
 
@@ -2239,7 +2283,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 					//loginfo("iter 1");
 					act = (*iter)->As<RE::Actor>();
 					//loginfo("iter 2");
-					if (act && !act->IsDeleted() && act->GetFormID() != 0x14) {
+					if (Utility::ValidateActor(act) && act->GetFormID() != 0x14) {
 						//loginfo("iter 3");
 						if (!visited.contains(act->GetFormID())) {
 							//loginfo("iter 4");
