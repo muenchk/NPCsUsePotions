@@ -1290,7 +1290,8 @@ bool Distribution::ExcludedNPC(RE::Actor* actor)
 	           actor->IsInFaction(Settings::CurrentFollowerFaction) ||
 	           actor->IsInFaction(Settings::CurrentHirelingFaction) ||
 	           (Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID())) ||
-	           actor->IsGhost();
+	           actor->IsGhost() ||
+	           actor->GetActorBase()->IsSummonable();
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 	if (!Distribution::npcMap()->contains(actor->GetFormID()) && ret == false) {
 		auto base = actor->GetActorBase();
@@ -1325,7 +1326,8 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 	// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
 	bool ret = Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
 	           Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID()) ||
-	           actor->IsGhost();
+	           actor->IsGhost() ||
+	           actor->GetActorBase()->IsSummonable();
 	if (ret == false && !Distribution::npcMap()->contains(actor->GetFormID())) {
 		auto race = actor->GetRace();
 		if (race) {
@@ -1351,7 +1353,8 @@ bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 	bool ret = (Distribution::excludedNPCs()->contains(npc->GetFormID())) ||
 	           npc->IsInFaction(Settings::CurrentFollowerFaction) ||
 	           npc->IsInFaction(Settings::CurrentHirelingFaction) ||
-	           npc->IsGhost();
+	           npc->IsGhost() ||
+	           npc->IsSummonable();
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 	if (!Distribution::npcMap()->contains(npc->GetFormID()) && ret == false) {
 		for (uint32_t i = 0; i < npc->numKeywords; i++) {
