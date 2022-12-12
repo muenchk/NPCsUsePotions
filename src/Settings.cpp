@@ -2622,7 +2622,7 @@ void Settings::ClassifyItems()
 		}
 		iter++;
 	}
-	PROF1_1("[PROF] [ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+	PROF1_1("{}[ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 
 	// items initialised
 	_itemsInit = true;

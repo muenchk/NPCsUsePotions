@@ -838,7 +838,7 @@ SkipFortify:;
 					// we do not need to retrieve values, since wthey are written to the reference directly
 				}
 				// write execution time of iteration
-				PROF1_1("{}[PROF] [Events]  [CheckActors] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+				PROF1_1("{}[Events] [CheckActors] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 				LOG1_1("{}[Events] [CheckActors] checked {} actors", std::to_string(acset.size()));
 				// release lock.
 			} else {
@@ -1114,6 +1114,8 @@ SkipFortify:;
 		EvalProcessing();
 		std::this_thread::sleep_for(5s);
 
+		auto begin = std::chrono::steady_clock::now();
+
 		auto datahandler = RE::TESDataHandler::GetSingleton();
 		auto actors = datahandler->GetFormArray<RE::Actor>();
 		RE::Actor* actor = nullptr;
@@ -1175,6 +1177,8 @@ SkipFortify:;
 			}
 		}
 		LogConsole("Finished Thread RemoveItemsOnStartup");
+
+		PROF1_1("{}[Events] [RemoveItemsOnStartup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 
 	void RegisterNPC(RE::Actor* actor)
@@ -1256,6 +1260,7 @@ SkipFortify:;
 
 	void LoadGameSub()
 	{
+		auto begin = std::chrono::steady_clock::now();
 		LOG_1("{}[Events] [LoadGameSub]");
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
@@ -1331,6 +1336,7 @@ SkipFortify:;
 		InitializeCompatibilityObjects();
 
 		LOG_1("{}[Events] [LoadGameSub] end");
+		PROF1_1("{}[Events] [LoadGameSub] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 
 	/// <summary>
@@ -1343,16 +1349,19 @@ SkipFortify:;
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
 	{
+		EvalProcessingEvent();
+		auto begin = std::chrono::steady_clock::now();
 		LOG_1("{}[Events] [TESDeathEvent]");
 		InitializeCompatibilityObjects();
+		RE::Actor* actor = nullptr;
 		if (a_event == nullptr || a_event->actorDying == nullptr) {
 			LOG_4("{}[Events] [TESDeathEvent] Died due to invalid event");
-			return EventResult::kContinue;
+			goto TESDeathEventEnd;
 		}
-		auto actor = a_event->actorDying->As<RE::Actor>();
+		actor = a_event->actorDying->As<RE::Actor>();
 		if (!Utility::ValidateActor(actor)) {
 			LOG_4("{}[Events] [TESDeathEvent] Died due to actor validation fail");
-			return EventResult::kContinue;
+			goto TESDeathEventEnd;
 		}
 		if (actor->IsPlayerRef()) {
 			LOG_4("{}[Events] [TESDeathEvent] player died");
@@ -1410,7 +1419,8 @@ SkipFortify:;
 			// delete actor from data
 			data->DeleteActor(actor->GetFormID());
 		}
-
+	TESDeathEventEnd:
+		PROF1_1("{}[Events] [TESDeathEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		return EventResult::kContinue;
 	}
 
@@ -1439,10 +1449,11 @@ SkipFortify:;
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>*)
 	{
+		EvalProcessingEvent();
 		if (!Settings::_featDisableOutOfCombatProcessing)
 			return EventResult::kContinue;
+		auto begin = std::chrono::steady_clock::now();
 		LOG_1("{}[Events] [TESCombatEvent]");
-		EvalProcessingEvent();
 		InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
 		if (actor && actor->GetFormID() != 0 && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
@@ -1452,7 +1463,7 @@ SkipFortify:;
 				UnregisterNPC(actor);
 			}
 		}
-
+		PROF1_2("{}[Events] [TESCombatEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		return EventResult::kContinue;
 	}
 
@@ -1464,11 +1475,12 @@ SkipFortify:;
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::TESCellAttachDetachEvent* a_event, RE::BSTEventSource<RE::TESCellAttachDetachEvent>*)
 	{
+		EvalProcessingEvent();
 		// return if feature disabled
 		if (Settings::_featDisableOutOfCombatProcessing)
 			return EventResult::kContinue;
-		EvalProcessingEvent();
 		ReEvalPlayerDeath;
+		auto begin = std::chrono::steady_clock::now();
 
 		if (a_event && a_event->reference) {
 			RE::Actor* actor = a_event->reference->As<RE::Actor>();
@@ -1480,7 +1492,7 @@ SkipFortify:;
 				}
 			}
 		}
-
+		PROF1_2("{}[Events] [CheckActors] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		return EventResult::kContinue;
 	}
 
@@ -1493,8 +1505,8 @@ SkipFortify:;
 	/// <returns></returns>
 	EventResult EventHandler::ProcessEvent(const RE::BGSActorCellEvent* a_event, RE::BSTEventSource<RE::BGSActorCellEvent>*)
 	{
-		//LOG_1("{}[Events] [BGSActorCellEvent]");
 		EvalProcessingEvent();
+		//LOG_1("{}[Events] [BGSActorCellEvent]");
 		if (cells.contains(a_event->cellID) == false) {
 			cells.insert(a_event->cellID);
 			Settings::CheckCellForActors(a_event->cellID);

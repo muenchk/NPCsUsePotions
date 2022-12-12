@@ -35,6 +35,8 @@ namespace
 		spdlog::set_default_logger(std::move(log));
 		//spdlog::set_pattern("%g(%#): [%^%l%$] %v"s);
 		spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
+
+		Profile::Init(Settings::PluginNamePlain);
 	}
 }
 
@@ -94,6 +96,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
 	if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
+		auto begin = std::chrono::steady_clock::now();
 		// load settings
 		Settings::Load(); // also resaves the file
 		logger::info("Settings loaded");
@@ -116,6 +119,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		logger::info("Registered Console Commands");
 		// register data storage
 		Storage::Register();
+		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 }
 
@@ -126,6 +130,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 #endif
 
 	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
+	profile("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
 

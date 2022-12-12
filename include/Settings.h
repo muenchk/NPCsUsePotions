@@ -32,6 +32,7 @@ public:
 	/// Name of this plugin
 	/// </summary>
 	static inline std::string PluginName = "NPCsUsePotions.esp";
+	static inline std::string PluginNamePlain = "NPCsUsePotions";
 
 	/// <summary>
 	/// Contains values used for compatibility

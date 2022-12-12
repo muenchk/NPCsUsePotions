@@ -1,5 +1,6 @@
 #pragma once
 
+#include<semaphore>
 
 #define loginfo(...) \
 	{                \
@@ -294,27 +295,27 @@
 
 #define PROF_1(s)                  \
 	if (Logging::EnableProfiling) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
+		static_cast<void>(profile(s, Logging::TimePassed() + " | "));
 
 #define PROF1_1(s, t)              \
 	if (Logging::EnableProfiling) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+		static_cast<void>(profile(s, Logging::TimePassed() + " | ", t));
 
 #define PROF_2(s)                                                 \
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 1) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
+		static_cast<void>(profile(s, Logging::TimePassed() + " | "));
 
 #define PROF1_2(s, t)                                             \
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 1) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+		static_cast<void>(profile(s, Logging::TimePassed() + " | ", t));
 
 #define PROF_3(s)                                                 \
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 2) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
+		static_cast<void>(profile(s, Logging::TimePassed() + " | "));
 
 #define PROF1_3(s, t)                                             \
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 2) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t));
+		static_cast<void>(profile(s, Logging::TimePassed() + " | ", t));
 
 #ifdef NDEBUG
 #	define LogConsole(c_str) \
@@ -324,6 +325,63 @@
 		((void)0);
 #endif
 
+class Profile
+{
+	static inline std::ofstream* _stream = nullptr;
+	static inline std::binary_semaphore lock{ 1 };
+
+public:
+	static void Init(std::string pluginname)
+	{
+		lock.acquire();
+		auto path = SKSE::log::log_directory();
+		if (path.has_value()) {
+			_stream = new std::ofstream(path.value() / (pluginname + "_profile.log"), std::ios_base::out | std::ios_base::trunc);
+		}
+		lock.release();
+	}
+
+	static void Close()
+	{
+		lock.acquire();
+		if (_stream != nullptr) {
+			_stream->flush();
+			_stream->close();
+			delete _stream;
+			_stream = nullptr;
+		}
+		lock.release();
+	}
+
+	template <class... Args>
+	static void write(std::string message)
+	{
+		lock.acquire();
+		if (_stream) {
+			_stream->write(message.c_str(), message.size());
+			_stream->flush();
+		}
+		lock.release();
+	}
+};
+template <class... Args>
+struct [[maybe_unused]] profile
+{
+	profile() = delete;
+
+	explicit profile(
+		fmt::format_string<Args...> a_fmt,
+		Args&&... a_args,
+		std::source_location a_loc = std::source_location::current())
+	{
+		std::string mes = std::string(std::filesystem::path(a_loc.file_name()).filename().string()) + "(" + std::to_string(static_cast<int>(a_loc.line())) + "): [profiling] " + fmt::format(a_fmt, std::forward<Args>(a_args)...) + "\n";
+		Profile::write(mes);
+	}
+};
+
+template <class... Args>
+profile(fmt::format_string<Args...>, Args&&...) -> profile<Args...>;
+
 class Logging
 {
 public:
@@ -331,6 +389,8 @@ public:
 	/// time the game was started
 	/// </summary>
 	static inline std::chrono::time_point<std::chrono::system_clock> execstart = std::chrono::system_clock::now();
+
+
 
 	/// <summary>
 	/// calculates and returns the time passed sinve programstart
