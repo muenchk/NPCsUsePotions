@@ -639,6 +639,7 @@ public:
 
 	static bool ExcludedNPC(RE::Actor* actor);
 	static bool ExcludedNPC(RE::TESNPC* npc);
+	static bool ExcludedNPCFromHandling(RE::Actor* actor);
 
 	friend void Settings::CheckActorsForRules();
 	friend void Settings::CheckCellForActors(RE::FormID cellid);

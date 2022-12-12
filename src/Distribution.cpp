@@ -1312,6 +1312,32 @@ bool Distribution::ExcludedNPC(RE::Actor* actor)
 	}
 	return ret;
 }
+
+/// <summary>
+/// returns whether the npc should no be handled at all
+/// </summary>
+/// <param name="actor"></param>
+/// <returns></returns>
+bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
+{
+	if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
+		return true;
+	// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
+	bool ret = Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
+	           Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID()) ||
+	           actor->IsGhost();
+	if (ret == false && !Distribution::npcMap()->contains(actor->GetFormID())) {
+		auto race = actor->GetRace();
+		if (race) {
+			ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
+			for (uint32_t i = 0; i < race->numKeywords; i++) {
+				ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+			}
+		}
+	}
+	return ret;
+}
+
 /// <summary>
 /// returns wether an npc is excluded from item distribution
 /// </summary>

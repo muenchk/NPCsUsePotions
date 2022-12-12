@@ -1133,16 +1133,8 @@ const char* Utility::GetPluginName(RE::TESForm* form)
 
 bool Utility::ValidateActor(RE::Actor* actor)
 {
-	if (actor == nullptr)
-		return false;
-	if (actor->IsDeleted())
-		return false;
-	if (actor->IsMarkedForDeletion())
-		return false;
-	if (actor->GetFormID() == 0)
-		return false;
-	if (actor->IsDisabled())
-		return false;
+	if (actor == nullptr || actor->IsDeleted() || actor->IsMarkedForDeletion() || actor->GetFormID() == 0 || actor->IsDisabled())
+		return false; 
 
 	return true;
 }

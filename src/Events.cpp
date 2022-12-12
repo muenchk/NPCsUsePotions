@@ -1324,8 +1324,9 @@ SkipFortify:;
 				while (itr != gamecells[i]->references.end()) {
 					if (itr->get()) {
 						RE::Actor* actor = itr->get()->As<RE::Actor>();
-						if (actor && actor->GetFormID() != 0 && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
-							RegisterNPC(actor);
+						if (Utility::ValidateActor(actor) && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
+							if (Distribution::ExcludedNPCFromHandling(actor) == false)
+								RegisterNPC(actor);
 						}
 					}
 					itr++;
@@ -1367,57 +1368,61 @@ SkipFortify:;
 			LOG_4("{}[Events] [TESDeathEvent] player died");
 			playerdied = true;
 		} else {
-			// as with potion distribution, exlude excluded actors and potential followers
-			if (!Distribution::ExcludedNPC(actor) && deads.contains(actor->GetFormID()) == false) {
-				// create and insert new event
+			// if not already dead, do stuff
+			if (deads.contains(actor->GetFormID()) == false) {
 				EvalProcessingEvent();
+				// all npcs must be unregistered, even if distribution oes not apply to them
 				UnregisterNPC(actor);
-				ActorInfo* acinfo = data->FindActor(actor);
-				deads.insert(actor->GetFormID());
-				LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
-				auto items = Distribution::GetMatchingInventoryItems(acinfo);
-				LOG1_1("{}[Events] [TESDeathEvent] found {} items", items.size());
-				if (items.size() > 0) {
-					// remove items that are too much
-					while (items.size() > Settings::_MaxItemsLeft) {
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(actor);
-						actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-						LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", items.back()->GetName());
-						items.pop_back();
-					}
-					//loginfo("[Events] [TESDeathEvent] 3");
-					// remove the rest of the items per chance
-					if (Settings::_ChanceToRemoveItem < 100) {
-						for (int i = (int)items.size() - 1; i >= 0; i--) {
-							if (rand100(rand) <= Settings::_ChanceToRemoveItem) {
-								RE::ExtraDataList* extra = new RE::ExtraDataList();
-								extra->SetOwner(actor);
-								actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-								LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", items[i]->GetName());
-							} else {
-								LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", items[i]->GetName());
+				// as with potion distribution, exlude excluded actors and potential followers
+				if (!Distribution::ExcludedNPC(actor)) {
+					// create and insert new event
+					ActorInfo* acinfo = data->FindActor(actor);
+					deads.insert(actor->GetFormID());
+					LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
+					auto items = Distribution::GetMatchingInventoryItems(acinfo);
+					LOG1_1("{}[Events] [TESDeathEvent] found {} items", items.size());
+					if (items.size() > 0) {
+						// remove items that are too much
+						while (items.size() > Settings::_MaxItemsLeft) {
+							RE::ExtraDataList* extra = new RE::ExtraDataList();
+							extra->SetOwner(actor);
+							actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", items.back()->GetName());
+							items.pop_back();
+						}
+						//loginfo("[Events] [TESDeathEvent] 3");
+						// remove the rest of the items per chance
+						if (Settings::_ChanceToRemoveItem < 100) {
+							for (int i = (int)items.size() - 1; i >= 0; i--) {
+								if (rand100(rand) <= Settings::_ChanceToRemoveItem) {
+									RE::ExtraDataList* extra = new RE::ExtraDataList();
+									extra->SetOwner(actor);
+									actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+									LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", items[i]->GetName());
+								} else {
+									LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", items[i]->GetName());
+								}
 							}
 						}
 					}
-				}
-				// distribute death items
-				auto ditems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->death);
-				// item, chance, num, cond1, cond2
-				for (int i = 0; i < ditems.size(); i++) {
-					// calc chances
-					if (rand100(rand) <= ditems[i]->chance) {
-						// distr item
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(actor);
-						actor->AddObjectToContainer(ditems[i]->object, extra, ditems[i]->num, nullptr);
+					// distribute death items
+					auto ditems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->death);
+					// item, chance, num, cond1, cond2
+					for (int i = 0; i < ditems.size(); i++) {
+						// calc chances
+						if (rand100(rand) <= ditems[i]->chance) {
+							// distr item
+							RE::ExtraDataList* extra = new RE::ExtraDataList();
+							extra->SetOwner(actor);
+							actor->AddObjectToContainer(ditems[i]->object, extra, ditems[i]->num, nullptr);
+						}
 					}
+				} else {
+					LOG1_4("{}[Events] [TESDeathEvent] actor {} is excluded or already dead", actor->GetName());
 				}
-			} else {
-				LOG_4("{}[Events] [TESDeathEvent] actor is excluded or already dead");
+				// delete actor from data
+				data->DeleteActor(actor->GetFormID());
 			}
-			// delete actor from data
-			data->DeleteActor(actor->GetFormID());
 		}
 	TESDeathEventEnd:
 		PROF1_1("{}[Events] [TESDeathEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
@@ -1456,9 +1461,10 @@ SkipFortify:;
 		LOG_1("{}[Events] [TESCombatEvent]");
 		InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
-		if (actor && actor->GetFormID() != 0 && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+		if (Utility::ValidateActor(actor) && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
-				RegisterNPC(actor);
+				if (Distribution::ExcludedNPCFromHandling(actor) == false)
+					RegisterNPC(actor);
 			} else {
 				UnregisterNPC(actor);
 			}
@@ -1484,9 +1490,10 @@ SkipFortify:;
 
 		if (a_event && a_event->reference) {
 			RE::Actor* actor = a_event->reference->As<RE::Actor>();
-			if (actor && actor->GetFormID() != 0 && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
+			if (Utility::ValidateActor(actor) && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
 				if (a_event->attached) {
-					RegisterNPC(actor);
+					if (Distribution::ExcludedNPCFromHandling(actor) == false)
+						RegisterNPC(actor);
 				} else {
 					UnregisterNPC(actor);
 				}
