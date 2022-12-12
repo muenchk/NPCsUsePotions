@@ -15,7 +15,8 @@ namespace Events
 		public RE::BSTEventSink<RE::TESDeathEvent>,
 		public RE::BSTEventSink<RE::BGSActorCellEvent>,
 		public RE::BSTEventSink<RE::TESCellAttachDetachEvent>,
-		public RE::BSTEventSink<RE::TESEquipEvent>
+		public RE::BSTEventSink<RE::TESEquipEvent>,
+		public RE::BSTEventSink<RE::TESFormDeleteEvent>
 	{
 	public:
 		/// <summary>
@@ -81,6 +82,13 @@ namespace Events
 		/// <param name="a_eventSource"></param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for catching deleted forms / actors
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::TESFormDeleteEvent* a_event, RE::BSTEventSource<RE::TESFormDeleteEvent>* a_eventSource) override;
 
 	private:
 		EventHandler() = default;

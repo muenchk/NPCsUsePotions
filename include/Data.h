@@ -97,4 +97,9 @@ public:
 	/// <param name="pluginname"></param>
 	/// <returns></returns>
 	RE::BGSPerk* FindPerk(uint32_t formid, std::string pluginname);
+	/// <summary>
+	/// Removes an actor from the data
+	/// </summary>
+	/// <param name="actor"></param>
+	void DeleteFormCustom(RE::FormID actorid);
 }; 

@@ -1542,6 +1542,22 @@ SkipFortify:;
 
 		return EventResult::kContinue;
 	}
+	
+	/// <summary>
+	/// EventHandler for catching deleted forms / actors
+	/// </summary>
+	/// <param name="a_event"></param>
+	/// <param name="a_eventSource"></param>
+	/// <returns></returns>
+	EventResult EventHandler::ProcessEvent(const RE::TESFormDeleteEvent* a_event, RE::BSTEventSource<RE::TESFormDeleteEvent>*)
+	{
+		// very important event. Allows to catch actors and other stuff that gets deleted, without dying, which could cause CTDs otherwise
+		if (a_event) {
+			data->DeleteActor(a_event->formID);
+			data->DeleteFormCustom(a_event->formID);
+		}
+		return EventResult::kContinue;
+	}
 
 	bool loadgamefired = false;
 
@@ -1634,6 +1650,8 @@ SkipFortify:;
 		}
 		scriptEventSourceHolder->GetEventSource<RE::TESCellAttachDetachEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESCellAttachDetachEvent).name());
+		scriptEventSourceHolder->GetEventSource<RE::TESFormDeleteEvent>()->AddEventSink(EventHandler::GetSingleton());
+		LOG1_1("{}Registered {}", typeid(RE::TESFormDeleteEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, LoadGameCallback);
 		LOG1_1("{}Registered {}", typeid(LoadGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000002, RevertGameCallback);

@@ -244,7 +244,7 @@ void Data::ReadActorInfoMap(SKSE::SerializationInterface* a_intfc)
 	lockdata.release();
 
 	loginfo("[Data] [ReadActorInfoMap] Read {} ActorInfos", accounter);
-	loginfo("[Data] [ReadActorInfoMap] Read {} dead or deleted ActorInfos", accounter);
+	loginfo("[Data] [ReadActorInfoMap] Read {} dead or deleted ActorInfos", acdcounter);
 	loginfo("[Data] [ReadActorInfoMap] Failed to read {} ActorInfos", acfcounter);
 }
 
@@ -326,4 +326,15 @@ RE::BGSPerk* Data::FindPerk(uint32_t formid, std::string pluginname)
 		return form->As<RE::BGSPerk>();
 	}
 	return nullptr;
+}
+
+void Data::DeleteFormCustom(RE::FormID formid)
+{
+	ActorInfo* acinfo = nullptr;
+	lockdata.acquire();
+	auto itr = customItemFormMap.find(formid);
+	if (itr != customItemFormMap.end()) {
+		customItemFormMap.erase(formid);
+	}
+	lockdata.release();
 }
