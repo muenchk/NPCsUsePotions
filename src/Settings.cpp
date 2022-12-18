@@ -1880,7 +1880,10 @@ void Settings::LoadDistrConfig()
 	}
 
 	// reactivate generic logging
-	Logging::EnableGenericLogging = true;
+	if (Logging::EnableLog == true)
+		Logging::EnableGenericLogging = true;
+	else
+		Logging::EnableGenericLogging = false;
 }
 
 
