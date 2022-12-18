@@ -2213,7 +2213,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		return Distribution::defaultRule;
 	}
 }
-
+/*
 static std::string GetFormEditorID(RE::TESFaction* fid)
 {
 	const auto& [map, lock] = RE::TESForm::GetAllFormsByEditorID();
@@ -2232,7 +2232,7 @@ static std::string GetFormEditorID(RE::TESFaction* fid)
 	}
 	return "ERROR";
 }
-
+*/
 std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
 {
 	// calc strength section
@@ -2334,7 +2334,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 				rule = std::get<1>(it->second);
 				prio = std::get<1>(it->second)->rulePriority;
 			}
-			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Race\t" + Utility::GetHex(base->GetRace()->GetFormID()) + "\t" + std::string(base->GetRace()->GetName()) });
+			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Race\t" + Utility::PrintForm(base->GetRace()) });
 		}
 		baseexcluded |= baselineExclusions()->contains(base->GetRace()->GetFormID());
 		adjustacs(base->GetRace()->GetFormID());
@@ -2350,7 +2350,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 					rule = std::get<1>(itr->second);
 					prio = std::get<1>(itr->second)->rulePriority;
 				}
-				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Racekwd\t" + Utility::GetHex(race->keywords[i]->GetFormID()) + "\t" + std::string(race->keywords[i]->GetFormEditorID()) });
+				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Racekwd\t" + Utility::PrintForm(race->keywords[i]) });
 			}
 			baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
 			bossoverride |= bosses()->contains(race->keywords[i]->GetFormID());
@@ -2374,7 +2374,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 						rule = std::get<1>(it->second);
 						prio = std::get<1>(it->second)->rulePriority;
 					}
-					rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Keyword\t" + Utility::GetHex(key->GetFormID()) + "\t" + std::string(key->GetFormEditorID()) });
+					rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Keyword\t" + Utility::PrintForm(key)  });
 				}
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
@@ -2394,7 +2394,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 					rule = std::get<1>(it->second);
 					prio = std::get<1>(it->second)->rulePriority;
 				}
-				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Faction\t" + Utility::GetHex(base->factions[i].faction->GetFormID()) + "\t" + GetFormEditorID(base->factions[i].faction) });
+				rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Faction\t" + Utility::PrintForm(base->factions[i].faction) });
 			}
 			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
 		}
@@ -2413,7 +2413,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 				rule = std::get<1>(it->second);
 				prio = std::get<1>(it->second)->rulePriority;
 			}
-			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Class\t" + Utility::GetHex(base->npcClass->GetFormID()) + "\t" + std::string(base->npcClass->GetFormEditorID()) });
+			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "Class\t" + Utility::PrintForm(base->npcClass) });
 		}
 		adjustacs(base->npcClass->GetFormID());
 	}
@@ -2429,7 +2429,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 				rule = std::get<1>(it->second);
 				prio = std::get<1>(it->second)->rulePriority;
 			}
-			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "CombatStyle\t" + Utility::GetHex(base->combatStyle->GetFormID()) + "\t" + std::string(base->combatStyle->GetFormEditorID()) });
+			rls.push_back({ std::get<0>(it->second), std::get<1>(it->second), "CombatStyle\t" + Utility::PrintForm(base->combatStyle) });
 		}
 		adjustacs(base->combatStyle->GetFormID());
 	}

@@ -366,14 +366,14 @@ namespace Events
 
 	void UpdateAcSet()
 	{
-		logwarn("[UpdateAcSet] begin");
+		LOG_1("[UpdateAcSet] begin");
 		sem.acquire();
 		ActorInfo* acinfo = nullptr;
-		logwarn("[UpdateAcSet] remove {}", acremove.size());
+		LOG1_1("[UpdateAcSet] remove {}", acremove.size());
 		auto itr = acremove.begin();
 		while (itr != acremove.end()) {
 			if (Utility::ValidateActor(*itr)) {
-				logwarn("[UpdateAcSet] remove actor {}", Utility::GetHex((*itr)->GetFormID()));
+				LOG1_1("[UpdateAcSet] remove actor {}", Utility::PrintForm((*itr)));
 				acinfo = data->FindActor(*itr);
 				acset.erase(acinfo);
 				acinfo->durHealth = 0;
@@ -385,11 +385,11 @@ namespace Events
 			itr++;
 		}
 		acremove.clear();
-		logwarn("[UpdateAcSet] insert {}", acinsert.size());
+		LOG1_1("[UpdateAcSet] insert {}", acinsert.size());
 		auto itra = acinsert.begin();
 		while (itra != acinsert.end()) {
 			if (Utility::ValidateActor(*itra)) {
-				logwarn("[UpdateAcSet] insert actor {}", Utility::GetHex((*itra)->GetFormID()));
+				LOG1_1("[UpdateAcSet] insert actor {}", Utility::PrintForm((*itra)));
 				acinfo = data->FindActor(*itra);
 				acset.insert(acinfo);
 			}
@@ -397,7 +397,7 @@ namespace Events
 		}
 		acinsert.clear();
 		sem.release();
-		logwarn("[UpdateAcSet] end");
+		LOG_1("[UpdateAcSet] end");
 	}
 
 	/// <summary>
@@ -461,7 +461,7 @@ namespace Events
 					LOG_3("{}[Events] [CheckActors] Adding player to the list");
 					player = true;
 				}
-				LOG1_1("{}[Events] [CheckActors] Handling all registered Actors {}", std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch()).count()));
+				LOG1_1("{}[Events] [CheckActors] Handling {} registered Actors", std::to_string(acset.size()));
 				// handle all registered actors
 				// the list does not change while doing this
 				auto iterset = acset.begin();
@@ -503,20 +503,7 @@ namespace Events
 						continue;
 					}
 					if (Settings::EnableLog) {
-						name = std::string_view{ "" };
-						if ((curr->actor->GetFormID() >> 24) != 0xFE) {
-							file = datahandler->LookupLoadedModByIndex((uint8_t)(curr->actor->GetFormID() >> 24));
-							if (file) {
-								name = file->GetFilename();
-							}
-						}
-						if (name.empty()) {
-							file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((curr->actor->GetFormID() & 0x00FFF000)) >> 12));
-							if (file) {
-								name = file->GetFilename();
-							}
-						}
-						LOG3_1("{}[Events] [CheckActors] [Actor] {} named {} from {}", Utility::GetHex((curr->actor)->GetFormID()), curr->actor->GetName(), name);
+						LOG1_1("{}[Events] [CheckActors] [Actor] {}", Utility::PrintForm((curr->actor)));
 					}
 					// if actor is valid and not dead
 					if (curr->actor && !(curr->actor->IsDead()) && curr->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
@@ -728,11 +715,11 @@ namespace Events
 											LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects);
 											auto tup = ACM::ActorUsePoison(curr, effects);
 											//if (std::get<1>(tup) != AlchemyEffect::kNone)
-											//	loginfo("Used poison on actor:\t{}", curr->actor->GetName());
+											//	loginfo("Used poison on actor:\t{}", Utility::PrintForm(curr->actor));
 										}
 									}
 									if (combatdata == 0)
-										LOG2_2("{}[Events] [CheckActors] couldn't determine combatdata for npc {} {}", curr->actor->GetName(), Utility::GetHex(curr->actor->GetFormID()));
+										LOG1_2("{}[Events] [CheckActors] couldn't determine combatdata for npc {}", Utility::PrintForm(curr->actor));
 									// else Mage of Hand to Hand which cannot use poisons
 
 								} else if ((combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
@@ -811,7 +798,7 @@ SkipFortify:;
 									effect = std::get<1>(tup);
 								}
 								if (effect != 0) {
-									LogConsole((std::string("Eating food ") + curr->actor->GetName()).c_str());
+									LogConsole((std::string("Eating food ") + Utility::PrintForm(curr->actor)).c_str());
 									LogConsole((std::string("Old Time: ") + std::to_string(curr->nextFoodTime)).c_str());
 									curr->nextFoodTime = RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24;
 									LogConsole((std::string("New Time: ") + std::to_string(curr->nextFoodTime)).c_str());
@@ -872,7 +859,7 @@ SkipFortify:;
 						RE::ExtraDataList* extra = new RE::ExtraDataList();
 						extra->SetOwner(acinfo->actor);
 						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", (*it)->GetName());
+						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllPoisons(acinfo);
@@ -881,7 +868,7 @@ SkipFortify:;
 						RE::ExtraDataList* extra = new RE::ExtraDataList();
 						extra->SetOwner(acinfo->actor);
 						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", (*it)->GetName());
+						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllFood(acinfo);
@@ -890,7 +877,7 @@ SkipFortify:;
 						RE::ExtraDataList* extra = new RE::ExtraDataList();
 						extra->SetOwner(acinfo->actor);
 						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", (*it)->GetName());
+						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 				}
@@ -906,12 +893,10 @@ SkipFortify:;
 						if (items[i] == nullptr) {
 							continue;
 						}
-						std::string name = items[i]->GetName();
-						std::string id = Utility::GetHex(items[i]->GetFormID());
 						RE::ExtraDataList* extra = new RE::ExtraDataList();
 						extra->SetOwner(acinfo->actor);
 						acinfo->actor->AddObjectToContainer(items[i], extra, 1, nullptr);
-						LOG2_4("{}[Events] [ProcessDistribution] added item {} to actor {}", Utility::GetHex(items[i]->GetFormID()), Utility::GetHex(acinfo->actor->GetFormID()));
+						LOG2_4("{}[Events] [ProcessDistribution] added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo->actor));
 					}
 					acinfo->lastDistrTime = RE::Calendar::GetSingleton()->GetDaysPassed();
 				}
@@ -1142,7 +1127,7 @@ SkipFortify:;
 							RE::ExtraDataList* extra = new RE::ExtraDataList();
 							extra->SetOwner(actor);
 							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", (*it)->GetName());
+							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 							it++;
 						}
 						items = ACM::GetAllPoisons(acinfo);
@@ -1155,7 +1140,7 @@ SkipFortify:;
 							RE::ExtraDataList* extra = new RE::ExtraDataList();
 							extra->SetOwner(actor);
 							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", (*it)->GetName());
+							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 							it++;
 						}
 						items = ACM::GetAllFood(acinfo);
@@ -1168,7 +1153,7 @@ SkipFortify:;
 							RE::ExtraDataList* extra = new RE::ExtraDataList();
 							extra->SetOwner(actor);
 							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", (*it)->GetName());
+							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 							it++;
 						}
 					}
@@ -1187,7 +1172,7 @@ SkipFortify:;
 		// exit if the actor is unsafe / not valid
 		if (Utility::ValidateActor(actor) == false)
 			return;
-		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", actor->GetName());
+		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
 		ActorInfo* acinfo = data->FindActor(actor);
 		// find out whether to insert the actor, if yes insert him into the temp insert list
 		sem.acquire();
@@ -1216,7 +1201,7 @@ SkipFortify:;
 		// exit if actor is unsafe / not valid
 		if (Utility::ValidateActor(actor) == false)
 			return;
-		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", actor->GetName());
+		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", Utility::PrintForm(actor));
 		ActorInfo* acinfo = data->FindActor(actor);
 		sem.acquire();
 		if (actorhandlerworking) {
@@ -1387,7 +1372,7 @@ SkipFortify:;
 							RE::ExtraDataList* extra = new RE::ExtraDataList();
 							extra->SetOwner(actor);
 							actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-							LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", items.back()->GetName());
+							LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items.back()));
 							items.pop_back();
 						}
 						//loginfo("[Events] [TESDeathEvent] 3");
@@ -1398,9 +1383,9 @@ SkipFortify:;
 									RE::ExtraDataList* extra = new RE::ExtraDataList();
 									extra->SetOwner(actor);
 									actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
-									LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", items[i]->GetName());
+									LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items[i]));
 								} else {
-									LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", items[i]->GetName());
+									LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", Utility::PrintForm(items[i]));
 								}
 							}
 						}
@@ -1418,7 +1403,7 @@ SkipFortify:;
 						}
 					}
 				} else {
-					LOG1_4("{}[Events] [TESDeathEvent] actor {} is excluded or already dead", actor->GetName());
+					LOG1_4("{}[Events] [TESDeathEvent] actor {} is excluded or already dead", Utility::PrintForm(actor));
 				}
 				// delete actor from data
 				data->DeleteActor(actor->GetFormID());
@@ -1455,8 +1440,8 @@ SkipFortify:;
 	EventResult EventHandler::ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>*)
 	{
 		EvalProcessingEvent();
-		if (!Settings::_featDisableOutOfCombatProcessing)
-			return EventResult::kContinue;
+		//if (!Settings::_featDisableOutOfCombatProcessing)
+		//	return EventResult::kContinue;
 		auto begin = std::chrono::steady_clock::now();
 		LOG_1("{}[Events] [TESCombatEvent]");
 		InitializeCompatibilityObjects();
@@ -1466,7 +1451,8 @@ SkipFortify:;
 				if (Distribution::ExcludedNPCFromHandling(actor) == false)
 					RegisterNPC(actor);
 			} else {
-				UnregisterNPC(actor);
+				if (Settings::_featDisableOutOfCombatProcessing)
+					UnregisterNPC(actor);
 			}
 		}
 		PROF1_2("{}[Events] [TESCombatEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
@@ -1498,8 +1484,8 @@ SkipFortify:;
 					UnregisterNPC(actor);
 				}
 			}
+			PROF1_2("{}[Events] [CellAttachDetachEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		}
-		PROF1_2("{}[Events] [CheckActors] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		return EventResult::kContinue;
 	}
 

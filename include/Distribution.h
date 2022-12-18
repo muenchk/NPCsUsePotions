@@ -134,6 +134,15 @@ public:
 	vec2.reserve(vec1.size()); \
 	std::copy(vec1.begin(), vec1.end(), vec2.begin());
 
+#define COPYMAP(map1, map2) \
+	{                                                               \
+		auto cpmiter = map1.begin();                                \
+		while (cpmiter != map1.end()) {                             \
+			map2.insert_or_assign(cpmiter->first, cpmiter->second); \
+			cpmiter++;												\
+		}															\
+	}
+
 		/// <summary>
 		/// Creates a deep copy of this rule
 		/// </summary>
@@ -152,21 +161,45 @@ public:
 			rl->poisonProperties = poisonProperties;
 			rl->foodProperties = foodProperties;
 			rl->allowMixed = allowMixed;
+			rl->styleScaling = styleScaling;
 			rl->maxPotions = maxPotions;
+			rl->maxFortify = maxFortify;
 			rl->maxPoisons = maxPoisons;
 			rl->potionTierAdjust = potionTierAdjust;
+			rl->fortifyTierAdjust = fortifyTierAdjust;
 			rl->poisonTierAdjust = poisonTierAdjust;
 			COPY(potion1Chance, rl->potion1Chance);
 			COPY(potion2Chance, rl->potion2Chance);
 			COPY(potion3Chance, rl->potion3Chance);
+			COPY(potion4Chance, rl->potion4Chance);
 			COPY(potionAdditionalChance, rl->potionAdditionalChance);
 			COPY(fortify1Chance, rl->fortify1Chance);
 			COPY(fortify2Chance, rl->fortify2Chance);
+			COPY(fortify3Chance, rl->fortify3Chance);
+			COPY(fortify4Chance, rl->fortify4Chance);
+			COPY(fortifyAdditionalChance, rl->fortifyAdditionalChance);
 			COPY(poison1Chance, rl->poison1Chance);
 			COPY(poison2Chance, rl->poison2Chance);
 			COPY(poison3Chance, rl->poison3Chance);
+			COPY(poison4Chance, rl->poison4Chance);
 			COPY(poisonAdditionalChance, rl->poisonAdditionalChance);
 			COPY(foodChance, rl->foodChance);
+			COPY(potionDistr, rl->potionDistr);
+			COPY(potionDistrChance, rl->potionDistrChance);
+			COPY(poisonDistr, rl->poisonDistr);
+			COPY(poisonDistrChance, rl->poisonDistrChance);
+			COPY(fortifyDistr, rl->fortifyDistr);
+			COPY(fortifyDistrChance, rl->fortifyDistrChance);
+			COPY(foodDistr, rl->foodDistr);
+			COPY(foodDistrChance, rl->foodDistrChance);
+			rl->validPotions = validPotions;
+			rl->validPoisons = validPoisons;
+			rl->validFortifyPotions = validFortifyPotions;
+			rl->validFood = validFood;
+			COPYMAP(potionEffectMap, rl->potionEffectMap);
+			COPYMAP(poisonEffectMap, rl->poisonEffectMap);
+			COPYMAP(fortifyEffectMap, rl->fortifyEffectMap);
+			COPYMAP(foodEffectMap, rl->foodEffectMap);
 			return rl;
 		}
 
@@ -646,6 +679,7 @@ public:
 	friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
 	friend void Settings::LoadDistrConfig();
 	friend void ActorInfo::CalcCustomItems();
+	friend void Settings::ApplySkillBoostPerks();
 
 private:
 	//static Rule* CalcRule(RE::Actor* actor);

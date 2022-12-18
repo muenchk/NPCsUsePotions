@@ -29,10 +29,37 @@ static std::uniform_int_distribution<signed> rand100(1, 100);
 
 #pragma region Settings
 
+void Settings::InitGameStuff()
+{
+	loginfo("[SETTINGS] [InitGameStuff] init pluginnames");
+	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
+	const RE::TESFile* file = nullptr;
+	for (int i = 0; i <= 254; i++) {
+		file = datahandler->LookupLoadedModByIndex((uint8_t)i);
+		if (file) {
+			pluginnames[i] = std::string(file->GetFilename());
+		} else
+			pluginnames[i] = "";
+	}
+	// 0xFF... is reserved for objects created by the game during runtime 
+	pluginnames[255] = "runtime";
+	for (int i = 0; i <= 4095; i++) {
+		file = datahandler->LookupLoadedLightModByIndex((uint16_t)i);
+		if (file) {
+			pluginnames[256 + i] = std::string(file->GetFilename());
+		} else
+			pluginnames[256 + i] = "";
+	}
+	loginfo("[SETTINGS] [InitGameStuff] finished");
+}
+
 void Settings::LoadDistrConfig()
 {
 	// set to false, to avoid other funcions running stuff on our variables
 	Distribution::initialised = false;
+
+	// init game objects etc. before we begin
+	InitGameStuff();
 
 	// disable generic logging, if load logging is disabled
 	if (Logging::EnableLoadLog == false)
@@ -73,6 +100,8 @@ void Settings::LoadDistrConfig()
 	// vector of splits, filename and line
 	std::vector<std::tuple<std::vector<std::string>*, std::string, std::string>> attachments;
 	std::vector<std::tuple<std::vector<std::string>*, std::string, std::string>> copyrules;
+
+	const int chancearraysize = 5;
 
 	// extract the rules from all files
 	for (std::string file : files) {
@@ -193,7 +222,7 @@ void Settings::LoadDistrConfig()
 									// now comes Potion1Chance
 									rule->potion1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion1Chance.size() == 0) {
+									if (rule->potion1Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Potion1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -202,7 +231,7 @@ void Settings::LoadDistrConfig()
 									// now comes Potion2Chance
 									rule->potion2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion2Chance.size() == 0) {
+									if (rule->potion2Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Potion2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -211,7 +240,7 @@ void Settings::LoadDistrConfig()
 									// now comes Potion3Chance
 									rule->potion3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion3Chance.size() == 0) {
+									if (rule->potion3Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Potion3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -220,7 +249,7 @@ void Settings::LoadDistrConfig()
 									// now comes PotionAddChance
 									rule->potionAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potionAdditionalChance.size() == 0) {
+									if (rule->potionAdditionalChance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"PotionAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -245,7 +274,7 @@ void Settings::LoadDistrConfig()
 									// now comes Fortify1Chance
 									rule->fortify1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify1Chance.size() == 0) {
+									if (rule->fortify1Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Fortify1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -254,7 +283,7 @@ void Settings::LoadDistrConfig()
 									// now comes Fortify2Chance
 									rule->fortify2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify2Chance.size() == 0) {
+									if (rule->fortify2Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Fortify2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -279,7 +308,7 @@ void Settings::LoadDistrConfig()
 									// now comes Poison1Chance
 									rule->poison1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison1Chance.size() == 0) {
+									if (rule->poison1Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Poison1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -288,7 +317,7 @@ void Settings::LoadDistrConfig()
 									// now comes Poison2Chance
 									rule->poison2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison2Chance.size() == 0) {
+									if (rule->poison2Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Poison2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -297,7 +326,7 @@ void Settings::LoadDistrConfig()
 									// now comes Poison3Chance
 									rule->poison3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison3Chance.size() == 0) {
+									if (rule->poison3Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Poison3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -306,7 +335,7 @@ void Settings::LoadDistrConfig()
 									// now comes PoisonAddChance
 									rule->poisonAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poisonAdditionalChance.size() == 0) {
+									if (rule->poisonAdditionalChance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"PoisonAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -332,7 +361,7 @@ void Settings::LoadDistrConfig()
 									// now comes FoodChance
 									rule->foodChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->foodChance.size() == 0) {
+									if (rule->foodChance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"FoodChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -736,7 +765,7 @@ void Settings::LoadDistrConfig()
 											}
 										}
 									}
-									if (cx == 0) {
+									if (cx == 0 && assocobj.size() == 0) {
 										auto iter = Distribution::_customItems.find(0x0);
 										if (iter != Distribution::_customItems.end()) {
 											auto vec = iter->second;
@@ -985,7 +1014,7 @@ void Settings::LoadDistrConfig()
 									// now comes Potion1Chance
 									rule->potion1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion1Chance.size() == 0) {
+									if (rule->potion1Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Potion1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -994,7 +1023,7 @@ void Settings::LoadDistrConfig()
 									// now comes Potion2Chance
 									rule->potion2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion2Chance.size() == 0) {
+									if (rule->potion2Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Potion2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1003,7 +1032,7 @@ void Settings::LoadDistrConfig()
 									// now comes Potion3Chance
 									rule->potion3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion3Chance.size() == 0) {
+									if (rule->potion3Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Potion3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1012,7 +1041,7 @@ void Settings::LoadDistrConfig()
 									// now comes Potion4Chance
 									rule->potion4Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion4Chance.size() == 0) {
+									if (rule->potion4Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Potion4Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1021,7 +1050,7 @@ void Settings::LoadDistrConfig()
 									// now comes PotionAddChance
 									rule->potionAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potionAdditionalChance.size() == 0) {
+									if (rule->potionAdditionalChance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"PotionAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1062,7 +1091,7 @@ void Settings::LoadDistrConfig()
 									// now comes Fortify1Chance
 									rule->fortify1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify1Chance.size() == 0) {
+									if (rule->fortify1Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Fortify1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1071,7 +1100,7 @@ void Settings::LoadDistrConfig()
 									// now comes Fortify2Chance
 									rule->fortify2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify2Chance.size() == 0) {
+									if (rule->fortify2Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Fortify2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1080,7 +1109,7 @@ void Settings::LoadDistrConfig()
 									// now comes Fortify3Chance
 									rule->fortify3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify3Chance.size() == 0) {
+									if (rule->fortify3Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Fortify3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1089,7 +1118,7 @@ void Settings::LoadDistrConfig()
 									// now comes Fortify4Chance
 									rule->fortify4Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify4Chance.size() == 0) {
+									if (rule->fortify4Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Fortify4Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1098,7 +1127,7 @@ void Settings::LoadDistrConfig()
 									// now comes FortifyAddChance
 									rule->fortifyAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortifyAdditionalChance.size() == 0) {
+									if (rule->fortifyAdditionalChance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"FortifyAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1139,7 +1168,7 @@ void Settings::LoadDistrConfig()
 									// now comes Poison1Chance
 									rule->poison1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison1Chance.size() == 0) {
+									if (rule->poison1Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Poison1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1148,7 +1177,7 @@ void Settings::LoadDistrConfig()
 									// now comes Poison2Chance
 									rule->poison2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison2Chance.size() == 0) {
+									if (rule->poison2Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Poison2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1157,7 +1186,7 @@ void Settings::LoadDistrConfig()
 									// now comes Poison3Chance
 									rule->poison3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison3Chance.size() == 0) {
+									if (rule->poison3Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Poison3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1166,7 +1195,7 @@ void Settings::LoadDistrConfig()
 									// now comes Poison4Chance
 									rule->poison4Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison4Chance.size() == 0) {
+									if (rule->poison4Chance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"Poison4Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1175,7 +1204,7 @@ void Settings::LoadDistrConfig()
 									// now comes PoisonAddChance
 									rule->poisonAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poisonAdditionalChance.size() == 0) {
+									if (rule->poisonAdditionalChance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"PoisonAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1201,7 +1230,7 @@ void Settings::LoadDistrConfig()
 									// now comes FoodChance
 									rule->foodChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->foodChance.size() == 0) {
+									if (rule->foodChance.size() != chancearraysize) {
 										logwarn("[Settings] [LoadDistrRules] fiels \"FoodChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1551,6 +1580,14 @@ void Settings::LoadDistrConfig()
 	if (Settings::ActorTypeDwarven == nullptr) {
 		loginfo("[Settings] [INIT] Couldn't find ActorTypeDwarven Keyword in game.");
 	}
+	Settings::ActorTypeCreature = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13795);
+	if (Settings::ActorTypeCreature == nullptr) {
+		loginfo("[Settings] [INIT] Couldn't find ActorTypeCreature Keyword in game.");
+	}
+	Settings::ActorTypeAnimal = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13798);
+	if (Settings::ActorTypeAnimal == nullptr) {
+		loginfo("[Settings] [INIT] Couldn't find ActorTypeAnimal Keyword in game.");
+	}
 
 	// hard exclude everyone that may become a follower
 	//Distribution::_excludedAssoc.insert(0x0005C84E);
@@ -1811,10 +1848,10 @@ void Settings::LoadDistrConfig()
 	//if ((tmp = Utility::GetTESForm(datahandler, 0, "", "")) != nullptr)
 	//	Distribution::_excludedItems.insert(tmp->GetFormID());
 
+	Distribution::initialised = true;
+
 	if (Settings::_ApplySkillBoostPerks)
 		Settings::ApplySkillBoostPerks();
-
-	Distribution::initialised = true;
 
 	if (Settings::EnableLoadLog) {
 		loginfo("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules()->size());
@@ -1983,7 +2020,7 @@ void Settings::CheckActorsForRules()
 				//act = nullptr;
 				act = (*iter).second->As<RE::Actor>();
 				npc = (*iter).second->As<RE::TESNPC>();
-				logwarn("[Settings] [CheckActorsForRules] act {}\t\t npc {}", act ? Utility::GetHex(act->GetFormID()) : "", npc ? Utility::GetHex(npc->GetFormID()) : "");
+				logwarn("[Settings] [CheckActorsForRules] act {}\t\t npc {}", act ? Utility::PrintForm(act) : "", npc ? Utility::PrintForm(npc) : "");
 				if (npc && npc->GetFormID() != 0x07 && (npc->GetFormID() >> 24) != 0xFF) {
 					if (!visited.contains(npc->GetFormID())) {
 						visited.insert(npc->GetFormID());
@@ -2432,10 +2469,26 @@ void Settings::ApplySkillBoostPerks()
 	auto datahandler = RE::TESDataHandler::GetSingleton();
 	auto npcs = datahandler->GetFormArray<RE::TESNPC>();
 	for(auto& npc : npcs) {
-		if (npc && npc->GetFormID() != 0x7 && !Distribution::ExcludedNPC(npc) ){//&& !((npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kSpells))) {
+		if (npc && npc->GetFormID() != 0x7 && !Distribution::ExcludedNPC(npc) ){
+			// some creatures have cause CTDs or other problems, if they get the perks, so try to filter some of them out
+			// if they are a creature and do not have any explicit rule, they will not get any perks
+			// at the same time, their id will be blacklisted for the rest of the plugin, to avoid any handling and distribution problems
+			if (Settings::_DisableCreaturesWithoutRules && (npc->GetRace()->HasKeyword(Settings::ActorTypeCreature) || npc->GetRace()->HasKeyword(ActorTypeAnimal))) {
+				ActorStrength acs;
+				ItemStrength is;
+				auto tplt = Distribution::ExtractTemplateInfo(npc);
+				auto rule = Distribution::CalcRule(npc, acs, is, &tplt);
+				if (rule->ruleName == Distribution::emptyRule->ruleName || rule->ruleName == Distribution::defaultRule->ruleName) {
+					// blacklist the npc
+					Distribution::_excludedNPCs.insert(npc->GetFormID());
+					logwarn("[Settings] [AddPerks] Excluded creature {}", Utility::PrintForm(npc));
+					// handle next npc
+					continue;
+				}
+			}
 			npc->AddPerk(Settings::AlchemySkillBoosts, 1);
 			npc->AddPerk(Settings::PerkSkillBoosts, 1);
-			LOGL1_3("{}[Settings] [AddPerks] Added perks to npc {}", npc->GetName());
+			LOGL1_3("{}[Settings] [AddPerks] Added perks to npc {}", Utility::PrintForm(npc));
 		}
 	}
 	/*
@@ -2490,7 +2543,7 @@ void Settings::ClassifyItems()
 		if ((*iter).second && (*iter).second->IsMagicItem()) {
 			item = (*iter).second->As<RE::AlchemyItem>();
 			if (item) {
-				LOGL1_4("{}[Settings] [ClassifyItems] Found AlchemyItem {}", item->GetName());
+				LOGL1_4("{}[Settings] [ClassifyItems] Found AlchemyItem {}", Utility::PrintForm(item));
 				// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
 				if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0 ||
 					std::string(item->GetName()).find(std::string("Dummy")) != std::string::npos ||
@@ -2521,7 +2574,7 @@ void Settings::ClassifyItems()
 				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
 					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 					if (EnableLoadLog && LogLevel >= 4) {
-						LOGLE1_1("Item: {}", item->GetName());
+						LOGLE1_1("Item: {}", Utility::PrintForm(item));
 						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
 							LOGLE_1("\tFlag: CostOverride");
 						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kFoodItem)
@@ -2533,7 +2586,7 @@ void Settings::ClassifyItems()
 						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kPoison)
 							LOGLE_1("\tFlag: Poison");
 					}
-					LOGLE1_1("[Settings] [ClassifyItems] [AssignPotionFlag] {}", item->GetName());
+					LOGLE1_1("[Settings] [ClassifyItems] [AssignPotionFlag] {}", Utility::PrintForm(item));
 				}
 
 				// determine the type of item
@@ -2605,12 +2658,12 @@ void Settings::ClassifyItems()
 					}
 				}
 				// add item into effect map
-				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas));
+				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas));
 			}
 
 			itemi = (*iter).second->As<RE::IngredientItem>();
 			if (itemi) {
-				LOGL1_4("{}[Settings] [ClassifyItems] Found IngredientItem {}", itemi->GetName());
+				LOGL1_4("{}[Settings] [ClassifyItems] Found IngredientItem {}", Utility::PrintForm(itemi));
 				for (int i = 0; i < (int)itemi->effects.size(); i++) {
 					auto sett = itemi->effects[i]->baseEffect;
 					// just retrieve the effects, we will analyze them later
@@ -2852,11 +2905,11 @@ void Settings::ClassifyItems()
 	}
 }
 
-std::tuple<uint64_t, ItemStrength, ItemType, int, float> Settings::ClassifyItem(RE::AlchemyItem* item)
+std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::ClassifyItem(RE::AlchemyItem* item)
 {
 	RE::EffectSetting* sett = nullptr;
 	if ((item->avEffectSetting) == nullptr && item->effects.size() == 0) {
-		return { 0, ItemStrength::kStandard, ItemType::kFood, 0, 0.0f};
+		return { 0, ItemStrength::kStandard, ItemType::kFood, 0, 0.0f, false};
 	}
 	// we look at max 4 effects
 	AlchemyEffectBase av[4]{
@@ -2877,6 +2930,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float> Settings::ClassifyItem(
 		0,
 		0
 	};
+	bool detrimental = false;
 	// we will not abort the loop, since the number of effects on one item is normally very
 	// limited, so we don't have much iterations
 	AlchemyEffectBase tmp = 0;
@@ -2887,6 +2941,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float> Settings::ClassifyItem(
 			if (sett) {
 				mag[i] = item->effects[i]->effectItem.magnitude;
 				dur[i] = item->effects[i]->effectItem.duration;
+				detrimental |= sett->IsDetrimental();
 
 				uint32_t formid = sett->GetFormID();
 				if ((tmp = (static_cast<uint64_t>(ConvertToAlchemyEffectPrimary(sett)))) > 0) {
@@ -2906,6 +2961,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float> Settings::ClassifyItem(
 		// emergency fallback // more or less unused
 		RE::MagicItem::SkillUsageData err;
 		item->GetSkillUsageData(err);
+		detrimental |= item->avEffectSetting->IsDetrimental();
 		switch (item->avEffectSetting->data.primaryAV) {
 		case RE::ActorValue::kHealth:
 			av[0] = static_cast<uint64_t>(ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV));
@@ -2985,7 +3041,8 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float> Settings::ClassifyItem(
 		str,
 		type,
 		maxdur,
-		maxmag
+		maxmag,
+		detrimental
 	};
 }
 

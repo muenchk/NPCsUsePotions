@@ -131,6 +131,8 @@ public:
 
 	static inline bool _CompatibilityWhitelist = false;
 
+	static inline bool _DisableCreaturesWithoutRules = true;					// disables all npcs with the ActorTypeCreature or ActorTypeAnimal keywords, if they do not have a dedicated rule. May cause npcs to be disabled, that should not be
+
 	// debug
 	static inline bool EnableLog = false;			// Enables general logging
 	static inline bool EnableLoadLog = false;		// Enables logging for plugin load
@@ -247,6 +249,8 @@ public:
 	static inline RE::BGSKeyword* VendorItemFoodRaw;
 	static inline RE::BGSKeyword* VendorItemPoison;
 	static inline RE::BGSKeyword* ActorTypeDwarven;
+	static inline RE::BGSKeyword* ActorTypeCreature;
+	static inline RE::BGSKeyword* ActorTypeAnimal;
 
 	static inline RE::TESFaction* CurrentFollowerFaction;
 	static inline RE::TESFaction* CurrentHirelingFaction;
@@ -260,6 +264,13 @@ public:
 	[[deprecated]] static inline bool FixedPotionUse = true;
 	[[deprecated]] static inline bool FixedPoisonUse = true;
 	[[deprecated]] static inline bool FixedFoodEat = true;
+
+	static inline std::string pluginnames[256+4096];
+
+	/// <summary>
+	/// Loads game objects
+	/// </summary>
+	static void InitGameStuff();
 
 	/// <summary>
 	/// Loads the plugin configuration
@@ -304,8 +315,8 @@ public:
 	/// classifies a single item based on its effects
 	/// </summary>
 	/// <param name="item"></param>
-	/// <returns>effects, strength, type, duration, magnitude</returns>
-	static std::tuple<uint64_t, ItemStrength, ItemType, int, float> ClassifyItem(RE::AlchemyItem* item);
+	/// <returns>effects, strength, type, duration, magnitude, whether an effect is detrimental</returns>
+	static std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> ClassifyItem(RE::AlchemyItem* item);
 
 	/// <summary>
 	/// classifies all AlchemyItems in the game according to its effects

@@ -26,14 +26,14 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
 	//logger::info("console 4");
 
-	std::string tmp = "Displaying stats for Actor:\t\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::GetHex(actor->GetFormID());
+	std::string tmp = "Displaying stats for Actor:\t\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::PrintForm(actor);
 	//logger::info("console 5");
 	console->Print(tmp.c_str());
-	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetRace()->GetFormID()) + "\t" + std::string(actor->GetRace()->GetFormEditorID());
+	tmp = "Race:\t\t\t\t\t" + Utility::PrintForm(actor->GetRace()) + "\t" + std::string(actor->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
-	tmp = "ActorBase:\t\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetName());
+	tmp = "ActorBase:\t\t\t\t\t" + Utility::PrintForm(actor->GetActorBase()) + "\t" + std::string(actor->GetActorBase()->GetName());
 	console->Print(tmp.c_str());
-	tmp = "Race:\t\t\t\t\t" + Utility::GetHex(actor->GetActorBase()->GetRace()->GetFormID()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
+	tmp = "Race:\t\t\t\t\t" + Utility::PrintForm(actor->GetActorBase()->GetRace()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
 	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(actor));
 	console->Print(tmp.c_str());

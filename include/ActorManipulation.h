@@ -71,8 +71,8 @@ public:
 	/// </summary>
 	/// <param name="item">item to check</param>
 	/// <param name="eff">effect to look for</param>
-	/// <returns>wether the item has the specified effect, the magnitude, and the duration</returns>
-	static std::tuple<bool, float, int, AlchemyEffectBase> HasAlchemyEffect(RE::AlchemyItem* item, AlchemyEffectBase alchemyEffect);
+	/// <returns>wether the item has the specified effect, the magnitude, and the duration, the total effects, whether there is a detrimental effect</returns>
+	static std::tuple<bool, float, int, AlchemyEffectBase, bool> HasAlchemyEffect(RE::AlchemyItem* item, AlchemyEffectBase alchemyEffect);
 
 	/// <summary>
 	/// Searches for potions with the effect [eff] in the inventory of the actor [actor]

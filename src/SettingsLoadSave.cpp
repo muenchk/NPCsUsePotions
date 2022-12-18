@@ -1,5 +1,6 @@
 #include "Settings.h"
 #include "Logging.h"
+#include "Utility.h"
 
 /// <summary>
 /// changes the output model of all consumable sounds to third person
@@ -27,11 +28,11 @@ void Settings::FixConsumables()
 					soundOM = (RE::BGSStandardSoundDef*)sounddesc;
 					if (Settings::_ForceFixPotionSounds) {
 						soundOM->outputModel = SOMMono01400_verb;
-						LOGL1_4("{}[Settings] [FixConsumables] forcefully set output model for sound {}", alch->data.consumptionSound->GetFormID());
+						LOGL1_4("{}[Settings] [FixConsumables] forcefully set output model for sound {}", Utility::PrintForm(alch->data.consumptionSound));
 					}
 					else if (soundOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
 						soundOM->outputModel = SOMMono01400_verb;
-						LOGL1_4("{}[Settings] [FixConsumables] changed output model for sound {}", alch->data.consumptionSound->GetFormID());
+						LOGL1_4("{}[Settings] [FixConsumables] changed output model for sound {}", Utility::PrintForm(alch->data.consumptionSound));
 					}
 				}
 			}
@@ -57,95 +58,91 @@ void Settings::Load()
 	ini.LoadFile(path);
 
 	// Features
-	_featMagickaRestoration = ini.GetValue("Features", "EnableMagickaRestoration") ? ini.GetBoolValue("Features", "EnableMagickaRestoration") : true;
+	_featMagickaRestoration = ini.GetValue("Features", "EnableMagickaRestoration") ? ini.GetBoolValue("Features", "EnableMagickaRestoration") : _featMagickaRestoration;
 	loginfo("[SETTINGS] {} {}", "EnableMagickaRestoration", std::to_string(_featMagickaRestoration));
-	_featStaminaRestoration = ini.GetValue("Features", "EnableStaminaRestoration") ? ini.GetBoolValue("Features", "EnableStaminaRestoration") : true;
+	_featStaminaRestoration = ini.GetValue("Features", "EnableStaminaRestoration") ? ini.GetBoolValue("Features", "EnableStaminaRestoration") : _featStaminaRestoration;
 	loginfo("[SETTINGS] {} {}", "EnableStaminaRestoration", std::to_string(_featStaminaRestoration));
-	_featHealthRestoration = ini.GetValue("Features", "EnableHealthRestoration") ? ini.GetBoolValue("Features", "EnableHealthRestoration") : true;
+	_featHealthRestoration = ini.GetValue("Features", "EnableHealthRestoration") ? ini.GetBoolValue("Features", "EnableHealthRestoration") : _featHealthRestoration;
 	loginfo("[SETTINGS] {} {}", "EnableHealthRestoration", std::to_string(_featHealthRestoration));
-	_featUsePoisons = ini.GetValue("Features", "EnablePoisonUsage") ? ini.GetBoolValue("Features", "EnablePoisonUsage") : true;
+	_featUsePoisons = ini.GetValue("Features", "EnablePoisonUsage") ? ini.GetBoolValue("Features", "EnablePoisonUsage") : _featUsePoisons;
 	loginfo("[SETTINGS] {} {}", "EnablePoisonUsage", std::to_string(_featUsePoisons));
-	_featUseFortifyPotions = ini.GetValue("Features", "EnableFortifyPotionUsage") ? ini.GetBoolValue("Features", "EnableFortifyPotionUsage") : true;
+	_featUseFortifyPotions = ini.GetValue("Features", "EnableFortifyPotionUsage") ? ini.GetBoolValue("Features", "EnableFortifyPotionUsage") : _featUseFortifyPotions;
 	loginfo("[SETTINGS] {} {}", "EnableFortifyPotionUsage", std::to_string(_featUseFortifyPotions));
-	_featUseFood = ini.GetValue("Features", "EnableFoodUsage") ? ini.GetBoolValue("Features", "EnableFoodUsage") : true;
+	_featUseFood = ini.GetValue("Features", "EnableFoodUsage") ? ini.GetBoolValue("Features", "EnableFoodUsage") : _featUseFood;
 	loginfo("[SETTINGS] {} {}", "EnableFoodUsage", std::to_string(_featUseFood));
 
-	_playerRestorationEnabled = ini.GetValue("Features", "EnablePlayerRestoration") ? ini.GetBoolValue("Features", "EnablePlayerRestoration") : false;
+	_playerRestorationEnabled = ini.GetValue("Features", "EnablePlayerRestoration") ? ini.GetBoolValue("Features", "EnablePlayerRestoration") : _playerRestorationEnabled;
 	loginfo("[SETTINGS] {} {}", "EnablePlayerRestoration", std::to_string(_playerRestorationEnabled));
-	_playerUsePoisons = ini.GetValue("Features", "EnablePlayerPoisonUsage") ? ini.GetBoolValue("Features", "EnablePlayerPoisonUsage") : false;
+	_playerUsePoisons = ini.GetValue("Features", "EnablePlayerPoisonUsage") ? ini.GetBoolValue("Features", "EnablePlayerPoisonUsage") : _playerUsePoisons;
 	loginfo("[SETTINGS] {} {}", "EnablePlayerPoisonUsage", std::to_string(_playerUsePoisons));
-	_playerUseFortifyPotions = ini.GetValue("Features", "EnablePlayerFortifyPotionUsage") ? ini.GetBoolValue("Features", "EnablePlayerFortifyPotionUsage") : false;
+	_playerUseFortifyPotions = ini.GetValue("Features", "EnablePlayerFortifyPotionUsage") ? ini.GetBoolValue("Features", "EnablePlayerFortifyPotionUsage") : _playerUseFortifyPotions;
 	loginfo("[SETTINGS] {} {}", "EnablePlayerFortifyPotionUsage", std::to_string(_playerUseFortifyPotions));
-	_playerUseFood = ini.GetBoolValue("Features", "EnablePlayerFoodUsage", false);
+	_playerUseFood = ini.GetBoolValue("Features", "EnablePlayerFoodUsage", _playerUseFood);
 	loginfo("[SETTINGS] {} {}", "EnablePlayerFoodUsage", std::to_string(_playerUseFood));
 
-	_featDistributePotions = ini.GetBoolValue("Features", "DistributePotions", true);
+	_featDistributePotions = ini.GetBoolValue("Features", "DistributePotions", _featDistributePotions);
 	loginfo("[SETTINGS] {} {}", "DistributePotions", std::to_string(_featDistributePotions));
-	_featDistributePoisons = ini.GetBoolValue("Features", "DistributePoisons", true);
+	_featDistributePoisons = ini.GetBoolValue("Features", "DistributePoisons", _featDistributePoisons);
 	loginfo("[SETTINGS] {} {}", "DistributePoisons", std::to_string(_featDistributePoisons));
-	_featDistributeFood = ini.GetBoolValue("Features", "DistributeFood", true);
+	_featDistributeFood = ini.GetBoolValue("Features", "DistributeFood", _featDistributeFood);
 	loginfo("[SETTINGS] {} {}", "DistributeFood", std::to_string(_featDistributeFood));
-	_featDistributeFortifyPotions = ini.GetBoolValue("Features", "DistributeFortifyPotions", true);
+	_featDistributeFortifyPotions = ini.GetBoolValue("Features", "DistributeFortifyPotions", _featDistributeFortifyPotions);
 	loginfo("[SETTINGS] {} {}", "DistributeFortifyPotions", std::to_string(_featDistributeFortifyPotions));
-	_featDistributeCustomItems = ini.GetBoolValue("Features", "DistributeCustomItems", true);
+	_featDistributeCustomItems = ini.GetBoolValue("Features", "DistributeCustomItems", _featDistributeCustomItems);
 	loginfo("[SETTINGS] {} {}", "DistributeCustomItems", std::to_string(_featDistributeCustomItems));
 
-	_featRemoveItemsOnDeath = ini.GetValue("Features", "RemoveItemsOnDeath") ? ini.GetBoolValue("Features", "RemoveItemsOnDeath") : true;
+	_featRemoveItemsOnDeath = ini.GetValue("Features", "RemoveItemsOnDeath") ? ini.GetBoolValue("Features", "RemoveItemsOnDeath") : _featRemoveItemsOnDeath;
 	loginfo("[SETTINGS] {} {}", "RemoveItemsOnDeath", std::to_string(_featRemoveItemsOnDeath));
 
-	_featDisableItemUsageWhileStaggered = ini.GetValue("Features", "DisableItemUsageWhileStaggered") ? ini.GetBoolValue("Features", "DisableItemUsageWhileStaggered") : false;
+	_featDisableItemUsageWhileStaggered = ini.GetValue("Features", "DisableItemUsageWhileStaggered") ? ini.GetBoolValue("Features", "DisableItemUsageWhileStaggered") : _featDisableItemUsageWhileStaggered;
 	loginfo("[SETTINGS] {} {}", "DisableItemUsageWhileStaggered", std::to_string(_featDisableItemUsageWhileStaggered));
 
-	_featDisableNonFollowerNPCs = ini.GetBoolValue("Features", "DisableNonFollowerNPCs", false);
+	_featDisableNonFollowerNPCs = ini.GetBoolValue("Features", "DisableNonFollowerNPCs", _featDisableNonFollowerNPCs);
 	loginfo("[SETTINGS] {} {}", "DisableNonFollowerNPCs", std::to_string(_featDisableNonFollowerNPCs));
-	_featDisableOutOfCombatProcessing = ini.GetBoolValue("Features", "DisableOutOfCombatProcessing", false);
+	_featDisableOutOfCombatProcessing = ini.GetBoolValue("Features", "DisableOutOfCombatProcessing", _featDisableOutOfCombatProcessing);
 	loginfo("[SETTINGS] {} {}", "DisableOutOfCombatProcessing", std::to_string(_featDisableOutOfCombatProcessing));
 
 	// fixes
-	_ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", true);
+	_ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", _ApplySkillBoostPerks);
 	loginfo("[SETTINGS] {} {}", "ApplySkillBoostPerks", std::to_string(_ApplySkillBoostPerks));
-	_ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", true);
+	_ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", _ForceFixPotionSounds);
 	loginfo("[SETTINGS] {} {}", "ForceFixPotionSounds", std::to_string(_ForceFixPotionSounds));
 
 	// compatibility
-	_CompatibilityPotionAnimation = ini.GetValue("Compatibility", "UltimatePotionAnimation") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimation") : false;
+	_CompatibilityPotionAnimation = ini.GetBoolValue("Compatibility", "UltimatePotionAnimation", _CompatibilityPotionAnimation);
 	loginfo("[SETTINGS] {} {}", "UltimatePotionAnimation", std::to_string(_CompatibilityPotionAnimation));
-	_CompatibilityPotionAnimationFortify = ini.GetValue("Compatibility", "UltimatePotionAnimationFortify") ? ini.GetBoolValue("Compatibility", "UltimatePotionAnimationFortify") : false;
+	_CompatibilityPotionAnimationFortify = ini.GetBoolValue("Compatibility", "UltimatePotionAnimationFortify", _CompatibilityPotionAnimationFortify);
 	loginfo("[SETTINGS] {} {}", "UltimatePotionAnimationFortify", std::to_string(_CompatibilityPotionAnimationFortify));
-	// get wether zxlice's Ultimate Potion Animation is present
-	//auto constexpr folder = R"(Data\SKSE\Plugins\)";
-	//for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-	//	if (entry.exists() && !entry.path().empty() && entry.path().filename() == "zxlice's ultimate potion animation.dll") {
-	//		Ultimateoptions = true;
-	//		loginfo("[SETTINGS] zxlice's Ultimate Potion Animation has been detected");
-	//	}
-	//}
-	_CompatibilityMode = ini.GetValue("Compatibility", "Compatibility") ? ini.GetBoolValue("Compatibility", "Compatibility") : false;
+	
+	_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", _CompatibilityMode);
 	loginfo("[SETTINGS] {} {}", "Compatibility", std::to_string(_CompatibilityMode));
-	_CompatibilityDisableAutomaticAdjustments = ini.GetValue("Compatibility", "DisableAutomaticAdjustments") ? ini.GetBoolValue("Compatibility", "DisableAutomaticAdjustments") : false;
+	_CompatibilityDisableAutomaticAdjustments = ini.GetBoolValue("Compatibility", "DisableAutomaticAdjustments", _CompatibilityDisableAutomaticAdjustments);
 	loginfo("[SETTINGS] {} {}", "DisableAutomaticAdjustments", std::to_string(_CompatibilityDisableAutomaticAdjustments));
 
-	_CompatibilityWhitelist = ini.GetBoolValue("Compatibility", "WhitelistMode", false);
+	_CompatibilityWhitelist = ini.GetBoolValue("Compatibility", "WhitelistMode", _CompatibilityWhitelist);
 	loginfo("[SETTINGS] {} {}", "WhitelistMode", std::to_string(_CompatibilityWhitelist));
 
+	_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", _DisableCreaturesWithoutRules);
+	loginfo("[SETTINGS] {} {}", "DisableCreaturesWithoutRules", std::to_string(_DisableCreaturesWithoutRules));
+
 	// distribution
-	_LevelEasy = ini.GetValue("Distribution", "LevelEasy") ? ini.GetLongValue("Distribution", "LevelEasy") : _LevelEasy;
+	_LevelEasy = ini.GetLongValue("Distribution", "LevelEasy", _LevelEasy);
 	loginfo("[SETTINGS] {} {}", "LevelEasy", std::to_string(_LevelEasy));
-	_LevelNormal = ini.GetValue("Distribution", "LevelNormal") ? ini.GetLongValue("Distribution", "LevelNormal") : _LevelNormal;
+	_LevelNormal = ini.GetLongValue("Distribution", "LevelNormal", _LevelNormal);
 	loginfo("[SETTINGS] {} {}", "LevelNormal", std::to_string(_LevelNormal));
-	_LevelDifficult = ini.GetValue("Distribution", "LevelDifficult") ? ini.GetLongValue("Distribution", "LevelDifficult") : _LevelDifficult;
+	_LevelDifficult = ini.GetLongValue("Distribution", "LevelDifficult", _LevelDifficult);
 	loginfo("[SETTINGS] {} {}", "LevelDifficult", std::to_string(_LevelDifficult));
-	_LevelInsane = ini.GetValue("Distribution", "LevelInsane") ? ini.GetLongValue("Distribution", "LevelInsane") : _LevelInsane;
+	_LevelInsane = ini.GetLongValue("Distribution", "LevelInsane", _LevelInsane);
 	loginfo("[SETTINGS] {} {}", "LevelInsane", std::to_string(_LevelInsane));
 
-	_GameDifficultyScaling = ini.GetValue("Distribution", "GameDifficultyScaling") ? ini.GetBoolValue("Distribution", "GameDifficultyScaling") : false;
+	_GameDifficultyScaling = ini.GetBoolValue("Distribution", "GameDifficultyScaling", _GameDifficultyScaling);
 	loginfo("[SETTINGS] {} {}", "GameDifficultyScaling", std::to_string(_GameDifficultyScaling));
 
-	_MaxMagnitudeWeak = ini.GetValue("Distribution", "MaxMagnitudeWeak") ? ini.GetLongValue("Distribution", "MaxMagnitudeWeak") : _MaxMagnitudeWeak;
+	_MaxMagnitudeWeak = ini.GetLongValue("Distribution", "MaxMagnitudeWeak",_MaxMagnitudeWeak);
 	loginfo("[SETTINGS] {} {}", "MaxMagnitudeWeak", std::to_string(_MaxMagnitudeWeak));
-	_MaxMagnitudeStandard = ini.GetValue("Distribution", "MaxMagnitudeStandard") ? ini.GetLongValue("Distribution", "MaxMagnitudeStandard") : _MaxMagnitudeStandard;
+	_MaxMagnitudeStandard = ini.GetLongValue("Distribution", "MaxMagnitudeStandard", _MaxMagnitudeStandard);
 	loginfo("[SETTINGS] {} {}", "MaxMagnitudeStandard", std::to_string(_MaxMagnitudeStandard));
-	_MaxMagnitudePotent = ini.GetValue("Distribution", "MaxMagnitudePotent") ? ini.GetLongValue("Distribution", "MaxMagnitudePotent") : _MaxMagnitudePotent;
+	_MaxMagnitudePotent = ini.GetLongValue("Distribution", "MaxMagnitudePotent", _MaxMagnitudePotent);
 	loginfo("[SETTINGS] {} {}", "MaxMagnitudePotent", std::to_string(_MaxMagnitudePotent));
 
 	_StyleScalingPrimary = (float)ini.GetDoubleValue("Distribution", "StyleScalingPrimary", _StyleScalingPrimary);
@@ -154,88 +151,88 @@ void Settings::Load()
 	loginfo("[SETTINGS] {} {}", "StyleScalingSecondary", std::to_string(_StyleScalingSecondary));
 
 	// Restoration Thresholds
-	_healthThreshold = ini.GetValue("Restoration", "HealthThresholdPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdPercent")) : _healthThreshold;
-	_healthThreshold = ini.GetValue("Restoration", "HealthThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdLowerPercent")) : _healthThreshold;
+	_healthThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdPercent",_healthThreshold));
+	_healthThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdLowerPercent", _healthThreshold));
 	if (_healthThreshold > 0.95f)
 		_healthThreshold = 0.95f;
 	loginfo("[SETTINGS] {} {}", "HealthThresholdPercent", std::to_string(_healthThreshold));
-	_magickaThreshold = ini.GetValue("Restoration", "MagickaThresholdPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdPercent")) : _magickaThreshold;
-	_magickaThreshold = ini.GetValue("Restoration", "MagickaThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdLowerPercent")) : _magickaThreshold;
+	_magickaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdPercent", _magickaThreshold));
+	_magickaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdLowerPercent", _magickaThreshold));
 	if (_magickaThreshold > 0.95f)
 		_magickaThreshold = 0.95f;
 	loginfo("[SETTINGS] {} {}", "MagickaThresholdPercent", std::to_string(_magickaThreshold));
-	_staminaThreshold = ini.GetValue("Restoration", "StaminaThresholdPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdPercent")) : _staminaThreshold;
-	_staminaThreshold = ini.GetValue("Restoration", "StaminaThresholdLowerPercent") ? static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdLowerPercent")) : _staminaThreshold;
+	_staminaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdPercent", _staminaThreshold));
+	_staminaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdLowerPercent", _staminaThreshold));
 	if (_staminaThreshold > 0.95f)
 		_staminaThreshold = 0.95f;
 	loginfo("[SETTINGS] {} {}", "StaminaThresholdPercent", std::to_string(_staminaThreshold));
-	_UsePotionChance = ini.GetValue("Restoration", "UsePotionChance") ? static_cast<int>(ini.GetLongValue("Restoration", "UsePotionChance")) : _UsePotionChance;
+	_UsePotionChance = static_cast<int>(ini.GetLongValue("Restoration", "UsePotionChance", _UsePotionChance));
 	loginfo("[SETTINGS] {} {}", "UsePotionChance", std::to_string(_UsePotionChance));
 
 	// Poisonusage options
-	_EnemyLevelScalePlayerLevel = ini.GetValue("Poisons", "EnemyLevelScalePlayerLevel") ? static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel")) : _EnemyLevelScalePlayerLevel;
+	_EnemyLevelScalePlayerLevel = static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", _EnemyLevelScalePlayerLevel));
 	loginfo("[SETTINGS] {} {}", "EnemyLevelScalePlayerLevel", std::to_string(_EnemyLevelScalePlayerLevel));
-	_EnemyNumberThreshold = ini.GetValue("Poisons", "FightingNPCsNumberThreshold") ? ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold") : _EnemyNumberThreshold;
+	_EnemyNumberThreshold = ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold", _EnemyNumberThreshold);
 	loginfo("[SETTINGS] {} {}", "FightingNPCsNumberThreshold", std::to_string(_EnemyNumberThreshold));
-	_UsePoisonChance = ini.GetValue("Poisons", "UsePoisonChance") ? static_cast<int>(ini.GetLongValue("Poisons", "UsePoisonChance")) : _UsePoisonChance;
+	_UsePoisonChance = static_cast<int>(ini.GetLongValue("Poisons", "UsePoisonChance", _UsePoisonChance));
 	loginfo("[SETTINGS] {} {}", "UsePoisonChance", std::to_string(_UsePoisonChance));
 
 	// fortify options
-	_EnemyLevelScalePlayerLevelFortify = ini.GetValue("Fortify", "EnemyLevelScalePlayerLevelFortify") ? static_cast<float>(ini.GetDoubleValue("Fortify", "EnemyLevelScalePlayerLevelFortify")) : _EnemyLevelScalePlayerLevelFortify;
+	_EnemyLevelScalePlayerLevelFortify = static_cast<float>(ini.GetDoubleValue("Fortify", "EnemyLevelScalePlayerLevelFortify", _EnemyLevelScalePlayerLevelFortify));
 	loginfo("[SETTINGS] {} {}", "EnemyLevelScalePlayerLevelFortify", std::to_string(_EnemyLevelScalePlayerLevelFortify));
-	_EnemyNumberThresholdFortify = ini.GetValue("Fortify", "FightingNPCsNumberThresholdFortify") ? ini.GetLongValue("Fortify", "FightingNPCsNumberThresholdFortify") : _EnemyNumberThresholdFortify;
+	_EnemyNumberThresholdFortify = ini.GetLongValue("Fortify", "FightingNPCsNumberThresholdFortify", _EnemyNumberThresholdFortify);
 	loginfo("[SETTINGS] {} {}", "FightingNPCsNumberThresholdFortify", std::to_string(_EnemyNumberThresholdFortify));
-	_UseFortifyPotionChance = ini.GetValue("Fortify", "UseFortifyPotionChance") ? static_cast<int>(ini.GetLongValue("Fortify", "UseFortifyPotionChance")) : _UseFortifyPotionChance;
+	_UseFortifyPotionChance = static_cast<int>(ini.GetLongValue("Fortify", "UseFortifyPotionChance", _UseFortifyPotionChance));
 	loginfo("[SETTINGS] {} {}", "UseFortifyPotionChance", std::to_string(_UseFortifyPotionChance));
 
 	// removal options
-	_ChanceToRemoveItem = ini.GetValue("Removal", "ChanceToRemoveItem") ? ini.GetLongValue("Removal", "ChanceToRemoveItem") : _ChanceToRemoveItem;
+	_ChanceToRemoveItem = ini.GetLongValue("Removal", "ChanceToRemoveItem", _ChanceToRemoveItem);
 	loginfo("[SETTINGS] {} {}", "ChanceToRemoveItem", std::to_string(_ChanceToRemoveItem));
-	_MaxItemsLeft = ini.GetValue("Removal", "MaxItemsLeftAfterRemoval") ? ini.GetLongValue("Removal", "MaxItemsLeftAfterRemoval") : _MaxItemsLeft;
+	_MaxItemsLeft = ini.GetLongValue("Removal", "MaxItemsLeftAfterRemoval", _MaxItemsLeft);
 	loginfo("[SETTINGS] {} {}", "MaxItemsLeftAfterRemoval", std::to_string(_MaxItemsLeft));
 
 	// general
-	_maxPotionsPerCycle = ini.GetValue("General", "MaxPotionsPerCycle") ? ini.GetLongValue("General", "MaxPotionsPerCycle", 1) : 1;
+	_maxPotionsPerCycle = ini.GetLongValue("General", "MaxPotionsPerCycle", 1);
 	loginfo("[SETTINGS] {} {}", "MaxPotionsPerCycle", std::to_string(_maxPotionsPerCycle));
-	_cycletime = ini.GetValue("General", "CycleWaitTime") ? ini.GetLongValue("General", "CycleWaitTime", 1000) : 1000;
+	_cycletime = ini.GetLongValue("General", "CycleWaitTime", 1000);
 	loginfo("[SETTINGS] {} {}", "CycleWaitTime", std::to_string(_cycletime));
-	_DisableEquipSounds = ini.GetValue("General", "DisableEquipSounds") ? ini.GetBoolValue("General", "DisableEquipSounds", false) : false;
+	_DisableEquipSounds = ini.GetBoolValue("General", "DisableEquipSounds", false);
 	loginfo("[SETTINGS] {} {}", "DisableEquipSounds", std::to_string(_DisableEquipSounds));
 
 	// Debugging
-	EnableLog = ini.GetValue("Debug", "EnableLogging") ? ini.GetBoolValue("Debug", "EnableLogging") : false;
+	EnableLog = ini.GetBoolValue("Debug", "EnableLogging", EnableLog);
 	Logging::EnableLog = EnableLog;
 	loginfo("[SETTINGS] {} {}", "EnableLogging", std::to_string(EnableLog));
-	EnableLoadLog = ini.GetBoolValue("Debug", "EnableLoadLogging", false);
+	EnableLoadLog = ini.GetBoolValue("Debug", "EnableLoadLogging", EnableLoadLog);
 	Logging::EnableLoadLog = EnableLoadLog;
 	loginfo("[SETTINGS] {} {}", "EnableLoadLogging", std::to_string(EnableLoadLog));
-	LogLevel = ini.GetValue("Debug", "LogLevel") ? ini.GetLongValue("Debug", "LogLevel") : 0;
+	LogLevel = ini.GetLongValue("Debug", "LogLevel", LogLevel);
 	Logging::LogLevel = LogLevel;
 	loginfo("[SETTINGS] {} {}", "LogLevel", std::to_string(LogLevel));
-	EnableProfiling = ini.GetValue("Debug", "EnableProfiling") ? ini.GetBoolValue("Debug", "EnableProfiling") : false;
+	EnableProfiling = ini.GetBoolValue("Debug", "EnableProfiling", EnableProfiling);
 	Logging::EnableProfiling = EnableProfiling;
 	loginfo("[SETTINGS] {} {}", "EnableProfiling", std::to_string(EnableProfiling));
-	ProfileLevel = ini.GetValue("Debug", "ProfileLevel") ? ini.GetLongValue("Debug", "ProfileLevel") : 0;
+	ProfileLevel = ini.GetLongValue("Debug", "ProfileLevel", ProfileLevel);
 	Logging::ProfileLevel = ProfileLevel;
 	loginfo("[SETTINGS] {} {}", "ProfileLevel", std::to_string(LogLevel));
 
-	_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", false);
+	_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", _CheckActorsWithoutRules);
 	loginfo("[SETTINGS] {} {}", "CheckActorWithoutRules", std::to_string(_CheckActorsWithoutRules));
 
-	_CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", false);
+	_CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", _CalculateCellRules);
 	loginfo("[SETTINGS] {} {}", "CalculateCellRules", std::to_string(_CalculateCellRules));
-	_Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", false);
+	_Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", _Test);
 	loginfo("[SETTINGS] {} {}", "CalculateAllCellOnStartup", std::to_string(_Test));
 	if (_CalculateCellRules && _Test == false) {
 		std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv", std::ofstream::out);
 		out << "CellName;RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
 	}
 
-	_CompatibilityRemoveItemsBeforeDist = ini.GetBoolValue("Debug", "RemoveItemsBeforeDist", false);
+	_CompatibilityRemoveItemsBeforeDist = ini.GetBoolValue("Debug", "RemoveItemsBeforeDist", _CompatibilityRemoveItemsBeforeDist);
 	loginfo("[SETTINGS] {} {}", "RemoveItemsBeforeDist", std::to_string(_CompatibilityRemoveItemsBeforeDist));
-	_CompatibilityRemoveItemsStartup = ini.GetBoolValue("Debug", "RemoveItemsStartup", false);
+	_CompatibilityRemoveItemsStartup = ini.GetBoolValue("Debug", "RemoveItemsStartup", _CompatibilityRemoveItemsStartup);
 	loginfo("[SETTINGS] {} {}", "RemoveItemsStartup", std::to_string(_CompatibilityRemoveItemsStartup));
-	_CompatibilityRemoveItemsStartup_OnlyExcluded = ini.GetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", false);
+	_CompatibilityRemoveItemsStartup_OnlyExcluded = ini.GetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", _CompatibilityRemoveItemsStartup_OnlyExcluded);
 	loginfo("[SETTINGS] {} {}", "RemoveItemsStartup_OnlyExcluded", std::to_string(_CompatibilityRemoveItemsStartup_OnlyExcluded));
 
 	// save user settings, before applying adjustments
@@ -353,6 +350,7 @@ void Settings::Save()
 	ini.SetBoolValue("Compatibility", "Compatibility", _CompatibilityMode, ";General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
 	ini.SetBoolValue("Compatibility", "DisableAutomaticAdjustments", _CompatibilityDisableAutomaticAdjustments, ";Disables automatic changes made to settings, due to compatibility.\n;Not all changes can be disabled.\n;1) Changes to \"MaxPotionsPerCycle\" when using Potion Animation Mods.\n;2) Enabling of \"UltimatePotionAnimation\" if zxlice's dll is found in your plugin folder. Since it would very likely result in a crash with this option enabled.");
 	ini.SetBoolValue("Compatibility", "WhitelistMode", _CompatibilityWhitelist, ";Enables the whitelist mode. Items that shall be distributed must not\n;be explicitly stated in the rules. This is the opposite to the standard (blacklist) behaviour.\n;Only use this if your loadorder causes you CTDs etc due to items being distributed that should not.\n;If you know which mod is causing the issue please do report it, such that appropriate rules can be created. This should only be a temporary solution.");
+	ini.SetBoolValue("Compatibility", "DisableCreaturesWithoutRules", _DisableCreaturesWithoutRules, ";Disables item distribution, potion usage and Skill Boost Perk distribution for NPCs with races with the ActorTypeCreature of ActorTypeAnimal keywords if and only if the NPC does not have any distribution rule assigned to them.\n;If you experience problems with your game CTDing, try to enable this. Some CTDs are caused by the Skill Boost perks being added to certain creatures.\n;If your game stops CTDing afterwards, the issue was caused by some creature.\n;You can also enable this if you see lots of mod added animals using potions. Please make sure to report such mods to the author nonetheless, so that proper rules can be made.\n;Be aware that this may also exclude NPCs from Mods that should not be excluded, due to many NPCs being assigned the creature keywword that should not have them.\n;Passivley disables custom item distribution for those npcs.");
 
 	// distribution options
 	ini.SetLongValue("Distribution", "LevelEasy", _LevelEasy, ";NPC lower or equal this level are considered weak.");

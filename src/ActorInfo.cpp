@@ -37,7 +37,7 @@ ActorInfo::ActorInfo()
 
 std::string ActorInfo::ToString()
 {
-	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor)) + "\tactor id:" + Utility::GetHex((actor ? actor->GetFormID() : 0));
+	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor)) + "\tactor:" + Utility::PrintForm(actor);
 }
 
 void ActorInfo::CalcCustomItems()

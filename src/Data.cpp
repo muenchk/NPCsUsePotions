@@ -234,7 +234,7 @@ void Data::ReadActorInfoMap(SKSE::SerializationInterface* a_intfc)
 			} else {
 				accounter++;
 				actorinfoMap.insert_or_assign(acinfo->actor->GetFormID(), acinfo);
-				loginfo("[Data] [ReadActorInfoMap] read ActorInfo. id: {}, name: {}", Utility::GetHex(acinfo->actor->GetFormID()), acinfo->actor->GetName());
+				loginfo("[Data] [ReadActorInfoMap] read ActorInfo. actor: {}", Utility::PrintForm(acinfo->actor));
 			}
 			delete[] buffer;
 			break;
@@ -263,22 +263,22 @@ void Data::DeleteActorInfoMap()
 	lockdata.release();
 }
 
-void Data::SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude)
+void Data::SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude, bool detrimental)
 {
-	std::tuple<AlchemyEffectBase, int, float> t = { effects, duration, magnitude };
+	std::tuple<AlchemyEffectBase, int, float, bool> t = { effects, duration, magnitude, detrimental };
 	alchitemEffectMap.insert_or_assign(id, t);
 }
 
-std::tuple<bool, AlchemyEffectBase, int, float> Data::GetAlchItemEffects(uint32_t id)
+std::tuple<bool, AlchemyEffectBase, int, float, bool> Data::GetAlchItemEffects(uint32_t id)
 {
 	auto itr = alchitemEffectMap.find(id);
 	if (itr != alchitemEffectMap.end()) {
-		auto [eff, dur, mag] = itr->second;
+		auto [eff, dur, mag, detri] = itr->second;
 		// found
-		return { true, eff, dur, mag };
+		return { true, eff, dur, mag, detri };
 	} else {
 		// not found
-		return { false, 0, 0, 0.0f };
+		return { false, 0, 0, 0.0f, false };
 	}
 }
 

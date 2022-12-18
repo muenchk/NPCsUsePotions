@@ -92,6 +92,24 @@ public:
 	}
 
 	/// <summary>
+	/// Returns a string representing the given form
+	/// </summary>
+	/// <param name="form"></param>
+	/// <returns></returns>
+	template <class T>
+	static std::string PrintForm(T* form)
+	{
+		if (form == nullptr || Logging::EnableGenericLogging == false)
+			return "None";
+		std::string plugin = "";
+		if ((form->GetFormID() >> 24) != 0xFE) {
+			plugin = Settings::pluginnames[(form->GetFormID() >> 24)];
+		} else
+			plugin = Settings::pluginnames[((form->GetFormID() & 0x00FFF000)) >> 12];
+		return form ? std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + form->GetFormEditorID() + "><" + plugin + "]" : " None ";
+	}
+
+	/// <summary>
 	/// Converts all symbols in a string into lower case.
 	/// </summary>
 	/// <param name="s"></param>

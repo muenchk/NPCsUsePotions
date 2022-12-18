@@ -14,9 +14,9 @@ private:
 	std::unordered_map<uint32_t, ActorInfo*> actorinfoMap;
 
 	/// <summary>
-	/// map that maps potionids to potion properties (effect, duration, magnitude)
+	/// map that maps potionids to potion properties (effect, duration, magnitude, detrimental)
 	/// </summary>
-	std::unordered_map<uint32_t, std::tuple<AlchemyEffectBase, int, float>> alchitemEffectMap;
+	std::unordered_map<uint32_t, std::tuple<AlchemyEffectBase, int, float, bool>> alchitemEffectMap;
 
 	/// <summary>
 	/// map that contains game objects that are used in custom object conditions, for fast access
@@ -64,13 +64,13 @@ public:
 	/// </summary>
 	/// <param name="id">id of the AlchemyItem</param>
 	/// <param name="effects">the alchemic effects of the item</param>
-	void SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude);
+	void SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude, bool detrimental);
 	/// <summary>
 	/// Retrieves the alchemic effects of an AlchemyItem
 	/// </summary>
 	/// <param name="id">the id of the AlchemyItem</param>
 	/// <returns>whether the item was found, and the saved effects</returns>
-	std::tuple<bool, AlchemyEffectBase, int, float> GetAlchItemEffects(uint32_t id);
+	std::tuple<bool, AlchemyEffectBase, int, float, bool> GetAlchItemEffects(uint32_t id);
 	/// <summary>
 	/// Resets all saved AlchemyItem effects
 	/// </summary>

@@ -593,13 +593,14 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID>> Utility::ParseAssoc
 					if (valid) {
 						ret.push_back({ type, tmp->GetFormID() });
 					} else {
-						logger::warn("[Utility] [ParseAssocObjects] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
+						logwarn("[Utility] [ParseAssocObjects] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
 					}
 				} else {
-					if (form)
-						logger::warn("[Utility] [ParseAssocObjects] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
-					else
-						logger::warn("[Utility] [ParseAssocObjects] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+					if (form) {
+						logwarn("[Utility] [ParseAssocObjects] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+					} else {
+						logwarn("[Utility] [ParseAssocObjects] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+					}
 				}
 			} else {
 				// invalid input return what we parsed so far and set error
@@ -850,13 +851,14 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 					if (valid) {
 						ret.push_back({ type, tmp->GetFormID(), chance, flag, num, exclude, conditionsall, conditionsany, giveonce });
 					} else {
-						logger::warn("[Utility] [ParseAssocObjectsChance] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", GetHex(tmp->GetFormID()), file, line);
+						logwarn("[Utility] [ParseAssocObjectsChance] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
 					}
 				} else {
-					if (form)
-						logger::warn("[Utility] [ParseAssocObjectsChance] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
-					else
-						logger::warn("[Utility] [ParseAssocObjectsChance] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+					if (form) {
+						logwarn("[Utility] [ParseAssocObjectsChance] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+					} else {
+						logwarn("[Utility] [ParseAssocObjectsChance] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+					}
 				}
 			} else {
 				// invalid input return what we parsed so far and set error
@@ -1085,7 +1087,7 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 			}
 		}
 	}
-	logger::info("[Utility] [CanApplyPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", actor->GetName(), pois && pois->poison ? pois->poison->GetName() : "not found", pois ? pois->count : -1);
+	LOG3_4("[Utility] [CanApplyPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
 
 	if (pois && pois->count > 0)
 		return false;
