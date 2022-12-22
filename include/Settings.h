@@ -35,18 +35,6 @@ public:
 	static inline std::string PluginNamePlain = "NPCsUsePotions";
 
 	/// <summary>
-	/// Contains values used for compatibility
-	/// </summary>
-	class Compatibility
-	{
-	public:
-		static inline std::string Plugin_PotionAnimatedfx = "PotionAnimatedfx.esp";
-		static inline RE::EffectSetting* PAF_NPCDrinkingCoolDownEffect = nullptr;
-		static inline RE::SpellItem* PAF_NPCDrinkingCoolDownSpell = nullptr;
-		static inline std::string PAF_NPCDrinkingCoolDownEffect_name = "PAF_NPCDrinkingCoolDownEffect";
-		static inline std::string PAF_NPCDrinkingCoolDownSpell_name = "PAF_NPCDrinkingCoolDownSpell";
-	};
-	/// <summary>
 	/// Supported types of Items
 	/// </summary>
 	enum class ItemType
@@ -128,6 +116,8 @@ public:
 	static inline bool _ForceFixPotionSounds = true;
 	static inline bool _CompatibilityCACO = false;	// automatic
 	static inline bool _CompatibilityApothecary = false; // automatic
+	static inline bool _CompatibilityAnimatedPoisons = false; // automatic
+	static inline bool _CompatibilityAnimatedPotions = false; // automatic
 
 	static inline bool _CompatibilityWhitelist = false;
 
@@ -258,6 +248,14 @@ public:
 	static inline RE::BGSPerk* AlchemySkillBoosts;
 	static inline RE::BGSPerk* PerkSkillBoosts;
 
+	static inline RE::BGSEquipSlot* Equip_LeftHand;
+	static inline RE::BGSEquipSlot* Equip_RightHand;
+	static inline RE::BGSEquipSlot* Equip_EitherHand;
+	static inline RE::BGSEquipSlot* Equip_BothHands;
+	static inline RE::BGSEquipSlot* Equip_Shield;
+	static inline RE::BGSEquipSlot* Equip_Voice;
+	static inline RE::BGSEquipSlot* Equip_Potion;
+
 	[[deprecated]] static inline RE::BGSSoundDescriptorForm* PotionUse;
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
 	[[deprecated]] static inline RE::BGSSoundDescriptorForm* FoodEat;
@@ -297,18 +295,6 @@ public:
 	static bool CompatibilityPotionPapyrus()
 	{
 		return Settings::_CompatibilityMode;
-	}
-	static bool CompatibilityPotionPlugin(RE::Actor* actor)
-	{
-		if (Settings::_CompatibilityPotionAnimatedFx) {
-			// compatibility mode for PotionAnimatedfx.esp activated, we may only use a potion if it is not on cooldown
-			// if the actor does not have the cooldown effect we may use a potion
-			if (!(actor->HasMagicEffect(Compatibility::PAF_NPCDrinkingCoolDownEffect))) {
-				return true;
-			} else
-				return false;
-		}
-		return true;
 	}
 
 	/// <summary>

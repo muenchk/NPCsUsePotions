@@ -36,6 +36,12 @@ public:
 	/// <returns></returns>
 	ActorInfo* FindActor(RE::Actor* actor);
 	/// <summary>
+	/// Returns and actorinfo object with information about [actorid]. THIS MAY RETURN NULLPTR.
+	/// </summary>
+	/// <param name="actorid"></param>
+	/// <returns></returns>
+	ActorInfo* FindActor(RE::FormID actorid);
+	/// <summary>
 	/// Removes an actor from the data
 	/// </summary>
 	/// <param name="actor"></param>

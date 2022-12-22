@@ -7,7 +7,7 @@
 #include "Utility.h"
 
 
-
+RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 
 Data* Data::GetSingleton()
 {
@@ -39,6 +39,15 @@ ActorInfo* Data::FindActor(RE::Actor* actor)
 	}
 	lockdata.release();
 	return acinfo;
+}
+
+ActorInfo* Data::FindActor(RE::FormID actorid)
+{
+	RE::Actor* actor = RE::TESForm::LookupByID<RE::Actor>(actorid);
+	if (actor)
+		return FindActor(actor);
+	else
+		return nullptr;
 }
 
 void Data::DeleteActor(RE::FormID actorid)
@@ -286,8 +295,6 @@ void Data::ResetAlchItemEffects()
 {
 	alchitemEffectMap.clear();
 }
-
-RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 
 RE::TESForm* Data::FindForm(uint32_t formid, std::string pluginname)
 {

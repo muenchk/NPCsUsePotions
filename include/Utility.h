@@ -99,14 +99,15 @@ public:
 	template <class T>
 	static std::string PrintForm(T* form)
 	{
-		if (form == nullptr || Logging::EnableGenericLogging == false)
+		if (form == nullptr || form->GetFormID() == 0 || Logging::EnableGenericLogging == false)
 			return "None";
 		std::string plugin = "";
-		if ((form->GetFormID() >> 24) != 0xFE) {
+		if ((form->GetFormID() & 0xFF000000) != 0xFE000000) {
 			plugin = Settings::pluginnames[(form->GetFormID() >> 24)];
 		} else
-			plugin = Settings::pluginnames[((form->GetFormID() & 0x00FFF000)) >> 12];
-		return form ? std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + form->GetFormEditorID() + "><" + plugin + "]" : " None ";
+			plugin = Settings::pluginnames[256 + (((form->GetFormID() & 0x00FFF000)) >> 12)];
+
+		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
 	}
 
 	/// <summary>
@@ -501,6 +502,13 @@ public:
 	/// <returns>Linear combination of values of CurrentArmor</returns>
 	static uint32_t GetArmorData(RE::Actor* actor);
 
+	/// <summary>
+	/// Returns the type of item, specific weapon type etc
+	/// </summary>
+	/// <param name="form"></param>
+	/// <returns></returns>
+	static int GetItemType(RE::TESForm* form);
+
 	#pragma region Parsing
 
 	/// <summary>
@@ -640,6 +648,19 @@ public:
 	/// <param name="actor"></param>
 	/// <returns></returns>
 	static bool ValidateActor(RE::Actor* actor);
+
+	/// <summary>
+	/// Returns whether a form is valid and safe to work with
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	template<class T>
+	static bool ValidateForm(T* form)
+	{
+		if (form == nullptr || form->GetFormID() == 0 || form->formFlags & RE::TESForm::RecordFlags::kDeleted)
+			return false;
+		return true;
+	}
 	#pragma endregion
 
 };

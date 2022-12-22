@@ -1376,6 +1376,12 @@ bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 	return ret;
 }
 
+bool Distribution::ForceExcludeNPC(uint32_t actorid)
+{
+	_excludedNPCs.insert(actorid);
+	return true;
+}
+
 Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section

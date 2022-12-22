@@ -19,7 +19,10 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/AlchemyEffect.cpp"
 	"${SOURCE_DIR}/PCH.h"
 	"${SOURCE_DIR}/DataStorage.cpp"
-	"${SOURCE_DIR}/Data.cpp")
+	"${SOURCE_DIR}/Data.cpp" 
+	"${SOURCE_DIR}/Compatibility.cpp" 
+	"${SOURCE_DIR}/Papyrus.cpp" 
+	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp")
 
 source_group(TREE "${ROOT_DIR}" FILES ${SOURCE_FILES})
 
@@ -46,7 +49,7 @@ add_library(
 	"${CMAKE_CURRENT_BINARY_DIR}/version.rc"
 	"${ROOT_DIR}/.clang-format"
 	"${ROOT_DIR}/.editorconfig"
-)
+ "Papyrus/NPCsUsePotions_Poisons.cpp")
 
 target_compile_features(
 	"${PROJECT_NAME}"

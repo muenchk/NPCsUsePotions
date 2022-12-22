@@ -425,6 +425,47 @@ uint32_t Utility::GetCombatData(RE::Actor* actor)
 	return combatdata;
 }
 
+int Utility::GetItemType(RE::TESForm* form)
+{
+	if (form == nullptr)
+		return 0; // HandtoHand
+	RE::TESObjectWEAP* weap = form->As<RE::TESObjectWEAP>();
+	if (weap) {
+		if (weap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandSword)
+			return 1;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandDagger)
+			return 2;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandAxe)
+			return 3;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kOneHandMace)
+			return 4;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kTwoHandSword)
+			return 5;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kTwoHandAxe)
+			return 6;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kBow)
+			return 7;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kStaff)
+			return 8;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kCrossbow)
+			return 12;
+		else if (weap->GetWeaponType() == RE::WEAPON_TYPE::kHandToHandMelee)
+			return 0;
+	}
+	RE::TESObjectARMO* armo = form->As<RE::TESObjectARMO>();
+	if (armo)
+		return 10;
+	RE::SpellItem* spell = form->As<RE::SpellItem>();
+	if (spell)
+		return 9; // magic spell
+
+	RE::TESObjectMISC* misc = form->As<RE::TESObjectMISC>();
+	if (misc && misc->GetFormID() == 0x0001D4EC)
+		return 11;
+
+	return 0; // fallback
+}
+
 uint32_t Utility::GetArmorData(RE::Actor* actor)
 {
 	LOG_3("{}[Utility] [GetArmorData]");
@@ -1140,3 +1181,4 @@ bool Utility::ValidateActor(RE::Actor* actor)
 
 	return true;
 }
+

@@ -152,6 +152,16 @@ public:
 	bool _boss = false;
 	bool _automaton = false;
 
+	/// <summary>
+	/// while the actor is busy with one animation, no other animation should be prepared / played
+	/// </summary>
+	bool Animation_busy = false;
+
+	/// <summary>
+	/// cooldown until next potion / poison / food can be used
+	/// </summary>
+	int globalCooldownTimer = 0;
+
 	static inline const uint32_t version = 0x00000001;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);

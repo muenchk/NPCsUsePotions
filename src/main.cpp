@@ -6,6 +6,8 @@
 #include "NUPInterface.h"
 #include "DataStorage.h"
 #include "ActorManipulation.h"
+#include "Compatibility.h"
+#include "Papyrus.h"
 
 namespace
 {
@@ -119,6 +121,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		logger::info("Registered Console Commands");
 		// register data storage
 		Storage::Register();
+		// register compatibility
+		Compatibility::Register();
 		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 }
@@ -148,9 +152,11 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 		return false;
 	}
 
+	// register game load save events
 	Game::SaveLoad::GetSingleton()->Register(serialization, 0xFD34899E);
 
-	//Hooks::InstallHooks();
+	// register papyrus functions
+	SKSE::GetPapyrusInterface()->Register(Papyrus::Register);
 
 	return true;
 }

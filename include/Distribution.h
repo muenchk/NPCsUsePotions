@@ -674,6 +674,8 @@ public:
 	static bool ExcludedNPC(RE::TESNPC* npc);
 	static bool ExcludedNPCFromHandling(RE::Actor* actor);
 
+	static bool ForceExcludeNPC(uint32_t actorid);
+
 	friend void Settings::CheckActorsForRules();
 	friend void Settings::CheckCellForActors(RE::FormID cellid);
 	friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);

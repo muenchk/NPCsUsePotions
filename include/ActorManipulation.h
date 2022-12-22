@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "Utility.h"
 #include "Data.h"
+#include "Compatibility.h"
 
 
 /// <summary>
@@ -14,6 +15,7 @@
 class ACM
 {
 	static inline Data* data;
+	static inline Compatibility* comp;
 
 public:
 
@@ -190,6 +192,8 @@ public:
 			return true;
 		return false;
 	}
+	
+	/* static bool AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison); */
 
 	#pragma endregion
 };

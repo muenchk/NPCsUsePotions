@@ -18,7 +18,7 @@ struct CustomItemConditionsAll
 		kHasKeyword = 1 << 7,		 // 80  // distribution & usage
 
 		kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven | kHasKeyword,
-		kAllDistr = kIsBoss |kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword,
+		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword,
 	};
 };
 

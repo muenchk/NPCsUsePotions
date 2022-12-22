@@ -1,6 +1,7 @@
 #include "Settings.h"
 #include "Logging.h"
 #include "Utility.h"
+#include "Compatibility.h"
 
 /// <summary>
 /// changes the output model of all consumable sounds to third person
@@ -261,13 +262,24 @@ void Settings::Load()
 	loginfo("[SETTINGS] checking for plugins");
 
 	// search for PotionAnimatedFx.esp for compatibility
-	if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ Compatibility::Plugin_PotionAnimatedfx }); plugin) {
+	if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ Compatibility::PotionAnimatedfx }); plugin) {
 		_CompatibilityPotionAnimatedFx = true;
 		loginfo("[SETTINGS] Found plugin PotionAnimatedfx.esp and activated compatibility mode");
 	} else {
 		// if we cannot find the plugin then we need to disable all related compatibility options, otherwise we WILL get CTDs
 	}
-	loginfo("[SETTINGS] checking for plugins2");
+
+	// search for AnimatedPoisons.esp
+	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Compatibility::AnimatedPoisons }); plugin) {
+		_CompatibilityAnimatedPoisons = true;
+		loginfo("[SETTINGS] Found plugin AnimatedPoisons.esp and activated compatibility mode");
+	}
+
+	// search for AnimatedPotions.esp
+	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Compatibility::AnimatedPotions }); plugin) {
+		_CompatibilityAnimatedPotions = true;
+		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
+	}
 
 	// plugin check
 	if (_CompatibilityMode) {

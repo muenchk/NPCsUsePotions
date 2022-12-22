@@ -208,6 +208,10 @@
 	if (Logging::EnableLog && Logging::EnableGenericLogging)     \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x));
 
+#define LOG6_1(s, t, u, v, w, x, y)                             \
+	if (Logging::EnableLog && Logging::EnableGenericLogging) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x, y));
+
 #define LOG_2(s)                                        \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
@@ -301,6 +305,10 @@
 	if (Logging::EnableProfiling) \
 		static_cast<void>(profile(s, Logging::TimePassed() + " | ", t));
 
+#define PROF2_1(s, t, u)             \
+	if (Logging::EnableProfiling) \
+		static_cast<void>(profile(s, Logging::TimePassed() + " | ", t, u));
+
 #define PROF_2(s)                                                 \
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 1) \
 		static_cast<void>(profile(s, Logging::TimePassed() + " | "));
@@ -317,7 +325,7 @@
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 2) \
 		static_cast<void>(profile(s, Logging::TimePassed() + " | ", t));
 
-#ifdef NDEBUG
+#ifndef NDEBUG
 #	define LogConsole(c_str) \
 		RE::ConsoleLog::GetSingleton()->Print(c_str);
 #else

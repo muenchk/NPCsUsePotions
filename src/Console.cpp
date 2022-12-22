@@ -94,6 +94,9 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	// durRegeneration
 	tmp = "Duration Regen:\t\t\t\t" + std::to_string(acinfo->durRegeneration);
 	console->Print(tmp.c_str());
+	// globalCooldownTimer
+	tmp = "Global Cooldown:\t\t\t\t" + std::to_string(acinfo->globalCooldownTimer);
+	console->Print(tmp.c_str());
 	// nextFoodTime
 	tmp = "Next Food Time:\t\t\t\t" + std::to_string(acinfo->nextFoodTime);
 	console->Print(tmp.c_str());
@@ -113,7 +116,10 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	tmp = "Boss:\t\t\t\t\t" + std::to_string(acinfo->_boss);
 	console->Print(tmp.c_str());
 	// IsFollower
-	tmp = "IsFollowe:\t\t\t\t" + std::to_string(acinfo->IsFollower());
+	tmp = "IsFollower:\t\t\t\t" + std::to_string(acinfo->IsFollower());
+	console->Print(tmp.c_str());
+	// AnimationBusy
+	tmp = "Animation Busy:\t\t\t\t" + std::to_string(acinfo->Animation_busy);
 	console->Print(tmp.c_str());
 
 	console->Print("CustomItems");
