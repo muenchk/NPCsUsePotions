@@ -21,11 +21,11 @@ void Compatibility::Load()
 	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 
 	// apothecary
-	if (true)
+	if (Settings::Compatibility::Apothecary::_CompatibilityApothecary)
 		_loadedApothecary = true;
 
 	// caco
-	if (true)
+	if (Settings::Compatibility::CACO::_CompatibilityCACO)
 		_loadedCACO = true;
 
 	// animated poisons
@@ -154,7 +154,7 @@ void Compatibility::Load()
 		AnPois_PoisonSound
 		) {
 		_loadedAnimatedPoisons = true;
-		if (Settings::_CompatibilityAnimatedPoisons)
+		if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable)
 			RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
 	}
 
@@ -168,12 +168,13 @@ void Compatibility::Load()
 	PAF_NPCDrinkingCoolDownSpell = RE::TESForm::LookupByEditorID<RE::SpellItem>(std::string_view{ PAF_NPCDrinkingCoolDownSpell_name });
 	if (PAF_NPCDrinkingCoolDownEffect && PAF_NPCDrinkingCoolDownSpell) {
 		_loadedPotionAnimatedFx = true;
-		if (Settings::_CompatibilityPotionAnimatedFx)
+		if (Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx)
 			RE::DebugNotification("NPCsUsePotions enabled AnimatedPotionFx compatibility",0, false);
 	}
 
 	// ZUPA
-	_loadedZUPA = Settings::_CompatibilityPotionAnimation;
+	if (Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation || Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify)
+		_loadedZUPA = true;
 
 	// global
 

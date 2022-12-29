@@ -681,7 +681,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 		bool giveonce = false;
 		std::vector<std::tuple<uint64_t, uint32_t, std::string>> conditionsall;
 		std::vector<std::tuple<uint64_t, uint32_t, std::string>> conditionsany;
-		int8_t num;
+		uint32_t num;
 		CustomItemFlag flag;
 		int32_t chance = 100;
 		while (input.empty() == false) {
@@ -726,7 +726,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 				numitems = entry.substr(0, pos);
 				entry.erase(0, pos + 1);
 				try {
-					num = (int8_t)(std::stol(numitems));
+					num = (std::stol(numitems));
 				} catch (std::exception&) {
 				}
 				// exclude
@@ -890,7 +890,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 				if (tmp != nullptr) {
 					type = MatchValidFormType(tmp->GetFormType(), valid);
 					if (valid) {
-						ret.push_back({ type, tmp->GetFormID(), chance, flag, num, exclude, conditionsall, conditionsany, giveonce });
+						ret.push_back({ type, tmp->GetFormID(), num, flag, (uint8_t)chance, exclude, conditionsall, conditionsany, giveonce });
 					} else {
 						logwarn("[Utility] [ParseAssocObjectsChance] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
 					}
@@ -1182,3 +1182,8 @@ bool Utility::ValidateActor(RE::Actor* actor)
 	return true;
 }
 
+int Utility::GetPoisonDosage(RE::AlchemyItem* /*poison*/)
+{
+	// TODO
+	return 1;
+}

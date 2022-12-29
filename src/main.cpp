@@ -108,7 +108,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Settings::LoadDistrConfig();
 		logger::info("Distribution configuration loaded");
 		// Debug stuff
-		if (Settings::_CheckActorsWithoutRules)
+		if (Settings::Debug::_CheckActorsWithoutRules)
 			Settings::CheckActorsForRules();
 		// classify currently loaded game items
 		Settings::ClassifyItems();

@@ -54,7 +54,7 @@ AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect)
 		if (id == 0xD6947)  // Persuasion
 			eff = AlchemyEffect::kPersuasion;
 		// COMPATIBILITY FOR CACO
-		if (Settings::_CompatibilityCACO) {
+		if (Settings::Compatibility::CACO::_CompatibilityCACO) {
 			// DamageStaminaRavage
 			if (id == 0x73F23)
 				eff = AlchemyEffect::kStamina;
@@ -63,7 +63,7 @@ AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect)
 				eff = AlchemyEffect::kMagicka;
 		}
 		// COMPATIBILITY FOR APOTHECARY
-		if (Settings::_CompatibilityApothecary) {
+		if (Settings::Compatibility::Apothecary::_CompatibilityApothecary) {
 			// DamageWeapon
 			if (id == 0x73F26)
 				eff = AlchemyEffect::kAttackDamageMult;

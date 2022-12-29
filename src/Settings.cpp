@@ -515,7 +515,7 @@ void Settings::LoadDistrConfig()
 											Distribution::_excludedItems.insert(std::get<1>(items[i]));
 											break;
 										}
-										if (EnableLoadLog) {
+										if (Logging::EnableLoadLog) {
 											if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
 												std::get<0>(items[i]) & Distribution::AssocType::kNPC) {
 												LOGLE1_2("[Settings] [LoadDistrRules] excluded actor {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
@@ -553,7 +553,7 @@ void Settings::LoadDistrConfig()
 											break;
 										}
 
-										if (EnableLoadLog) {
+										if (Logging::EnableLoadLog) {
 											if (std::get<0>(items[i]) & Distribution::AssocType::kFaction) {
 												LOGLE1_2("[Settings] [LoadDistrRules] excluded faction {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kKeyword) {
@@ -588,7 +588,7 @@ void Settings::LoadDistrConfig()
 											Distribution::_whitelistItems.insert(std::get<1>(items[i]));
 											break;
 										}
-										if (EnableLoadLog) {
+										if (Logging::EnableLoadLog) {
 											if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
 												LOGLE1_2("[Settings] [LoadDistrRules] whitelisted item {}.", Utility::GetHex(std::get<1>(items[i])));
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
@@ -736,6 +736,7 @@ void Settings::LoadDistrConfig()
 										delete citems;
 										continue;
 									}
+									loginfo("[Settings] [LoadDistrRules] rule contains items {} {} {} {} {} {}", citems->items.size(), citems->death.size(), citems->food.size(), citems->fortify.size(), citems->poisons.size(), citems->potions.size());
 
 									int cx = 0;
 									// now parse associations
@@ -761,9 +762,8 @@ void Settings::LoadDistrConfig()
 												Distribution::_customItems.insert_or_assign(std::get<1>(assocobj[i]), vec);
 												cx++;
 											}
-											break;
 										}
-										if (EnableLoadLog) {
+										if (Logging::EnableLoadLog) {
 											if (std::get<0>(assocobj[i]) & Distribution::AssocType::kKeyword) {
 											} else if (std::get<0>(assocobj[i]) & Distribution::AssocType::kRace) {
 											} else if (std::get<0>(assocobj[i]) & Distribution::AssocType::kFaction) {
@@ -773,11 +773,12 @@ void Settings::LoadDistrConfig()
 													   std::get<0>(assocobj[i]) & Distribution::AssocType::kNPC) {
 											}
 										}
+										LOGL_2("{}[Settings] [LoadDistrRules] attached custom rule to specific objects");
 									}
 									if (cx == 0 && assocobj.size() == 0) {
 										auto iter = Distribution::_customItems.find(0x0);
 										if (iter != Distribution::_customItems.end()) {
-											auto vec = iter->second;
+											std::vector<Distribution::CustomItemStorage*> vec = iter->second;
 											vec.push_back(citems);
 											Distribution::_customItems.insert_or_assign(0x0, vec);
 											cx++;
@@ -786,6 +787,7 @@ void Settings::LoadDistrConfig()
 											Distribution::_customItems.insert_or_assign(0x0, vec);
 											cx++;
 										}
+										LOGL_2("{}[Settings] [LoadDistrRules] attached custom rule to everything");
 									}
 
 									// since we are done delete splits
@@ -853,7 +855,7 @@ void Settings::LoadDistrConfig()
 											Distribution::_itemStrengthMap.insert_or_assign(std::get<1>(items[i]), str);
 											break;
 										}
-										if (EnableLoadLog) {
+										if (Logging::EnableLoadLog) {
 											if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
 												LOGLE1_2("[Settings] [LoadDistrRules] set item strength {}.", Utility::GetHex(std::get<1>(items[i])));
 											} else {
@@ -906,7 +908,7 @@ void Settings::LoadDistrConfig()
 												Distribution::_actorStrengthMap.insert_or_assign(std::get<1>(items[i]), str);
 												break;
 											}
-											if (EnableLoadLog) {
+											if (Logging::EnableLoadLog) {
 												if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
 													std::get<0>(items[i]) & Distribution::AssocType::kNPC ||
 													std::get<0>(items[i]) & Distribution::AssocType::kFaction ||
@@ -936,7 +938,7 @@ void Settings::LoadDistrConfig()
 									auto forms = Utility::GetFormsInPlugin<RE::AlchemyItem>(pluginname);
 									for (int i = 0; i < forms.size(); i++) {
 										Distribution::_whitelistItems.insert(forms[i]->GetFormID());
-										if (EnableLoadLog)
+										if (Logging::EnableLoadLog)
 											LOGLE3_2("[Settings] [LoadDistrRules] whitelisted item. id: {}, name: {}, plugin: {}.", Utility::GetHex(forms[i]->GetFormID()), forms[i]->GetName(), pluginname);
 									}
 									// since we are done delete splits
@@ -1505,7 +1507,7 @@ void Settings::LoadDistrConfig()
 							}
 							break;
 						}
-						if (EnableLoadLog) {
+						if (Logging::EnableLoadLog) {
 							switch (std::get<0>(objects[i])) {
 							case Distribution::AssocType::kFaction:
 								if (attach) {
@@ -1859,10 +1861,10 @@ void Settings::LoadDistrConfig()
 
 	Distribution::initialised = true;
 
-	if (Settings::_ApplySkillBoostPerks)
+	if (Settings::Fixes::_ApplySkillBoostPerks)
 		Settings::ApplySkillBoostPerks();
 
-	if (Settings::EnableLoadLog) {
+	if (Logging::EnableLoadLog) {
 		loginfo("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules()->size());
 		loginfo("[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap()->size());
 		loginfo("[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
@@ -1886,6 +1888,39 @@ void Settings::LoadDistrConfig()
 			loginfo("assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
 			iter++;
 		}*/
+
+
+		auto cuitr = Distribution::_customItems.begin();
+		int x = 0;
+		while (cuitr != Distribution::_customItems.end()) {
+			x++;
+			std::vector<Distribution::CustomItemStorage*> cust = cuitr->second;
+			LOGL3_1("{}[Settings] [LoadDistr] {}: FormID: {}\tEntries: {}", std::to_string(x), std::to_string(cuitr->first), cust.size());
+			for (int b = 0; b < cust.size(); b++) {
+				
+				for (int i = 0; i < cust[b]->items.size(); i++) {
+					auto cit = cust[b]->items[i];
+					LOGL3_1("{}[Settings] [LoadDistr] {}: Items: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->death.size(); i++) {
+					auto cit = cust[b]->death[i];
+					LOGL3_1("{}[Settings] [LoadDistr] {}: Death: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->poisons.size(); i++) {
+					auto cit = cust[b]->poisons[i];
+					LOGL3_1("{}[Settings] [LoadDistr] {}: Poisons: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->potions.size(); i++) {
+					auto cit = cust[b]->potions[i];
+					LOGL3_1("{}[Settings] [LoadDistr] {}: Potions: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->fortify.size(); i++) {
+					auto cit = cust[b]->fortify[i];
+					LOGL3_1("{}[Settings] [LoadDistr] {}: Fortify: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+			}
+			cuitr++;
+		}
 	}
 
 	// reactivate generic logging
@@ -2349,7 +2384,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							visited.insert(act->GetFormID());
 							bool excluded = false;
 							// check wether there is a rule that applies
-							if (Settings::EnableLog) {
+							if (Logging::EnableLog) {
 								//loginfo("iter 5 {}", Utility::GetHex(act->GetFormID()));
 								name = std::string_view{ "" };
 								if ((act->GetFormID() >> 24) != 0xFE) {
@@ -2485,7 +2520,7 @@ void Settings::ApplySkillBoostPerks()
 			// some creatures have cause CTDs or other problems, if they get the perks, so try to filter some of them out
 			// if they are a creature and do not have any explicit rule, they will not get any perks
 			// at the same time, their id will be blacklisted for the rest of the plugin, to avoid any handling and distribution problems
-			if (Settings::_DisableCreaturesWithoutRules && (npc->GetRace()->HasKeyword(Settings::ActorTypeCreature) || npc->GetRace()->HasKeyword(ActorTypeAnimal))) {
+			if (Settings::Compatibility::_DisableCreaturesWithoutRules && (npc->GetRace()->HasKeyword(Settings::ActorTypeCreature) || npc->GetRace()->HasKeyword(ActorTypeAnimal))) {
 				ActorStrength acs;
 				ItemStrength is;
 				auto tplt = Distribution::ExtractTemplateInfo(npc);
@@ -2566,7 +2601,9 @@ void Settings::ClassifyItems()
 				// check whether item is excluded, or whether it is not whitelisted when in whitelist mode
 				// if it is excluded and whitelisted it is still excluded
 				if (Distribution::excludedItems()->contains(item->GetFormID()) ||
-					Settings::_CompatibilityWhitelist && !Distribution::whitelistItems()->contains(item->GetFormID())) {
+					Settings::Whitelist::Enabled &&
+						!Distribution::whitelistItems()->contains(item->GetFormID())
+					) {
 					iter++;
 					continue;
 				}
@@ -2585,7 +2622,7 @@ void Settings::ClassifyItems()
 				// set medicine flag for those who need it
 				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
 					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
-					if (EnableLoadLog && LogLevel >= 4) {
+					if (Logging::EnableLoadLog && Logging::LogLevel >= 4) {
 						LOGLE1_1("Item: {}", Utility::PrintForm(item));
 						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
 							LOGLE_1("\tFlag: CostOverride");
@@ -2710,7 +2747,7 @@ void Settings::ClassifyItems()
 	LOGL1_1("{}[Settings] [ClassifyItems] _foodhealth {}", foodhealth()->size());
 	LOGL1_1("{}[Settings] [ClassifyItems] _foodall {}", foodall()->size());
 
-	if (EnableLoadLog && LogLevel >= 4) {
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 4) {
 		std::string path = "Data\\SKSE\\Plugins\\NPCsUsePotions\\items.txt";
 		std::ofstream out = std::ofstream(path, std::ofstream::out);
 		std::unordered_set<RE::FormID> visited;
@@ -3022,11 +3059,11 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 		str = ItemStrength::kPotent;
 	else if (maxmag == 0)
 		str = ItemStrength::kStandard;
-	else if (maxmag <= _MaxMagnitudeWeak)
+	else if (maxmag <= Distr::_MaxMagnitudeWeak)
 		str = ItemStrength::kWeak;
-	else if (maxmag <= _MaxMagnitudeStandard)
+	else if (maxmag <= Distr::_MaxMagnitudeStandard)
 		str = ItemStrength::kStandard;
-	else if (maxmag <= _MaxMagnitudePotent)
+	else if (maxmag <= Distr::_MaxMagnitudePotent)
 		str = ItemStrength::kPotent;
 	else
 		str = ItemStrength::kInsane;

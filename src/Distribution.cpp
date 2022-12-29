@@ -108,7 +108,7 @@ std::vector<std::tuple<int, AlchemyEffect>> Distribution::Rule::GetScaledDistrib
 				prefscore2 = 0x10;
 			}
 		}
-		scale = Settings::_StyleScalingPrimary;
+		scale = Settings::Distr::_StyleScalingPrimary;
 		// scale general effects first
 		auto itr = effectMap.find(AlchemyEffect::kDamageResist);
 		if (itr != effectMap.end()) {
@@ -133,12 +133,12 @@ std::vector<std::tuple<int, AlchemyEffect>> Distribution::Rule::GetScaledDistrib
 
 		if (prefscore & 0x08) {  // staff
 			if (prefscore2 & 0x08 && max != max2)
-				scale = Settings::_StyleScalingSecondary;
+				scale = Settings::Distr::_StyleScalingSecondary;
 			goto GetScaledDistributionMagic;
 		}
 		if (prefscore & 0x01) {  // magic
 			if (prefscore2 & 0x01 && max != max2)
-				scale = Settings::_StyleScalingSecondary;
+				scale = Settings::Distr::_StyleScalingSecondary;
 GetScaledDistributionMagic:
 			itr = effectMap.find(AlchemyEffect::kMagicka);
 			if (itr != effectMap.end()) {
@@ -177,10 +177,10 @@ GetScaledDistributionMagic:
 				effectMap.insert_or_assign(AlchemyEffect::kRestoration, itr->second * scale);
 			}
 		}
-		scale = Settings::_StyleScalingPrimary;
+		scale = Settings::Distr::_StyleScalingPrimary;
 		if (prefscore & 0x02) {  // ranged
 			if (prefscore2 & 0x02 && max != max2)
-				scale = Settings::_StyleScalingSecondary;
+				scale = Settings::Distr::_StyleScalingSecondary;
 			itr = effectMap.find(AlchemyEffect::kArchery);
 			if (itr != effectMap.end()) {
 				effectMap.insert_or_assign(AlchemyEffect::kArchery, itr->second * scale);
@@ -190,10 +190,10 @@ GetScaledDistributionMagic:
 				effectMap.insert_or_assign(AlchemyEffect::kBowSpeed, itr->second * scale);
 			}
 		}
-		scale = Settings::_StyleScalingPrimary;
+		scale = Settings::Distr::_StyleScalingPrimary;
 		if (prefscore & 0x04) {  // melee
 			if (prefscore2 & 0x04 && max != max2)
-				scale = Settings::_StyleScalingSecondary;
+				scale = Settings::Distr::_StyleScalingSecondary;
 			itr = effectMap.find(AlchemyEffect::kOneHanded);
 			if (itr != effectMap.end()) {
 				effectMap.insert_or_assign(AlchemyEffect::kOneHanded, itr->second * scale);
@@ -207,20 +207,20 @@ GetScaledDistributionMagic:
 				effectMap.insert_or_assign(AlchemyEffect::kBlock, itr->second * scale);
 			}
 		}
-		scale = Settings::_StyleScalingPrimary;
+		scale = Settings::Distr::_StyleScalingPrimary;
 		if (prefscore & 0x10) {  // unarmed
 			if (prefscore2 & 0x10 && max != max2)
-				scale = Settings::_StyleScalingSecondary;
+				scale = Settings::Distr::_StyleScalingSecondary;
 			itr = effectMap.find(AlchemyEffect::kUnarmedDamage);
 			if (itr != effectMap.end()) {
 				effectMap.insert_or_assign(AlchemyEffect::kUnarmedDamage, itr->second * scale);
 			}
 		}
-		scale = Settings::_StyleScalingPrimary;
+		scale = Settings::Distr::_StyleScalingPrimary;
 		if (prefscore & 0x16) {
 			// stamina pots
 			if ((prefscore & 0x16) == (prefscore & 0x16) && max != max2)
-				scale = Settings::_StyleScalingSecondary;
+				scale = Settings::Distr::_StyleScalingSecondary;
 			itr = effectMap.find(AlchemyEffect::kStamina);
 			if (itr != effectMap.end()) {
 				effectMap.insert_or_assign(AlchemyEffect::kStamina, itr->second * scale);
@@ -259,10 +259,10 @@ GetScaledDistributionMagic:
 				effectMap.insert_or_assign(AlchemyEffect::kLightArmor, itr->second * scale);
 			}
 		}
-		scale = Settings::_StyleScalingPrimary;
+		scale = Settings::Distr::_StyleScalingPrimary;
 		if (prefscore & 0x14) {
 			if ((prefscore & 0x14) == (prefscore2 & 0x14) && max != max2)
-				scale = Settings::_StyleScalingSecondary;
+				scale = Settings::Distr::_StyleScalingSecondary;
 			itr = effectMap.find(AlchemyEffect::kHealth);
 			if (itr != effectMap.end()) {
 				effectMap.insert_or_assign(AlchemyEffect::kHealth, itr->second * scale);
@@ -934,7 +934,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 		// if there is no rule, we have to check for cutsom items anyway, so assign a default rule that 
 		auto items = ACM::GetCustomAlchItems(acinfo);
 		int diff = 0;
-		if (Settings::_featDistributePotions) {
+		if (Settings::Distr::_DistributePotions) {
 			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->potions);
 			std::vector<RE::TESBoundObject*> vec;
 			for (int i = 0; i < ritems.size(); i++) {
@@ -954,7 +954,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 				ret.insert(ret.end(), vec.begin(), vec.end());
 			}
 		}
-		if (Settings::_featDistributePoisons) {
+		if (Settings::Distr::_DistributePoisons) {
 			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->poisons);
 			std::vector<RE::TESBoundObject*> vec;
 			for (int i = 0; i < ritems.size(); i++) {
@@ -974,7 +974,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 				ret.insert(ret.end(), vec.begin(), vec.end());
 			}
 		}
-		if (Settings::_featDistributeFortifyPotions) {
+		if (Settings::Distr::_DistributeFortifyPotions) {
 			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->fortify);
 			std::vector<RE::TESBoundObject*> vec;
 			for (int i = 0; i < ritems.size(); i++) {
@@ -994,7 +994,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 				ret.insert(ret.end(), vec.begin(), vec.end());
 			}
 		}
-		if (Settings::_featDistributeFortifyPotions) {
+		if (Settings::Distr::_DistributeFortifyPotions) {
 			auto ritems = acinfo->FilterCustomConditionsDistr(acinfo->citems->food);
 			std::vector<RE::TESBoundObject*> vec;
 			for (int i = 0; i < ritems.size(); i++) {
@@ -1016,8 +1016,8 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 		}
 	}
 	{
-		if (Settings::_featDistributePotions) {
-			if (Settings::_featDisableOutOfCombatProcessing == false)
+		if (Settings::Distr::_DistributePotions) {
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 				acinfo->potionDistr = rule->GetScaledDistribution(Settings::ItemType::kPotion, acinfo);
 			auto ritems = rule->GetRandomPotions(acinfo);
 			acinfo->potionDistr.clear();
@@ -1034,8 +1034,8 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 			}
 			//logger::info("potions to give:\t{}", ritems.size());
 		}
-		if (Settings::_featDistributePoisons) {
-			if (Settings::_featDisableOutOfCombatProcessing == false)
+		if (Settings::Distr::_DistributePoisons) {
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 				acinfo->poisonDistr = rule->GetScaledDistribution(Settings::ItemType::kPoison, acinfo);
 			auto ritems = rule->GetRandomPoisons(acinfo);
 			acinfo->poisonDistr.clear();
@@ -1052,8 +1052,8 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 			}
 			//logger::info("poisons to give:\t{}", ritems.size());
 		}
-		if (Settings::_featDistributeFortifyPotions) {
-			if (Settings::_featDisableOutOfCombatProcessing == false)
+		if (Settings::Distr::_DistributeFortifyPotions) {
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 				acinfo->fortifyDistf = rule->GetScaledDistribution(Settings::ItemType::kFortifyPotion, acinfo);
 			auto ritems = rule->GetRandomFortifyPotions(acinfo);
 			acinfo->fortifyDistf.clear();
@@ -1070,8 +1070,8 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 			}
 			//logger::info("fortify potions to give:\t{}", ritems.size());
 		}
-		if (Settings::_featDistributeFood) {
-			if (Settings::_featDisableOutOfCombatProcessing == false)
+		if (Settings::Distr::_DistributeFood) {
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 				acinfo->foodDistr = rule->GetScaledDistribution(Settings::ItemType::kFood, acinfo);
 			auto ritems = rule->GetRandomFood(acinfo);
 			acinfo->foodDistr.clear();
@@ -1092,7 +1092,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 		}
 	}
 	// custom generic items are distributed whenever one of the options above is used
-	if (Settings::_featDistributeCustomItems) {
+	if (Settings::Distr::_DistributeCustomItems) {
 		std::unordered_map<uint32_t, int> items = ACM::GetCustomItems(acinfo);
 		auto ritems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->items);
 		for (int i = 0; i < ritems.size(); i++) {
@@ -1128,7 +1128,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
-	if (Settings::_featDisableOutOfCombatProcessing == false)
+	if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 		acinfo->potionDistr = rule->GetScaledDistribution(Settings::ItemType::kPotion, acinfo);
 	auto ritems = rule->GetRandomPotions(acinfo);
 	acinfo->potionDistr.clear();
@@ -1145,7 +1145,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(ActorInfo* acinfo)
 std::vector<RE::AlchemyItem*> Distribution::GetDistrPoisons(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
-	if (Settings::_featDisableOutOfCombatProcessing == false)
+	if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 		acinfo->poisonDistr = rule->GetScaledDistribution(Settings::ItemType::kPoison, acinfo);
 	auto ritems = rule->GetRandomPoisons(acinfo);
 	acinfo->poisonDistr.clear();
@@ -1162,7 +1162,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrPoisons(ActorInfo* acinfo)
 std::vector<RE::AlchemyItem*> Distribution::GetDistrFortifyPotions(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
-	if (Settings::_featDisableOutOfCombatProcessing == false)
+	if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 		acinfo->fortifyDistf = rule->GetScaledDistribution(Settings::ItemType::kFortifyPotion, acinfo);
 	auto ritems = rule->GetRandomFortifyPotions(acinfo);
 	acinfo->fortifyDistf.clear();
@@ -1179,7 +1179,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrFortifyPotions(ActorInfo* ac
 std::vector<RE::AlchemyItem*> Distribution::GetDistrFood(ActorInfo* acinfo)
 {
 	Rule* rule = CalcRule(acinfo, nullptr);
-	if (Settings::_featDisableOutOfCombatProcessing == false)
+	if (Settings::Usage::_DisableOutOfCombatProcessing == false)
 		acinfo->foodDistr = rule->GetScaledDistribution(Settings::ItemType::kFood, acinfo);
 	auto ritems = rule->GetRandomFood(acinfo);
 	acinfo->foodDistr.clear();
@@ -1198,25 +1198,25 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(Acto
 {
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
-	if (Settings::_featDistributePotions) {
+	if (Settings::Distr::_DistributePotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
-	if (Settings::_featDistributePoisons) {
+	if (Settings::Distr::_DistributePoisons) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPoisons(acinfo, rule->validPoisons);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
-	if (Settings::_featDistributeFortifyPotions) {
+	if (Settings::Distr::_DistributeFortifyPotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
-	if (Settings::_featDistributeFood) {
+	if (Settings::Distr::_DistributeFood) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingFood(acinfo, rule->validFood, false);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
@@ -1232,28 +1232,28 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 	//logger::info("[SettingsDistribution] GetMatchingInventoryItems enter");
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
-	if (Settings::_featDistributePotions) {
+	if (Settings::Distr::_DistributePotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| potions {} | found: {}", Utility::GetHex(rule->validPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
-	if (Settings::_featDistributePoisons) {
+	if (Settings::Distr::_DistributePoisons) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPoisons(acinfo, rule->validPoisons);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| poisons {} | found: {}", Utility::GetHex(rule->validPoisons), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
-	if (Settings::_featDistributeFortifyPotions) {
+	if (Settings::Distr::_DistributeFortifyPotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| fortify {} | found: {}", Utility::GetHex(rule->validFortifyPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
 	}
-	if (Settings::_featDistributeFood) {
+	if (Settings::Distr::_DistributeFood) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingFood(acinfo, rule->validFood, false);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| food {} | found: {}", Utility::GetHex(rule->validFood), items.size());
 		for (auto i : items) {
@@ -1385,7 +1385,7 @@ bool Distribution::ForceExcludeNPC(uint32_t actorid)
 Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
-	if (Settings::_GameDifficultyScaling) {
+	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
@@ -1466,12 +1466,29 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		auto itc = customItems()->find(npc->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
+			/* for (int d = 0; d < vec.size(); d++) {
 				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				for (int c = 0; c < vec[b]->items.size(); c++) {
+					custItems->items.push_back(vec[b]->items[c]);
+				}
+				for (int c = 0; c < vec[b]->death.size(); c++) {
+					custItems->death.push_back(vec[b]->death[c]);
+				}
+				for (int c = 0; c < vec[b]->poisons.size(); c++) {
+					custItems->poisons.push_back(vec[b]->poisons[c]);
+				}
+				for (int c = 0; c < vec[b]->potions.size(); c++) {
+					custItems->potions.push_back(vec[b]->potions[c]);
+				}
+				for (int c = 0; c < vec[b]->fortify.size(); c++) {
+					custItems->fortify.push_back(vec[b]->fortify[c]);
+				}
 			}
 		}
 	}
@@ -1515,24 +1532,58 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		auto itc = customItems()->find(race->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
+			/* for (int d = 0; d < vec.size(); d++) {
 				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				for (int c = 0; c < vec[b]->items.size(); c++) {
+					custItems->items.push_back(vec[b]->items[c]);
+				}
+				for (int c = 0; c < vec[b]->death.size(); c++) {
+					custItems->death.push_back(vec[b]->death[c]);
+				}
+				for (int c = 0; c < vec[b]->poisons.size(); c++) {
+					custItems->poisons.push_back(vec[b]->poisons[c]);
+				}
+				for (int c = 0; c < vec[b]->potions.size(); c++) {
+					custItems->potions.push_back(vec[b]->potions[c]);
+				}
+				for (int c = 0; c < vec[b]->fortify.size(); c++) {
+					custItems->fortify.push_back(vec[b]->fortify[c]);
+				}
 			}
 		}
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
 			itc = customItems()->find(race->keywords[i]->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/*for (int d = 0; d < vec.size(); d++) {
 					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						custItems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						custItems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						custItems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						custItems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -1561,12 +1612,29 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				auto itc = customItems()->find(key->GetFormID());
 				if (itc != customItems()->end()) {
 					auto vec = itc->second;
-					for (int d = 0; d < vec.size(); d++) {
+					/* for (int d = 0; d < vec.size(); d++) {
 						custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 						custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 						custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 						custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 						custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+					}*/
+					for (int b = 0; b < vec.size(); b++) {
+						for (int c = 0; c < vec[b]->items.size(); c++) {
+							custItems->items.push_back(vec[b]->items[c]);
+						}
+						for (int c = 0; c < vec[b]->death.size(); c++) {
+							custItems->death.push_back(vec[b]->death[c]);
+						}
+						for (int c = 0; c < vec[b]->poisons.size(); c++) {
+							custItems->poisons.push_back(vec[b]->poisons[c]);
+						}
+						for (int c = 0; c < vec[b]->potions.size(); c++) {
+							custItems->potions.push_back(vec[b]->potions[c]);
+						}
+						for (int c = 0; c < vec[b]->fortify.size(); c++) {
+							custItems->fortify.push_back(vec[b]->fortify[c]);
+						}
 					}
 				}
 			}
@@ -1594,12 +1662,29 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
 					if (itc != customItems()->end()) {
 						auto vec = itc->second;
-						for (int d = 0; d < vec.size(); d++) {
+						/* for (int d = 0; d < vec.size(); d++) {
 							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}*/
+						for (int b = 0; b < vec.size(); b++) {
+							for (int c = 0; c < vec[b]->items.size(); c++) {
+								custItems->items.push_back(vec[b]->items[c]);
+							}
+							for (int c = 0; c < vec[b]->death.size(); c++) {
+								custItems->death.push_back(vec[b]->death[c]);
+							}
+							for (int c = 0; c < vec[b]->poisons.size(); c++) {
+								custItems->poisons.push_back(vec[b]->poisons[c]);
+							}
+							for (int c = 0; c < vec[b]->potions.size(); c++) {
+								custItems->potions.push_back(vec[b]->potions[c]);
+							}
+							for (int c = 0; c < vec[b]->fortify.size(); c++) {
+								custItems->fortify.push_back(vec[b]->fortify[c]);
+							}
 						}
 					}
 				}
@@ -1628,12 +1713,29 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			auto itc = customItems()->find(npc->factions[i].faction->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/* for (int d = 0; d < vec.size(); d++) {
 					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						custItems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						custItems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						custItems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						custItems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -1660,12 +1762,29 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
 					if (itc != customItems()->end()) {
 						auto vec = itc->second;
-						for (int d = 0; d < vec.size(); d++) {
+						/* for (int d = 0; d < vec.size(); d++) {
 							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}*/
+						for (int b = 0; b < vec.size(); b++) {
+							for (int c = 0; c < vec[b]->items.size(); c++) {
+								custItems->items.push_back(vec[b]->items[c]);
+							}
+							for (int c = 0; c < vec[b]->death.size(); c++) {
+								custItems->death.push_back(vec[b]->death[c]);
+							}
+							for (int c = 0; c < vec[b]->poisons.size(); c++) {
+								custItems->poisons.push_back(vec[b]->poisons[c]);
+							}
+							for (int c = 0; c < vec[b]->potions.size(); c++) {
+								custItems->potions.push_back(vec[b]->potions[c]);
+							}
+							for (int c = 0; c < vec[b]->fortify.size(); c++) {
+								custItems->fortify.push_back(vec[b]->fortify[c]);
+							}
 						}
 					}
 				}
@@ -1694,12 +1813,29 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			auto itc = customItems()->find(cls->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/* for (int d = 0; d < vec.size(); d++) {
 					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						custItems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						custItems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						custItems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						custItems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -1725,12 +1861,29 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			auto itc = customItems()->find(style->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/* for (int d = 0; d < vec.size(); d++) {
 					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						custItems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						custItems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						custItems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						custItems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -1765,7 +1918,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 	if (acinfo == nullptr)
 		return emptyRule;
 	// calc strength section
-	if (Settings::_GameDifficultyScaling) {
+	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
@@ -1784,19 +1937,19 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 	} else {
 		// get level dependencies
 		short lvl = acinfo->actor->GetLevel();
-		if (lvl <= Settings::_LevelEasy) {
+		if (lvl <= Settings::Distr::_LevelEasy) {
 			acinfo->actorStrength = ActorStrength::Weak;
 			acinfo->itemStrength = ItemStrength::kWeak;
 			// weak actor
-		} else if (lvl <= Settings::_LevelNormal) {
+		} else if (lvl <= Settings::Distr::_LevelNormal) {
 			acinfo->actorStrength = ActorStrength::Normal;
 			acinfo->itemStrength = ItemStrength::kStandard;
 			// normal actor
-		} else if (lvl <= Settings::_LevelDifficult) {
+		} else if (lvl <= Settings::Distr::_LevelDifficult) {
 			acinfo->actorStrength = ActorStrength::Powerful;
 			acinfo->itemStrength = ItemStrength::kPotent;
 			// difficult actor
-		} else if (lvl <= Settings::_LevelInsane) {
+		} else if (lvl <= Settings::Distr::_LevelInsane) {
 			acinfo->actorStrength = ActorStrength::Insane;
 			acinfo->itemStrength = ItemStrength::kInsane;
 			// insane actor
@@ -1849,12 +2002,30 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		auto itc = customItems()->find(acinfo->actor->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
+			/* for (int d = 0; d < vec.size(); d++) {
 				acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 				acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 				acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 				acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}*/
+
+			for (int b = 0; b < vec.size(); b++) {
+				for (int c = 0; c < vec[b]->items.size(); c++) {
+					acinfo->citems->items.push_back(vec[b]->items[c]);
+				}
+				for (int c = 0; c < vec[b]->death.size(); c++) {
+					acinfo->citems->death.push_back(vec[b]->death[c]);
+				}
+				for (int c = 0; c < vec[b]->poisons.size(); c++) {
+					acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+				}
+				for (int c = 0; c < vec[b]->potions.size(); c++) {
+					acinfo->citems->potions.push_back(vec[b]->potions[c]);
+				}
+				for (int c = 0; c < vec[b]->fortify.size(); c++) {
+					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+				}
 			}
 		}
 	}
@@ -1878,12 +2049,29 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		auto itc = customItems()->find(acinfo->actor->GetActorBase()->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
+			/* for (int d = 0; d < vec.size(); d++) {
 				acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 				acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 				acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 				acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				for (int c = 0; c < vec[b]->items.size(); c++) {
+					acinfo->citems->items.push_back(vec[b]->items[c]);
+				}
+				for (int c = 0; c < vec[b]->death.size(); c++) {
+					acinfo->citems->death.push_back(vec[b]->death[c]);
+				}
+				for (int c = 0; c < vec[b]->poisons.size(); c++) {
+					acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+				}
+				for (int c = 0; c < vec[b]->potions.size(); c++) {
+					acinfo->citems->potions.push_back(vec[b]->potions[c]);
+				}
+				for (int c = 0; c < vec[b]->fortify.size(); c++) {
+					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+				}
 			}
 		}
 	}
@@ -1934,24 +2122,60 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 		auto itc = customItems()->find(race->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
+			/* for (int d = 0; d < vec.size(); d++) {
 				acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 				acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 				acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 				acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+			}*/
+
+			for (int b = 0; b < vec.size(); b++) {
+				for (int c = 0; c < vec[b]->items.size(); c++) {
+					acinfo->citems->items.push_back(vec[b]->items[c]);
+				}
+				for (int c = 0; c < vec[b]->death.size(); c++) {
+					acinfo->citems->death.push_back(vec[b]->death[c]);
+				}
+				for (int c = 0; c < vec[b]->poisons.size(); c++) {
+					acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+				}
+				for (int c = 0; c < vec[b]->potions.size(); c++) {
+					acinfo->citems->potions.push_back(vec[b]->potions[c]);
+				}
+				for (int c = 0; c < vec[b]->fortify.size(); c++) {
+					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+				}
 			}
 		}
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
 			itc = customItems()->find(race->keywords[i]->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/*for (int d = 0; d < vec.size(); d++) {
 					acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						acinfo->citems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						acinfo->citems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						acinfo->citems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -1983,12 +2207,30 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				auto itc = customItems()->find(key->GetFormID());
 				if (itc != customItems()->end()) {
 					auto vec = itc->second;
-					for (int d = 0; d < vec.size(); d++) {
+					/* for (int d = 0; d < vec.size(); d++) {
 						acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 						acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 						acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 						acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 						acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+					}*/
+
+					for (int b = 0; b < vec.size(); b++) {
+						for (int c = 0; c < vec[b]->items.size(); c++) {
+							acinfo->citems->items.push_back(vec[b]->items[c]);
+						}
+						for (int c = 0; c < vec[b]->death.size(); c++) {
+							acinfo->citems->death.push_back(vec[b]->death[c]);
+						}
+						for (int c = 0; c < vec[b]->poisons.size(); c++) {
+							acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+						}
+						for (int c = 0; c < vec[b]->potions.size(); c++) {
+							acinfo->citems->potions.push_back(vec[b]->potions[c]);
+						}
+						for (int c = 0; c < vec[b]->fortify.size(); c++) {
+							acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+						}
 					}
 				}
 			}
@@ -2019,12 +2261,30 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
 					if (itc != customItems()->end()) {
 						auto vec = itc->second;
-						for (int d = 0; d < vec.size(); d++) {
+						/* for (int d = 0; d < vec.size(); d++) {
 							acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 							acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 							acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 							acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 							acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}*/
+
+						for (int b = 0; b < vec.size(); b++) {
+							for (int c = 0; c < vec[b]->items.size(); c++) {
+								acinfo->citems->items.push_back(vec[b]->items[c]);
+							}
+							for (int c = 0; c < vec[b]->death.size(); c++) {
+								acinfo->citems->death.push_back(vec[b]->death[c]);
+							}
+							for (int c = 0; c < vec[b]->poisons.size(); c++) {
+								acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+							}
+							for (int c = 0; c < vec[b]->potions.size(); c++) {
+								acinfo->citems->potions.push_back(vec[b]->potions[c]);
+							}
+							for (int c = 0; c < vec[b]->fortify.size(); c++) {
+								acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+							}
 						}
 					}
 				}
@@ -2057,12 +2317,30 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 			auto itc = customItems()->find(base->factions[i].faction->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/* for (int d = 0; d < vec.size(); d++) {
 					acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						acinfo->citems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						acinfo->citems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						acinfo->citems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -2092,12 +2370,30 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
 					if (itc != customItems()->end()) {
 						auto vec = itc->second;
-						for (int d = 0; d < vec.size(); d++) {
+						/* for (int d = 0; d < vec.size(); d++) {
 							acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 							acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 							acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 							acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 							acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+						}*/
+
+						for (int b = 0; b < vec.size(); b++) {
+							for (int c = 0; c < vec[b]->items.size(); c++) {
+								acinfo->citems->items.push_back(vec[b]->items[c]);
+							}
+							for (int c = 0; c < vec[b]->death.size(); c++) {
+								acinfo->citems->death.push_back(vec[b]->death[c]);
+							}
+							for (int c = 0; c < vec[b]->poisons.size(); c++) {
+								acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+							}
+							for (int c = 0; c < vec[b]->potions.size(); c++) {
+								acinfo->citems->potions.push_back(vec[b]->potions[c]);
+							}
+							for (int c = 0; c < vec[b]->fortify.size(); c++) {
+								acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+							}
 						}
 					}
 				}
@@ -2130,12 +2426,30 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 			auto itc = customItems()->find(base->npcClass->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/* for (int d = 0; d < vec.size(); d++) {
 					acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						acinfo->citems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						acinfo->citems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						acinfo->citems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -2163,12 +2477,29 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 			auto itc = customItems()->find(base->combatStyle->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				for (int d = 0; d < vec.size(); d++) {
+				/* for (int d = 0; d < vec.size(); d++) {
 					acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 					acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 					acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 					acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					for (int c = 0; c < vec[b]->items.size(); c++) {
+						acinfo->citems->items.push_back(vec[b]->items[c]);
+					}
+					for (int c = 0; c < vec[b]->death.size(); c++) {
+						acinfo->citems->death.push_back(vec[b]->death[c]);
+					}
+					for (int c = 0; c < vec[b]->poisons.size(); c++) {
+						acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+					}
+					for (int c = 0; c < vec[b]->potions.size(); c++) {
+						acinfo->citems->potions.push_back(vec[b]->potions[c]);
+					}
+					for (int c = 0; c < vec[b]->fortify.size(); c++) {
+						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
 				}
 			}
 		}
@@ -2189,15 +2520,62 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 
 	if (calccustitems) {
 		auto itc = customItems()->find(0x0);
+		LOG_1("{} custom item 0x0");
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			for (int d = 0; d < vec.size(); d++) {
+
+			/* for (int d = 0; d < vec.size(); d++) {
 				acinfo->citems->items.insert(acinfo->citems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
 				acinfo->citems->potions.insert(acinfo->citems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
 				acinfo->citems->poisons.insert(acinfo->citems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
 				acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-			}
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				for (int c = 0; c < vec[b]->items.size(); c++) {
+					acinfo->citems->items.push_back(vec[b]->items[c]);
+				}
+				for (int c = 0; c < vec[b]->death.size(); c++) {
+					acinfo->citems->death.push_back(vec[b]->death[c]);
+				}
+				for (int c = 0; c < vec[b]->poisons.size(); c++) {
+					acinfo->citems->poisons.push_back(vec[b]->poisons[c]);
+				}
+				for (int c = 0; c < vec[b]->potions.size(); c++) {
+					acinfo->citems->potions.push_back(vec[b]->potions[c]);
+				}
+				for (int c = 0; c < vec[b]->fortify.size(); c++) {
+					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+				}
+			} /*
+			//LOG3_1("{}[Settings] [LoadDistr] {}: FormID: {}\tEntries: {}", std::to_string(1), std::to_string(itc->first), vec.size());
+			for (int b = 0; b < vec.size(); b++) {
+				for (int i = 0; i < vec[b]->items.size(); i++) {
+					auto cit = vec[b]->items[i];
+					acinfo->citems->items.push_back(cit);
+					//LOG3_1("{}[Settings] [LoadDistr] {}: Items: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < vec[b]->death.size(); i++) {
+					auto cit = vec[b]->death[i];
+					acinfo->citems->death.push_back(cit);
+					//LOG3_1("{}[Settings] [LoadDistr] {}: Death: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < vec[b]->poisons.size(); i++) {
+					auto cit = vec[b]->poisons[i];
+					acinfo->citems->poisons.push_back(cit);
+					//LOG3_1("{}[Settings] [LoadDistr] {}: Poisons: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < vec[b]->potions.size(); i++) {
+					auto cit = vec[b]->potions[i];
+					acinfo->citems->potions.push_back(cit);
+					//LOG3_1("{}[Settings] [LoadDistr] {}: Potions: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < vec[b]->fortify.size(); i++) {
+					auto cit = vec[b]->fortify[i];
+					acinfo->citems->fortify.push_back(cit);
+					//LOG3_1("{}[Settings] [LoadDistr] {}: Fortify: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
+				}
+			}*/
 		}
 		acinfo->citems->calculated = true;
 		acinfo->citems->CreateMaps();
@@ -2242,7 +2620,7 @@ static std::string GetFormEditorID(RE::TESFaction* fid)
 std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
 {
 	// calc strength section
-	if (Settings::_GameDifficultyScaling) {
+	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
@@ -2261,19 +2639,19 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 	} else {
 		// get level dependencies
 		short lvl = actor->GetLevel();
-		if (lvl <= Settings::_LevelEasy) {
+		if (lvl <= Settings::Distr::_LevelEasy) {
 			acs = ActorStrength::Weak;
 			is = ItemStrength::kWeak;
 			// weak actor
-		} else if (lvl <= Settings::_LevelNormal) {
+		} else if (lvl <= Settings::Distr::_LevelNormal) {
 			acs = ActorStrength::Normal;
 			is = ItemStrength::kStandard;
 			// normal actor
-		} else if (lvl <= Settings::_LevelDifficult) {
+		} else if (lvl <= Settings::Distr::_LevelDifficult) {
 			acs = ActorStrength::Powerful;
 			is = ItemStrength::kPotent;
 			// difficult actor
-		} else if (lvl <= Settings::_LevelInsane) {
+		} else if (lvl <= Settings::Distr::_LevelInsane) {
 			acs = ActorStrength::Insane;
 			is = ItemStrength::kInsane;
 			// insane actor

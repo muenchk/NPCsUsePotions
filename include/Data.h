@@ -58,12 +58,14 @@ public:
 	/// saves ActorInfoMap in skse co-save
 	/// </summary>
 	/// <param name="a_intfc"></param>
-	void SaveActorInfoMap(SKSE::SerializationInterface* a_intfc);
+	/// <return>Returns number of bytes written</return>
+	long SaveActorInfoMap(SKSE::SerializationInterface* a_intfc);
 	/// <summary>
 	/// reads ActorInfoMap from skse co-save
 	/// </summary>
 	/// <param name="a_intfc"></param>
-	void ReadActorInfoMap(SKSE::SerializationInterface* a_intfc);
+	/// <return>Returns number of bytes read</return>
+	long ReadActorInfoMap(SKSE::SerializationInterface* a_intfc);
 
 	/// <summary>
 	/// Saves the alchemic effects of an AlchemyItem for later use

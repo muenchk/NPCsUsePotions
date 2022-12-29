@@ -4,6 +4,7 @@
 #include "Data.h"
 #include "Utility.h"
 #include "Compatibility.h"
+#include "Statistics.h"
 
 namespace Papyrus
 {
@@ -18,7 +19,7 @@ namespace Papyrus
 		/// </summary>
 		static RE::BSAudioManager* audiomanager;
 
-		void AnimatedPoisons_Callback(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, RE::Actor* actor)
+		void AnimatedPoisons_Callback(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, RE::Actor* actor, int poisonDosage)
 		{
 			if (!actor) {
 				a_vm->TraceStack("Actor not found", a_stackID);
@@ -34,9 +35,16 @@ namespace Papyrus
 
 			comp->AnPois_RemoveActorPoison(actor->GetFormID());
 
+			int dosage = poisonDosage;
+			if (!Settings::Compatibility::AnimatedPoisons::_UsePoisonDosage || dosage == 0)
+				dosage = Utility::GetPoisonDosage(poison);
+
+			// save statistics
+			Statistics::Misc_PoisonsUsed++;
+
 			LOG1_2("{}[Papyrus] [Poison] [AnimatedPoisons_Callback] Use Poison {}", Utility::PrintForm(poison));
 			RE::ExtraDataList* extra = new RE::ExtraDataList();
-			extra->Add(new RE::ExtraPoison(poison, 1));
+			extra->Add(new RE::ExtraPoison(poison, dosage));
 			auto ied = actor->GetEquippedEntryData(false);
 			if (ied) {
 				ied->AddExtraList(extra);

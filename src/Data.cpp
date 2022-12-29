@@ -5,6 +5,7 @@
 #include "Data.h"
 #include "Logging.h"
 #include "Utility.h"
+#include "Statistics.h"
 
 
 RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
@@ -77,12 +78,15 @@ void Data::ResetActorInfoMap()
 	lockdata.release();
 }
 
-void Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
+long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 {
 	lockdata.acquire();
 	loginfo("[Data] [SaveActorInfoMap] Writing ActorInfo");
 	loginfo("[Data] [SaveActorInfoMap] {} records to write", actorinfoMap.size());
 	
+	long size = 0;
+	long successfulwritten = 0;
+
 	// transform second values of map into a vector and operate on the vector instead
 	std::vector<ActorInfo*> acvec;
 	// write map data to vector
@@ -115,6 +119,8 @@ void Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 									logwarn("[Data] [WriteData] failed to write ActorInfo record: record length 0");
 									continue;
 								}
+								// save written bytes nu´mber
+								size += length;
 								loginfo("[Data] [SaveActorInfoMap] \tcreate buffer");
 								// create buffer
 								unsigned char* buffer = new unsigned char[length + 1];
@@ -126,6 +132,7 @@ void Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 								// fill buffer
 								if (acvec[i]->WriteData(buffer, 0) == false) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: Writing of ActorInfo failed");
+									delete[] buffer;
 									continue;
 								}
 								loginfo("[Data] [SaveActorInfoMap] \twrite record");
@@ -133,6 +140,7 @@ void Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 								a_intfc->WriteRecordData(buffer, length);
 								loginfo("[Data] [SaveActorInfoMap] \tDelete buffer");
 								delete[] buffer;
+								successfulwritten++;
 							} else if (acvec[i] == nullptr) {
 								logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: ActorInfo invalidated");
 							} else if (acvec[i]->actor == nullptr) {
@@ -211,9 +219,11 @@ void Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 		itr++;
 	}*/
 	lockdata.release();
+	Statistics::Storage_ActorsSavedLast = successfulwritten;
+	return size;
 }
 
-void Data::ReadActorInfoMap(SKSE::SerializationInterface* a_intfc)
+long Data::ReadActorInfoMap(SKSE::SerializationInterface* a_intfc)
 {
 	uint32_t type = 0;
 	uint32_t version = 0;
@@ -223,12 +233,15 @@ void Data::ReadActorInfoMap(SKSE::SerializationInterface* a_intfc)
 	int acfcounter = 0;
 	int acdcounter = 0;
 
+	long size = 0;
+
 	// get map lock
 	lockdata.acquire();
 
 	loginfo("[Data] [ReadActorInfoMap] Reading ActorInfoMap...");
 	while (a_intfc->GetNextRecordInfo(type, version, length)) {
 		loginfo("[Data] [ReadActorInfoMap] found record with type {} and length {}", type, length);
+		size += length;
 		switch (type) {
 		case 'ACIF':  // ActorInfo
 			unsigned char* buffer = new unsigned char[length];
@@ -255,6 +268,8 @@ void Data::ReadActorInfoMap(SKSE::SerializationInterface* a_intfc)
 	loginfo("[Data] [ReadActorInfoMap] Read {} ActorInfos", accounter);
 	loginfo("[Data] [ReadActorInfoMap] Read {} dead or deleted ActorInfos", acdcounter);
 	loginfo("[Data] [ReadActorInfoMap] Failed to read {} ActorInfos", acfcounter);
+	Statistics::Storage_ActorsReadLast = accounter;
+	return size;
 }
 
 void Data::DeleteActorInfoMap()

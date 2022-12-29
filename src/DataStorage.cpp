@@ -4,6 +4,7 @@
 #include "Events.h"
 #include "Data.h"
 #include "Utility.h"
+#include "Statistics.h"
 
 namespace Storage
 {
@@ -32,6 +33,27 @@ namespace Storage
 	{
 		LOG_1("{}[DataStorage] [SaveGameCallback]");
 		WriteData(a_intfc);
+
+		// print statistics to logfile
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESHitEvents registered               {}", Statistics::Events_TESHitEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESCombatEvents registered            {}", Statistics::Events_TESCombatEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESLoadGameEvents registered          {}", Statistics::Events_TESLoadGameEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESDeathEvents registered             {}", Statistics::Events_TESDeathEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] BGSActorCellEvents registered         {}", Statistics::Events_BGSActorCellEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESCellAttachDetachEvents registered  {}", Statistics::Events_TESCellAttachDetachEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESEquipEvents registered             {}", Statistics::Events_TESEquipEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESFormDeleteEvent registereds        {}", Statistics::Events_TESHitEvent);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESContainerChangedEvent registereds  {}", Statistics::Events_TESContainerChangedEvent);
+
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Bytes Written To Last Savegame        {}", Statistics::Storage_BytesWrittenLast);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Bytes Read From Last Savegame         {}", Statistics::Storage_BytesReadLast);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Actors Saved To Last Savegame         {}", Statistics::Storage_ActorsSavedLast);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Actors Read From Last Savegame        {}", Statistics::Storage_ActorsReadLast);
+
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] potions administered                  {}", Statistics::Misc_PotionsAdministered);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] poisons used                          {}", Statistics::Misc_PoisonsUsed);
+		loginfo("[DataStorage] [SaveGameCallback] [Statistics] food eaten                            {}", Statistics::Misc_FoodEaten);
+
 		LOG_1("{}[DataStorage] [SaveGameCallback] end");
 	}
 
@@ -79,28 +101,31 @@ namespace Storage
 	{
 		bool preproc = Events::LockProcessing();
 
-		uint32_t type = 0;
-		uint32_t version = 0;
-		uint32_t length = 0;
+		// total number of bytes read
+		long size = 0;
 
 		loginfo("[DataStorage] [ReadData] Beginning data load...");
 		
-		data->ReadActorInfoMap(a_intfc);
+		size += data->ReadActorInfoMap(a_intfc);
 
 		loginfo("[DataStorage] [ReadData] Finished loading data");
 		if (preproc) {  // if processing was enabled before locking
 			Events::UnlockProcessing();
 			loginfo("[DataStorage] [ReadData] Enable processing");
 		}
+		Statistics::Storage_BytesReadLast = size;
 	}
 
 	void WriteData(SKSE::SerializationInterface* a_intfc)
 	{
 		bool preproc = Events::LockProcessing();
 
+		// total number of bytes written
+		long size = 0;
+
 		loginfo("[DataStorage] [WriteData] Beginning to write data...");
 		
-		data->SaveActorInfoMap(a_intfc);
+		size +=data->SaveActorInfoMap(a_intfc);
 
 		loginfo("[DataStorage] [WriteData] Finished writing data");
 
@@ -108,6 +133,7 @@ namespace Storage
 			Events::UnlockProcessing();
 			loginfo("[DataStorage] [WriteData] Enable processing");
 		}
+		Statistics::Storage_BytesWrittenLast = size;
 	}
 
 	void RevertData()

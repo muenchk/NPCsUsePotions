@@ -79,6 +79,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print("");
 	console->Print("Current Actor Info");
 	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
+	Distribution::CalcRule(acinfo);
 	// durHealth
 	tmp = "Duration Health:\t\t\t\t" + std::to_string(acinfo->durHealth);
 	console->Print(tmp.c_str());
@@ -260,7 +261,7 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");
 	Settings::LoadDistrConfig();
-	if (Settings::_CheckActorsWithoutRules) {
+	if (Settings::Debug::_CheckActorsWithoutRules) {
 		console->Print("Calculating Actors without rules...");
 		Settings::CheckActorsForRules();
 	}

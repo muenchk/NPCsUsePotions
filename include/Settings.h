@@ -74,109 +74,207 @@ public:
 	static inline int _MaxDuration = 10000;
 	static inline int _MaxFortifyDuration = 180000;
 
-	//general
-	static inline long _maxPotionsPerCycle = 2;
-	static inline long _cycletime = 500;
-	static inline bool _DisableEquipSounds = false;
+	/// <summary>
+	/// Settings for the system, can be ignored by user
+	/// </summary>
+	struct System
+	{
+		static inline long _cycletime = 1000;
+		static const long _maxPotionsPerCycle = 1;
+	};
 
-	// features
-	static inline bool _featMagickaRestoration = true;			// enables automatic usage of magicka potions
-	static inline bool _featStaminaRestoration = true;			// enables automatic usage of stamina potions
-	static inline bool _featHealthRestoration = true;			// enables automatic usage of health potions
-	static inline bool _playerRestorationEnabled = false;		// enables automatic usage of potions for the player
-	static inline bool _featUsePoisons = true;             // enables automatic usage of poisons for npcs
-	static inline bool _featUseFortifyPotions = true;		// enables automatic usage of fortify potions for npcs
-	static inline bool _featUseFood = true;				// enables automatic usage of food for npcs
-	static inline bool _playerUsePoisons = false;          // enables automatic usage of poisons for player
-	static inline bool _playerUseFortifyPotions = false;   // enables automatic usage of fortify potions for player
-	static inline bool _playerUseFood = false;				// enables automatic usage of food for player
-	static inline bool _featDistributePoisons = true;			// player is excluded from distribution options, as well as followers
-	static inline bool _featDistributePotions = true;			// player is excluded from distribution options, as well as followers
-	static inline bool _featDistributeFortifyPotions = true;	// player is excluded from distribution options, as well as followers
-	static inline bool _featDistributeFood = true;				// player is excluded from distribution options, as well as followers
-	static inline bool _featDistributeCustomItems = true;		// distributes custom items/death items to actor, does not affect custom potions etc.
-	static inline bool _featUseDeathItems = true;				// the npc will be given potions that may appear in their deathItems if available
-	static inline bool _featRemoveItemsOnDeath = true;		// remove unused items on death, if activated chances for removal can be set
-	static inline bool _featDisableItemUsageWhileStaggered = false;		// disables potion and poison usage while the npc is staggered
-	static inline bool _featDisableNonFollowerNPCs = false;		// disable item usage for npcs that aren't followers or the player.
-	static inline bool _featDisableOutOfCombatProcessing = false; // disables npc processing if they are out-of-combat
+	/// <summary>
+	/// General settings
+	/// </summary>
+	struct Usage
+	{
+		static inline long _globalCooldown = 0;
+		static inline bool _DisableItemUsageWhileStaggered = false;  // disables potion and poison usage while the npc is staggered
+		static inline bool _DisableNonFollowerNPCs = false;          // disable item usage for npcs that aren't followers or the player.
+		static inline bool _DisableOutOfCombatProcessing = false;    // disables npc processing if they are out-of-combat
+	};
 
-	// compatibility
-	static inline bool _CompatibilityMode = false;								// Use Items with Papyrus, needs the plugin
-	static inline bool _CompatibilityPotionAnimation = false;					// Use Potions with Papyrus
-	static inline bool _CompatibilityPotionAnimationFortify = false;                   // Use Potions with Papyrus
-	static inline bool _CompatibilityDisableAutomaticAdjustments = false;		// Disables most automatic adjustments made to settings for compatibility
-	static inline bool _CompatibilityPotionAnimatedFx = false;					// no settings entry | Compatiblity Mode for Mods
-																				// 1) Animated Potion Drinking SE
-																				// 2) Potion Animated fix (SE)
-	static inline bool _CompatibilityRemoveItemsBeforeDist = false;				// removes items from actors before the distribution of new items
-	static inline bool _CompatibilityRemoveItemsStartup = false;				// removes items from actors at startup
-	static inline bool _CompatibilityRemoveItemsStartup_OnlyExcluded = false;	// removes only excluded items shortly after loading a game
-	static inline bool _ApplySkillBoostPerks = true;							// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
-	static inline bool _ForceFixPotionSounds = true;
-	static inline bool _CompatibilityCACO = false;	// automatic
-	static inline bool _CompatibilityApothecary = false; // automatic
-	static inline bool _CompatibilityAnimatedPoisons = false; // automatic
-	static inline bool _CompatibilityAnimatedPotions = false; // automatic
+	/// <summary>
+	/// Settings related to potions
+	/// </summary>
+	struct Potions
+	{
+		static inline bool _enableMagickaRestoration = true;  // enables automatic usage of magicka potions
+		static inline bool _enableStaminaRestoration = true;  // enables automatic usage of stamina potions
+		static inline bool _enableHealthRestoration = true;   // enables automatic usage of health potions
 
-	static inline bool _CompatibilityWhitelist = false;
+		static inline float _healthThreshold = 0.5f;
+		static inline float _magickaThreshold = 0.5f;
+		static inline float _staminaThreshold = 0.5f;
+		static inline int _UsePotionChance = 100;  // Chance that a potion will be used when appropiate
+	};
 
-	static inline bool _DisableCreaturesWithoutRules = true;					// disables all npcs with the ActorTypeCreature or ActorTypeAnimal keywords, if they do not have a dedicated rule. May cause npcs to be disabled, that should not be
+	/// <summary>
+	/// Settings related to poisons
+	/// </summary>
+	struct Poisons
+	{
+		static inline bool _enablePoisons = true;  // enables automatic usage of poisons for npcs
 
-	// debug
-	static inline bool EnableLog = false;			// Enables general logging
-	static inline bool EnableLoadLog = false;		// Enables logging for plugin load
-	static inline int LogLevel = 0;					// 0 - only highest level
-													// 1 - highest to layer 1 function logging
-													// 2 - highest to layer 2 function logging
-													// 3 - highest to layer 3 function logging
-	static inline int ProfileLevel = 0;				// 0 - highest level only
-													// 1 - highest and layer 1
-													// 2 - highest and layer 2
-	static inline bool EnableProfiling = false;
-	static inline bool _CalculateCellRules = false;
+		static inline float _EnemyLevelScalePlayerLevel = 0.8f;  // how high the level of an enemy must be for followers to use poisons
+		static inline int _EnemyNumberThreshold = 5;             // how many npcs must be fighting, for followers to use poisons regardless of the enemies level
+		static inline int _UsePoisonChance = 100;                // Chance that a poison will be used when possible
+	};
 
-	// distribution
-	static inline int _LevelEasy = 20;				// only distribute "weak" potions and poisons
-	static inline int _LevelNormal = 35;			// may distribute "standard" potions and poisons
-	static inline int _LevelDifficult = 50;			// may distribute "potent" potions and poisons
-	static inline int _LevelInsane = 70;			// may have Insane tear potions
+	/// <summary>
+	/// Settings related to fortify potions
+	/// </summary>
+	struct FortifyPotions
+	{
+		static inline bool _enableFortifyPotions = true;  // enables automatic usage of fortify potions for npcs
 
-	static inline bool _GameDifficultyScaling = false; // ties the strength of the actors not to levels, but the game difficulty
+		static inline float _EnemyLevelScalePlayerLevelFortify = 0.8f;  // how high the level of an enemy must be for followers to use fortify potions
+		static inline int _EnemyNumberThresholdFortify = 5;             // how many npcs must be fighting, for followers to use fortify potions regardless of the enemies level
+		static inline int _UseFortifyPotionChance = 100;                // Chance that a fortify potion will be used when possible
+	};
 
-	static inline int _MaxMagnitudeWeak = 30;		// max potion / poison magnitude to be considered "weak"
-	static inline int _MaxMagnitudeStandard = 60;	// max potion / poison magnitude to be considered "standard"
-	static inline int _MaxMagnitudePotent = 150;	// max potion / poison magnitude to be considered "potent"
-													// anything above this won't be distributed
-	static inline float _StyleScalingPrimary = 1.20f;	// base scaling factor applied to potions etc. that are considered useful for the the primary combattype of an actor
-	static inline float _StyleScalingSecondary = 1.10f;  // base scaling factor applied to potions etc. that are considered useful for the secondary combattype of an actor
+	/// <summary>
+	/// Settings related to food
+	/// </summary>
+	struct Food
+	{
+		static inline bool _enableFood = true;				// enables automatic usage of food for npcs
+		static inline bool _RestrictFoodToCombatStart = false;  // restricts the usage of food to the beginning of the combat
+	};
 
-	// potion usage
-	static inline float _healthThreshold = 0.5f;
-	static inline float _magickaThreshold = 0.5f;
-	static inline float _staminaThreshold = 0.5f;
-	static inline int _UsePotionChance = 100;		// Chance that a potion will be used when appropiate
+	/// <summary>
+	/// settings related to the player character
+	/// </summary>
+	struct Player
+	{
+		static inline bool _playerPotions = false;  // enables automatic usage of potions for the player
+		static inline bool _playerPoisons = false;          // enables automatic usage of poisons for player
+		static inline bool _playerFortifyPotions = false;   // enables automatic usage of fortify potions for player
+		static inline bool _playerFood = false;             // enables automatic usage of food for player
+	};
 
-	// poison usage
-	static inline float _EnemyLevelScalePlayerLevel = 0.8f;		// how high the level of an enemy must be for followers to use poisons
-	static inline int _EnemyNumberThreshold = 5;				// how many npcs must be fighting, for followers to use poisons regardless of the enemies level
-	static inline int _UsePoisonChance = 100;					// Chance that a poison will be used when possible
+	/// <summary>
+	/// Settings related to distribution
+	/// </summary>
+	struct Distr
+	{
+		static inline bool _DistributePoisons = true;         // player is excluded from distribution options, as well as followers
+		static inline bool _DistributePotions = true;         // player is excluded from distribution options, as well as followers
+		static inline bool _DistributeFortifyPotions = true;  // player is excluded from distribution options, as well as followers
+		static inline bool _DistributeFood = true;            // player is excluded from distribution options, as well as followers
+		static inline bool _DistributeCustomItems = true;     // distributes custom items/death items to actor, does not affect custom potions etc.
 
-	// fortify potions
-	static inline float _EnemyLevelScalePlayerLevelFortify = 0.8f;  // how high the level of an enemy must be for followers to use fortify potions
-	static inline int _EnemyNumberThresholdFortify = 5;             // how many npcs must be fighting, for followers to use fortify potions regardless of the enemies level
-	static inline int _UseFortifyPotionChance = 100;				// Chance that a fortify potion will be used when possible
+		static inline int _LevelEasy = 20;       // only distribute "weak" potions and poisons
+		static inline int _LevelNormal = 35;     // may distribute "standard" potions and poisons
+		static inline int _LevelDifficult = 50;  // may distribute "potent" potions and poisons
+		static inline int _LevelInsane = 70;     // may have Insane tear potions
 
-	// food usage
-	static inline bool _RestrictFoodToCombatStart = false;			// restricts the usage of food to the beginning of the combat
+		static inline bool _GameDifficultyScaling = false;  // ties the strength of the actors not to levels, but the game difficulty
 
-	// removal
-	static inline int _ChanceToRemoveItem = 90;		// chance for an item to be removed
-	static inline int _MaxItemsLeft = 2;			// maximum number of items that may remain, from those to be removed
+		static inline int _MaxMagnitudeWeak = 30;      // max potion / poison magnitude to be considered "weak"
+		static inline int _MaxMagnitudeStandard = 60;  // max potion / poison magnitude to be considered "standard"
+		static inline int _MaxMagnitudePotent = 150;   // max potion / poison magnitude to be considered "potent"
+													   // anything above this won't be distributed
 
-	// intern
-	static inline bool _CheckActorsWithoutRules = false;	// checks for actors which do not have any rules, and prints their information to the, logfile
-	static inline bool _Test = false;
+		static inline float _StyleScalingPrimary = 1.20f;    // base scaling factor applied to potions etc. that are considered useful for the the primary combattype of an actor
+		static inline float _StyleScalingSecondary = 1.10f;  // base scaling factor applied to potions etc. that are considered useful for the secondary combattype of an actor
+	};
+
+	/// <summary>
+	/// Settings related to removal options
+	/// </summary>
+	struct Removal
+	{
+		static inline bool _RemoveItemsOnDeath = true;  // remove unused items on death, if activated chances for removal can be set
+
+		static inline int _ChanceToRemoveItem = 90;         // chance for an item to be removed
+		static inline int _MaxItemsLeft = 2;                // maximum number of items that may remain, from those to be removed
+	};
+
+	/// <summary>
+	/// Settings for the whitelist mode
+	/// </summary>
+	struct Whitelist
+	{
+		static inline bool Enabled = false;
+	};
+
+	/// <summary>
+	/// Settings related to fixes
+	/// </summary>
+	struct Fixes
+	{
+		static inline bool _ApplySkillBoostPerks = true;  // Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
+		static inline bool _ForceFixPotionSounds = true;
+	};
+
+	/// <summary>
+	/// General settings for compatibility
+	/// </summary>
+	struct Compatibility
+	{
+		// compatibility
+		static inline bool _CompatibilityMode = false;  // Use Items with Papyrus, needs the plugin
+		static inline bool _DisableCreaturesWithoutRules = true;  // disables all npcs with the ActorTypeCreature or ActorTypeAnimal keywords, if they do not have a dedicated rule. May cause npcs to be disabled, that should not be
+
+		struct UltimatePotionAnimation
+		{
+			static inline bool _CompatibilityPotionAnimation = false;					// Use Potions with Papyrus
+			static inline bool _CompatibilityPotionAnimationFortify = false;                   // Use Potions with Papyrusv
+		};
+
+		struct PotionAnimatedFx
+		{
+			static inline bool _CompatibilityPotionAnimatedFx = false;					// no settings entry | Compatiblity Mode for Mods
+		};
+		struct CACO
+		{
+			static inline bool _CompatibilityCACO = false;  // automatic
+		};
+
+		struct Apothecary
+		{
+			static inline bool _CompatibilityApothecary = false;  // automatic
+		};
+
+		struct AnimatedPoisons
+		{
+			static inline bool _CompatibilityAnimatedPoisons = false;  // automatic
+			static inline bool _Enable = true;
+			static inline bool _UsePoisonDosage = false;  // enables the poison dosage mechanic of Animated Poisons if the mod is found
+		};
+
+		struct AnimatedPotions
+		{
+			static inline bool _CompatibilityAnimatedPotions = false;  // automatic
+			static inline bool _Enable = true;
+		};
+	};
+
+	/// <summary>
+	/// Settings for debug features
+	/// </summary>
+	struct Debug
+	{
+		static inline bool _CompatibilityRemoveItemsBeforeDist = false;            // removes items from actors before the distribution of new items
+		static inline bool _CompatibilityRemoveItemsStartup = false;               // removes items from actors at startup
+		static inline bool _CompatibilityRemoveItemsStartup_OnlyExcluded = false;  // removes only excluded items shortly after loading a game
+
+		static inline bool EnableLog = false;      // Enables general logging
+		static inline bool EnableLoadLog = false;  // Enables logging for plugin load
+		static inline int LogLevel = 0;            // 0 - only highest level
+												   // 1 - highest to layer 1 function logging
+												   // 2 - highest to layer 2 function logging
+												   // 3 - highest to layer 3 function logging
+		static inline int ProfileLevel = 0;        // 0 - highest level only
+												   // 1 - highest and layer 1
+												   // 2 - highest and layer 2
+		static inline bool EnableProfiling = false;
+		static inline bool _CalculateCellRules = false;
+
+		static inline bool _CheckActorsWithoutRules = false;  // checks for actors which do not have any rules, and prints their information to the, logfile
+		static inline bool _Test = false;
+	};
 
 	class Internal
 	{
@@ -286,7 +384,7 @@ public:
 	/// <returns></returns>
 	static bool CompatibilityFoodPapyrus()
 	{
-		return Settings::_CompatibilityMode;
+		return Settings::Compatibility::_CompatibilityMode;
 	}
 	/// <summary>
 	/// returns whether potions whould be used in compatibility mode
@@ -294,7 +392,7 @@ public:
 	/// <returns></returns>
 	static bool CompatibilityPotionPapyrus()
 	{
-		return Settings::_CompatibilityMode;
+		return Settings::Compatibility::_CompatibilityMode;
 	}
 
 	/// <summary>

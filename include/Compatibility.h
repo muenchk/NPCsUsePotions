@@ -5,7 +5,6 @@
 class Compatibility
 {
 public:
-	// ZUPA
 
 	// apothecary
 
@@ -69,7 +68,7 @@ public:
 	int AnPoti_GlobalCooldown = 0;
 
 	// ZUPA
-	int ZUPA_GlobalCooldown = 3000;
+	int ZUPA_GlobalCooldown = 2500;
 	
 	// potion animated fx
 	static inline std::string PotionAnimatedfx = "PotionAnimatedfx.esp";
@@ -118,7 +117,7 @@ public:
 	/// <returns></returns>
 	bool LoadedApothecary()
 	{
-		return Settings::_CompatibilityApothecary && _loadedApothecary;
+		return Settings::Compatibility::Apothecary::_CompatibilityApothecary && _loadedApothecary;
 	}
 
 	/// <summary>
@@ -127,7 +126,7 @@ public:
 	/// <returns></returns>
 	bool LoadedCACO()
 	{
-		return Settings::_CompatibilityCACO && _loadedCACO;
+		return Settings::Compatibility::CACO::_CompatibilityCACO && _loadedCACO;
 	}
 	
 	/// <summary>
@@ -136,7 +135,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPotions()
 	{
-		return Settings::_CompatibilityAnimatedPotions && _loadedAnimatedPotions;
+		return Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable && _loadedAnimatedPotions;
 	}
 
 	/// <summary>
@@ -145,7 +144,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPoisons()
 	{
-		return Settings::_CompatibilityAnimatedPoisons && _loadedAnimatedPoisons;
+		return Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable && _loadedAnimatedPoisons;
 	}
 
 	/// <summary>
@@ -154,7 +153,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPotionFx()
 	{
-		return Settings::_CompatibilityPotionAnimatedFx && _loadedPotionAnimatedFx;
+		return Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx && _loadedPotionAnimatedFx;
 	}
 
 	/// <summary>
@@ -172,7 +171,7 @@ public:
 	/// <returns></returns>
 	bool DisableItemUsageWhileParalyzed()
 	{
-		return Settings::_featDisableItemUsageWhileStaggered || _disableParalyzedItems;	
+		return Settings::Usage::_DisableItemUsageWhileStaggered || _disableParalyzedItems;	
 	}
 	
 	/// <summary>

@@ -41,3 +41,4 @@ startenvlaptop.bat
 *.exe
 *.out
 *.app
+/tmp.txt
