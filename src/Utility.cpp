@@ -953,7 +953,6 @@ Distribution::AssocType Utility::MatchValidFormType(RE::FormType type, bool& val
 	case RE::FormType::Weapon:
 	case RE::FormType::Ammo:
 	case RE::FormType::SoulGem:
-	case RE::FormType::LeveledItem:
 		valid = true;
 		return Distribution::AssocType::kItem;
 	default:

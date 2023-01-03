@@ -334,6 +334,12 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 					return false;	
 			}
 			break;
+		case CustomItemConditionsAll::kIsGhost:
+			{
+				if (actor->IsGhost() == false)
+					return false;
+			}
+			break;
 		}
 	}
 
@@ -373,6 +379,12 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 					return true;	
 			}
 			break;
+		case CustomItemConditionsAny::kIsGhost:
+			{
+				if (actor->IsGhost())
+					return true;
+			}
+			break;
 		}
 	}
 	return false;
@@ -380,7 +392,7 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 
 bool ActorInfo::IsFollower()
 {
-	bool follower = actor->IsInFaction(Settings::CurrentFollowerFaction) | actor->IsInFaction(Settings::CurrentHirelingFaction);
+	bool follower = actor->IsInFaction(Settings::CurrentFollowerFaction) || actor->IsInFaction(Settings::CurrentHirelingFaction);
 	if (follower)
 		return true;
 	auto itr = actor->GetActorBase()->factions.begin();

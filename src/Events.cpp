@@ -1433,9 +1433,9 @@ namespace Events
 				// all npcs must be unregistered, even if distribution oes not apply to them
 				UnregisterNPC(actor);
 				// as with potion distribution, exlude excluded actors and potential followers
+				ActorInfo* acinfo = data->FindActor(actor);
 				if (!Distribution::ExcludedNPC(actor)) {
 					// create and insert new event
-					ActorInfo* acinfo = data->FindActor(actor);
 					deads.insert(actor->GetFormID());
 					LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
 					auto items = Distribution::GetMatchingInventoryItems(acinfo);
@@ -1464,20 +1464,21 @@ namespace Events
 							}
 						}
 					}
-					// distribute death items
-					auto ditems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->death);
-					// item, chance, num, cond1, cond2
-					for (int i = 0; i < ditems.size(); i++) {
-						// calc chances
-						if (rand100(rand) <= ditems[i]->chance) {
-							// distr item
-							RE::ExtraDataList* extra = new RE::ExtraDataList();
-							extra->SetOwner(actor);
-							actor->AddObjectToContainer(ditems[i]->object, extra, ditems[i]->num, nullptr);
-						}
-					}
+					
 				} else {
 					LOG1_4("{}[Events] [TESDeathEvent] actor {} is excluded or already dead", Utility::PrintForm(actor));
+				}
+				// distribute death items, independently of whether the npc is excluded
+				auto ditems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->death);
+				// item, chance, num, cond1, cond2
+				for (int i = 0; i < ditems.size(); i++) {
+					// calc chances
+					if (rand100(rand) <= ditems[i]->chance) {
+						// distr item
+						RE::ExtraDataList* extra = new RE::ExtraDataList();
+						extra->SetOwner(actor);
+						actor->AddObjectToContainer(ditems[i]->object, extra, ditems[i]->num, nullptr);
+					}
 				}
 				// delete actor from data
 				data->DeleteActor(actor->GetFormID());
