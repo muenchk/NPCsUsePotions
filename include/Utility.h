@@ -536,7 +536,7 @@ public:
 	/// <param name="file">the relative path of the file that contains the string</param>
 	/// <param name="line">the line in the file that contains the string</param>
 	/// <returns>a vector of parsed and validated objects</returns>
-	static std::vector<std::tuple<Distribution::AssocType, RE::FormID>> ParseAssocObjects(std::string input, bool& error, std::string file, std::string line);
+	static std::vector<std::tuple<Distribution::AssocType, RE::FormID>> ParseAssocObjects(std::string input, bool& error, std::string file, std::string line, int& totalobjects);
 
 	/// <summary>
 	/// Parses objects for distribution rules from a string input with an optional chance for items

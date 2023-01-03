@@ -398,7 +398,8 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 
 									// parse the associated objects
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
 
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
@@ -475,7 +476,8 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
 											std::get<0>(items[i]) & Distribution::AssocType::kNPC ||
@@ -499,7 +501,8 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kActor:
@@ -543,7 +546,8 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kFaction:
@@ -581,7 +585,8 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kItem:
@@ -611,13 +616,15 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> assocobj = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									bool errorcustom = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> assocobj = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									
 									// parse items associated
 									assoc = splits->at(splitindex);
 									splitindex++;
 									error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> associtm = Utility::ParseCustomObjects(assoc, error, file, tmp);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> associtm = Utility::ParseCustomObjects(assoc, errorcustom, file, tmp);
 									RE::TESForm* tmpf = nullptr;
 									RE::TESBoundObject* tmpb = nullptr;
 									RE::AlchemyItem* alch = nullptr;
@@ -775,7 +782,7 @@ void Settings::LoadDistrConfig()
 										}
 										LOGL_2("{}[Settings] [LoadDistrRules] attached custom rule to specific objects");
 									}
-									if (cx == 0 && assocobj.size() == 0) {
+									if (cx == 0 && total == 0) {
 										auto iter = Distribution::_customItems.find(0x0);
 										if (iter != Distribution::_customItems.end()) {
 											std::vector<Distribution::CustomItemStorage*> vec = iter->second;
@@ -830,7 +837,8 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									ItemStrength str = ItemStrength::kWeak;
 									// arse item strength
 									try {
@@ -879,7 +887,8 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									int str = 0;
 									// arse item strength
 									try {
@@ -954,7 +963,8 @@ void Settings::LoadDistrConfig()
 									std::string assoc = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp);
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++)
 									{
 										switch (std::get<0>(items[i])) {
@@ -1272,9 +1282,10 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 
 									bool error = false;
+									int total = 0;
 
 									// parse the associated objects
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
 
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
@@ -1471,7 +1482,8 @@ void Settings::LoadDistrConfig()
 
 					// parse the associated objects
 					bool error = false;
-					std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a));
+					int total = 0;
+					std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a), total);
 
 					std::pair<int, Distribution::Rule*> tmptuple = { prio, rule };
 					// assign rules to search parameters

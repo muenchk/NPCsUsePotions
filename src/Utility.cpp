@@ -578,7 +578,7 @@ RE::TESForm* Utility::GetTESForm(RE::TESDataHandler* datahandler, RE::FormID for
 	return tmp;
 }
 
-std::vector<std::tuple<Distribution::AssocType, RE::FormID>> Utility::ParseAssocObjects(std::string input, bool& error, std::string file, std::string line)
+std::vector<std::tuple<Distribution::AssocType, RE::FormID>> Utility::ParseAssocObjects(std::string input, bool& error, std::string file, std::string line, int& totalobjects)
 {
 	LOG_3("{}[Utility] [ParseAssocObjects]");
 	std::vector<std::tuple<Distribution::AssocType, RE::FormID>> ret;
@@ -599,6 +599,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID>> Utility::ParseAssoc
 			input.erase(0, input.find('<') + 1);
 			if ((pos = input.find('>')) != std::string::npos) {
 				// we have a valid entry, probably
+				totalobjects++;
 				std::string entry = input.substr(0, pos);
 				input.erase(0, pos + 1);
 				// parse form or editor id
@@ -952,6 +953,7 @@ Distribution::AssocType Utility::MatchValidFormType(RE::FormType type, bool& val
 	case RE::FormType::Weapon:
 	case RE::FormType::Ammo:
 	case RE::FormType::SoulGem:
+	case RE::FormType::LeveledItem:
 		valid = true;
 		return Distribution::AssocType::kItem;
 	default:

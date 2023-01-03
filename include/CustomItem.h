@@ -16,9 +16,10 @@ struct CustomItemConditionsAll
 		kHasMagicEffect = 1 << 5,	 // 20  // distribution & usage
 		kHasPerk = 1 << 6,			 // 40  // distribution & usage
 		kHasKeyword = 1 << 7,		 // 80  // distribution & usage
+		kIsGhost = 1 << 8,			 // 100 // distribution
 
 		kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven | kHasKeyword,
-		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword,
+		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword | kIsGhost,
 	};
 };
 
@@ -35,9 +36,10 @@ struct CustomItemConditionsAny
 		kHasMagicEffect = 1 << 5,    // 20  // distribution & usage
 		kHasPerk = 1 << 6,           // 40  // distribution & usage
 		kHasKeyword = 1 << 7,		 // 80  // distribution & usage
+		kIsGhost = 1 << 8,           // 100 // distribution
 
 		kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven | kHasKeyword,
-		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword,
+		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword | kIsGhost,
 	};
 };
 
