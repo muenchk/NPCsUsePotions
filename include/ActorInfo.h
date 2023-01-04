@@ -194,8 +194,10 @@ public:
 	bool IsBoss() { return _boss; }
 
 	std::vector<CustomItemAlch*> FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms);
+	bool CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms);
 	std::vector<CustomItemAlch*> FilterCustomConditionsUsage(std::vector<CustomItemAlch*> itms);
 	std::vector<CustomItem*> FilterCustomConditionsDistrItems(std::vector<CustomItem*> itms);
+	bool CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms);
 	bool CanUseItem(RE::FormID item);
 	bool CanUsePot(RE::FormID item);
 	bool CanUsePotion(RE::FormID item);

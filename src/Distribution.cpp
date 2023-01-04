@@ -1445,6 +1445,13 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 	bool baseexcluded = false;
 	int prio = INT_MIN;
 
+	std::vector<CustomItemStorage*>* citems = nullptr;
+	std::unordered_set<std::string>* citemsset = nullptr;
+	if (custItems) {
+		citems = new std::vector<CustomItemStorage*>{};
+		citemsset = new std::unordered_set<std::string>{};
+	}
+
 	Rule* rule = nullptr;
 	// define general stuff
 	auto style = npc->combatStyle;
@@ -1473,7 +1480,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}*/
-			for (int b = 0; b < vec.size(); b++) {
+			/* for (int b = 0; b < vec.size(); b++) {
 				for (int c = 0; c < vec[b]->items.size(); c++) {
 					custItems->items.push_back(vec[b]->items[c]);
 				}
@@ -1488,6 +1495,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				}
 				for (int c = 0; c < vec[b]->fortify.size(); c++) {
 					custItems->fortify.push_back(vec[b]->fortify[c]);
+				}
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				if (citemsset->contains(vec[b]->id) == false) {
+					citems->push_back(vec[b]);
+					citemsset->insert(vec[b]->id);
 				}
 			}
 		}
@@ -1539,7 +1552,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}*/
-			for (int b = 0; b < vec.size(); b++) {
+			/* for (int b = 0; b < vec.size(); b++) {
 				for (int c = 0; c < vec[b]->items.size(); c++) {
 					custItems->items.push_back(vec[b]->items[c]);
 				}
@@ -1555,6 +1568,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				for (int c = 0; c < vec[b]->fortify.size(); c++) {
 					custItems->fortify.push_back(vec[b]->fortify[c]);
 				}
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				if (citemsset->contains(vec[b]->id) == false) {
+					citems->push_back(vec[b]);
+					citemsset->insert(vec[b]->id);
+				}
 			}
 		}
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
@@ -1568,7 +1587,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
-				for (int b = 0; b < vec.size(); b++) {
+				/*for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						custItems->items.push_back(vec[b]->items[c]);
 					}
@@ -1583,6 +1602,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -1619,7 +1644,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 						custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 						custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 					}*/
-					for (int b = 0; b < vec.size(); b++) {
+					/* for (int b = 0; b < vec.size(); b++) {
 						for (int c = 0; c < vec[b]->items.size(); c++) {
 							custItems->items.push_back(vec[b]->items[c]);
 						}
@@ -1634,6 +1659,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 						}
 						for (int c = 0; c < vec[b]->fortify.size(); c++) {
 							custItems->fortify.push_back(vec[b]->fortify[c]);
+						}
+					}*/
+					for (int b = 0; b < vec.size(); b++) {
+						if (citemsset->contains(vec[b]->id) == false) {
+							citems->push_back(vec[b]);
+							citemsset->insert(vec[b]->id);
 						}
 					}
 				}
@@ -1669,7 +1700,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 						}*/
-						for (int b = 0; b < vec.size(); b++) {
+						/* for (int b = 0; b < vec.size(); b++) {
 							for (int c = 0; c < vec[b]->items.size(); c++) {
 								custItems->items.push_back(vec[b]->items[c]);
 							}
@@ -1684,6 +1715,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 							}
 							for (int c = 0; c < vec[b]->fortify.size(); c++) {
 								custItems->fortify.push_back(vec[b]->fortify[c]);
+							}
+						}*/
+						for (int b = 0; b < vec.size(); b++) {
+							if (citemsset->contains(vec[b]->id) == false) {
+								citems->push_back(vec[b]);
+								citemsset->insert(vec[b]->id);
 							}
 						}
 					}
@@ -1720,7 +1757,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
-				for (int b = 0; b < vec.size(); b++) {
+				/* for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						custItems->items.push_back(vec[b]->items[c]);
 					}
@@ -1735,6 +1772,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -1769,7 +1812,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 						}*/
-						for (int b = 0; b < vec.size(); b++) {
+						/* for (int b = 0; b < vec.size(); b++) {
 							for (int c = 0; c < vec[b]->items.size(); c++) {
 								custItems->items.push_back(vec[b]->items[c]);
 							}
@@ -1784,6 +1827,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 							}
 							for (int c = 0; c < vec[b]->fortify.size(); c++) {
 								custItems->fortify.push_back(vec[b]->fortify[c]);
+							}
+						}*/
+						for (int b = 0; b < vec.size(); b++) {
+							if (citemsset->contains(vec[b]->id) == false) {
+								citems->push_back(vec[b]);
+								citemsset->insert(vec[b]->id);
 							}
 						}
 					}
@@ -1820,7 +1869,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
-				for (int b = 0; b < vec.size(); b++) {
+				/* for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						custItems->items.push_back(vec[b]->items[c]);
 					}
@@ -1835,6 +1884,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -1868,7 +1923,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
-				for (int b = 0; b < vec.size(); b++) {
+				/* for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						custItems->items.push_back(vec[b]->items[c]);
 					}
@@ -1883,6 +1938,12 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						custItems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -1901,6 +1962,39 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 	if (bossoverride)
 		acs = ActorStrength::Boss;
 
+	if (custItems) {
+		auto itc = customItems()->find(0x0);
+		if (itc != customItems()->end()) {
+			auto vec = itc->second;
+			for (int b = 0; b < vec.size(); b++) {
+				if (citemsset->contains(vec[b]->id) == false) {
+					citems->push_back(vec[b]);
+					citemsset->insert(vec[b]->id);
+				}
+			}
+		}
+		// work the accumulated items
+		for (int b = 0; b < citems->size(); b++) {
+			for (int c = 0; c < citems->at(b)->items.size(); c++) {
+				custItems->items.push_back(citems->at(b)->items[c]);
+			}
+			for (int c = 0; c < citems->at(b)->death.size(); c++) {
+				custItems->death.push_back(citems->at(b)->death[c]);
+			}
+			for (int c = 0; c < citems->at(b)->poisons.size(); c++) {
+				custItems->poisons.push_back(citems->at(b)->poisons[c]);
+			}
+			for (int c = 0; c < citems->at(b)->potions.size(); c++) {
+				custItems->potions.push_back(citems->at(b)->potions[c]);
+			}
+			for (int c = 0; c < citems->at(b)->fortify.size(); c++) {
+				custItems->fortify.push_back(citems->at(b)->fortify[c]);
+			}
+		}
+		delete citems;
+		delete citemsset;
+	}
+
 	if (rule) {
 		LOG1_1("{}[SettingsDistribution] [CalcRuleBase] rule found: {}", rule->ruleName);
 		return rule;
@@ -1913,8 +2007,23 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 	}
 }
 
+bool CheckDistributability(ActorInfo* acinfo, Distribution::CustomItemStorage* cust)
+{
+	if (cust == nullptr)
+		return false;
+	bool distr = false;
+	distr |= acinfo->CheckCustomConditionsDistr(cust->food);
+	distr |= acinfo->CheckCustomConditionsDistr(cust->fortify);
+	distr |= acinfo->CheckCustomConditionsDistr(cust->poisons);
+	distr |= acinfo->CheckCustomConditionsDistr(cust->potions);
+	distr |= acinfo->CheckCustomConditionsDistrItems(cust->death);
+	distr |= acinfo->CheckCustomConditionsDistrItems(cust->items);
+	return distr;
+}
+
 Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tpltinfo)
 {
+	auto begin = std::chrono::steady_clock::now();
 	if (acinfo == nullptr)
 		return emptyRule;
 	// calc strength section
@@ -1978,6 +2087,13 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 
 	bool calccustitems = !acinfo->citems->calculated;
 
+	std::vector<CustomItemStorage*>* citems = nullptr;
+	std::unordered_set<std::string>* citemsset = nullptr;
+	if (calccustitems) {
+		citems = new std::vector<CustomItemStorage*>{};
+		citemsset = new std::unordered_set<std::string>{};
+	}
+
 	auto base = acinfo->actor->GetActorBase();
 
 	Rule* rule = nullptr;
@@ -2009,8 +2125,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}*/
-
-			for (int b = 0; b < vec.size(); b++) {
+			/*for (int b = 0; b < vec.size(); b++) {
 				for (int c = 0; c < vec[b]->items.size(); c++) {
 					acinfo->citems->items.push_back(vec[b]->items[c]);
 				}
@@ -2025,6 +2140,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				}
 				for (int c = 0; c < vec[b]->fortify.size(); c++) {
 					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+				}
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+					citems->push_back(vec[b]);
+					citemsset->insert(vec[b]->id);
 				}
 			}
 		}
@@ -2056,7 +2177,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}*/
-			for (int b = 0; b < vec.size(); b++) {
+			/* for (int b = 0; b < vec.size(); b++) {
 				for (int c = 0; c < vec[b]->items.size(); c++) {
 					acinfo->citems->items.push_back(vec[b]->items[c]);
 				}
@@ -2071,6 +2192,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				}
 				for (int c = 0; c < vec[b]->fortify.size(); c++) {
 					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+				}
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+					citems->push_back(vec[b]);
+					citemsset->insert(vec[b]->id);
 				}
 			}
 		}
@@ -2130,7 +2257,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}*/
 
-			for (int b = 0; b < vec.size(); b++) {
+			/* for (int b = 0; b < vec.size(); b++) {
 				for (int c = 0; c < vec[b]->items.size(); c++) {
 					acinfo->citems->items.push_back(vec[b]->items[c]);
 				}
@@ -2146,6 +2273,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				for (int c = 0; c < vec[b]->fortify.size(); c++) {
 					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
 				}
+			}*/
+			for (int b = 0; b < vec.size(); b++) {
+				if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+					citems->push_back(vec[b]);
+					citemsset->insert(vec[b]->id);
+				}
 			}
 		}
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
@@ -2160,7 +2293,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
 
-				for (int b = 0; b < vec.size(); b++) {
+				/* for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						acinfo->citems->items.push_back(vec[b]->items[c]);
 					}
@@ -2175,6 +2308,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -2215,7 +2354,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 						acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 					}*/
 
-					for (int b = 0; b < vec.size(); b++) {
+					/* for (int b = 0; b < vec.size(); b++) {
 						for (int c = 0; c < vec[b]->items.size(); c++) {
 							acinfo->citems->items.push_back(vec[b]->items[c]);
 						}
@@ -2230,6 +2369,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 						}
 						for (int c = 0; c < vec[b]->fortify.size(); c++) {
 							acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+						}
+					}*/
+					for (int b = 0; b < vec.size(); b++) {
+						if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+							citems->push_back(vec[b]);
+							citemsset->insert(vec[b]->id);
 						}
 					}
 				}
@@ -2269,7 +2414,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 							acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 						}*/
 
-						for (int b = 0; b < vec.size(); b++) {
+						/* for (int b = 0; b < vec.size(); b++) {
 							for (int c = 0; c < vec[b]->items.size(); c++) {
 								acinfo->citems->items.push_back(vec[b]->items[c]);
 							}
@@ -2284,6 +2429,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 							}
 							for (int c = 0; c < vec[b]->fortify.size(); c++) {
 								acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+							}
+						}*/
+						for (int b = 0; b < vec.size(); b++) {
+							if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+								citems->push_back(vec[b]);
+								citemsset->insert(vec[b]->id);
 							}
 						}
 					}
@@ -2325,7 +2476,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
 
-				for (int b = 0; b < vec.size(); b++) {
+				/* for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						acinfo->citems->items.push_back(vec[b]->items[c]);
 					}
@@ -2340,6 +2491,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -2378,7 +2535,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 							acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 						}*/
 
-						for (int b = 0; b < vec.size(); b++) {
+						/* for (int b = 0; b < vec.size(); b++) {
 							for (int c = 0; c < vec[b]->items.size(); c++) {
 								acinfo->citems->items.push_back(vec[b]->items[c]);
 							}
@@ -2393,6 +2550,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 							}
 							for (int c = 0; c < vec[b]->fortify.size(); c++) {
 								acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+							}
+						}*/
+						for (int b = 0; b < vec.size(); b++) {
+							if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+								citems->push_back(vec[b]);
+								citemsset->insert(vec[b]->id);
 							}
 						}
 					}
@@ -2434,7 +2597,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
 
-				for (int b = 0; b < vec.size(); b++) {
+				/* for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						acinfo->citems->items.push_back(vec[b]->items[c]);
 					}
@@ -2449,6 +2612,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -2484,7 +2653,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 					acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 				}*/
-				for (int b = 0; b < vec.size(); b++) {
+				/* for (int b = 0; b < vec.size(); b++) {
 					for (int c = 0; c < vec[b]->items.size(); c++) {
 						acinfo->citems->items.push_back(vec[b]->items[c]);
 					}
@@ -2499,6 +2668,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					}
 					for (int c = 0; c < vec[b]->fortify.size(); c++) {
 						acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
+					}
+				}*/
+				for (int b = 0; b < vec.size(); b++) {
+					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
 					}
 				}
 			}
@@ -2531,7 +2706,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				acinfo->citems->fortify.insert(acinfo->citems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
 				acinfo->citems->food.insert(acinfo->citems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
 			}*/
-			for (int b = 0; b < vec.size(); b++) {
+			/* for (int b = 0; b < vec.size(); b++) {
 				for (int c = 0; c < vec[b]->items.size(); c++) {
 					acinfo->citems->items.push_back(vec[b]->items[c]);
 				}
@@ -2547,40 +2722,41 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				for (int c = 0; c < vec[b]->fortify.size(); c++) {
 					acinfo->citems->fortify.push_back(vec[b]->fortify[c]);
 				}
-			} /*
-			//LOG3_1("{}[Settings] [LoadDistr] {}: FormID: {}\tEntries: {}", std::to_string(1), std::to_string(itc->first), vec.size());
+			} */
 			for (int b = 0; b < vec.size(); b++) {
-				for (int i = 0; i < vec[b]->items.size(); i++) {
-					auto cit = vec[b]->items[i];
-					acinfo->citems->items.push_back(cit);
-					//LOG3_1("{}[Settings] [LoadDistr] {}: Items: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
+				if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+					citems->push_back(vec[b]);
+					citemsset->insert(vec[b]->id);
 				}
-				for (int i = 0; i < vec[b]->death.size(); i++) {
-					auto cit = vec[b]->death[i];
-					acinfo->citems->death.push_back(cit);
-					//LOG3_1("{}[Settings] [LoadDistr] {}: Death: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
-				}
-				for (int i = 0; i < vec[b]->poisons.size(); i++) {
-					auto cit = vec[b]->poisons[i];
-					acinfo->citems->poisons.push_back(cit);
-					//LOG3_1("{}[Settings] [LoadDistr] {}: Poisons: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
-				}
-				for (int i = 0; i < vec[b]->potions.size(); i++) {
-					auto cit = vec[b]->potions[i];
-					acinfo->citems->potions.push_back(cit);
-					//LOG3_1("{}[Settings] [LoadDistr] {}: Potions: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
-				}
-				for (int i = 0; i < vec[b]->fortify.size(); i++) {
-					auto cit = vec[b]->fortify[i];
-					acinfo->citems->fortify.push_back(cit);
-					//LOG3_1("{}[Settings] [LoadDistr] {}: Fortify: Name: {}\tChance: {}", std::to_string(1), cit->object->GetName(), std::to_string(cit->chance));
-				}
-			}*/
+			} 
 		}
+		// work the accumulated items
+		for (int b = 0; b < citems->size(); b++) {
+			for (int c = 0; c < citems->at(b)->items.size(); c++) {
+				acinfo->citems->items.push_back(citems->at(b)->items[c]);
+			}
+			for (int c = 0; c < citems->at(b)->death.size(); c++) {
+				acinfo->citems->death.push_back(citems->at(b)->death[c]);
+			}
+			for (int c = 0; c < citems->at(b)->poisons.size(); c++) {
+				acinfo->citems->poisons.push_back(citems->at(b)->poisons[c]);
+			}
+			for (int c = 0; c < citems->at(b)->potions.size(); c++) {
+				acinfo->citems->potions.push_back(citems->at(b)->potions[c]);
+			}
+			for (int c = 0; c < citems->at(b)->fortify.size(); c++) {
+				acinfo->citems->fortify.push_back(citems->at(b)->fortify[c]);
+			}
+		}
+		delete citems;
+		delete citemsset;
+
 		acinfo->citems->calculated = true;
 		acinfo->citems->CreateMaps();
 	}
 	acinfo->_boss = bossoverride;
+
+	PROF1_1("{}[Distribution] [CalcRule] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 
 	if (rule) {
 		//logger::info("rule 18 {}", Utility::GetHex((uintptr_t)rule));

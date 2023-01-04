@@ -199,6 +199,8 @@ void Compatibility::Load()
 	sem.release();
 }
 
+std::binary_semaphore actorpoisonlock{ 1 };
+
 void Compatibility::Clear()
 {
 	// get lock to avoid deadlocks (should not occur, since the functions should not be called simultaneously
@@ -279,8 +281,6 @@ void Compatibility::Clear()
 
 	sem.release();
 }
-
-std::binary_semaphore actorpoisonlock{ 1 };
 
 RE::AlchemyItem* Compatibility::AnPois_FindActorPoison(RE::FormID actor)
 {

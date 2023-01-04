@@ -609,12 +609,14 @@ void Settings::LoadDistrConfig()
 								break;
 							case 8: // custom object distribution
 								{
-									if (splits->size() != 4) {
-										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+									if (splits->size() != 5) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 5. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
 										continue;
 									}
-
+									std::string id = splits->at(splitindex);
+									splitindex++;
 									Distribution::CustomItemStorage* citems = new Distribution::CustomItemStorage();
+									citems->id = id;
 									// parse associated obj
 									std::string assoc = splits->at(splitindex);
 									splitindex++;

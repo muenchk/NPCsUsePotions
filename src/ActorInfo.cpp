@@ -62,6 +62,20 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<
 	return dist;
 }
 
+bool ActorInfo::CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
+{
+	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistr]");
+	bool distributable = false;
+	for (int i = 0; i < itms.size(); i++) {
+		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0)
+			continue;
+		bool valid = CalcDistrConditions(itms[i]);
+		if (valid == true)
+			distributable |= valid;
+	}
+	return distributable;
+}
+
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
@@ -92,6 +106,21 @@ std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector
 			dist.push_back(itms[i]);
 	}
 	return dist;
+}
+
+bool ActorInfo::CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms)
+{
+	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistrItems]");
+	bool distributable = false;
+	for (int i = 0; i < itms.size(); i++) {
+		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
+			continue;
+		}
+		bool valid = CalcDistrConditions(itms[i]);
+		if (valid == true)
+			distributable |= valid;
+	}
+	return distributable;
 }
 
 bool ActorInfo::CanUseItem(RE::FormID item)

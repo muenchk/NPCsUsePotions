@@ -439,6 +439,10 @@ public:
 	{
 	public:
 		/// <summary>
+		/// id of the custom rule.
+		/// </summary>
+		std::string id;
+		/// <summary>
 		/// races, factions, kwds, classes, combatstyles, etc. which may get the items below
 		/// </summary>
 		std::unordered_set<RE::FormID> assocobjects;
