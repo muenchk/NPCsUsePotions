@@ -74,6 +74,9 @@ void Settings::LoadDistrConfig()
 	if (Logging::EnableLoadLog == false)
 		Logging::EnableGenericLogging = false;
 
+	// reset custom items
+	Distribution::ResetCustomItems();
+
 	std::vector<std::string> files;
 	auto constexpr folder = R"(Data\SKSE\Plugins\)";
 	for (const auto& entry : std::filesystem::directory_iterator(folder)) {

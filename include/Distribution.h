@@ -705,4 +705,6 @@ private:
 
 	static NPCTPLTInfo ExtractTemplateInfo(RE::TESNPC* npc);
 	static NPCTPLTInfo ExtractTemplateInfo(RE::TESLevCharacter* lvl);
+
+	static void ResetCustomItems();
 };

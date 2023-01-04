@@ -2843,4 +2843,36 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 		return std::vector<std::tuple<int, Distribution::Rule*, std::string>>{ { INT_MIN, Distribution::defaultRule, "Default" } };
 	}
 }
+
+void Distribution::ResetCustomItems()
+{
+	std::unordered_set<Distribution::CustomItemStorage*> set;
+	LogConsole("Gathering custom items...");
+	for (auto cust : _customItems) {
+		for (int i = 0; i < cust.second.size(); i++) {
+			if (cust.second[i] != nullptr)
+				set.insert(cust.second[i]);
+		}
+	}
+	_customItems.clear();
+	LogConsole(("Found " + std::to_string(set.size()) + " custom items. Beginning deletion").c_str());
+	for (auto entry : set) {
+		for (int i = 0; i < entry->items.size(); i++)
+			delete entry->items[i];
+		for (int i = 0; i < entry->death.size(); i++)
+			delete entry->death[i];
+		for (int i = 0; i < entry->potions.size(); i++)
+			delete entry->potions[i];
+		for (int i = 0; i < entry->poisons.size(); i++)
+			delete entry->poisons[i];
+		for (int i = 0; i < entry->fortify.size(); i++)
+			delete entry->fortify[i];
+		for (int i = 0; i < entry->food.size(); i++)
+			delete entry->food[i];
+		delete entry;
+	}
+	set.clear();
+	LogConsole("Reset custom items");
+}
+
 #pragma endregion

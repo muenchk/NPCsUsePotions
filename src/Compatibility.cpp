@@ -271,6 +271,12 @@ void Compatibility::Clear()
 	_AnPois_ActorPoisonMap.clear();
 	_disableParalyzedItems = false;
 
+
+	// clear poison list
+	actorpoisonlock.acquire();
+	_AnPois_ActorPoisonMap.clear();
+	actorpoisonlock.release();
+
 	sem.release();
 }
 
