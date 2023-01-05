@@ -23,7 +23,7 @@ void ACM::Init()
 std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::AlchemyItem* item, AlchemyEffectBase alchemyEffect)
 {
 	LOG_3("{}[ActorManipulation] [HasAlchemyEffect]");
-	auto [mapf, eff, dur, mag, detr] = data->GetAlchItemEffects(item->GetFormID());
+	auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
 	if (mapf) {
 		if ((eff & alchemyEffect) != 0) {
 			LOG_4("{}[ActorManipulation] [HasAlchemyEffect] fast success");
@@ -91,6 +91,9 @@ std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::
 		if (found) {
 			//logger::info("[ActorManipulation] [HasAlchemyEffect] dur {} mag {}, effect {}, converted {}", dur, mag, out, static_cast<uint64_t>(static_cast<AlchemyEffect>(out)));
 			LOG_4("{}[ActorManipulation] [HasAlchemyEffect] slow success");
+			// save calculated values to data
+			dosage = Distribution::GetPoisonDosage(item, out);
+			data->SetAlchItemEffects(item->GetFormID(), out, dur, mag, detrimental, dosage);
 			return { true, mag, dur, out,detrimental };
 		}
 		LOG_4("{}[ActorManipulation] [HasAlchemyEffect] slow fail: does not match effect");
@@ -644,7 +647,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 					if (!audiomanager)
 						audiomanager = RE::BSAudioManager::GetSingleton();
 					RE::ExtraDataList* extra = new RE::ExtraDataList();
-					int dosage = Utility::GetPoisonDosage(poison);
+					int dosage = data->GetPoisonDosage(poison);
 					extra->Add(new RE::ExtraPoison(poison, dosage));
 					auto ied = acinfo->actor->GetEquippedEntryData(false);
 					if (ied) {

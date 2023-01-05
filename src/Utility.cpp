@@ -1211,9 +1211,3 @@ bool Utility::ValidateActor(RE::Actor* actor)
 
 	return true;
 }
-
-int Utility::GetPoisonDosage(RE::AlchemyItem* /*poison*/)
-{
-	// TODO
-	return 1;
-}

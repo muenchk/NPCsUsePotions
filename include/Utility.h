@@ -620,13 +620,6 @@ public:
 	static const char* GetPluginName(RE::TESForm* form);
 
 	/// <summary>
-	/// Returns the dosage of the given poison that is to be applied
-	/// </summary>
-	/// <param name="poison"></param>
-	/// <returns></returns>
-	static int GetPoisonDosage(RE::AlchemyItem* poison);
-
-	/// <summary>
 	/// Returns a vector with all forms of the given type in the plugin
 	/// </summary>
 	/// <typeparam name="T"></typeparam>

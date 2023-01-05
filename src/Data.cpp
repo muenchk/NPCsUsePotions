@@ -6,6 +6,7 @@
 #include "Logging.h"
 #include "Utility.h"
 #include "Statistics.h"
+#include "ActorManipulation.h"
 
 
 RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
@@ -287,22 +288,22 @@ void Data::DeleteActorInfoMap()
 	lockdata.release();
 }
 
-void Data::SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude, bool detrimental)
+void Data::SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude, bool detrimental, int dosage)
 {
-	std::tuple<AlchemyEffectBase, int, float, bool> t = { effects, duration, magnitude, detrimental };
+	std::tuple<AlchemyEffectBase, int, float, bool, int> t = { effects, duration, magnitude, detrimental, dosage };
 	alchitemEffectMap.insert_or_assign(id, t);
 }
 
-std::tuple<bool, AlchemyEffectBase, int, float, bool> Data::GetAlchItemEffects(uint32_t id)
+std::tuple<bool, AlchemyEffectBase, int, float, bool, int> Data::GetAlchItemEffects(uint32_t id)
 {
 	auto itr = alchitemEffectMap.find(id);
 	if (itr != alchitemEffectMap.end()) {
-		auto [eff, dur, mag, detri] = itr->second;
+		auto [eff, dur, mag, detri, dosage] = itr->second;
 		// found
-		return { true, eff, dur, mag, detri };
+		return { true, eff, dur, mag, detri, dosage };
 	} else {
 		// not found
-		return { false, 0, 0, 0.0f, false };
+		return { false, 0, 0, 0.0f, false, 0 };
 	}
 }
 
@@ -359,4 +360,25 @@ void Data::DeleteFormCustom(RE::FormID formid)
 		customItemFormMap.erase(formid);
 	}
 	lockdata.release();
+}
+
+int Data::GetPoisonDosage(RE::AlchemyItem* poison)
+{
+	{
+		auto [mapf, eff, dur, mag, detr, dosage] = GetAlchItemEffects(poison->GetFormID());
+		if (mapf) {
+			// found it in database
+			return dosage;
+		}
+	}
+	// we didn't find it, so we need to calculate it
+	ACM::HasAlchemyEffect(poison, 0xFFFFFFFFFFFFFFFF); // find any effect, results will be entered into database if valid
+	{
+		auto [mapf, eff, dur, mag, detr, dosage] = GetAlchItemEffects(poison->GetFormID());
+		if (mapf) {
+			// found it in database
+			return dosage;
+		}
+	}
+	return Settings::Poisons::_Dosage;
 }

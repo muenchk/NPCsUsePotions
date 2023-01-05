@@ -119,6 +119,9 @@ public:
 		static inline float _EnemyLevelScalePlayerLevel = 0.8f;  // how high the level of an enemy must be for followers to use poisons
 		static inline int _EnemyNumberThreshold = 5;             // how many npcs must be fighting, for followers to use poisons regardless of the enemies level
 		static inline int _UsePoisonChance = 100;                // Chance that a poison will be used when possible
+
+		static const int _BaseDosage = 1;		   // base dosage. if dosage is different dosage rules are ignored
+		static inline int _Dosage = _BaseDosage;  //  dosage applied to poisons
 	};
 
 	/// <summary>

@@ -981,6 +981,100 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
+							case 14: // poison dosage item based
+								{
+									// version, type, enforce, assocobjects (items), dosage or setting 
+									if (splits->size() != 5) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 5. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string senforce = splits->at(splitindex);
+									splitindex++;
+									bool enforce = false;
+									try {
+										if (std::stol(senforce) == 1)
+											enforce = true;
+									}
+									catch (std::exception&) {
+										enforce = false;
+									}
+
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									std::string sdosage = splits->at(splitindex);
+									splitindex++;
+									bool setting = false;
+									int dosage = 0;
+									if (sdosage == "setting") {
+										setting = true;
+										dosage = 1;
+									} else {
+										try {
+											dosage = std::stoi(sdosage);
+										}
+										catch (std::exception&) {
+											logwarn("[Settings] [LoadDistrRules] expection in field \"Dosage\". file: {}, rule:\"{}\"", file, tmp);
+											delete splits;
+											continue;
+										}
+									}
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										if (std::get<0>(items[i]) == Distribution::AssocType::kItem) {
+											Distribution::_dosageItemMap.insert_or_assign(std::get<1>(items[i]), std::tuple<bool, bool, int>{ enforce, setting, dosage });
+										}
+									}
+									delete splits;
+								}
+								break;
+							case 15: // poison dosage effect based
+								{
+									// version, type, enforce, effect, dosage or setting
+									if (splits->size() != 5) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 5. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string senforce = splits->at(splitindex);
+									splitindex++;
+									bool enforce = false;
+									try {
+										if (std::stol(senforce) == 1)
+											enforce = true;
+									} catch (std::exception&) {
+										enforce = false;
+									}
+
+									std::string seffects = splits->at(splitindex);
+									splitindex++;
+									std::string sdosage = splits->at(splitindex);
+									splitindex++;
+									bool setting = false;
+									int dosage = 0;
+									if (sdosage == "setting") {
+										setting = true;
+										dosage = 1;
+									} else {
+										try {
+											dosage = std::stoi(sdosage);
+										} catch (std::exception&) {
+											logwarn("[Settings] [LoadDistrRules] expection in field \"Dosage\". file: {}, rule:\"{}\"", file, tmp);
+											delete splits;
+											continue;
+										}
+									}
+									bool error = false;
+									std::vector<std::tuple<uint64_t, float>> effects = Utility::ParseAlchemyEffects(seffects, error);
+									for (int i = 0; i < effects.size(); i++) {
+										AlchemyEffect effect = static_cast<AlchemyEffect>(std::get<0>(effects[i]));
+										if (effect != AlchemyEffect::kNone) {
+											Distribution::_dosageEffectMap.insert_or_assign(effect, std::tuple<bool, bool, int>{ enforce, setting, dosage });
+										}
+									}
+									delete splits;
+								}
+								break;
 							default:
 								logwarn("[Settings] [LoadDistrRules] Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;
@@ -2723,8 +2817,11 @@ void Settings::ClassifyItems()
 						}
 					}
 				}
+				int dosage = 0;
+				if (item->IsPoison())
+					dosage = Distribution::GetPoisonDosage(item, std::get<0>(clas));
 				// add item into effect map
-				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas));
+				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas), dosage);
 			}
 
 			itemi = (*iter).second->As<RE::IngredientItem>();

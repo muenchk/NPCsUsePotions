@@ -1276,6 +1276,52 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 	return ret;
 }
 
+int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase effects)
+{
+	int dosage = 0;
+	auto itr = dosageItemMap()->find(poison->GetFormID());
+	if (itr != dosageItemMap()->end()) {
+		auto [force, setting, dos] = itr->second;
+		if (force && setting)
+			dosage = Settings::Poisons::_Dosage;
+		else if (force)
+			dosage = dos;
+		else if (setting)
+			dosage = Settings::Poisons::_Dosage;
+		else if (Settings::Poisons::_BaseDosage == Settings::Poisons::_Dosage)
+			dosage = dos;
+	}
+	// we evaluated the item specific dosage
+	// if we did not find anything check the effect specific dosages
+	if (dosage != 0) {
+		// find the minimum explicit value we can apply
+		std::vector<AlchemyEffect> effvec = AlchEff::GetAlchemyEffects(effects);
+		int min = INT_MAX;
+		for (int i = 0; i < effvec.size(); i++) {
+			auto itra = dosageEffectMap()->find(effvec[i]);
+			if (itra != dosageEffectMap()->end()) {
+				auto [force, setting, dos] = itr->second;
+				if (force && setting)
+					dos = Settings::Poisons::_Dosage;
+				else if (force)
+					dos = dos;
+				else if (setting)
+					dos = Settings::Poisons::_Dosage;
+				else if (Settings::Poisons::_BaseDosage == Settings::Poisons::_Dosage)
+					dos = dos;
+				if (dos < min)
+					min = dos;
+			}
+		}
+		if (min < INT_MAX)
+			dosage = min;
+	}
+	// if we did not find anything at all, assign the setting
+	if (dosage <= 0)
+		dosage = Settings::Poisons::_Dosage;
+	return dosage;
+}
+
 /// <summary>
 /// returns wether an npc is excluded from item distribution
 /// </summary>
@@ -1665,11 +1711,11 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 						if (citemsset->contains(vec[b]->id) == false) {
 							citems->push_back(vec[b]);
 							citemsset->insert(vec[b]->id);
-						}
 					}
 				}
 			}
 		}
+	}
 	}
 	if (tpltinfo) {
 		for (int i = 0; i < tpltinfo->tpltkeywords.size(); i++) {
@@ -2278,8 +2324,8 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 				if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
 					citems->push_back(vec[b]);
 					citemsset->insert(vec[b]->id);
-				}
 			}
+		}
 		}
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
 			itc = customItems()->find(race->keywords[i]->GetFormID());
@@ -2497,10 +2543,10 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
 						citems->push_back(vec[b]);
 						citemsset->insert(vec[b]->id);
-					}
 				}
 			}
 		}
+	}
 	}
 	if (tpltinfo) {
 		//logger::info("rule 13");
@@ -2623,7 +2669,6 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 			}
 		}
 	}
-
 	// handle combat styles
 	if (base->combatStyle) {
 		//logger::info("rule 16");
@@ -2674,10 +2719,10 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
 						citems->push_back(vec[b]);
 						citemsset->insert(vec[b]->id);
-					}
 				}
 			}
 		}
+	}
 	}
 
 	if (acsadj != 0) {
@@ -2728,7 +2773,7 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tplti
 					citems->push_back(vec[b]);
 					citemsset->insert(vec[b]->id);
 				}
-			} 
+			}
 		}
 		// work the accumulated items
 		for (int b = 0; b < citems->size(); b++) {

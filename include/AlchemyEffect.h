@@ -8,7 +8,7 @@ typedef uint64_t AlchemyEffectBase;
 	/// <summary>
 /// Supported AlchemyEffects
 /// </summary>
-enum class AlchemyEffect : unsigned __int64
+enum class AlchemyEffect : AlchemyEffectBase
 {
 	kNone = 0,                                      // 0
 	kHealth = 1 << 0,                               // 1
@@ -66,6 +66,14 @@ enum class AlchemyEffect : unsigned __int64
 	kFortifyHealth = (unsigned __int64)1 << 52,     // 10000000000000
 	kFortifyMagicka = (unsigned __int64)1 << 53,    // 20000000000000
 	kFortifyStamina = (unsigned __int64)1 << 54,    // 40000000000000
+	kUnused1 = (unsigned __int64)1 << 55,			// 80000000000000
+	kUnused2 = (unsigned __int64)1 << 56,           // 100000000000000
+	kUnused3 = (unsigned __int64)1 << 57,           // 200000000000000
+	kUnused4 = (unsigned __int64)1 << 58,           // 300000000000000
+	kUnused5 = (unsigned __int64)1 << 59,           // 400000000000000
+	kUnused6 = (unsigned __int64)1 << 60,           // 800000000000000
+	kUnused7 = (unsigned __int64)1 << 61,           // 1000000000000000
+	kUnused8 = (unsigned __int64)1 << 62,           // 2000000000000000
 	kCustom = (unsigned __int64)1 << 63,            // 4000000000000000
 	// 2000007
 	kAnyPotion = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kInvisibility),
@@ -100,4 +108,5 @@ namespace AlchEff
 {
 	bool IsPotion(AlchemyEffectBase effects);
 	bool IsFortify(AlchemyEffectBase effects);
+	std::vector<AlchemyEffect> GetAlchemyEffects(AlchemyEffectBase effects);
 }

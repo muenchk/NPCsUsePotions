@@ -523,7 +523,15 @@ private:
 	/// set that contains factions, whichs members are considered followers of the player
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _followerFactions;
-
+	/// <summary>
+	/// map that contains the dosages set for specific items [forced, usesetting, integer]
+	/// </summary>
+	static inline std::unordered_map<RE::FormID, std::tuple<bool,bool,int>> _dosageItemMap;
+	/// <summary>
+	/// map that contains the dosages set for alchemic effects (lower priority than items) [forced, usesetting, integer]
+	/// </summary>
+	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dosageEffectMap;
+	
 public:
 	static inline std::vector<Rule*> _dummyVecR;
 	static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
@@ -534,6 +542,8 @@ public:
 	static inline std::unordered_set<uint16_t> _dummySet3;
 	static inline std::unordered_map<RE::FormID, ItemStrength> _dummyMap3;
 	static inline std::unordered_map<RE::FormID, int> _dummyMap4;
+	static inline std::unordered_map<RE::FormID, std::tuple<bool, bool, int>> _dummyMap5;
+	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dummyMap6;
 
 	/// <summary>
 	/// Returns the vector containing all rules
@@ -607,6 +617,16 @@ public:
 	/// returns the set that contains factions whichs members are considered followers of the player
 	/// </summary>
 	static inline std::unordered_set<RE::FormID>* followerFactions() { return initialised ? &_followerFactions : &_dummySet1; }
+	/// <summary>
+	/// return the map that contains the dosages for individual items
+	/// </summary>
+	/// <returns></returns>
+	static inline std::unordered_map<RE::FormID, std::tuple<bool, bool, int>>* dosageItemMap() { return initialised ? &_dosageItemMap : &_dummyMap5; }
+	/// <summary>
+	/// return the map that contains the dosages for alchemic effects
+	/// </summary>
+	/// <returns></returns>
+	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>>* dosageEffectMap() { return initialised ? &_dosageEffectMap : &_dummyMap6; }
 
 	static std::vector<std::tuple<int, AlchemyEffect>> GetVector(int i, AlchemyEffect alch)
 	{
@@ -673,6 +693,13 @@ public:
 	/// <param name="actor"></param>
 	/// <returns></returns>
 	static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(ActorInfo* acinfo);
+	/// <summary>
+	/// Returns the dosage of a poison
+	/// </summary>
+	/// <param name="poison"></param>
+	/// <param name="effects"></param>
+	/// <returns></returns>
+	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase effects);
 
 	static bool ExcludedNPC(RE::Actor* actor);
 	static bool ExcludedNPC(RE::TESNPC* npc);

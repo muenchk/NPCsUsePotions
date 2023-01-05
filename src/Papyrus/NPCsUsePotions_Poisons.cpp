@@ -13,6 +13,7 @@ namespace Papyrus
 		const std::string script = "NPCsUsePotions_Poisons";
 
 		static Compatibility* comp = nullptr;
+		static Data* data = nullptr;
 
 		/// <summary>
 		/// Game audiomanager which plays sounds.
@@ -37,7 +38,7 @@ namespace Papyrus
 
 			int dosage = poisonDosage;
 			if (!Settings::Compatibility::AnimatedPoisons::_UsePoisonDosage || dosage == 0)
-				dosage = Utility::GetPoisonDosage(poison);
+				dosage = data->GetPoisonDosage(poison);
 
 			// save statistics
 			Statistics::Misc_PoisonsUsed++;
@@ -101,6 +102,7 @@ namespace Papyrus
 		void Register(RE::BSScript::Internal::VirtualMachine* a_vm)
 		{
 			comp = Compatibility::GetSingleton();
+			data = Data::GetSingleton();
 
 			a_vm->RegisterFunction(std::string("AnimatedPoisons_Callback"), script, AnimatedPoisons_Callback);
 			a_vm->RegisterFunction(std::string("AnimatedPoisons_Abort"), script, AnimatedPoisons_Abort);

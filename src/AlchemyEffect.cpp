@@ -449,4 +449,14 @@ namespace AlchEff
 	{
 		return effects & static_cast<AlchemyEffectBase>(AlchemyEffect::kAnyFortify);
 	}
+	std::vector<AlchemyEffect> GetAlchemyEffects(AlchemyEffectBase effects)
+	{
+		std::vector<AlchemyEffect> effvec;
+		AlchemyEffectBase base = 1;
+		for (int i = 0; i < 64; i++) {
+			if (effects & (base << i))
+				effvec.push_back(static_cast<AlchemyEffect>(base << i));
+		}
+		return effvec;
+	}
 }

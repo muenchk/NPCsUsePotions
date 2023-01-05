@@ -276,7 +276,9 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "FightingNPCsNumberThreshold", std::to_string(Poisons::_EnemyNumberThreshold));
 		Poisons::_UsePoisonChance = static_cast<int>(ini.GetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance));
 		loginfo("[SETTINGS] {} {}", "UsePoisonChance", std::to_string(Poisons::_UsePoisonChance));
-
+		Poisons::_Dosage = static_cast<int>(ini.GetLongValue("Poisons", "Dosage", Poisons::_Dosage));
+		loginfo("[SETTINGS] {} {}", "Dosage", std::to_string(Poisons::_Dosage));
+		
 
 		// fortify potions
 		FortifyPotions::_enableFortifyPotions = ini.GetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions);
@@ -535,6 +537,7 @@ void Settings::Save()
 	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, ";Scaling factor when NPCs start using poisons on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use poisons.");
 	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold, ";When the number of NPCs in a fight is at least at this value, followers start to use poisons regardless of the enemies level, to faster help out the player.\n;This includes hostile and non-hostile NPCs.");
 	ini.SetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance, ";Chance that an NPC will use a fortify potion if they can.");
+	ini.SetLongValue("Poisons", "Dosage", Poisons::_Dosage, ";The dosage describes the number of hits a poison lasts on your weapons.\n;This does not affect all poisons, like paralysis poisons, to enforce balancing");
 
 
 	// fortify potions
