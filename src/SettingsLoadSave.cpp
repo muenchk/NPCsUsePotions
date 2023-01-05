@@ -475,7 +475,11 @@ void Settings::Load()
 	}
 
 	// search for AnimatedPotions.esp
-	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Comp::AnimatedPotions }); plugin) {
+	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Comp::AnimatedPotions_4_4 }); plugin) {
+		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
+		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
+	}
+	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Comp::AnimatedPotions_4_3 }); plugin) {
 		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
 		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
 	}

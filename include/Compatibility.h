@@ -63,7 +63,8 @@ public:
 
 
 	// animated potions
-	static inline std::string AnimatedPotions = "Animated Potions.esp";
+	static inline std::string AnimatedPotions_4_4 = "Animated Potions.esp";
+	static inline std::string AnimatedPotions_4_3 = "AnimatedPotions.esp";
 
 	int AnPoti_GlobalCooldown = 0;
 
