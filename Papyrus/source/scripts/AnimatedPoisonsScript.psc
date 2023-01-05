@@ -77,12 +77,10 @@ Function NPCsUsePotions_ItemRemoved(string eventName, string strArg, float numAr
         Actor act = sender as Actor
         if (act)
             form akBaseItem = Game.GetForm(strArg as Int)
-            debug.trace("[NPCsAnimatedPoisons] strArg " + akBaseItem)
             string PoisonKeystring = GetFormEditoriD(akBaseItem)
-            debug.trace("[NPCsAnimatedPoisons] " + PoisonKeystring)
             string AnimationEventstring = FetchAnimationEventstring(PoisonKeystring, akBaseItem, POiSON_LiST_FiLENAME);JsonUtil.stringListGet(POiSON_LiST_FiLENAME, PoisonKeystring, 0) ;Everything lowercase in Json. Ctrl + shift + p "Transfrom to lowercase"
             ;int PoisonDoseCount = JsonUtil.intListGet(POiSON_DOSE_LiST_FiLENAME, PoisonKeystring, 0)
-            debug.trace("[NPCsAnimatedPoisons] " + AnimationEventstring)
+            int PoisonDoseCount = JsonUtil.intListGet(POiSON_DOSE_LiST_FiLENAME, PoisonKeystring, 0)
             if EmptyAnimationEventstring(AnimationEventstring) == false
                 form actLeftitem
                 Spell actLeftSpell
@@ -150,7 +148,7 @@ Function NPCsUsePotions_ItemRemoved(string eventName, string strArg, float numAr
                     act.DrawWeapon()
                 endif
                 act.SetAnimationVariablebool("bSprintOK", true)
-                NPCsUsePotions_Poisons.AnimatedPoisons_Callback(act)
+                NPCsUsePotions_Poisons.AnimatedPoisons_Callback(act, PoisonDoseCount)
             endif
         endif
     endif

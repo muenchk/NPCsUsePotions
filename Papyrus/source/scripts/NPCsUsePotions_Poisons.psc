@@ -1,6 +1,6 @@
 Scriptname NPCsUsePotions_Poisons Hidden
 
-Function AnimatedPoisons_Callback(Actor akActor) global native
+Function AnimatedPoisons_Callback(Actor akActor, Int poisonDosage) global native
 
 Function AnimatedPoisons_Abort(Actor akActor) global native
 

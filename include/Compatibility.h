@@ -63,7 +63,7 @@ public:
 
 
 	// animated potions
-	static inline std::string AnimatedPotions = "AnimatedPotions.esp";
+	static inline std::string AnimatedPotions = "Animated Potions.esp";
 
 	int AnPoti_GlobalCooldown = 0;
 
@@ -92,6 +92,9 @@ private:
 	bool _disableParalyzedItems = false;
 
 	std::unordered_map<RE::FormID, std::tuple<RE::AlchemyItem*, RE::FormID>> _AnPois_ActorPoisonMap;
+
+	std::unordered_map<RE::FormID, std::tuple<RE::AlchemyItem*, RE::FormID>> _AnPoti_ActorPotionMap;
+	std::unordered_map<RE::FormID, std::tuple<RE::AlchemyItem*, RE::FormID, int>> _AnPoti_ActorPoisonMap;
 
 public:
 	
@@ -187,6 +190,16 @@ public:
 	void AnPois_AddActorPoison(RE::FormID actor, RE::AlchemyItem* poison);
 	void AnPois_DeleteActorPoison(RE::FormID actor);
 	void AnPois_RemoveActorPoison(RE::FormID actor);
+
+	
+	RE::AlchemyItem* AnPoti_FindActorPotion(RE::FormID actor);
+	void AnPoti_AddActorPotion(RE::FormID actor, RE::AlchemyItem* potion);
+	void AnPoti_DeleteActorPotion(RE::FormID actor);
+	void AnPoti_RemoveActorPotion(RE::FormID actor);
+	std::tuple<RE::AlchemyItem*, int> AnPoti_FindActorPoison(RE::FormID actor);
+	void AnPoti_AddActorPoison(RE::FormID actor, RE::AlchemyItem* Poison, int count);
+	void AnPoti_DeleteActorPoison(RE::FormID actor);
+	void AnPoti_RemoveActorPoison(RE::FormID actor);
 
 	static void Register();
 };

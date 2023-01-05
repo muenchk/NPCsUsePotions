@@ -22,7 +22,8 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Data.cpp" 
 	"${SOURCE_DIR}/Compatibility.cpp" 
 	"${SOURCE_DIR}/Papyrus.cpp" 
-	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp")
+	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp" 
+	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp")
 
 source_group(TREE "${ROOT_DIR}" FILES ${SOURCE_FILES})
 

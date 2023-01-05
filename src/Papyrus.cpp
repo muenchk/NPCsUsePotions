@@ -3,6 +3,7 @@
 #include "Papyrus.h"
 #include "Logging.h"
 #include "Papyrus/NPCsUsePotions_Poisons.h"
+#include "Papyrus/NPCsUsePotions_Potions.h"
 
 namespace Papyrus
 {
@@ -14,6 +15,7 @@ namespace Papyrus
 		}
 
 		Poisons::Register(a_vm);
+		Potions::Register(a_vm);
 
 		return true;
 	}

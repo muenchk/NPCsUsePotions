@@ -1483,6 +1483,8 @@ namespace Events
 				// delete actor from data
 				data->DeleteActor(actor->GetFormID());
 				comp->AnPois_RemoveActorPoison(actor->GetFormID());
+				comp->AnPoti_RemoveActorPotion(actor->GetFormID());
+				comp->AnPoti_RemoveActorPoison(actor->GetFormID());
 			}
 		}
 	TESDeathEventEnd:
@@ -1505,9 +1507,17 @@ namespace Events
 			RE::Actor* actor = a_event->target.get()->As<RE::Actor>();
 			if (actor) {
 				// check whether the actor is queued for poison application
-				if (comp->AnPois_FindActorPoison(actor->GetFormID()) != nullptr) {
+				if (comp->LoadedAnimatedPoisons() && comp->AnPois_FindActorPoison(actor->GetFormID()) != nullptr) {
 					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
 					ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPoisonsHitEvent");
+					ev->strArg = RE::BSFixedString();
+					ev->numArg = 0.0f;
+					ev->sender = actor;
+					SKSE::GetModCallbackEventSource()->SendEvent(ev);
+				}
+				if (comp->LoadedAnimatedPotions() && comp->AnPoti_FindActorPotion(actor->GetFormID()) != nullptr) {
+					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPotionsHitEvent");
 					ev->strArg = RE::BSFixedString();
 					ev->numArg = 0.0f;
 					ev->sender = actor;
@@ -1720,6 +1730,8 @@ namespace Events
 			data->DeleteActor(a_event->formID);
 			data->DeleteFormCustom(a_event->formID);
 			comp->AnPois_DeleteActorPoison(a_event->formID);
+			comp->AnPoti_DeleteActorPotion(a_event->formID);
+			comp->AnPoti_DeleteActorPoison(a_event->formID);
 		}
 		return EventResult::kContinue;
 	}

@@ -1136,6 +1136,35 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 	return true;
 }
 
+bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
+{
+	auto ied = actor->GetEquippedEntryData(false);
+	if (ied) {
+		if (ied->extraLists) {
+			for (const auto& extraL : *(ied->extraLists)) {
+				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+				if (pois)
+					break;
+			}
+		}
+	}
+	if (pois == nullptr) {
+		ied = actor->GetEquippedEntryData(true);
+		if (ied && ied->extraLists) {
+			for (const auto& extraL : *(ied->extraLists)) {
+				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+				if (pois)
+					break;
+			}
+		}
+	}
+	LOG3_4("[Utility] [GetAppliedPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
+
+	if (pois && pois->count > 0)
+		return true;
+	return false;
+}
+
 bool Utility::VerifyActorInfo(ActorInfo* acinfo)
 {
 	if (acinfo == nullptr || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {

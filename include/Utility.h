@@ -601,6 +601,14 @@ public:
 	static bool CanApplyPoison(RE::Actor* actor);
 
 	/// <summary>
+	/// Returns whether an NPC has poison applied to their weapons, and the poison applied
+	/// </summary>
+	/// <param name="actor">Actor to check</param>
+	/// <param name="pois">Poison found [out]</param>
+	/// <returns></returns>
+	static bool GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison*& pois);
+
+	/// <summary>
 	/// Verifies that acinfo is a valid object
 	/// <param name="acinfo">ActorInfo to verify</param>
 	/// </summary>

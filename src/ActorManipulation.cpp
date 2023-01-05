@@ -446,45 +446,59 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 
 	LOG_2("{}[ActorManipulation] [ActorUsePotion] list bound");
 	if (Utility::VerifyActorInfo(acinfo)) {
-		if (ls.size() > 0 && std::get<2>(ls.front())) {
-			LOG1_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {}", Utility::PrintForm(std::get<2>(ls.front())));
-			if (Settings::CompatibilityPotionPapyrus() || compatibility) {
-				LOG_3("{}[ActorManipulation] [ActorUsePotion] Compatibility Mode");
-				if (!CompPotAnimFx()) {
-					LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
-					return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
-				}
-				// save statistics
-				Statistics::Misc_PotionsAdministered++;
-				// preliminary, has check built in wether it applies
-				SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = acinfo->actor;
-				SKSE::GetModCallbackEventSource()->SendEvent(ev);
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = std::get<2>(ls.front());
-				SKSE::GetModCallbackEventSource()->SendEvent(ev);
-			} else {
-				// apply compatibility stuff before using potion
-				if (!CompPotAnimFx()) {
-					LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
-					return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
-				}
-				// save statistics
-				Statistics::Misc_PotionsAdministered++;
-				RE::ExtraDataList* extra = new RE::ExtraDataList();
-				extra->SetOwner(acinfo->actor);
+		if (ls.size() > 0) {
+			RE::AlchemyItem* potion;
+			if (potion = std::get<2>(ls.front()); potion) {
+				LOG1_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {}", Utility::PrintForm(potion));
+				if (comp->LoadedAnimatedPotions()) {
+					LOG_2("{}[ActorManipulation] [ActorUsePotion] AnimatedPotions loaded, apply potion later");
+					comp->AnPoti_AddActorPotion(acinfo->actor->GetFormID(), potion);
 
-				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPotionsEvent");
+					ev->strArg = RE::BSFixedString(std::to_string(potion->GetFormID()));
+					ev->numArg = 0.0f;
+					ev->sender = acinfo->actor;
+					SKSE::GetModCallbackEventSource()->SendEvent(ev);
+
+				} else if (Settings::CompatibilityPotionPapyrus() || compatibility) {
+					LOG_3("{}[ActorManipulation] [ActorUsePotion] Compatibility Mode");
+					if (!CompPotAnimFx()) {
+						LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
+						return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
+					}
+					// save statistics
+					Statistics::Misc_PotionsAdministered++;
+					// preliminary, has check built in wether it applies
+					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = acinfo->actor;
+					SKSE::GetModCallbackEventSource()->SendEvent(ev);
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = std::get<2>(ls.front());
+					SKSE::GetModCallbackEventSource()->SendEvent(ev);
+				} else {
+					// apply compatibility stuff before using potion
+					if (!CompPotAnimFx()) {
+						LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
+						return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
+					}
+					// save statistics
+					Statistics::Misc_PotionsAdministered++;
+					RE::ExtraDataList* extra = new RE::ExtraDataList();
+					extra->SetOwner(acinfo->actor);
+
+					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+				}
+				std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
+				ls.pop_front();
+				return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
 			}
-			std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
-			ls.pop_front();
-			return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
 		}
 	}
 	return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };

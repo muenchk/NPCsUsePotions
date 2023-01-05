@@ -160,7 +160,9 @@ void Compatibility::Load()
 
 	// animated potions
 
-
+	_loadedAnimatedPotions = true;
+	if (Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable)
+		RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
 	
 
 	// potion animated fx
@@ -200,6 +202,7 @@ void Compatibility::Load()
 }
 
 std::binary_semaphore actorpoisonlock{ 1 };
+std::binary_semaphore actorpotionlock{ 1 };
 
 void Compatibility::Clear()
 {
@@ -279,6 +282,11 @@ void Compatibility::Clear()
 	_AnPois_ActorPoisonMap.clear();
 	actorpoisonlock.release();
 
+	// clear potion list
+	actorpotionlock.acquire();
+	_AnPoti_ActorPotionMap.clear();
+	actorpotionlock.release();
+
 	sem.release();
 }
 
@@ -326,6 +334,97 @@ void Compatibility::AnPois_RemoveActorPoison(RE::FormID form)
 	actorpoisonlock.acquire();
 	_AnPois_ActorPoisonMap.erase(form);
 	actorpoisonlock.release();
+}
+
+RE::AlchemyItem* Compatibility::AnPoti_FindActorPotion(RE::FormID actor)
+{
+	if (actor == 0)
+		return nullptr;
+	RE::AlchemyItem* ret = nullptr;
+	actorpotionlock.acquire();
+	auto itr = _AnPoti_ActorPotionMap.find(actor);
+	if (itr != _AnPoti_ActorPotionMap.end()) {
+		ret = std::get<0>(itr->second);
+	}
+	actorpotionlock.release();
+	return ret;
+}
+void Compatibility::AnPoti_AddActorPotion(RE::FormID actor, RE::AlchemyItem* potion)
+{
+	if (actor == 0 || Utility::ValidateForm(potion) == false)
+		return;
+	actorpotionlock.acquire();
+	_AnPoti_ActorPotionMap.insert_or_assign(actor, std::tuple<RE::AlchemyItem*, RE::FormID>{ potion, potion->GetFormID() });
+	actorpotionlock.release();
+}
+void Compatibility::AnPoti_DeleteActorPotion(RE::FormID form)
+{
+	if (form == 0)
+		return;
+	actorpotionlock.acquire();
+	_AnPoti_ActorPotionMap.erase(form);
+	auto itr = _AnPoti_ActorPotionMap.begin();
+	while (itr != _AnPoti_ActorPotionMap.end()) {
+		if (std::get<1>(itr->second) == form) {
+			_AnPoti_ActorPotionMap.erase(itr);
+			itr--;
+		}
+		itr++;
+	}
+	actorpotionlock.release();
+}
+void Compatibility::AnPoti_RemoveActorPotion(RE::FormID form)
+{
+	if (form == 0)
+		return;
+	actorpotionlock.acquire();
+	_AnPoti_ActorPotionMap.erase(form);
+	actorpotionlock.release();
+}
+std::tuple<RE::AlchemyItem*, int> Compatibility::AnPoti_FindActorPoison(RE::FormID actor)
+{
+	if (actor == 0)
+		return { nullptr, 0 };
+	std::tuple<RE::AlchemyItem*, int> ret;
+	actorpotionlock.acquire();
+	auto itr = _AnPoti_ActorPoisonMap.find(actor);
+	if (itr != _AnPoti_ActorPoisonMap.end()) {
+		ret = { std::get<0>(itr->second), std::get<2>(itr->second) };
+	}
+	actorpotionlock.release();
+	return ret;
+}
+void Compatibility::AnPoti_AddActorPoison(RE::FormID actor, RE::AlchemyItem* poison, int count)
+{
+	if (actor == 0 || Utility::ValidateForm(poison) == false)
+		return;
+	actorpotionlock.acquire();
+	_AnPoti_ActorPoisonMap.insert_or_assign(actor, std::tuple<RE::AlchemyItem*, RE::FormID, int>{ poison, poison->GetFormID(), count });
+	actorpotionlock.release();
+}
+void Compatibility::AnPoti_DeleteActorPoison(RE::FormID form)
+{
+	if (form == 0)
+		return;
+	actorpotionlock.acquire();
+	_AnPoti_ActorPoisonMap.erase(form);
+	auto itr = _AnPoti_ActorPoisonMap.begin();
+	while (itr != _AnPoti_ActorPoisonMap.end()) {
+		if (std::get<1>(itr->second) == form) {
+			_AnPoti_ActorPoisonMap.erase(itr);
+			itr--;
+		}
+		itr++;
+	}
+	actorpotionlock.release();
+}
+void Compatibility::AnPoti_RemoveActorPoison(RE::FormID form)
+{
+	if (form == 0)
+		return;
+	actorpotionlock.acquire();
+	_AnPoti_ActorPoisonMap.erase(form);
+	actorpotionlock.release();
 }
 
 void SaveGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
