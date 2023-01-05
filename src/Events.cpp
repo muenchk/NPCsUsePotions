@@ -203,7 +203,8 @@ namespace Events
 		           static_cast<uint64_t>(AlchemyEffect::kResistDisease) |
 		           static_cast<uint64_t>(AlchemyEffect::kReflectDamage) |
 		           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-		           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth);
+		           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
+		           static_cast<uint64_t>(AlchemyEffect::kHealth);
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
 			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
@@ -211,7 +212,8 @@ namespace Events
 			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
 			           static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kStamina);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
@@ -220,7 +222,9 @@ namespace Events
 			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
 			           static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kMagicka);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHandedShield)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
@@ -228,7 +232,8 @@ namespace Events
 			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kStamina);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kTwoHanded) |
@@ -237,7 +242,8 @@ namespace Events
 			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kStamina);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Ranged)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kArchery) |
@@ -245,25 +251,30 @@ namespace Events
 			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kBowSpeed) |
 			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kStamina);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualWield)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
 			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kStamina);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kUnarmedDamage) |
 			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
+			           static_cast<uint64_t>(AlchemyEffect::kStamina);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualStaff)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka);
+			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
+			           static_cast<uint64_t>(AlchemyEffect::kMagicka);
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka);
+			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
+			           static_cast<uint64_t>(AlchemyEffect::kMagicka);
 		}
 		// magic related stuff
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicAlteration)) {
@@ -793,8 +804,8 @@ namespace Events
 								// handle poisons
 								//if (curr->IsFollower() || curr->actor->IsPlayerRef()) {
 								if (combatdata != 0 && (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
-									(combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0 &&
-									comp->AnPois_FindActorPoison(curr->actor->GetFormID()) == nullptr &&
+									(combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0 /* &&
+									comp->AnPois_FindActorPoison(curr->actor->GetFormID()) == nullptr*/ &&
 									Utility::CanApplyPoison(curr->actor)) {
 									// handle followers
 									// they only use poisons if there are many npcs in the fight, or if the enemies they are targetting

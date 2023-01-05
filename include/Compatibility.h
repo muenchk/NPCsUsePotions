@@ -66,7 +66,11 @@ public:
 	static inline std::string AnimatedPotions_4_4 = "Animated Potions.esp";
 	static inline std::string AnimatedPotions_4_3 = "AnimatedPotions.esp";
 
-	int AnPoti_GlobalCooldown = 0;
+	int AnPoti_Version = 44;
+
+	RE::TESGlobal* AnPoti_TogglePlayerPotionAnimation = nullptr;
+
+	int AnPoti_GlobalCooldown = 3;
 
 	// ZUPA
 	int ZUPA_GlobalCooldown = 2500;
@@ -139,7 +143,9 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPotions()
 	{
-		return Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable && _loadedAnimatedPotions;
+		return Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable && 
+			_loadedAnimatedPotions && 
+			(AnPoti_TogglePlayerPotionAnimation && AnPoti_TogglePlayerPotionAnimation->value == 1);
 	}
 
 	/// <summary>

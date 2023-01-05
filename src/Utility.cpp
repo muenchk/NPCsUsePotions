@@ -1129,7 +1129,7 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 			}
 		}
 	}
-	LOG3_4("[Utility] [CanApplyPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
+	LOG3_4("{}[Utility] [CanApplyPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
 
 	if (pois && pois->count > 0)
 		return false;

@@ -453,7 +453,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 			RE::AlchemyItem* potion;
 			if (potion = std::get<2>(ls.front()); potion) {
 				LOG1_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {}", Utility::PrintForm(potion));
-				if (comp->LoadedAnimatedPotions()) {
+				if (comp->LoadedAnimatedPotions() && acinfo->formid != 0x14) {
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] AnimatedPotions loaded, apply potion later");
 					comp->AnPoti_AddActorPotion(acinfo->actor->GetFormID(), potion);
 

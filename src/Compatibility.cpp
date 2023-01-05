@@ -159,10 +159,22 @@ void Compatibility::Load()
 	}
 
 	// animated potions
+	
+	switch (AnPoti_Version) {
+	case 44: // Version 4.4
+		AnPoti_TogglePlayerPotionAnimation = datahandler->LookupForm<RE::TESGlobal>(0x8C8, AnimatedPotions_4_4);
+		LOG1_1("{}[Compatibility] [Load] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
+		break;
+	case 43: // version 4.3
+		AnPoti_TogglePlayerPotionAnimation = datahandler->LookupForm<RE::TESGlobal>(0x8C8, AnimatedPotions_4_3);
+		LOG1_1("{}[Compatibility] [Load] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
+	}
 
-	_loadedAnimatedPotions = true;
-	if (Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable)
-		RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
+	if (AnPoti_TogglePlayerPotionAnimation) {
+		_loadedAnimatedPotions = true;
+		if (Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable)
+			RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
+	}
 	
 
 	// potion animated fx
@@ -261,6 +273,8 @@ void Compatibility::Clear()
 
 	// animated potions
 	_loadedAnimatedPotions = false;
+
+	AnPoti_TogglePlayerPotionAnimation = nullptr;
 
 	// potion animated fx
 	_loadedPotionAnimatedFx = false;
