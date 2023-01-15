@@ -99,6 +99,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
 	if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
 		auto begin = std::chrono::steady_clock::now();
+		// init Data
+		Data::GetSingleton()->Init();
 		// load settings
 		Settings::Load(); // also resaves the file
 		logger::info("Settings loaded");

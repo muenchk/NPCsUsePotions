@@ -8,8 +8,10 @@
 #include "Statistics.h"
 #include "ActorManipulation.h"
 
-
-RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
+void Data::Init()
+{
+	datahandler = RE::TESDataHandler::GetSingleton();
+}
 
 Data* Data::GetSingleton()
 {

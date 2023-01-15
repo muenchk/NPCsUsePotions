@@ -23,7 +23,16 @@ private:
 	/// </summary>
 	std::unordered_map<uint32_t, RE::TESForm*> customItemFormMap;
 
+	/// <summary>
+	/// datahandler
+	/// </summary>
+	RE::TESDataHandler* datahandler = nullptr;
+
 public:
+	/// <summary>
+	/// Initializes data.
+	/// </summary>
+	void Init();
 	/// <summary>
 	/// returns a pointer to a static Data object
 	/// </summary>

@@ -772,7 +772,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 							continue;
 						}
 						tmp3.erase(0, pos+1);
-						if ((pos = splits[x].find(':')) != std::string::npos) {
+						if ((pos = tmp3.find(':')) != std::string::npos) {
 							try {
 								tmp2 = std::stoull(tmp3.substr(0, pos), nullptr, 16);
 							} catch (std::exception&) {
@@ -816,7 +816,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 							continue;
 						}
 						tmp3.erase(0, pos + 1);
-						if ((pos = splits[x].find(':')) != std::string::npos) {
+						if ((pos = tmp3.find(':')) != std::string::npos) {
 							try {
 								tmp2 = std::stoull(tmp3.substr(0, pos), nullptr, 16);
 							} catch (std::exception&) {
