@@ -102,12 +102,12 @@ public:
 		static inline bool _enableMagickaRestoration = true;  // enables automatic usage of magicka potions
 		static inline bool _enableStaminaRestoration = true;  // enables automatic usage of stamina potions
 		static inline bool _enableHealthRestoration = true;   // enables automatic usage of health potions
+		static inline bool _AllowDetrimentalEffects = false;  // allows / disallows npcs to use potions with detrimental effects
 
 		static inline float _healthThreshold = 0.5f;
 		static inline float _magickaThreshold = 0.5f;
 		static inline float _staminaThreshold = 0.5f;
 		static inline int _UsePotionChance = 100;  // Chance that a potion will be used when appropiate
-		static inline bool _AllowDetrimentalEffects = false; // allows / disallows npcs to use potions with detrimental effects
 	};
 
 	/// <summary>
@@ -116,6 +116,7 @@ public:
 	struct Poisons
 	{
 		static inline bool _enablePoisons = true;  // enables automatic usage of poisons for npcs
+		static inline bool _AllowPositiveEffects = false;  // allows / disallows npcs to use poisons with positive effects
 
 		static inline float _EnemyLevelScalePlayerLevel = 0.8f;  // how high the level of an enemy must be for followers to use poisons
 		static inline int _EnemyNumberThreshold = 5;             // how many npcs must be fighting, for followers to use poisons regardless of the enemies level
@@ -123,7 +124,6 @@ public:
 
 		static const int _BaseDosage = 1;		   // base dosage. if dosage is different dosage rules are ignored
 		static inline int _Dosage = _BaseDosage;  //  dosage applied to poisons
-		static inline bool _AllowPositiveEffects = false; // allows / disallows npcs to use poisons with positive effects
 	};
 
 	/// <summary>
