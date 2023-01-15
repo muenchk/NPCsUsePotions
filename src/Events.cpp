@@ -1747,38 +1747,6 @@ namespace Events
 		return EventResult::kContinue;
 	}
 
-	bool loadgamefired = false;
-
-	/// <summary>
-	/// EventHandler for TESLoadGameEvent. Loads main thread
-	/// </summary>
-	/// <param name="">unused</param>
-	/// <param name="">unused</param>
-	/// <returns></returns>
-	EventResult EventHandler::ProcessEvent(const RE::TESLoadGameEvent*, RE::BSTEventSource<RE::TESLoadGameEvent>*)
-	{
-		Statistics::Events_TESLoadGameEvent++;
-		LOG_1("{}[Events] [LoadGameEvent]");
-		if (loadgamefired == false) {
-			loadgamefired = true;
-			LoadGameSub();
-		}
-
-		return EventResult::kContinue;
-	}
-
-	void LoadGameFallback()
-	{
-		std::this_thread::sleep_for(5s);
-		if (loadgamefired == false) {
-			loadgamefired = true;
-			LOG_1("{}[Events] [LoadGameFallback] Forcing Load Game to process");
-			LoadGameSub();
-		} else {
-			LOG_1("{}[Events] [LoadGameFallback] loadgameevent already fired");
-		}
-	}
-
 	void SaveGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [SaveGameCallback]");
@@ -1788,14 +1756,13 @@ namespace Events
 	void LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [LoadGameCallback]");
-		new std::thread(LoadGameFallback);
+		LoadGameSub();
 	}
 
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [RevertGameCallback]");
 		enableProcessing = false;
-		loadgamefired = false;
 		stopactorhandler = true;
 		std::this_thread::sleep_for(10ms);
 		if (actorhandler != nullptr)
@@ -1826,8 +1793,6 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESHitEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESCombatEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
-		scriptEventSourceHolder->GetEventSource<RE::TESLoadGameEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESLoadGameEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESEquipEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESEquipEvent).name());
 		if (Settings::Removal::_RemoveItemsOnDeath) {

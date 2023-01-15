@@ -11,7 +11,6 @@ namespace Events
     class EventHandler :
 		public RE::BSTEventSink<RE::TESHitEvent>,
 		public RE::BSTEventSink<RE::TESCombatEvent>,
-		public RE::BSTEventSink<RE::TESLoadGameEvent>,
 		public RE::BSTEventSink<RE::TESDeathEvent>,
 		public RE::BSTEventSink<RE::BGSActorCellEvent>,
 		public RE::BSTEventSink<RE::TESCellAttachDetachEvent>,
@@ -46,13 +45,6 @@ namespace Events
 		/// <param name=""></param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>* a_eventSource) override;
-		/// <summary>
-		/// EventHandler for TESLoadGameEvent. Loads main thread
-		/// </summary>
-		/// <param name="">unused</param>
-		/// <param name="">unused</param>
-		/// <returns></returns>
-		virtual EventResult ProcessEvent(const RE::TESLoadGameEvent* a_event, RE::BSTEventSource<RE::TESLoadGameEvent>* a_eventSource) override;
 		/// <summary>
 		/// EventHandler for TESDeathEvent
 		/// removed unused potions and poisons from actor, to avoid economy instability
