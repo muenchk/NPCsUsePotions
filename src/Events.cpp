@@ -453,15 +453,16 @@ namespace Events
 		effects |= static_cast<uint64_t>(AlchemyEffect::kHealRate) |
 		           static_cast<uint64_t>(AlchemyEffect::kHealRateMult);
 
-		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) {
+		if (combatdata &
+			(	static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword) |
+				static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword))) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kMagickaRate) |
 			           static_cast<uint64_t>(AlchemyEffect::kMagickaRateMult) |
 			           static_cast<uint64_t>(AlchemyEffect::kStaminaRate) |
 			           static_cast<uint64_t>(AlchemyEffect::kStaminaRateMult);
 		}
 		if (combatdata &
-			(static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword) |
-				static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHandedShield) |
+			(	static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHandedShield) |
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded) |
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::Ranged) |
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::DualWield) |
@@ -469,7 +470,9 @@ namespace Events
 			effects |= static_cast<uint64_t>(AlchemyEffect::kStaminaRate) |
 			           static_cast<uint64_t>(AlchemyEffect::kStaminaRateMult);
 		}
-		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) {
+		if (combatdata &
+			(	static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage) |
+				static_cast<uint32_t>(Utility::CurrentCombatStyle::DualStaff))) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kMagickaRate) |
 			           static_cast<uint64_t>(AlchemyEffect::kMagickaRateMult);
 		}
@@ -810,7 +813,9 @@ namespace Events
 									// handle followers
 									// they only use poisons if there are many npcs in the fight, or if the enemies they are targetting
 									// have a high enough level, like starting at PlayerLevel*0.8 or so
-									if (Settings::Poisons::_EnemyNumberThreshold < actorsincombat || (target && target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::Poisons::_EnemyLevelScalePlayerLevel)) {
+									if (((curr->IsFollower() || curr->actor->IsPlayerRef()) && 
+										(Settings::Poisons::_EnemyNumberThreshold < actorsincombat || (target && target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::Poisons::_EnemyLevelScalePlayerLevel)))
+										|| curr->IsFollower() == false && curr->actor->IsPlayerRef() == false) {
 										// time to use some poisons
 										uint64_t effects = 0;
 										// kResistMagic, kResistFire, kResistFrost, kResistMagic should only be used if the follower is a spellblade
