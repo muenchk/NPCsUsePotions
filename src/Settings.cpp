@@ -1075,6 +1075,30 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
+							case 16:  // exclude effect
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string effect = splits->at(splitindex);
+									splitindex++;
+									AlchemyEffectBase eff = 0;
+									try {
+										eff = std::stoull(effect, nullptr, 16);
+									} catch (std::exception&) {
+										logwarn("[Settings] [LoadDistrRules] expection in field \"Effect\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									}
+									AlchemyEffect e = static_cast<AlchemyEffect>(eff);
+									if (e != AlchemyEffect::kNone) {
+										Distribution::_excludedEffects.insert(e);
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
 							default:
 								logwarn("[Settings] [LoadDistrRules] Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;
@@ -2734,7 +2758,7 @@ void Settings::ClassifyItems()
 				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
 					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 					if (Logging::EnableLoadLog && Logging::LogLevel >= 4) {
-						LOGLE1_1("Item: {}", Utility::PrintForm(item));
+						//LOGLE1_1("Item: {}", Utility::PrintForm(item));
 						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
 							LOGLE_1("\tFlag: CostOverride");
 						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kFoodItem)
@@ -2746,7 +2770,19 @@ void Settings::ClassifyItems()
 						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kPoison)
 							LOGLE_1("\tFlag: Poison");
 					}
-					LOGLE1_1("[Settings] [ClassifyItems] [AssignPotionFlag] {}", Utility::PrintForm(item));
+					//LOGLE1_1("[Settings] [ClassifyItems] [AssignPotionFlag] {}", Utility::PrintForm(item));
+				}
+				// exclude item, if it has an alchemy effect that has been excluded
+				AlchemyEffectBase effects = std::get<0>(clas);
+				auto itr = Distribution::excludedEffects()->begin();
+				while (itr != Distribution::excludedEffects()->end()) {
+					if (effects & static_cast<AlchemyEffectBase>(*itr)) {
+						Distribution::_excludedItems.insert(item->GetFormID());
+					}
+				}
+				if (Distribution::excludedItems()->contains(item->GetFormID())) {
+					iter++;
+					continue;
 				}
 
 				// determine the type of item

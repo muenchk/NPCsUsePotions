@@ -531,19 +531,24 @@ private:
 	/// map that contains the dosages set for alchemic effects (lower priority than items) [forced, usesetting, integer]
 	/// </summary>
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dosageEffectMap;
+	/// <summary>
+	/// map that contains from distribution excluded effects
+	/// </summary>
+	static inline std::unordered_set<AlchemyEffect> _excludedEffects;
 	
 public:
 	static inline std::vector<Rule*> _dummyVecR;
 	static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
 	static inline std::unordered_map<uint32_t, std::vector<CustomItemStorage*>> _dummyMapC;
 	static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
-	static inline std::unordered_set<RE::FormID> _dummySet1;
-	static inline std::unordered_set<uint8_t> _dummySet2;
-	static inline std::unordered_set<uint16_t> _dummySet3;
 	static inline std::unordered_map<RE::FormID, ItemStrength> _dummyMap3;
 	static inline std::unordered_map<RE::FormID, int> _dummyMap4;
 	static inline std::unordered_map<RE::FormID, std::tuple<bool, bool, int>> _dummyMap5;
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dummyMap6;
+	static inline std::unordered_set<RE::FormID> _dummySet1;
+	static inline std::unordered_set<uint8_t> _dummySet2;
+	static inline std::unordered_set<uint16_t> _dummySet3;
+	static inline std::unordered_set<AlchemyEffect> _dummySet4;
 
 	/// <summary>
 	/// Returns the vector containing all rules
@@ -627,6 +632,8 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>>* dosageEffectMap() { return initialised ? &_dosageEffectMap : &_dummyMap6; }
+
+	static inline std::unordered_set<AlchemyEffect>* excludedEffects() { return initialised ? &_excludedEffects : &_dummySet4; }
 
 	static std::vector<std::tuple<int, AlchemyEffect>> GetVector(int i, AlchemyEffect alch)
 	{
@@ -713,6 +720,7 @@ public:
 	friend void Settings::LoadDistrConfig();
 	friend void ActorInfo::CalcCustomItems();
 	friend void Settings::ApplySkillBoostPerks();
+	friend void Settings::ClassifyItems();
 
 private:
 	//static Rule* CalcRule(RE::Actor* actor);
