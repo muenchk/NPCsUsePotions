@@ -369,6 +369,21 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 					return false;
 			}
 			break;
+		case CustomItemConditionsAll::kActorStrengthEq:
+			{
+				if (static_cast<int>(this->actorStrength) != std::get<1>(item->conditionsall[i]))
+					return false;
+			}
+		case CustomItemConditionsAll::kActorStrengthLesserEq:
+			{
+				if (static_cast<int>(this->actorStrength) > std::get<1>(item->conditionsall[i]))
+					return false;
+			}
+		case CustomItemConditionsAll::kActorStrengthGreaterEq:
+			{
+				if (static_cast<int>(this->actorStrength) < std::get<1>(item->conditionsall[i]))
+					return false;
+			}
 		}
 	}
 
@@ -411,6 +426,21 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 		case CustomItemConditionsAny::kIsGhost:
 			{
 				if (actor->IsGhost())
+					return true;
+			}
+		case CustomItemConditionsAny::kActorStrengthEq:
+			{
+				if (static_cast<int>(this->actorStrength) == std::get<1>(item->conditionsall[i]))
+					return true;
+			}
+		case CustomItemConditionsAny::kActorStrengthLesserEq:
+			{
+				if (static_cast<int>(this->actorStrength) <= std::get<1>(item->conditionsall[i]))
+					return true;
+			}
+		case CustomItemConditionsAny::kActorStrengthGreaterEq:
+			{
+				if (static_cast<int>(this->actorStrength) >= std::get<1>(item->conditionsall[i]))
 					return true;
 			}
 			break;
