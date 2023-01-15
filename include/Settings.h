@@ -107,6 +107,7 @@ public:
 		static inline float _magickaThreshold = 0.5f;
 		static inline float _staminaThreshold = 0.5f;
 		static inline int _UsePotionChance = 100;  // Chance that a potion will be used when appropiate
+		static inline bool _AllowDetrimentalEffects = false; // allows / disallows npcs to use potions with detrimental effects
 	};
 
 	/// <summary>
@@ -122,6 +123,7 @@ public:
 
 		static const int _BaseDosage = 1;		   // base dosage. if dosage is different dosage rules are ignored
 		static inline int _Dosage = _BaseDosage;  //  dosage applied to poisons
+		static inline bool _AllowPositiveEffects = false; // allows / disallows npcs to use poisons with positive effects
 	};
 
 	/// <summary>
@@ -142,6 +144,7 @@ public:
 	struct Food
 	{
 		static inline bool _enableFood = true;				// enables automatic usage of food for npcs
+		static inline bool _AllowDetrimentalEffects = false;
 		static inline bool _RestrictFoodToCombatStart = false;  // restricts the usage of food to the beginning of the combat
 	};
 

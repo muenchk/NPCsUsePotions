@@ -248,6 +248,8 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "EnableMagickaRestoration", std::to_string(Potions::_enableMagickaRestoration));
 		Potions::_enableStaminaRestoration = ini.GetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration);
 		loginfo("[SETTINGS] {} {}", "EnableStaminaRestoration", std::to_string(Potions::_enableStaminaRestoration));
+		Potions::_AllowDetrimentalEffects = static_cast<int>(ini.GetLongValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects));
+		loginfo("[SETTINGS] {} {}", "AllowDetrimentalEffects", std::to_string(Potions::_AllowDetrimentalEffects));
 		Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold));
 		Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdLowerPercent", Potions::_healthThreshold));
 		if (Potions::_healthThreshold > 0.95f)
@@ -270,6 +272,8 @@ void Settings::Load()
 		// poisons
 		Poisons::_enablePoisons = ini.GetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons);
 		loginfo("[SETTINGS] {} {}", "EnablePoisonUsage", std::to_string(Poisons::_enablePoisons));
+		Poisons::_AllowPositiveEffects = static_cast<int>(ini.GetLongValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects));
+		loginfo("[SETTINGS] {} {}", "AllowPositiveEffects", std::to_string(Poisons::_AllowPositiveEffects));
 		Poisons::_EnemyLevelScalePlayerLevel = static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel));
 		loginfo("[SETTINGS] {} {}", "EnemyLevelScalePlayerLevel", std::to_string(Poisons::_EnemyLevelScalePlayerLevel));
 		Poisons::_EnemyNumberThreshold = ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold);
@@ -294,6 +298,8 @@ void Settings::Load()
 		// food
 		Food::_enableFood = ini.GetBoolValue("Food", "EnableFoodUsage", Food::_enableFood);
 		loginfo("[SETTINGS] {} {}", "EnableFoodUsage", std::to_string(Food::_enableFood));
+		Food::_AllowDetrimentalEffects = static_cast<int>(ini.GetLongValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects));
+		loginfo("[SETTINGS] {} {}", "AllowDetrimentalEffects", std::to_string(Food::_AllowDetrimentalEffects));
 		Food::_RestrictFoodToCombatStart = ini.GetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart);
 		loginfo("[SETTINGS] {} {}", "OnlyAllowFoodAtCombatStart", std::to_string(Food::_RestrictFoodToCombatStart));
 
@@ -532,6 +538,7 @@ void Settings::Save()
 	ini.SetBoolValue("Potions", "EnableHealthRestoration", Potions::_enableHealthRestoration, ";NPCs use health potions to restore their missing hp in combat.");
 	ini.SetBoolValue("Potions", "EnableMagickaRestoration", Potions::_enableMagickaRestoration, ";NPCs use magicka potions to restore their missing magicka in combat.");
 	ini.SetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration, ";NPCs use stamina potions to restore their missing stamina in combat.");
+	ini.SetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects, ";Allows NPCs to use potions that have detrimental effects.\n;!!!This setting also affects fortify potions");
 	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold, ";Upon reaching this threshold, NPCs will start to use health potions");
 	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold, ";Upon reaching this threshold, NPCs will start to use magicka potions");
 	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold, ";Upon reaching this threshold, NPCs will start to use stamina potions");
@@ -540,6 +547,7 @@ void Settings::Save()
 
 	// poisons
 	ini.SetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons, ";NPCs use poisons in combat.\n;Followers will use poisons only on appropiate enemies.\n;Generic NPCs will randomly use their poisons.");
+	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, ";This allows NPCs to use poisons that apply positive effects to their opponents");
 	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, ";Scaling factor when NPCs start using poisons on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use poisons.");
 	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold, ";When the number of NPCs in a fight is at least at this value, followers start to use poisons regardless of the enemies level, to faster help out the player.\n;This includes hostile and non-hostile NPCs.");
 	ini.SetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance, ";Chance that an NPC will use a fortify potion if they can.");
@@ -554,8 +562,9 @@ void Settings::Save()
 
 
 	// food
-	ini.SetBoolValue("Food", "EnableFoodUsage", Food::_enableFood, ";Normally one would assume that NPCs eat during the day. This features simulates");
-	ini.SetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart, ";NPCs will only eat food at the beginning of combat, instead of eating it, once the foods buff runs out. This is the way it worked until version 3.0");
+	ini.SetBoolValue("Food", "EnableFoodUsage", Food::_enableFood, ";Normally one would assume that NPCs eat during the day. This features simulates.");
+	ini.SetBoolValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects, ";This allows NPCs to use food that has detrimental effects.");
+	ini.SetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart, ";NPCs will only eat food at the beginning of combat, instead of eating it, once the foods buff runs out. This is the way it worked until version 3.0.");
 
 
 	// player

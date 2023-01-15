@@ -2750,7 +2750,8 @@ void Settings::ClassifyItems()
 				}
 
 				// determine the type of item
-				if (std::get<2>(clas) == ItemType::kFood) {
+				if (std::get<2>(clas) == ItemType::kFood &&
+					(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
 					// we will only classify food which works on stamina, magicka or health for now
 					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
 						(std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealRate)) > 0) {
@@ -2765,7 +2766,8 @@ void Settings::ClassifyItems()
 						_foodstamina.insert(_foodstamina.end(), { std::get<0>(clas), item });
 					}
 					_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
-				} else if (std::get<2>(clas) == ItemType::kPoison) {
+				} else if (std::get<2>(clas) == ItemType::kPoison &&
+						   (Settings::Poisons::_AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
 					switch (std::get<1>(clas)) {
 					case ItemStrength::kWeak:
 						_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
@@ -2780,7 +2782,8 @@ void Settings::ClassifyItems()
 						_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
 						break;
 					}
-				} else if (std::get<2>(clas) == ItemType::kPotion) {
+				} else if (std::get<2>(clas) == ItemType::kPotion &&
+						   (Settings::Potions::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
 					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
 						_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
 					else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
@@ -3094,6 +3097,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 		0
 	};
 	bool detrimental = false;
+	bool positive = false;
 	// we will not abort the loop, since the number of effects on one item is normally very
 	// limited, so we don't have much iterations
 	AlchemyEffectBase tmp = 0;
@@ -3105,6 +3109,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 				mag[i] = item->effects[i]->effectItem.magnitude;
 				dur[i] = item->effects[i]->effectItem.duration;
 				detrimental |= sett->IsDetrimental();
+				positive |= !sett->IsDetrimental();
 
 				uint32_t formid = sett->GetFormID();
 				if ((tmp = (static_cast<uint64_t>(ConvertToAlchemyEffectPrimary(sett)))) > 0) {
@@ -3125,6 +3130,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 		RE::MagicItem::SkillUsageData err;
 		item->GetSkillUsageData(err);
 		detrimental |= item->avEffectSetting->IsDetrimental();
+		positive |= !item->avEffectSetting->IsDetrimental();
 		switch (item->avEffectSetting->data.primaryAV) {
 		case RE::ActorValue::kHealth:
 			av[0] = static_cast<uint64_t>(ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV));
@@ -3196,8 +3202,17 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	ItemType type = ItemType::kPotion;
 	if (item->IsFood())
 		type = ItemType::kFood;
-	else if (item->IsPoison())
+	else if (item->IsPoison()) {
 		type = ItemType::kPoison;
+		return {
+			alch,
+			str,
+			type,
+			maxdur,
+			maxmag,
+			positive // return whether there is a positive effect on the poison
+		};
+	}
 
 	return {
 		alch,
