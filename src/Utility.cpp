@@ -1122,10 +1122,19 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 	if (pois == nullptr) {
 		ied = actor->GetEquippedEntryData(true);
 		if (ied && ied->extraLists) {
-			for (const auto& extraL : *(ied->extraLists)) {
-				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-				if (pois)
-					break;
+#ifdef GetObject
+#	undef GetObject
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#	define GetObject GetObjectA
+#else
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#endif
+			if (obj->IsWeapon()) {
+				for (const auto& extraL : *(ied->extraLists)) {
+					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+					if (pois)
+						break;
+				}
 			}
 		}
 	}
@@ -1151,10 +1160,19 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 	if (pois == nullptr) {
 		ied = actor->GetEquippedEntryData(true);
 		if (ied && ied->extraLists) {
-			for (const auto& extraL : *(ied->extraLists)) {
-				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-				if (pois)
-					break;
+#ifdef GetObject
+#	undef GetObject
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#	define GetObject GetObjectA
+#else
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#endif
+			if (obj->IsWeapon()) {
+				for (const auto& extraL : *(ied->extraLists)) {
+					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+					if (pois)
+						break;
+				}
 			}
 		}
 	}

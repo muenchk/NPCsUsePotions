@@ -23,6 +23,9 @@ void ACM::Init()
 std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::AlchemyItem* item, AlchemyEffectBase alchemyEffect)
 {
 	LOG_3("{}[ActorManipulation] [HasAlchemyEffect]");
+	// check if the ite is excluded
+	if (Distribution::excludedItems()->contains(item->GetFormID()))
+		return { false, -1.0f, -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), false };
 	auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
 	if (mapf) {
 		if ((eff & alchemyEffect) != 0) {
@@ -668,20 +671,29 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 					} else {
 						ied = acinfo->actor->GetEquippedEntryData(true);
 						if (ied) {
-							ied->AddExtraList(extra);
-							acinfo->actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							{
-								// play poison sound
-								RE::BSSoundHandle handle;
-								if (poison->data.consumptionSound)
-									audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-								else
-									audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-								handle.SetObjectToFollow(acinfo->actor->Get3D());
-								handle.SetVolume(1.0);
-								handle.Play();
+							#ifdef GetObject
+							#undef GetObject
+							RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+							#define GetObject GetObjectA
+							#else
+							RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+							#endif
+							if (obj->IsWeapon()) {
+								ied->AddExtraList(extra);
+								acinfo->actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								{
+									// play poison sound
+									RE::BSSoundHandle handle;
+									if (poison->data.consumptionSound)
+										audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+									else
+										audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+									handle.SetObjectToFollow(acinfo->actor->Get3D());
+									handle.SetVolume(1.0);
+									handle.Play();
+								}
+								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 							}
-							return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 						}
 					}
 				}
