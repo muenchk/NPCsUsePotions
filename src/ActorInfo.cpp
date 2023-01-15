@@ -371,19 +371,30 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 			break;
 		case CustomItemConditionsAll::kActorStrengthEq:
 			{
-				if (static_cast<int>(this->actorStrength) != std::get<1>(item->conditionsall[i]))
+				if (static_cast<uint32_t>(this->actorStrength) != std::get<1>(item->conditionsall[i]))
 					return false;
 			}
+			break;
 		case CustomItemConditionsAll::kActorStrengthLesserEq:
 			{
-				if (static_cast<int>(this->actorStrength) > std::get<1>(item->conditionsall[i]))
+				if (static_cast<uint32_t>(this->actorStrength) > std::get<1>(item->conditionsall[i]))
 					return false;
 			}
+			break;
 		case CustomItemConditionsAll::kActorStrengthGreaterEq:
 			{
-				if (static_cast<int>(this->actorStrength) < std::get<1>(item->conditionsall[i]))
+				if (static_cast<uint32_t>(this->actorStrength) < std::get<1>(item->conditionsall[i]))
 					return false;
 			}
+			break;
+		case CustomItemConditionsAll::kIsInFaction:
+			{
+				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				RE::TESFaction* fac = tmp->As<RE::TESFaction>();
+				if (fac == nullptr || actor->IsInFaction(fac) == false)
+					return false;
+			}
+			break;
 		}
 	}
 
@@ -430,17 +441,25 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 			}
 		case CustomItemConditionsAny::kActorStrengthEq:
 			{
-				if (static_cast<int>(this->actorStrength) == std::get<1>(item->conditionsall[i]))
+				if (static_cast<uint32_t>(this->actorStrength) == std::get<1>(item->conditionsall[i]))
 					return true;
 			}
 		case CustomItemConditionsAny::kActorStrengthLesserEq:
 			{
-				if (static_cast<int>(this->actorStrength) <= std::get<1>(item->conditionsall[i]))
+				if (static_cast<uint32_t>(this->actorStrength) <= std::get<1>(item->conditionsall[i]))
 					return true;
 			}
 		case CustomItemConditionsAny::kActorStrengthGreaterEq:
 			{
-				if (static_cast<int>(this->actorStrength) >= std::get<1>(item->conditionsall[i]))
+				if (static_cast<uint32_t>(this->actorStrength) >= std::get<1>(item->conditionsall[i]))
+					return true;
+			}
+			break;
+		case CustomItemConditionsAll::kIsInFaction:
+			{
+				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				RE::TESFaction* fac = tmp->As<RE::TESFaction>();
+				if (fac == nullptr || actor->IsInFaction(fac))
 					return true;
 			}
 			break;

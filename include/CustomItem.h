@@ -20,9 +20,10 @@ struct CustomItemConditionsAll
 		kActorStrengthEq = 1 << 9,		 // 200 // distribution
 		kActorStrengthGreaterEq = 1 << 10, // 400 // distribution
 		kActorStrengthLesserEq = 1 << 11,  // 800 // distribution
+		kIsInFaction = 1 << 12,             // 1000  // distribution
 
 		kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven | kHasKeyword,
-		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword | kIsGhost | kActorStrengthEq | kActorStrengthGreaterEq | kActorStrengthLesserEq,
+		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword | kIsGhost | kActorStrengthEq | kActorStrengthGreaterEq | kActorStrengthLesserEq | kIsInFaction,
 	};
 };
 
@@ -43,9 +44,10 @@ struct CustomItemConditionsAny
 		kActorStrengthEq = 1 << 9,     // 200 // distribution
 		kActorStrengthGreaterEq = 1 << 10,  // 400 // distribution
 		kActorStrengthLesserEq = 1 << 11,   // 800 // distribution
+		kIsInFaction = 1 << 12,              // 1000  // distribution
 
 		kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven | kHasKeyword,
-		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword | kIsGhost | kActorStrengthEq | kActorStrengthGreaterEq | kActorStrengthLesserEq,
+		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword | kIsGhost | kActorStrengthEq | kActorStrengthGreaterEq | kActorStrengthLesserEq | kIsInFaction,
 	};
 };
 
