@@ -119,6 +119,12 @@ public:
 	/// </summary>
 	void Clear();
 
+	bool CanApplyPoisonToLeftHand()
+	{
+		// all anmiation mods must be false, then we may use left hand
+		return !(!LoadedAnimatedPoisons() && !LoadedAnimatedPotionFx() && !LoadedAnimatedPotions() && !LoadedZUPA());
+	}
+
 	/// <summary>
 	/// returns whether compatibility for apothecary is enabled
 	/// </summary>

@@ -1,6 +1,7 @@
 #include <Utility.h>
 #include <AlchemyEffect.h>
 #include <Distribution.h>
+#include "Compatibility.h"
 
 uint32_t Utility::GetCombatData(RE::Actor* actor)
 {
@@ -1128,7 +1129,7 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 			}
 		}
 	}
-	if (pois == nullptr) {
+	if (pois == nullptr && Compatibility::GetSingleton()->CanApplyPoisonToLeftHand()) {
 		ied = actor->GetEquippedEntryData(true);
 		if (ied && ied->extraLists) {
 #ifdef GetObject
@@ -1175,7 +1176,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 			}
 		}
 	}
-	if (pois == nullptr) {
+	if (pois == nullptr && Compatibility::GetSingleton()->CanApplyPoisonToLeftHand()) {
 		ied = actor->GetEquippedEntryData(true);
 		if (ied && ied->extraLists) {
 #ifdef GetObject
