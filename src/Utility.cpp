@@ -1112,10 +1112,19 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 	RE::ExtraPoison* pois = nullptr;
 	if (ied) {
 		if (ied->extraLists) {
-			for (const auto& extraL : *(ied->extraLists)) {
-				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-				if (pois)
-					break;
+#ifdef GetObject
+#	undef GetObject
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#	define GetObject GetObjectA
+#else
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#endif
+			if (obj && obj->IsWeapon()) {
+				for (const auto& extraL : *(ied->extraLists)) {
+					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+					if (pois)
+						break;
+				}
 			}
 		}
 	}
@@ -1129,7 +1138,7 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 #else
 			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
 #endif
-			if (obj->IsWeapon()) {
+			if (obj && obj->IsWeapon()) {
 				for (const auto& extraL : *(ied->extraLists)) {
 					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
 					if (pois)
@@ -1150,10 +1159,19 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 	auto ied = actor->GetEquippedEntryData(false);
 	if (ied) {
 		if (ied->extraLists) {
-			for (const auto& extraL : *(ied->extraLists)) {
-				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-				if (pois)
-					break;
+#ifdef GetObject
+#	undef GetObject
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#	define GetObject GetObjectA
+#else
+			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
+#endif
+			if (obj && obj->IsWeapon()) {
+				for (const auto& extraL : *(ied->extraLists)) {
+					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+					if (pois)
+						break;
+				}
 			}
 		}
 	}
@@ -1167,7 +1185,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 #else
 			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
 #endif
-			if (obj->IsWeapon()) {
+			if (obj && obj->IsWeapon()) {
 				for (const auto& extraL : *(ied->extraLists)) {
 					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
 					if (pois)
