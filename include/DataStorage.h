@@ -2,5 +2,8 @@
 
 namespace Storage
 {
+	/// <summary>
+	/// Registers storage functions
+	/// </summary>
 	void Register();
 }

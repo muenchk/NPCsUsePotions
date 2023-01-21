@@ -64,6 +64,10 @@ namespace Events
 #define EvalProcessingEvent() \
 	if (!enableProcessing)    \
 		return EventResult::kContinue;
+	/// <summary>
+	/// Returns whether processing of actors is allowed
+	/// </summary>
+	/// <returns></returns>
 	bool CanProcess()
 	{
 		return enableProcessing;
@@ -158,7 +162,7 @@ namespace Events
 #pragma endregion
 
 	/// <summary>
-	/// initializes importent variables, which need to be initialized every time a game is loaded
+	/// initializes important variables, which need to be initialized every time a game is loaded
 	/// </summary>
 	void InitializeCompatibilityObjects()
 	{
@@ -193,6 +197,13 @@ namespace Events
 		}
 	}
 
+	/// <summary>
+	/// Calculates poison effects based on [combatdata], [target], and [tcombatdata]
+	/// </summary>
+	/// <param name="combatdata">combatdata of the actor using poison</param>
+	/// <param name="target">target</param>
+	/// <param name="tcombatdata">combatdata of the target</param>
+	/// <returns>valid poison effects</returns>
 	uint64_t CalcPoisonEffects(uint32_t combatdata, RE::Actor* target, uint32_t tcombatdata)
 	{
 		LOG_4("{}[Events] [CalcPoisonEffects]");
@@ -442,10 +453,10 @@ namespace Events
 	}
 
 	/// <summary>
-	/// Calculated all regeneration effects that an actor is equitable for, based on their combat data
+	/// Calculates all regeneration effects that an actor is equitable for, based on their combat data
 	/// </summary>
-	/// <param name="combatdata"></param>
-	/// <returns></returns>
+	/// <param name="combatdata">combatdata of the actor</param>
+	/// <returns>valid regeneration effects</returns>
 	uint64_t CalcRegenEffects(uint32_t combatdata)
 	{
 		LOG_4("{}[Events] [CalcRegenEffects]");
@@ -479,7 +490,7 @@ namespace Events
 		return effects;
 	}
 	/// <summary>
-	/// Calculated all regeneration effects that an actor is equitable for, based on their combat data
+	/// Calculates all regeneration effects that an actor is equitable for, based on their combat data
 	/// </summary>
 	/// <param name="acinfo"></param>
 	/// <param name="combatdata"></param>
@@ -488,6 +499,9 @@ namespace Events
 		return CalcRegenEffects(combatdata);
 	} 
 
+	/// <summary>
+	/// Updates the working set of registered actors
+	/// </summary>
 	void UpdateAcSet()
 	{
 		LOG_1("{}[UpdateAcSet] begin");
@@ -653,7 +667,7 @@ namespace Events
 						LOG6_1("{}[Events] [CheckActors] [Actor] cooldown: {} {} {} {} {} {}", curr->durHealth, curr->durMagicka, curr->durStamina, curr->durFortify, curr->durRegeneration, curr->globalCooldownTimer);
 
 						// if global cooldown greater zero, we can skip everything
-						if (curr->globalCooldownTimer > 0)
+						if (curr->globalCooldownTimer > tolerance)
 							continue;
 
 						// check for out-of-combat option
@@ -1183,6 +1197,9 @@ namespace Events
 		}
 	}
 
+	/// <summary>
+	/// Removes all distributable alchemy items from all actors in the game on loading a game
+	/// </summary>
 	void RemoveItemsOnStartup()
 	{
 		EvalProcessing();
@@ -1255,6 +1272,10 @@ namespace Events
 		PROF1_1("{}[Events] [RemoveItemsOnStartup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 
+	/// <summary>
+	/// Registers an NPC for handling
+	/// </summary>
+	/// <param name="actor"></param>
 	void RegisterNPC(RE::Actor* actor)
 	{
 		EvalProcessing();
@@ -1284,6 +1305,10 @@ namespace Events
 		LOG_1("{}[Events] [RegisterNPC] finished registering NPC");
 	}
 
+	/// <summary>
+	/// Unregisters an NPC form handling
+	/// </summary>
+	/// <param name="actor"></param>
 	void UnregisterNPC(RE::Actor* actor)
 	{
 		EvalProcessing();
@@ -1310,6 +1335,10 @@ namespace Events
 		LOG_1("{}[Events] [UnregisterNPC] Unregistered NPC");
 	}
 
+	/// <summary>
+	/// Unregisters an NPC from handling
+	/// </summary>
+	/// <param name="acinfo"></param>
 	void UnregisterNPC(ActorInfo* acinfo)
 	{
 		EvalProcessing();
@@ -1332,6 +1361,9 @@ namespace Events
 		sem.release();
 	}
 
+	/// <summary>
+	/// Enables processing and starts handlers
+	/// </summary>
 	void LoadGameSub()
 	{
 		auto begin = std::chrono::steady_clock::now();
@@ -1656,6 +1688,14 @@ namespace Events
 		return EventResult::kContinue;
 	}
 
+	/// <summary>
+	/// Handles an item being removed from a container
+	/// </summary>
+	/// <param name="container">The container the item was removed from</param>
+	/// <param name="baseObj">The base object that has been removed</param>
+	/// <param name="count">The number of items that have been removed</param>
+	/// <param name="destinationContainer">The container the items have been moved to</param>
+	/// <param name="a_event">The event information</param>
 	void OnItemRemoved(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* /*destinationContainer*/, const RE::TESContainerChangedEvent* /*a_event*/)
 	{
 		LOG2_1("{}[Events] [OnItemRemovedEvent] {} removed from {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
@@ -1690,6 +1730,14 @@ namespace Events
 		return;
 	}
 
+	/// <summary>
+	/// Handles an item being added to a container
+	/// </summary>
+	/// <param name="container">The container the item is added to</param>
+	/// <param name="baseObj">The base object that has been added</param>
+	/// <param name="count">The number of items added</param>
+	/// <param name="sourceContainer">The container the item was in before</param>
+	/// <param name="a_event">The event information</param>
 	void OnItemAdded(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* /*sourceContainer*/, const RE::TESContainerChangedEvent* /*a_event*/)
 	{
 		LOG2_1("{}[Events] [OnItemAddedEvent] {} added to {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
@@ -1752,18 +1800,30 @@ namespace Events
 		return EventResult::kContinue;
 	}
 
+	/// <summary>
+	/// Callback on saving the game
+	/// </summary>
+	/// <param name=""></param>
 	void SaveGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [SaveGameCallback]");
 
 	}
 
+	/// <summary>
+	/// Callback on loading a save game, initializes actor processing
+	/// </summary>
+	/// <param name=""></param>
 	void LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [LoadGameCallback]");
 		LoadGameSub();
 	}
 
+	/// <summary>
+	/// Callback on reverting the game. Disables processing and stops all handlers
+	/// </summary>
+	/// <param name=""></param>
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [RevertGameCallback]");

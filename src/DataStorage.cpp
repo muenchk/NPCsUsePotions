@@ -8,6 +8,9 @@
 
 namespace Storage
 {
+	/// <summary>
+	/// whether processing is enabled
+	/// </summary>
 	bool processing;
 	bool CanProcess() { return processing; }
 #define EvalProcessing \
@@ -18,8 +21,10 @@ namespace Storage
 		return false;
 	
 
+	/// <summary>
+	/// Pointer to the singleton of the data class
+	/// </summary>
 	static Data* data = nullptr;
-
 	void ReadData(SKSE::SerializationInterface* a_intfc);
 	void WriteData(SKSE::SerializationInterface* a_intfc);
 	void RevertData();
@@ -37,7 +42,6 @@ namespace Storage
 		// print statistics to logfile
 		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESHitEvents registered               {}", Statistics::Events_TESHitEvent);
 		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESCombatEvents registered            {}", Statistics::Events_TESCombatEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESLoadGameEvents registered          {}", Statistics::Events_TESLoadGameEvent);
 		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESDeathEvents registered             {}", Statistics::Events_TESDeathEvent);
 		loginfo("[DataStorage] [SaveGameCallback] [Statistics] BGSActorCellEvents registered         {}", Statistics::Events_BGSActorCellEvent);
 		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESCellAttachDetachEvents registered  {}", Statistics::Events_TESCellAttachDetachEvent);
@@ -97,6 +101,10 @@ namespace Storage
 			logcritical("[DataStorage] [Register] Cannot access data storage");
 	}
 
+	/// <summary>
+	/// Reads data from savegame
+	/// </summary>
+	/// <param name="a_intfc"></param>
 	void ReadData(SKSE::SerializationInterface* a_intfc)
 	{
 		bool preproc = Events::LockProcessing();
@@ -116,6 +124,10 @@ namespace Storage
 		Statistics::Storage_BytesReadLast = size;
 	}
 
+	/// <summary>
+	/// Writes data to savegame
+	/// </summary>
+	/// <param name="a_intfc"></param>
 	void WriteData(SKSE::SerializationInterface* a_intfc)
 	{
 		bool preproc = Events::LockProcessing();
@@ -136,6 +148,9 @@ namespace Storage
 		Statistics::Storage_BytesWrittenLast = size;
 	}
 
+	/// <summary>
+	/// Reverts data during game reset
+	/// </summary>
 	void RevertData()
 	{
 		bool preproc = Events::LockProcessing();

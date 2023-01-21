@@ -1,7 +1,7 @@
 #pragma once
 
 /// <summary>
-/// Specifies conditions for distribution and usage for custom items
+/// Specifies conditions for distribution and usage for custom items that must all be fulfilled
 /// </summary>
 struct CustomItemConditionsAll
 {
@@ -27,6 +27,9 @@ struct CustomItemConditionsAll
 	};
 };
 
+/// <summary>
+/// Specified conditions for distribution and usage, of which at least one must be fulfilled
+/// </summary>
 struct CustomItemConditionsAny
 {
 	enum CustomItemConditionsAnyEnum : unsigned __int64
@@ -51,16 +54,40 @@ struct CustomItemConditionsAny
 	};
 };
 
+/// <summary>
+/// Custom item
+/// </summary>
 struct CustomItem
 {
+	/// <summary>
+	/// Custom item
+	/// </summary>
 	RE::TESBoundObject* object;
+	/// <summary>
+	/// Number to be distributed to an actor
+	/// </summary>
 	int num;
+	/// <summary>
+	/// Chance for distribution
+	/// </summary>
 	int8_t chance;
+	/// <summary>
+	/// Conditions that must all be fulfilled
+	/// </summary>
 	std::vector<std::tuple<uint64_t, uint32_t, std::string>> conditionsall;
+	/// <summary>
+	/// Conditions, of which at least one must be fulfilled
+	/// </summary>
 	std::vector<std::tuple<uint64_t, uint32_t, std::string>> conditionsany;
+	/// <summary>
+	/// Whether to give the item only once
+	/// </summary>
 	bool giveonce = false;
 };
 
+/// <summary>
+/// Custom alchemy item
+/// </summary>
 struct CustomItemAlch : CustomItem
 {
 };

@@ -339,6 +339,10 @@ class Profile
 	static inline std::binary_semaphore lock{ 1 };
 
 public:
+	/// <summary>
+	/// Inits profile log
+	/// </summary>
+	/// <param name="pluginname"></param>
 	static void Init(std::string pluginname)
 	{
 		lock.acquire();
@@ -348,7 +352,10 @@ public:
 		}
 		lock.release();
 	}
-
+	
+	/// <summary>
+	/// Closes profile log
+	/// </summary>
 	static void Close()
 	{
 		lock.acquire();
@@ -361,6 +368,11 @@ public:
 		lock.release();
 	}
 
+	/// <summary>
+	/// writes to the profile log
+	/// </summary>
+	/// <typeparam name="...Args"></typeparam>
+	/// <param name="message"></param>
 	template <class... Args>
 	static void write(std::string message)
 	{
@@ -411,10 +423,28 @@ public:
 		return ss.str();
 	}
 
+	/// <summary>
+	/// Whether logging is enables
+	/// </summary>
 	static inline bool EnableLog = false;
+	/// <summary>
+	/// Whether logging during loading the game is enabled
+	/// </summary>
 	static inline bool EnableLoadLog = false;
+	/// <summary>
+	/// Whether profiling is enabled
+	/// </summary>
 	static inline bool EnableProfiling = false;
+	/// <summary>
+	/// Whether generic Logging is enabled
+	/// </summary>
 	static inline bool EnableGenericLogging = true;
+	/// <summary>
+	/// The level of events to log
+	/// </summary>
 	static inline int LogLevel = 0;
+	/// <summary>
+	/// The level of functions to profile
+	/// </summary>
 	static inline int ProfileLevel = 0;
 };

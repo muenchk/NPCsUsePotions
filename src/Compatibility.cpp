@@ -192,6 +192,7 @@ void Compatibility::Load()
 
 	// global
 
+	_globalCooldown = max(_globalCooldown, Settings::Usage::_globalCooldown);
 	if (_loadedAnimatedPoisons) {
 		_globalCooldown = max(_globalCooldown, AnPois_GlobalCooldown);
 		_disableParalyzedItems = true;
@@ -341,12 +342,12 @@ void Compatibility::AnPois_DeleteActorPoison(RE::FormID form)
 	}
 	actorpoisonlock.release();
 }
-void Compatibility::AnPois_RemoveActorPoison(RE::FormID form)
+void Compatibility::AnPois_RemoveActorPoison(RE::FormID actor)
 {
-	if (form == 0)
+	if (actor == 0)
 		return;
 	actorpoisonlock.acquire();
-	_AnPois_ActorPoisonMap.erase(form);
+	_AnPois_ActorPoisonMap.erase(actor);
 	actorpoisonlock.release();
 }
 
@@ -387,12 +388,12 @@ void Compatibility::AnPoti_DeleteActorPotion(RE::FormID form)
 	}
 	actorpotionlock.release();
 }
-void Compatibility::AnPoti_RemoveActorPotion(RE::FormID form)
+void Compatibility::AnPoti_RemoveActorPotion(RE::FormID actor)
 {
-	if (form == 0)
+	if (actor == 0)
 		return;
 	actorpotionlock.acquire();
-	_AnPoti_ActorPotionMap.erase(form);
+	_AnPoti_ActorPotionMap.erase(actor);
 	actorpotionlock.release();
 }
 std::tuple<RE::AlchemyItem*, int> Compatibility::AnPoti_FindActorPoison(RE::FormID actor)
@@ -432,12 +433,12 @@ void Compatibility::AnPoti_DeleteActorPoison(RE::FormID form)
 	}
 	actorpotionlock.release();
 }
-void Compatibility::AnPoti_RemoveActorPoison(RE::FormID form)
+void Compatibility::AnPoti_RemoveActorPoison(RE::FormID actor)
 {
-	if (form == 0)
+	if (actor == 0)
 		return;
 	actorpotionlock.acquire();
-	_AnPoti_ActorPoisonMap.erase(form);
+	_AnPoti_ActorPoisonMap.erase(actor);
 	actorpotionlock.release();
 }
 

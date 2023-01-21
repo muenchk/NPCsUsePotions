@@ -14,7 +14,13 @@
 /// </summary>
 class ACM
 {
+	/// <summary>
+	/// pointer to the singleton of the data class
+	/// </summary>
 	static inline Data* data;
+	/// <summary>
+	/// pointer to the singleton of the compatibility class
+	/// </summary>
 	static inline Compatibility* comp;
 
 public:

@@ -16,34 +16,17 @@
 /// </summary>
 class Utility
 {
-private:
-	// FROM WIKIPEDIA
-	const uint64_t m1 = 0x5555555555555555;   //binary: 0101...
-	const uint64_t m2 = 0x3333333333333333;   //binary: 00110011..
-	const uint64_t m4 = 0x0f0f0f0f0f0f0f0f;   //binary:  4 zeros,  4 ones ...
-	const uint64_t m8 = 0x00ff00ff00ff00ff;   //binary:  8 zeros,  8 ones ...
-	const uint64_t m16 = 0x0000ffff0000ffff;  //binary: 16 zeros, 16 ones ...
-	const uint64_t m32 = 0x00000000ffffffff;  //binary: 32 zeros, 32 ones
-	const uint64_t h01 = 0x0101010101010101;
-
-	int Bits_1(uint64_t x)
-	{
-		x -= (x >> 1) & m1;              //put count of each 2 bits into those 2 bits
-		x = (x & m2) + ((x >> 2) & m2);  //put count of each 4 bits into those 4 bits
-		x = (x + (x >> 4)) & m4;         //put count of each 8 bits into those 8 bits
-		return (x * h01) >> 56;          //returns left 8 bits of x + (x<<8) + (x<<16) + (x<<24) + ...
-	}
-	// END
-
-
 public:
 
 	#pragma region SortingFunctions
 	// comparator used to sort magnitude - duration - AlchemyItem* lists for maximum magnitude descending
-	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> first, std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> second)
-	{
-		return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
-	}
+	/// <summary>
+	/// Compares the magnitude of two alchemy items
+	/// </summary>
+	/// <param name="first"></param>
+	/// <param name="second"></param>
+	/// <returns></returns>
+	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> first, std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> second);
 	#pragma endregion
 
 	/// <summary>
@@ -128,286 +111,32 @@ public:
 	/// </summary>
 	/// <param name="acs"></param>
 	/// <returns></returns>
-	static std::string ToString(ActorStrength acs)
-	{
-		switch (acs) {
-		case ActorStrength::Weak:
-			return "Weak";
-		case ActorStrength::Normal:
-			return "Normal";
-		case ActorStrength::Powerful:
-			return "Powerful";
-		case ActorStrength::Insane:
-			return "Insane";
-		case ActorStrength::Boss:
-			return "Boss";
-		default:
-			return "Not Applicable";
-		}
-	}
+	static std::string ToString(ActorStrength acs);
 
 	/// <summary>
 	/// Converts an ItemStrength into a string
 	/// </summary>
 	/// <param name="is"></param>
 	/// <returns></returns>
-	static std::string ToString(ItemStrength is)
-	{
-		switch (is) {
-		case ItemStrength::kWeak:
-			return "Weak";
-		case ItemStrength::kStandard:
-			return "Standard";
-		case ItemStrength::kPotent:
-			return "Potent";
-		case ItemStrength::kInsane:
-			return "Insane";
-		default:
-			return "Not Applicable";
-		}
-	}
+	static std::string ToString(ItemStrength is);
 
-	static std::string ToString(AlchemyEffect ae)
-	{
-		switch (ae) {
-		case AlchemyEffect::kAlteration:
-			return "Alteration";
-		case AlchemyEffect::kAnyFood:
-			return "AnyFood";
-		case AlchemyEffect::kAnyFortify:
-			return "AnyFortify";
-		case AlchemyEffect::kAnyPoison:
-			return "AnyPoison";
-		case AlchemyEffect::kAnyPotion:
-			return "AnyPotion";
-		case AlchemyEffect::kArchery:
-			return "Archery";
-		case AlchemyEffect::kAttackDamageMult:
-			return "AttackDamageMult";
-		case AlchemyEffect::kBlock:
-			return "Block";
-		case AlchemyEffect::kBlood:
-			return "Blood";
-		case AlchemyEffect::kBowSpeed:
-			return "BowSpeed";
-		case AlchemyEffect::kConjuration:
-			return "Conjuration";
-		case AlchemyEffect::kCriticalChance:
-			return "CriticalChance";
-		case AlchemyEffect::kDamageResist:
-			return "DamageResist";
-		case AlchemyEffect::kDestruction:
-			return "Destruction";
-		case AlchemyEffect::kFear:
-			return "Fear";
-		case AlchemyEffect::kFrenzy:
-			return "Frenzy";
-		case AlchemyEffect::kHealRate:
-			return "HealRate";
-		case AlchemyEffect::kHealRateMult:
-			return "HealRateMult";
-		case AlchemyEffect::kHealth:
-			return "Health";
-		case AlchemyEffect::kHeavyArmor:
-			return "HeavyArmor";
-		case AlchemyEffect::kIllusion:
-			return "Illusion";
-		case AlchemyEffect::kInvisibility:
-			return "Invisibility";
-		case AlchemyEffect::kLightArmor:
-			return "LightArmor";
-		case AlchemyEffect::kLockpicking:
-			return "Lockpicking";
-		case AlchemyEffect::kMagicka:
-			return "Magicka";
-		case AlchemyEffect::kMagickaRate:
-			return "MagickaRate";
-		case AlchemyEffect::kMagickaRateMult:
-			return "MagickaRateMult";
-		case AlchemyEffect::kMeleeDamage:
-			return "MeleeDamage";
-		case AlchemyEffect::kNone:
-			return "None";
-		case AlchemyEffect::kOneHanded:
-			return "OneHanded";
-		case AlchemyEffect::kParalysis:
-			return "Paralysis";
-		case AlchemyEffect::kPickpocket:
-			return "Pickpocket";
-		case AlchemyEffect::kPoisonResist:
-			return "PoisonResist";
-		case AlchemyEffect::kReflectDamage:
-			return "ReflectDamage";
-		case AlchemyEffect::kResistDisease:
-			return "ResistDisease";
-		case AlchemyEffect::kResistFire:
-			return "ResistFire";
-		case AlchemyEffect::kResistFrost:
-			return "ResistFrost";
-		case AlchemyEffect::kResistMagic:
-			return "ResistMagic";
-		case AlchemyEffect::kResistShock:
-			return "ResistShock";
-		case AlchemyEffect::kRestoration:
-			return "Restoration";
-		case AlchemyEffect::kSneak:
-			return "Sneak";
-		case AlchemyEffect::kSpeedMult:
-			return "SpeedMult";
-		case AlchemyEffect::kStamina:
-			return "Stamina";
-		case AlchemyEffect::kStaminaRate:
-			return "StaminaRate";
-		case AlchemyEffect::kStaminaRateMult:
-			return "StaminaRateMult";
-		case AlchemyEffect::kTwoHanded:
-			return "TwoHanded";
-		case AlchemyEffect::kUnarmedDamage:
-			return "UnarmedDamage";
-		case AlchemyEffect::kWeaponSpeedMult:
-			return "WeapenSpeedMult";
-		case AlchemyEffect::kCureDisease:
-			return "CureDisease";
-		case AlchemyEffect::kCurePoison:
-			return "CurePoison";
-		case AlchemyEffect::kEnchanting:
-			return "Enchanting";
-		case AlchemyEffect::kWaterbreathing:
-			return "Waterbreathing";
-		case AlchemyEffect::kSmithing:
-			return "Smithing";
-		case AlchemyEffect::kSpeech:
-			return "Speech";
-		case AlchemyEffect::kCarryWeight:
-			return "CarryWeight";
-		case AlchemyEffect::kAlchemy:
-			return "Alchemy";
-		case AlchemyEffect::kPersuasion:
-			return "Persuasion";
-		case AlchemyEffect::kCustom:
-			return "Custom";
-		default:
-			return "Unknown";
-		}
-	}
+	/// <summary>
+	/// Converts an AlchemyEffect to a String
+	/// </summary>
+	/// <param name="ae"></param>
+	/// <returns></returns>
+	static std::string ToString(AlchemyEffect ae);
 
-	static std::string ToString(AlchemyEffectBase ae)
-	{
-		std::string ret = "|";
-		if (ae & Base(AlchemyEffect::kAlteration))
-			ret += "Alteration|";
-		if (ae & Base(AlchemyEffect::kArchery))
-			ret += "Archery|";
-		if (ae & Base(AlchemyEffect::kAttackDamageMult))
-			ret += "AttackDamageMult|";
-		if (ae & Base(AlchemyEffect::kBlock))
-			ret += "Block|";
-		if (ae & Base(AlchemyEffect::kBlood))
-			ret += "Blood|";
-		if (ae & Base(AlchemyEffect::kBowSpeed))
-			ret += "BowSpeed|";
-		if (ae & Base(AlchemyEffect::kConjuration))
-			ret += "Conjuration|";
-		if (ae & Base(AlchemyEffect::kCriticalChance))
-			ret += "CriticalChance|";
-		if (ae & Base(AlchemyEffect::kDamageResist))
-			ret += "DamageResist|";
-		if (ae & Base(AlchemyEffect::kDestruction))
-			ret += "Destruction|";
-		if (ae & Base(AlchemyEffect::kFear))
-			ret += "Fear|";
-		if (ae & Base(AlchemyEffect::kFrenzy))
-			ret += "Frenzy|";
-		if (ae & Base(AlchemyEffect::kHealRate))
-			ret += "HealRate|";
-		if (ae & Base(AlchemyEffect::kHealRateMult))
-			ret += "HealRateMult|";
-		if (ae & Base(AlchemyEffect::kHealth))
-			ret += "Health|";
-		if (ae & Base(AlchemyEffect::kHeavyArmor))
-			ret += "HeavyArmor|";
-		if (ae & Base(AlchemyEffect::kIllusion))
-			ret += "Illusion|";
-		if (ae & Base(AlchemyEffect::kInvisibility))
-			ret += "Invisibility|";
-		if (ae & Base(AlchemyEffect::kLightArmor))
-			ret += "LightArmor|";
-		if (ae & Base(AlchemyEffect::kLockpicking))
-			ret += "Lockpicking|";
-		if (ae & Base(AlchemyEffect::kMagicka))
-			ret += "Magicka|";
-		if (ae & Base(AlchemyEffect::kMagickaRate))
-			ret += "MagickaRate|";
-		if (ae & Base(AlchemyEffect::kMagickaRateMult))
-			ret += "MagickaRateMult|";
-		if (ae & Base(AlchemyEffect::kMeleeDamage))
-			ret += "MeleeDamage|";
-		if (ae & Base(AlchemyEffect::kNone))
-			ret += "None|";
-		if (ae & Base(AlchemyEffect::kOneHanded))
-			ret += "OneHanded|";
-		if (ae & Base(AlchemyEffect::kParalysis))
-			ret += "Paralysis|";
-		if (ae & Base(AlchemyEffect::kPickpocket))
-			ret += "Pickpocket|";
-		if (ae & Base(AlchemyEffect::kPoisonResist))
-			ret += "PoisonResist|";
-		if (ae & Base(AlchemyEffect::kReflectDamage))
-			ret += "ReflectDamage|";
-		if (ae & Base(AlchemyEffect::kResistDisease))
-			ret += "ResistDisease|";
-		if (ae & Base(AlchemyEffect::kResistFire))
-			ret += "ResistFire|";
-		if (ae & Base(AlchemyEffect::kResistFrost))
-			ret += "ResistFrost|";
-		if (ae & Base(AlchemyEffect::kResistMagic))
-			ret += "ResistMagic|";
-		if (ae & Base(AlchemyEffect::kResistShock))
-			ret += "ResistShock|";
-		if (ae & Base(AlchemyEffect::kRestoration))
-			ret += "Restoration|";
-		if (ae & Base(AlchemyEffect::kSneak))
-			ret += "Sneak|";
-		if (ae & Base(AlchemyEffect::kSpeedMult))
-			ret += "SpeedMult|";
-		if (ae & Base(AlchemyEffect::kStamina))
-			ret += "Stamina|";
-		if (ae & Base(AlchemyEffect::kStaminaRate))
-			ret += "StaminaRate|";
-		if (ae & Base(AlchemyEffect::kStaminaRateMult))
-			ret += "StaminaRateMult|";
-		if (ae & Base(AlchemyEffect::kTwoHanded))
-			ret += "TwoHanded|";
-		if (ae & Base(AlchemyEffect::kUnarmedDamage))
-			ret += "UnarmedDamage|";
-		if (ae & Base(AlchemyEffect::kWeaponSpeedMult))
-			ret += "WeapenSpeedMult|";
-		if (ae & Base(AlchemyEffect::kCureDisease))
-			ret += "CureDisease|";
-		if (ae & Base(AlchemyEffect::kCurePoison))
-			ret += "CurePoison|";
-		if (ae & Base(AlchemyEffect::kEnchanting))
-			ret += "Enchanting|";
-		if (ae & Base(AlchemyEffect::kWaterbreathing))
-			ret += "Waterbreathing|";
-		if (ae & Base(AlchemyEffect::kSmithing))
-			ret += "Smithing|";
-		if (ae & Base(AlchemyEffect::kSpeech))
-			ret += "Speech|";
-		if (ae & Base(AlchemyEffect::kCarryWeight))
-			ret += "CarryWeight|";
-		if (ae & Base(AlchemyEffect::kAlchemy))
-			ret += "Alchemy|";
-		if (ae & Base(AlchemyEffect::kPersuasion))
-			ret += "Persuasion|";
-		if (ae & Base(AlchemyEffect::kCustom))
-			ret += "Custom|";
-		
-		if (ret == "|")
-			return "|Unknown|";
-		return ret;
-	}
+	/// <summary>
+	/// Converts accumulated alchemy effects into a String
+	/// </summary>
+	/// <param name="ae"></param>
+	/// <returns></returns>
+	static std::string ToString(AlchemyEffectBase ae);
 
+	/// <summary>
+	/// The current combat style of an actor
+	/// </summary>
 	enum class CurrentCombatStyle
 	{
 		Spellsword = 0x1, // combination spell and onehanded
@@ -432,53 +161,11 @@ public:
 	};
 
 	/// <summary>
-	/// converts a CurrentCombatStyle value into a string
+	/// Converts a CurrentCombatStyle value into a string
 	/// </summary>
 	/// <param name="style">CurrentCombatStyle value to convert</param>
 	/// <returns>String representing [style]</returns>
-	static std::string ToStringCombatStyle(uint32_t style)
-	{
-		std::string flags = "|";
-		if (style & static_cast<int>(CurrentCombatStyle::Spellsword))
-			flags += "Spellsword|";
-		if (style & static_cast<int>(CurrentCombatStyle::OneHandedShield))
-			flags += "OneHandedShield|";
-		if (style & static_cast<int>(CurrentCombatStyle::TwoHanded))
-			flags += "TwoHanded|";
-		if (style & static_cast<int>(CurrentCombatStyle::OneHanded))
-			flags += "OneHanded|";
-		if (style & static_cast<int>(CurrentCombatStyle::Ranged))
-			flags += "Ranged|";
-		if (style & static_cast<int>(CurrentCombatStyle::DualWield))
-			flags += "DualWield|";
-		if (style & static_cast<int>(CurrentCombatStyle::HandToHand))
-			flags += "HandToHand|";
-		if (style & static_cast<int>(CurrentCombatStyle::Staffsword))
-			flags += "Staffsword|";
-		if (style & static_cast<int>(CurrentCombatStyle::DualStaff))
-			flags += "DualStaff|";
-		if (style & static_cast<int>(CurrentCombatStyle::Staff))
-			flags += "Staff|";
-		if (style & static_cast<int>(CurrentCombatStyle::Mage))
-			flags += "Mage|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicDestruction))
-			flags += "MagicDestruction|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicConjuration))
-			flags += "MagicConjuration|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicAlteration))
-			flags += "MagicAlteration|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicIllusion))
-			flags += "MagicIllusion|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicRestoration))
-			flags += "MagicRestoration|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFire))
-			flags += "MagicDamageFire|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageShock))
-			flags += "MagicDamageShock|";
-		if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFrost))
-			flags += "MagicDamageFrost|";
-		return flags;
-	}
+	static std::string ToStringCombatStyle(uint32_t style);
 
 	/// <summary>
 	/// Retrieves data about the current equiped items and spells of an actor
@@ -622,8 +309,8 @@ public:
 	/// <summary>
 	/// Returns a vector with all forms of the given type in the plugin
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	/// <param name="pluginname"></param>
+	/// <typeparam name="T">form type</typeparam>
+	/// <param name="pluginname">name of the plugin</param>
 	/// <returns></returns>
 	template <class T>
 	static std::vector<T*> GetFormsInPlugin(std::string pluginname)
@@ -653,14 +340,14 @@ public:
 	/// <summary>
 	/// Returns whether an actor is valid and safe to work with
 	/// </summary>
-	/// <param name="actor"></param>
+	/// <param name="actor">Actor to validate</param>
 	/// <returns></returns>
 	static bool ValidateActor(RE::Actor* actor);
 
 	/// <summary>
 	/// Returns whether a form is valid and safe to work with
 	/// </summary>
-	/// <param name="actor"></param>
+	/// <param name="form">Form to validate</param>
 	/// <returns></returns>
 	template<class T>
 	static bool ValidateForm(T* form)

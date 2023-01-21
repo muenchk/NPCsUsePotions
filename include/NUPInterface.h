@@ -119,6 +119,12 @@ namespace NPCsUsePotions
 		/// </summary>
 		bool DistributedCustomItems();
 
+		/// <summary>
+		/// Returns the current remaining global cooldown on item usage
+		/// </summary>
+		/// <returns></returns>
+		int GetGlobalCooldownTimer();
+
 		ActorStrength GetActorStrength();
 		ItemStrength GetItemStrength();
 

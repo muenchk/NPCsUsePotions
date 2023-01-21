@@ -693,7 +693,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 							#else
 							RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
 							#endif
-							if (obj->IsWeapon()) {
+							if (obj && obj->IsWeapon()) {
 								ied->AddExtraList(extra);
 								acinfo->actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 								{

@@ -38,12 +38,6 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(actor));
 	console->Print(tmp.c_str());
 	//logger::info("console 6");
-	tmp = "Strength of Actor:\t\t\t" + Utility::ToString(acs);
-	//logger::info("console 7");
-	console->Print(tmp.c_str());
-	//logger::info("console 8");
-	tmp = "Strength of given Items:\t\t" + Utility::ToString(is);
-	//logger::info("console 9");
 	console->Print(tmp.c_str());
 	tmp = "Combat data:\t\t\t\t" + Utility::ToStringCombatStyle(Utility::GetCombatData(actor));
 	console->Print(tmp.c_str());
@@ -160,56 +154,6 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
-	/*
-	console->Print("Storage");
-	auto itr = Distribution::customItems()->begin();
-	while (itr != Distribution::customItems()->end()) {
-		console->Print("\tNext Storage");
-		for (int x = 0; x < itr->second.size(); x++) {
-			auto citems = itr->second[x];
-			if (citems != nullptr) {
-				console->Print("\titer");
-				console->Print("\t\titems");
-				for (int i = 0; i < citems->items.size(); i++) {
-					auto tup = citems->items[i];
-					tmp = "\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
-					console->Print(tmp.c_str());
-				}
-				console->Print("\t\tdeath items");
-				for (int i = 0; i < citems->death.size(); i++) {
-					auto tup = citems->death[i];
-					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
-					console->Print(tmp.c_str());
-				}
-				console->Print("\t\tpoisons");
-				for (int i = 0; i < citems->poisons.size(); i++) {
-					auto tup = citems->poisons[i];
-					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
-					console->Print(tmp.c_str());
-				}
-				console->Print("\t\tpotions");
-				for (int i = 0; i < citems->potions.size(); i++) {
-					auto tup = citems->potions[i];
-					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
-					console->Print(tmp.c_str());
-				}
-				console->Print("\t\tfortify");
-				for (int i = 0; i < citems->fortify.size(); i++) {
-					auto tup = citems->fortify[i];
-					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
-					console->Print(tmp.c_str());
-				}
-				console->Print("\t\tfood");
-				for (int i = 0; i < citems->food.size(); i++) {
-					auto tup = citems->food[i];
-					tmp = "\t\t\t" + std::string((std::get<0>(tup))->GetName()) + "\tchance: " + std::to_string(std::get<1>(tup));
-					console->Print(tmp.c_str());
-				}
-			}
-		}
-		itr++;
-	}
-	*/
 	console->Print("");
 
 	return true;
@@ -219,38 +163,6 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR*, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&) 
 {
 	LOG_3("{}[Console] [ReloadDist] [Process]");
-	/*{
-		std::ofstream outcons("Data\\SKSE\\Plugins\\NPCsUsePotions\\ConsoleCommands.txt");
-		std::ofstream outscript("Data\\SKSE\\Plugins\\NPCsUsePotions\\ScriptCommands.txt");
-
-		RE::SCRIPT_FUNCTION* info = RE::SCRIPT_FUNCTION::GetFirstConsoleCommand();
-		outcons << info->functionName << ";"
-				<< info->shortName << ";"
-				<< "\n";
-		int iter = 0;
-		for (; static_cast<int>(info->output) < RE::SCRIPT_FUNCTION::Commands::kConsoleCommandsEnd + RE::SCRIPT_FUNCTION::Commands::kConsoleOpBase; iter++) {
-			info++;
-			outcons << info->functionName << ";"
-					<< info->shortName << ";"
-					<< "\n";
-		}
-
-		info = RE::SCRIPT_FUNCTION::GetFirstScriptCommand();
-		outscript << info->functionName << ";"
-				  << info->shortName << ";"
-				  << "\n";
-		iter = 0;
-		for (; static_cast<int>(info->output) < RE::SCRIPT_FUNCTION::Commands::kScriptCommandsEnd + RE::SCRIPT_FUNCTION::Commands::kScriptOpBase; iter++) {
-			info++;
-			outscript << info->functionName << ";"
-					  << info->shortName << ";"
-					  << "\n";
-		}
-		outcons.flush();
-		outcons.close();
-		outscript.flush();
-		outscript.close();
-	}*/
 	auto console = RE::ConsoleLog::GetSingleton();
 	console->Print("Resetting information about actors...");
 	bool preproc = Events::LockProcessing();

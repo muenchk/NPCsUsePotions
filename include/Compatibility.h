@@ -85,20 +85,53 @@ public:
 	
 	// general section
 private:
+	/// <summary>
+	/// Whether all objects for Apothecary have been found
+	/// </summary>
 	bool _loadedApothecary = false;
+	/// <summary>
+	/// Whether all objects for Complete Alchemy and Cooking Overhaul have been found
+	/// </summary>
 	bool _loadedCACO = false;
+	/// <summary>
+	/// Whether all objects for Animated Poisons have been found
+	/// </summary>
 	bool _loadedAnimatedPoisons = false;
+	/// <summary>
+	/// Whether all objects for Animated Potions have been found
+	/// </summary>
 	bool _loadedAnimatedPotions = false;
+	/// <summary>
+	/// Whether all objects for Potion Animated Fx have been found
+	/// </summary>
 	bool _loadedPotionAnimatedFx = false;
+	/// <summary>
+	/// Whether all objects for zxlice's Ultimate Potion Animation have been found
+	/// </summary>
 	bool _loadedZUPA = false;
 
+	/// <summary>
+	/// Global cooldown applied
+	/// </summary>
 	int _globalCooldown = 0;
 
+	/// <summary>
+	/// whether item usage while paralyzed is disabled
+	/// </summary>
 	bool _disableParalyzedItems = false;
 
+	/// <summary>
+	/// Maps actorIDs to poisons that should be applied
+	/// </summary>
 	std::unordered_map<RE::FormID, std::tuple<RE::AlchemyItem*, RE::FormID>> _AnPois_ActorPoisonMap;
 
+	/// <summary>
+	/// Maps actorIDs to potions that should be applied
+	/// </summary>
 	std::unordered_map<RE::FormID, std::tuple<RE::AlchemyItem*, RE::FormID>> _AnPoti_ActorPotionMap;
+	/// <summary>
+	/// Maps actorIDs to saved poisons that should be reapplied
+	/// </summary>
 	std::unordered_map<RE::FormID, std::tuple<RE::AlchemyItem*, RE::FormID, int>> _AnPoti_ActorPoisonMap;
 
 public:
@@ -199,20 +232,78 @@ public:
 		return _globalCooldown;
 	}
 
+	/// <summary>
+	/// [AnimatedPoisons] Finds the poison that should be applied to [actor]'s weapons
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
 	RE::AlchemyItem* AnPois_FindActorPoison(RE::FormID actor);
+	/// <summary>
+	/// [AnimatedPoisons] Saves a [poison] that should be applied to [actor]'s weapons
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <param name="poison"></param>
 	void AnPois_AddActorPoison(RE::FormID actor, RE::AlchemyItem* poison);
-	void AnPois_DeleteActorPoison(RE::FormID actor);
+	/// <summary>
+	/// [AnimatedPoisons] Deletes a Form from the actor poison map [CTD FAILSAVE]
+	/// </summary>
+	/// <param name="actor"></param>
+	void AnPois_DeleteActorPoison(RE::FormID form);
+	/// <summary>
+	/// [AnimatedPoisons] removes a saved poison that should be applied to [actor]
+	/// </summary>
+	/// <param name="actor"></param>
 	void AnPois_RemoveActorPoison(RE::FormID actor);
 
 	
+	/// <summary>
+	/// [AnimatedPotions] Finds the potion that should be applied to [actor]
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
 	RE::AlchemyItem* AnPoti_FindActorPotion(RE::FormID actor);
+	/// <summary>
+	/// [AnimatedPotions] Saves a [potion] that should be applied to [actor]
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <param name="potion"></param>
 	void AnPoti_AddActorPotion(RE::FormID actor, RE::AlchemyItem* potion);
-	void AnPoti_DeleteActorPotion(RE::FormID actor);
+	/// <summary>
+	/// [AnimatedPotions] Deletes a form from the actor potion map [CTD FAILSAVE]
+	/// </summary>
+	/// <param name="actor"></param>
+	void AnPoti_DeleteActorPotion(RE::FormID form);
+	/// <summary>
+	/// [AnimatedPotions] Removes a saved potion that should be used by [actor]
+	/// </summary>
+	/// <param name="actor"></param>
 	void AnPoti_RemoveActorPotion(RE::FormID actor);
+	/// <summary>
+	/// [AnimatedPotions] Finds the poison that should be reapplied to an actors weapons
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
 	std::tuple<RE::AlchemyItem*, int> AnPoti_FindActorPoison(RE::FormID actor);
+	/// <summary>
+	/// [AnimatedPotions] Saves a [poison] that should be reapplied to [actor]'s weapons
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <param name="poison"></param>
 	void AnPoti_AddActorPoison(RE::FormID actor, RE::AlchemyItem* Poison, int count);
-	void AnPoti_DeleteActorPoison(RE::FormID actor);
+	/// <summary>
+	/// [AnimatedPotions] Deletes a Form from the actor poison map [CTD FAILSAVE]
+	/// </summary>
+	/// <param name="actor"></param>
+	void AnPoti_DeleteActorPoison(RE::FormID form);
+	/// <summary>
+	/// [AnimatedPotions] removes a saves poison that should be reapplied to [actor]
+	/// </summary>
+	/// <param name="actor"></param>
 	void AnPoti_RemoveActorPoison(RE::FormID actor);
 
+
+	/// <summary>
+	/// Registers Game Callbacks
+	/// </summary>
 	static void Register();
 };

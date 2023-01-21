@@ -87,14 +87,39 @@ enum class AlchemyEffect : AlchemyEffectBase
 
 };
 
+/// <summary>
+/// Converts the primary effect of [effect] to an AlchemyEffect
+/// </summary>
+/// <param name="effect"></param>
+/// <returns></returns>
 AlchemyEffect ConvertToAlchemyEffect(RE::EffectSetting* effect);
 
+/// <summary>
+/// Converts the primary effect of [effect] to an AlchemyEffect
+/// </summary>
+/// <param name="effect"></param>
+/// <returns></returns>
 AlchemyEffect ConvertToAlchemyEffectPrimary(RE::EffectSetting* effect);
 
+/// <summary>
+/// Converts the secondary effect of [effect] to an AlchemyEffect
+/// </summary>
+/// <param name="effect"></param>
+/// <returns></returns>
 AlchemyEffect ConvertToAlchemyEffectSecondary(RE::EffectSetting* effect);
 
+/// <summary>
+/// Converts [effect] to an AlchemyEffect based on its FormID
+/// </summary>
+/// <param name="effect"></param>
+/// <returns></returns>
 AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect);
 
+/// <summary>
+/// Converts an ActorValue to an AlchemyEffect
+/// </summary>
+/// <param name="val"></param>
+/// <returns></returns>
 AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val);
 
 /// <summary>
@@ -106,7 +131,22 @@ RE::ActorValue ConvertAlchemyEffect(AlchemyEffect eff);
 
 namespace AlchEff
 {
+	/// <summary>
+	/// Returns whether the [effects] are that of a potion
+	/// </summary>
+	/// <param name="effects"></param>
+	/// <returns></returns>
 	bool IsPotion(AlchemyEffectBase effects);
+	/// <summary>
+	/// Returns whether the [effects] are that of a fortify potion
+	/// </summary>
+	/// <param name="effects"></param>
+	/// <returns></returns>
 	bool IsFortify(AlchemyEffectBase effects);
+	/// <summary>
+	/// Converts accumulated [effects] into a list of AlchemyEffect
+	/// </summary>
+	/// <param name="effects">accumulated effects</param>
+	/// <returns>list of AlchemyEffect</returns>
 	std::vector<AlchemyEffect> GetAlchemyEffects(AlchemyEffectBase effects);
 }

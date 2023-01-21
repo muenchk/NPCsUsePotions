@@ -93,6 +93,14 @@ namespace NPCsUsePotions
 		return valid;
 	}
 
+	int NUPActorInfoHandle::GetGlobalCooldownTimer()
+	{
+		if (valid)
+			return ((ActorInfo*)acinfo)->globalCooldownTimer;
+		else
+			return INT_MAX;
+	}
+
 	NUPActorInfoHandle::ActorStrength NUPActorInfoHandle::GetActorStrength()
 	{
 		if (valid)

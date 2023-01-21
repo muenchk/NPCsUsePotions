@@ -785,28 +785,9 @@ GetRandomFoodeff:;
 		auto itm = food[ra(randi)];
 		return itm->object->As<RE::AlchemyItem>();
 	} else {
-		switch (reff) {
-		case AlchemyEffect::kMagicka:
-		case AlchemyEffect::kMagickaRate:
-		case AlchemyEffect::kMagickaRateMult:
-			items = Settings::GetMatchingItems(*Settings::foodmagicka(), static_cast<uint64_t>(reff));
-			break;
-		case AlchemyEffect::kHealRate:
-		case AlchemyEffect::kHealRateMult:
-		case AlchemyEffect::kHealth:
-			items = Settings::GetMatchingItems(*Settings::foodstamina(), static_cast<uint64_t>(reff));
-			break;
-		case AlchemyEffect::kStamina:
-		case AlchemyEffect::kStaminaRate:
-		case AlchemyEffect::kStaminaRateMult:
-			items = Settings::GetMatchingItems(*Settings::foodhealth(), static_cast<uint64_t>(reff));
-			break;
-		default:
-			items = Settings::GetMatchingItems(*Settings::foodall(), static_cast<uint64_t>(reff));
-			if (items.size() == 0) {
-				items = Settings::GetMatchingItems(*Settings::foodall(), validFood);
-			}
-			break;
+		items = Settings::GetMatchingItems(*Settings::foodall(), static_cast<uint64_t>(reff));
+		if (items.size() == 0) {
+			items = Settings::GetMatchingItems(*Settings::foodall(), validFood);
 		}
 	}
 	// return random item

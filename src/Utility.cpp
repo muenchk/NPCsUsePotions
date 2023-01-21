@@ -3,6 +3,342 @@
 #include <Distribution.h>
 #include "Compatibility.h"
 
+bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> first, std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> second)
+{
+	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
+}
+
+std::string Utility::ToString(ActorStrength acs)
+{
+	switch (acs) {
+	case ActorStrength::Weak:
+		return "Weak";
+	case ActorStrength::Normal:
+		return "Normal";
+	case ActorStrength::Powerful:
+		return "Powerful";
+	case ActorStrength::Insane:
+		return "Insane";
+	case ActorStrength::Boss:
+		return "Boss";
+	default:
+		return "Not Applicable";
+	}
+}
+
+std::string Utility::ToString(ItemStrength is)
+{
+	switch (is) {
+	case ItemStrength::kWeak:
+		return "Weak";
+	case ItemStrength::kStandard:
+		return "Standard";
+	case ItemStrength::kPotent:
+		return "Potent";
+	case ItemStrength::kInsane:
+		return "Insane";
+	default:
+		return "Not Applicable";
+	}
+}
+
+std::string Utility::ToString(AlchemyEffect ae)
+{
+	switch (ae) {
+	case AlchemyEffect::kAlteration:
+		return "Alteration";
+	case AlchemyEffect::kAnyFood:
+		return "AnyFood";
+	case AlchemyEffect::kAnyFortify:
+		return "AnyFortify";
+	case AlchemyEffect::kAnyPoison:
+		return "AnyPoison";
+	case AlchemyEffect::kAnyPotion:
+		return "AnyPotion";
+	case AlchemyEffect::kArchery:
+		return "Archery";
+	case AlchemyEffect::kAttackDamageMult:
+		return "AttackDamageMult";
+	case AlchemyEffect::kBlock:
+		return "Block";
+	case AlchemyEffect::kBlood:
+		return "Blood";
+	case AlchemyEffect::kBowSpeed:
+		return "BowSpeed";
+	case AlchemyEffect::kConjuration:
+		return "Conjuration";
+	case AlchemyEffect::kCriticalChance:
+		return "CriticalChance";
+	case AlchemyEffect::kDamageResist:
+		return "DamageResist";
+	case AlchemyEffect::kDestruction:
+		return "Destruction";
+	case AlchemyEffect::kFear:
+		return "Fear";
+	case AlchemyEffect::kFrenzy:
+		return "Frenzy";
+	case AlchemyEffect::kHealRate:
+		return "HealRate";
+	case AlchemyEffect::kHealRateMult:
+		return "HealRateMult";
+	case AlchemyEffect::kHealth:
+		return "Health";
+	case AlchemyEffect::kHeavyArmor:
+		return "HeavyArmor";
+	case AlchemyEffect::kIllusion:
+		return "Illusion";
+	case AlchemyEffect::kInvisibility:
+		return "Invisibility";
+	case AlchemyEffect::kLightArmor:
+		return "LightArmor";
+	case AlchemyEffect::kLockpicking:
+		return "Lockpicking";
+	case AlchemyEffect::kMagicka:
+		return "Magicka";
+	case AlchemyEffect::kMagickaRate:
+		return "MagickaRate";
+	case AlchemyEffect::kMagickaRateMult:
+		return "MagickaRateMult";
+	case AlchemyEffect::kMeleeDamage:
+		return "MeleeDamage";
+	case AlchemyEffect::kNone:
+		return "None";
+	case AlchemyEffect::kOneHanded:
+		return "OneHanded";
+	case AlchemyEffect::kParalysis:
+		return "Paralysis";
+	case AlchemyEffect::kPickpocket:
+		return "Pickpocket";
+	case AlchemyEffect::kPoisonResist:
+		return "PoisonResist";
+	case AlchemyEffect::kReflectDamage:
+		return "ReflectDamage";
+	case AlchemyEffect::kResistDisease:
+		return "ResistDisease";
+	case AlchemyEffect::kResistFire:
+		return "ResistFire";
+	case AlchemyEffect::kResistFrost:
+		return "ResistFrost";
+	case AlchemyEffect::kResistMagic:
+		return "ResistMagic";
+	case AlchemyEffect::kResistShock:
+		return "ResistShock";
+	case AlchemyEffect::kRestoration:
+		return "Restoration";
+	case AlchemyEffect::kSneak:
+		return "Sneak";
+	case AlchemyEffect::kSpeedMult:
+		return "SpeedMult";
+	case AlchemyEffect::kStamina:
+		return "Stamina";
+	case AlchemyEffect::kStaminaRate:
+		return "StaminaRate";
+	case AlchemyEffect::kStaminaRateMult:
+		return "StaminaRateMult";
+	case AlchemyEffect::kTwoHanded:
+		return "TwoHanded";
+	case AlchemyEffect::kUnarmedDamage:
+		return "UnarmedDamage";
+	case AlchemyEffect::kWeaponSpeedMult:
+		return "WeapenSpeedMult";
+	case AlchemyEffect::kCureDisease:
+		return "CureDisease";
+	case AlchemyEffect::kCurePoison:
+		return "CurePoison";
+	case AlchemyEffect::kEnchanting:
+		return "Enchanting";
+	case AlchemyEffect::kWaterbreathing:
+		return "Waterbreathing";
+	case AlchemyEffect::kSmithing:
+		return "Smithing";
+	case AlchemyEffect::kSpeech:
+		return "Speech";
+	case AlchemyEffect::kCarryWeight:
+		return "CarryWeight";
+	case AlchemyEffect::kAlchemy:
+		return "Alchemy";
+	case AlchemyEffect::kPersuasion:
+		return "Persuasion";
+	case AlchemyEffect::kFortifyHealth:
+		return "FortifyHealth";
+	case AlchemyEffect::kFortifyMagicka:
+		return "FortifyMagicka";
+	case AlchemyEffect::kFortifyStamina:
+		return "FortifyStamina";
+	case AlchemyEffect::kCustom:
+		return "Custom";
+	default:
+		return "Unknown";
+	}
+}
+
+std::string Utility::ToString(AlchemyEffectBase ae)
+{
+	std::string ret = "|";
+	if (ae & Base(AlchemyEffect::kAlteration))
+		ret += "Alteration|";
+	if (ae & Base(AlchemyEffect::kArchery))
+		ret += "Archery|";
+	if (ae & Base(AlchemyEffect::kAttackDamageMult))
+		ret += "AttackDamageMult|";
+	if (ae & Base(AlchemyEffect::kBlock))
+		ret += "Block|";
+	if (ae & Base(AlchemyEffect::kBlood))
+		ret += "Blood|";
+	if (ae & Base(AlchemyEffect::kBowSpeed))
+		ret += "BowSpeed|";
+	if (ae & Base(AlchemyEffect::kConjuration))
+		ret += "Conjuration|";
+	if (ae & Base(AlchemyEffect::kCriticalChance))
+		ret += "CriticalChance|";
+	if (ae & Base(AlchemyEffect::kDamageResist))
+		ret += "DamageResist|";
+	if (ae & Base(AlchemyEffect::kDestruction))
+		ret += "Destruction|";
+	if (ae & Base(AlchemyEffect::kFear))
+		ret += "Fear|";
+	if (ae & Base(AlchemyEffect::kFrenzy))
+		ret += "Frenzy|";
+	if (ae & Base(AlchemyEffect::kHealRate))
+		ret += "HealRate|";
+	if (ae & Base(AlchemyEffect::kHealRateMult))
+		ret += "HealRateMult|";
+	if (ae & Base(AlchemyEffect::kHealth))
+		ret += "Health|";
+	if (ae & Base(AlchemyEffect::kHeavyArmor))
+		ret += "HeavyArmor|";
+	if (ae & Base(AlchemyEffect::kIllusion))
+		ret += "Illusion|";
+	if (ae & Base(AlchemyEffect::kInvisibility))
+		ret += "Invisibility|";
+	if (ae & Base(AlchemyEffect::kLightArmor))
+		ret += "LightArmor|";
+	if (ae & Base(AlchemyEffect::kLockpicking))
+		ret += "Lockpicking|";
+	if (ae & Base(AlchemyEffect::kMagicka))
+		ret += "Magicka|";
+	if (ae & Base(AlchemyEffect::kMagickaRate))
+		ret += "MagickaRate|";
+	if (ae & Base(AlchemyEffect::kMagickaRateMult))
+		ret += "MagickaRateMult|";
+	if (ae & Base(AlchemyEffect::kMeleeDamage))
+		ret += "MeleeDamage|";
+	if (ae & Base(AlchemyEffect::kNone))
+		ret += "None|";
+	if (ae & Base(AlchemyEffect::kOneHanded))
+		ret += "OneHanded|";
+	if (ae & Base(AlchemyEffect::kParalysis))
+		ret += "Paralysis|";
+	if (ae & Base(AlchemyEffect::kPickpocket))
+		ret += "Pickpocket|";
+	if (ae & Base(AlchemyEffect::kPoisonResist))
+		ret += "PoisonResist|";
+	if (ae & Base(AlchemyEffect::kReflectDamage))
+		ret += "ReflectDamage|";
+	if (ae & Base(AlchemyEffect::kResistDisease))
+		ret += "ResistDisease|";
+	if (ae & Base(AlchemyEffect::kResistFire))
+		ret += "ResistFire|";
+	if (ae & Base(AlchemyEffect::kResistFrost))
+		ret += "ResistFrost|";
+	if (ae & Base(AlchemyEffect::kResistMagic))
+		ret += "ResistMagic|";
+	if (ae & Base(AlchemyEffect::kResistShock))
+		ret += "ResistShock|";
+	if (ae & Base(AlchemyEffect::kRestoration))
+		ret += "Restoration|";
+	if (ae & Base(AlchemyEffect::kSneak))
+		ret += "Sneak|";
+	if (ae & Base(AlchemyEffect::kSpeedMult))
+		ret += "SpeedMult|";
+	if (ae & Base(AlchemyEffect::kStamina))
+		ret += "Stamina|";
+	if (ae & Base(AlchemyEffect::kStaminaRate))
+		ret += "StaminaRate|";
+	if (ae & Base(AlchemyEffect::kStaminaRateMult))
+		ret += "StaminaRateMult|";
+	if (ae & Base(AlchemyEffect::kTwoHanded))
+		ret += "TwoHanded|";
+	if (ae & Base(AlchemyEffect::kUnarmedDamage))
+		ret += "UnarmedDamage|";
+	if (ae & Base(AlchemyEffect::kWeaponSpeedMult))
+		ret += "WeapenSpeedMult|";
+	if (ae & Base(AlchemyEffect::kCureDisease))
+		ret += "CureDisease|";
+	if (ae & Base(AlchemyEffect::kCurePoison))
+		ret += "CurePoison|";
+	if (ae & Base(AlchemyEffect::kEnchanting))
+		ret += "Enchanting|";
+	if (ae & Base(AlchemyEffect::kWaterbreathing))
+		ret += "Waterbreathing|";
+	if (ae & Base(AlchemyEffect::kSmithing))
+		ret += "Smithing|";
+	if (ae & Base(AlchemyEffect::kSpeech))
+		ret += "Speech|";
+	if (ae & Base(AlchemyEffect::kCarryWeight))
+		ret += "CarryWeight|";
+	if (ae & Base(AlchemyEffect::kAlchemy))
+		ret += "Alchemy|";
+	if (ae & Base(AlchemyEffect::kPersuasion))
+		ret += "Persuasion|";
+	if (ae & Base(AlchemyEffect::kFortifyHealth))
+		ret += "FortifyHealth|";
+	if (ae & Base(AlchemyEffect::kFortifyMagicka))
+		ret += "FortifyMagicka|";
+	if (ae & Base(AlchemyEffect::kFortifyStamina))
+		ret += "FortifyStamina|";
+	if (ae & Base(AlchemyEffect::kCustom))
+		ret += "Custom|";
+
+	if (ret == "|")
+		return "|Unknown|";
+	return ret;
+}
+
+std::string Utility::ToStringCombatStyle(uint32_t style)
+{
+	std::string flags = "|";
+	if (style & static_cast<int>(CurrentCombatStyle::Spellsword))
+		flags += "Spellsword|";
+	if (style & static_cast<int>(CurrentCombatStyle::OneHandedShield))
+		flags += "OneHandedShield|";
+	if (style & static_cast<int>(CurrentCombatStyle::TwoHanded))
+		flags += "TwoHanded|";
+	if (style & static_cast<int>(CurrentCombatStyle::OneHanded))
+		flags += "OneHanded|";
+	if (style & static_cast<int>(CurrentCombatStyle::Ranged))
+		flags += "Ranged|";
+	if (style & static_cast<int>(CurrentCombatStyle::DualWield))
+		flags += "DualWield|";
+	if (style & static_cast<int>(CurrentCombatStyle::HandToHand))
+		flags += "HandToHand|";
+	if (style & static_cast<int>(CurrentCombatStyle::Staffsword))
+		flags += "Staffsword|";
+	if (style & static_cast<int>(CurrentCombatStyle::DualStaff))
+		flags += "DualStaff|";
+	if (style & static_cast<int>(CurrentCombatStyle::Staff))
+		flags += "Staff|";
+	if (style & static_cast<int>(CurrentCombatStyle::Mage))
+		flags += "Mage|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicDestruction))
+		flags += "MagicDestruction|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicConjuration))
+		flags += "MagicConjuration|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicAlteration))
+		flags += "MagicAlteration|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicIllusion))
+		flags += "MagicIllusion|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicRestoration))
+		flags += "MagicRestoration|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFire))
+		flags += "MagicDamageFire|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicDamageShock))
+		flags += "MagicDamageShock|";
+	if (style & static_cast<int>(CurrentCombatStyle::MagicDamageFrost))
+		flags += "MagicDamageFrost|";
+	return flags;
+}
+
 uint32_t Utility::GetCombatData(RE::Actor* actor)
 {
 	LOG_3("{}[Utility] [GetCombatData]");

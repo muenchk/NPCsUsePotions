@@ -35,10 +35,21 @@ public:
 	{
 	public:
 		// if set to false this rule is effectively empty
+		/// <summary>
+		/// whether the rule is valid, if [false] this rule is effectively empty
+		/// </summary>
 		bool valid = true;
-		///
+		/// <summary>
+		/// Version of the rule
+		/// </summary>
 		int ruleVersion = 1;
+		/// <summary>
+		/// Type of the rule
+		/// </summary>
 		int ruleType = 1;
+		/// <summary>
+		/// Unique name of the rule
+		/// </summary>
 		std::string ruleName;
 
 		/// TYPE 1 - Rule
@@ -75,10 +86,6 @@ public:
 		int poisonTierAdjust = 0;
 		std::vector<int> foodChance;
 
-		/// TYPE 2 - Exclusion
-		//std::string			assocRuleName;
-		//std::string			assocExclusions;
-
 		// distributions for different item types
 		std::vector<std::tuple<int, AlchemyEffect>> potionDistr;
 		std::vector<std::tuple<int, AlchemyEffect>> potionDistrChance;
@@ -95,9 +102,21 @@ public:
 		std::map<AlchemyEffect, float> fortifyEffectMap;
 		std::map<AlchemyEffect, float> foodEffectMap;
 
+		/// <summary>
+		/// accumulated alchemy effects valid for potions
+		/// </summary>
 		uint64_t validPotions = 0;
+		/// <summary>
+		/// accumulated alchemy effect valid for poisons
+		/// </summary>
 		uint64_t validPoisons = 0;
+		/// <summary>
+		/// accumulated alchemy effects valid for fortify potions
+		/// </summary>
 		uint64_t validFortifyPotions = 0;
+		/// <summary>
+		/// accumulated alchemy effects valid for food
+		/// </summary>
 		uint64_t validFood = 0;
 
 		/// <summary>
@@ -435,6 +454,7 @@ public:
 		RE::TESClass* tpltclass = nullptr;
 	};
 
+	// Storage for custom items
 	class CustomItemStorage
 	{
 	public:
@@ -450,10 +470,25 @@ public:
 		/// items associated with the objects above
 		/// </summary>
 		std::vector<CustomItem*> items;
+		/// <summary>
+		/// items that are given on death
+		/// </summary>
 		std::vector<CustomItem*> death;
+		/// <summary>
+		/// custom potions that may be given
+		/// </summary>
 		std::vector<CustomItemAlch*> potions;
+		/// <summary>
+		/// custom fortify potions that may be given
+		/// </summary>
 		std::vector<CustomItemAlch*> fortify;
+		/// <summary>
+		/// custom poisons that may be given
+		/// </summary>
 		std::vector<CustomItemAlch*> poisons;
+		/// <summary>
+		/// custom food that may be given
+		/// </summary>
 		std::vector<CustomItemAlch*> food;
 	};
 
@@ -708,11 +743,34 @@ public:
 	/// <returns></returns>
 	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase effects);
 
+	/// <summary>
+	/// Returns whether an actor has been excluded from distribution
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
 	static bool ExcludedNPC(RE::Actor* actor);
+	/// <summary>
+	/// Returns whether a NPC has been excluded from distribution
+	/// </summary>
+	/// <param name="npc"></param>
+	/// <returns></returns>
 	static bool ExcludedNPC(RE::TESNPC* npc);
+	/// <summary>
+	/// Returns whether an actor has been excluded from handling
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
 	static bool ExcludedNPCFromHandling(RE::Actor* actor);
 
+	/// <summary>
+	/// Forcefully excludes an NPC from distribution and Handling
+	/// </summary>
+	/// <param name="actorid"></param>
+	/// <returns></returns>
 	static bool ForceExcludeNPC(uint32_t actorid);
+
+	// friends
+	// i.e. functions that may access private class members
 
 	friend void Settings::CheckActorsForRules();
 	friend void Settings::CheckCellForActors(RE::FormID cellid);
@@ -723,16 +781,30 @@ public:
 	friend void Settings::ClassifyItems();
 
 private:
-	//static Rule* CalcRule(RE::Actor* actor);
-	//static Rule* CalcRule(RE::Actor* actor, CustomItemStorage* custItems);
-	//static Rule* CalcRule(RE::TESNPC* npc);
-	//static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
-	//static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, CustomItemStorage* custItems);
-	//static Rule* CalcRule(RE::Actor* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems = nullptr);
+	/// <summary>
+	/// Calculates the distribution rule, actor strength, item strength, and the custom items for an NPC
+	/// </summary>
+	/// <param name="actor">NPC to calculate for</param>
+	/// <param name="acs">[overwrite] the actor strength</param>
+	/// <param name="is">[overwrite] the item strength</param>
+	/// <param name="tpltinfo">template information of the NPC if available</param>
+	/// <param name="custItems">[overwrite] custom items of the NPC</param>
+	/// <returns></returns>
 	static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
+	/// <summary>
+	/// Calculates the rule, actor strength, item strength, and the custom items for an NPC
+	/// </summary>
+	/// <param name="acinfo">the ActorInfo of the actor to calculate for [infomation us updated]</param>
+	/// <param name="tpltinfo">template information of the actor, if available</param>
+	/// <returns></returns>
 	static Rule* CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tpltinfo = nullptr);
 	static std::vector<std::tuple<int, Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
+	/// <summary>
+	/// Finds the Rule with [name]
+	/// </summary>
+	/// <param name="name"></param>
+	/// <returns></returns>
 	static Rule* FindRule(std::string name)
 	{
 		for (Rule* r : _rules) {
@@ -742,8 +814,21 @@ private:
 		return nullptr;
 	}
 
+	/// <summary>
+	/// Extracts template information from an NPC
+	/// </summary>
+	/// <param name="npc"></param>
+	/// <returns></returns>
 	static NPCTPLTInfo ExtractTemplateInfo(RE::TESNPC* npc);
+	/// <summary>
+	/// Exctracts template information from a Leveled Character
+	/// </summary>
+	/// <param name="lvl"></param>
+	/// <returns></returns>
 	static NPCTPLTInfo ExtractTemplateInfo(RE::TESLevCharacter* lvl);
 
+	/// <summary>
+	/// Resets all custom items
+	/// </summary>
 	static void ResetCustomItems();
 };

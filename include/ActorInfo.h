@@ -149,7 +149,13 @@ public:
 	ActorStrength actorStrength = ActorStrength::Weak;
 	ItemStrength itemStrength = ItemStrength::kWeak;
 
+	/// <summary>
+	/// if the actor is considered boss level
+	/// </summary>
 	bool _boss = false;
+	/// <summary>
+	/// if the actor is a automaton
+	/// </summary>
 	bool _automaton = false;
 
 	/// <summary>
@@ -162,11 +168,18 @@ public:
 	/// </summary>
 	int globalCooldownTimer = 0;
 
+	/// <summary>
+	/// version of class [used for save and load]
+	/// </summary>
 	static inline const uint32_t version = 0x00000001;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
 	ActorInfo();
 
+	/// <summary>
+	/// returns a string that represents the actor
+	/// </summary>
+	/// <returns></returns>
 	std::string ToString();
 	
 
@@ -184,41 +197,180 @@ public:
 		}
 	}
 
+	/// <summary>
+	/// custom potion distribution to be applied
+	/// </summary>
 	std::vector<std::tuple<int, AlchemyEffect>> potionDistr;
+	/// <summary>
+	/// custom poison distribution to be applied
+	/// </summary>
 	std::vector<std::tuple<int, AlchemyEffect>> poisonDistr;
+	/// <summary>
+	/// custom food distribution to be applied
+	/// </summary>
 	std::vector<std::tuple<int, AlchemyEffect>> foodDistr;
+	/// <summary>
+	/// custom fortify distribution to be applied
+	/// </summary>
 	std::vector<std::tuple<int, AlchemyEffect>> fortifyDistf;
 
 public:
+	/// <summary>
+	/// calculates the custom items available
+	/// </summary>
 	void CalcCustomItems();
+	/// <summary>
+	/// Returns whether the actor is a boss
+	/// </summary>
+	/// <returns></returns>
 	bool IsBoss() { return _boss; }
 
+	/// <summary>
+	/// Filters a list of custom items and returns only those that can be distributed
+	/// </summary>
+	/// <param name="itms">list of custom items</param>
+	/// <returns>list of distributable items</returns>
 	std::vector<CustomItemAlch*> FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms);
+	/// <summary>
+	/// Returns whether at least one item in a list of custom items can be distributed
+	/// </summary>
+	/// <param name="itms"></param>
+	/// <returns></returns>
 	bool CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms);
+	/// <summary>
+	/// Filters a list of custom items and returns only those that can be used
+	/// </summary>
+	/// <param name="itms">list of custom items</param>
+	/// <returns>list of usable items</returns>
 	std::vector<CustomItemAlch*> FilterCustomConditionsUsage(std::vector<CustomItemAlch*> itms);
+	/// <summary>
+	/// Filters a list of custom items and returns only those that can be distributed
+	/// </summary>
+	/// <param name="itms">list of custom items</param>
+	/// <returns>list of distributable items</returns>
 	std::vector<CustomItem*> FilterCustomConditionsDistrItems(std::vector<CustomItem*> itms);
+	/// <summary>
+	/// Returns whether at least one item in a list of custom items can be distributed
+	/// </summary>
+	/// <param name="itms"></param>
+	/// <returns></returns>
 	bool CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms);
+	/// <summary>
+	/// Returns whether the actor may use the given item
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool CanUseItem(RE::FormID item);
+	/// <summary>
+	/// Returns whether the actor may use the given potion or fortify potion
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool CanUsePot(RE::FormID item);
+	/// <summary>
+	/// Returns whether the actor may use the given potion
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool CanUsePotion(RE::FormID item);
+	/// <summary>
+	/// Returns whether the actor may use the given poison
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool CanUsePoison(RE::FormID item);
+	/// <summary>
+	/// Returns whether the actor may use the given fortify potion
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool CanUseFortify(RE::FormID item);
+	/// <summary>
+	/// Returns whether the actor may use the given food
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool CanUseFood(RE::FormID item);
+	/// <summary>
+	/// Returns whether the given item is a custom alchemy item
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool IsCustomAlchItem(RE::AlchemyItem* item);
+	/// <summary>
+	/// Returns whether the given item is a custom potion
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool IsCustomPotion(RE::AlchemyItem* item);
+	/// <summary>
+	/// Returns whether the given item is a custom poison
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool IsCustomPoison(RE::AlchemyItem* item);
+	/// <summary>
+	/// Returns whether the given item is a custom food
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool IsCustomFood(RE::AlchemyItem* item);
+	/// <summary>
+	/// Returns whether the given item is a custom item
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
 	bool IsCustomItem(RE::TESBoundObject* item);
 
-	bool CalcUsageConditions(CustomItem*);
-	bool CalcDistrConditions(CustomItem*);
+	/// <summary>
+	/// Returns whether the given custom item can be used by the actor
+	/// </summary>
+	/// <param name="">item to check</param>
+	/// <returns>[true] if usage is possible, [false] otherwise</returns>
+	bool CalcUsageConditions(CustomItem* item);
+	/// <summary>
+	/// Returns whether the given custom item may be distributed to the actor
+	/// </summary>
+	/// <param name="item">item to check</param>
+	/// <returns>[true] if distribution is allowed, [false] otherwise</returns>
+	bool CalcDistrConditions(CustomItem* item);
 
+	/// <summary>
+	/// Returns whether the actor is follower
+	/// </summary>
+	/// <returns></returns>
 	bool IsFollower();
 
+	/// <summary>
+	/// Returns the version of the class
+	/// </summary>
+	/// <returns></returns>
 	static uint32_t GetVersion();
 
+	/// <summary>
+	/// Returns the save size of the object in bytes
+	/// </summary>
+	/// <returns></returns>
 	int32_t GetDataSize();
+	/// <summary>
+	/// Returns the minimal save size of the object in bytes
+	/// </summary>
+	/// <param name="version"></param>
+	/// <returns></returns>
 	int32_t GetMinDataSize(int32_t version);
+	/// <summary>
+	/// Writes the object information to the given buffer
+	/// </summary>
+	/// <param name="buffer">buffer to write to</param>
+	/// <param name="offset">offset at which writing will begin</param>
+	/// <returns>Whether the data was successfully written</returns>
 	bool WriteData(unsigned char* buffer, int offset);
+	/// <summary>
+	/// Reads the object information from the given data
+	/// </summary>
+	/// <param name="buffer">buffer to read from</param>
+	/// <param name="offset">offset in the buffer where the read operation will begin</param>
+	/// <param name="length">maximal length to read</param>
+	/// <returns>Whether the read operation was successful</returns>
 	bool ReadData(unsigned char* buffer, int offset, int length);
 };
