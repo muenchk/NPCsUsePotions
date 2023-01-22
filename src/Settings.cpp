@@ -3173,7 +3173,7 @@ void Settings::CleanAlchemyEffects()
 {
 	std::vector<AlchemyEffect> effectsToRemove;
 	// iterate over existing alchemy effects
-	for (uint64_t i = 1; i <= 63; i++) {
+	for (uint64_t i = 0; i <= 63; i++) {
 		if (_alchemyEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
 			// found existing effect, which is not excluded
 		} else {
