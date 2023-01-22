@@ -66,7 +66,7 @@ enum class AlchemyEffect : AlchemyEffectBase
 	kFortifyHealth = (unsigned __int64)1 << 52,     // 10000000000000
 	kFortifyMagicka = (unsigned __int64)1 << 53,    // 20000000000000
 	kFortifyStamina = (unsigned __int64)1 << 54,    // 40000000000000
-	kUnused1 = (unsigned __int64)1 << 55,			// 80000000000000
+	kUnused1 = (unsigned __int64)1 << 55,           // 80000000000000
 	kUnused2 = (unsigned __int64)1 << 56,           // 100000000000000
 	kUnused3 = (unsigned __int64)1 << 57,           // 200000000000000
 	kUnused4 = (unsigned __int64)1 << 58,           // 300000000000000
@@ -75,15 +75,108 @@ enum class AlchemyEffect : AlchemyEffectBase
 	kUnused7 = (unsigned __int64)1 << 61,           // 1000000000000000
 	kUnused8 = (unsigned __int64)1 << 62,           // 2000000000000000
 	kCustom = (unsigned __int64)1 << 63,            // 4000000000000000
+
 	// 2000007
-	kAnyPotion = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kInvisibility),
-	// 180D7E3C007
-	kAnyPoison = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kParalysis) | static_cast<uint64_t>(kSpeedMult) | static_cast<uint64_t>(kDamageResist) | static_cast<uint64_t>(kPoisonResist) | static_cast<uint64_t>(kWeaponSpeedMult) | static_cast<uint64_t>(kAttackDamageMult) | static_cast<uint64_t>(kMagickaRateMult) | static_cast<uint64_t>(kStaminaRateMult) | static_cast<uint64_t>(kHealRateMult) | static_cast<uint64_t>(kResistFire) | static_cast<uint64_t>(kResistFrost) | static_cast<uint64_t>(kResistMagic) | static_cast<uint64_t>(kResistShock) | static_cast<uint64_t>(kFrenzy) | static_cast<uint64_t>(kFear) | static_cast<uint64_t>(kBowSpeed) | static_cast<uint64_t>(kReflectDamage) | static_cast<uint64_t>(kCarryWeight),
-	kAnyRegen = static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate) | static_cast<uint64_t>(kHealRateMult) | static_cast<uint64_t>(kMagickaRateMult) | static_cast<uint64_t>(kStaminaRateMult),
-	// CBFA3FF8
-	kAnyFortify = static_cast<uint64_t>(kOneHanded) | static_cast<uint64_t>(kTwoHanded) | static_cast<uint64_t>(kArchery) | static_cast<uint64_t>(kBlock) | static_cast<uint64_t>(kHeavyArmor) | static_cast<uint64_t>(kLightArmor) | static_cast<uint64_t>(kAlteration) | static_cast<uint64_t>(kConjuration) | static_cast<uint64_t>(kDestruction) | static_cast<uint64_t>(kIllusion) | static_cast<uint64_t>(kRestoration) | static_cast<uint64_t>(kSpeedMult) | static_cast<uint64_t>(kMeleeDamage) | static_cast<uint64_t>(kUnarmedDamage) | static_cast<uint64_t>(kDamageResist) | static_cast<uint64_t>(kPoisonResist) | static_cast<uint64_t>(kResistFire) | static_cast<uint64_t>(kResistFrost) | static_cast<uint64_t>(kResistShock) | static_cast<uint64_t>(kResistMagic) | static_cast<uint64_t>(kResistDisease) | static_cast<uint64_t>(kWeaponSpeedMult) | static_cast<uint64_t>(kAttackDamageMult) | static_cast<uint64_t>(kPickpocket) | static_cast<uint64_t>(kLockpicking) | static_cast<uint64_t>(kSneak) | static_cast<uint64_t>(kBowSpeed) | static_cast<uint64_t>(kReflectDamage) | static_cast<uint64_t>(kEnchanting) | static_cast<uint64_t>(kWaterbreathing) | static_cast<uint64_t>(kSmithing) | static_cast<uint64_t>(kSpeech) | static_cast<uint64_t>(kCarryWeight) | static_cast<uint64_t>(kPersuasion) | static_cast<uint64_t>(kAlchemy) | static_cast<uint64_t>(kFortifyHealth) | static_cast<uint64_t>(kFortifyMagicka) | static_cast<uint64_t>(kFortifyStamina),
-	// 1C007
-	kAnyFood = static_cast<uint64_t>(kHealth) | static_cast<uint64_t>(kMagicka) | static_cast<uint64_t>(kStamina) | static_cast<uint64_t>(kHealRate) | static_cast<uint64_t>(kMagickaRate) | static_cast<uint64_t>(kStaminaRate),
+	kAnyPotion = static_cast<uint64_t>(kHealth) |
+	             static_cast<uint64_t>(kMagicka) |
+	             static_cast<uint64_t>(kStamina) |
+	             static_cast<uint64_t>(kInvisibility),
+
+	// 720387DFFBFFFF
+	kAnyPoison = static_cast<uint64_t>(kHealth) |
+	             static_cast<uint64_t>(kMagicka) |
+	             static_cast<uint64_t>(kStamina) |
+	             static_cast<uint64_t>(kOneHanded) |
+	             static_cast<uint64_t>(kTwoHanded) |
+	             static_cast<uint64_t>(kArchery) |
+	             static_cast<uint64_t>(kBlock) |
+	             static_cast<uint64_t>(kHeavyArmor) |
+	             static_cast<uint64_t>(kLightArmor) |
+	             static_cast<uint64_t>(kAlteration) |
+	             static_cast<uint64_t>(kConjuration) | 
+	             static_cast<uint64_t>(kDestruction) |
+	             static_cast<uint64_t>(kIllusion) |
+	             static_cast<uint64_t>(kRestoration) |
+	             static_cast<uint64_t>(kHealRate) |
+	             static_cast<uint64_t>(kMagickaRate) |
+	             static_cast<uint64_t>(kStaminaRate) |
+	             static_cast<uint64_t>(kSpeedMult) |
+	             static_cast<uint64_t>(kMeleeDamage) |
+	             static_cast<uint64_t>(kUnarmedDamage) |
+	             static_cast<uint64_t>(kDamageResist) |
+	             static_cast<uint64_t>(kPoisonResist) |
+	             static_cast<uint64_t>(kResistFire) |
+	             static_cast<uint64_t>(kResistShock) |
+	             static_cast<uint64_t>(kResistFrost) |
+	             static_cast<uint64_t>(kResistMagic) |
+	             static_cast<uint64_t>(kResistDisease) |
+	             static_cast<uint64_t>(kParalysis) |
+	             static_cast<uint64_t>(kWeaponSpeedMult) |
+	             static_cast<uint64_t>(kAttackDamageMult) |
+	             static_cast<uint64_t>(kHealRateMult) |
+	             static_cast<uint64_t>(kMagickaRateMult) |
+	             static_cast<uint64_t>(kStaminaRateMult) |
+	             static_cast<uint64_t>(kFrenzy) |
+	             static_cast<uint64_t>(kFear) |
+	             static_cast<uint64_t>(kBowSpeed) |
+	             static_cast<uint64_t>(kCarryWeight) |
+	             static_cast<uint64_t>(kFortifyHealth) |
+	             static_cast<uint64_t>(kFortifyMagicka) |
+	             static_cast<uint64_t>(kFortifyStamina),
+
+	// 70001C000
+	kAnyRegen = static_cast<uint64_t>(kHealRate) |
+	            static_cast<uint64_t>(kMagickaRate) |
+	            static_cast<uint64_t>(kStaminaRate) |
+	            static_cast<uint64_t>(kHealRateMult) |
+	            static_cast<uint64_t>(kMagickaRateMult) |
+	            static_cast<uint64_t>(kStaminaRateMult),
+
+	// 7FE670CFFE3FF8
+	kAnyFortify = static_cast<uint64_t>(kOneHanded) |
+	              static_cast<uint64_t>(kTwoHanded) |
+	              static_cast<uint64_t>(kArchery) |
+	              static_cast<uint64_t>(kBlock) |
+	              static_cast<uint64_t>(kHeavyArmor) |
+	              static_cast<uint64_t>(kLightArmor) |
+	              static_cast<uint64_t>(kAlteration) |
+	              static_cast<uint64_t>(kConjuration) |
+	              static_cast<uint64_t>(kDestruction) |
+	              static_cast<uint64_t>(kIllusion) |
+	              static_cast<uint64_t>(kRestoration) |
+	              static_cast<uint64_t>(kSpeedMult) |
+	              static_cast<uint64_t>(kCriticalChance) |
+	              static_cast<uint64_t>(kMeleeDamage) |
+	              static_cast<uint64_t>(kUnarmedDamage) |
+	              static_cast<uint64_t>(kDamageResist) |
+	              static_cast<uint64_t>(kPoisonResist) |
+	              static_cast<uint64_t>(kResistFire) |
+	              static_cast<uint64_t>(kResistShock) |
+	              static_cast<uint64_t>(kResistFrost) |
+	              static_cast<uint64_t>(kResistMagic) |
+	              static_cast<uint64_t>(kResistDisease) |
+	              static_cast<uint64_t>(kWeaponSpeedMult) |
+	              static_cast<uint64_t>(kAttackDamageMult) |
+	              static_cast<uint64_t>(kPickpocket) |
+	              static_cast<uint64_t>(kLockpicking) |
+	              static_cast<uint64_t>(kSneak) |
+	              static_cast<uint64_t>(kBowSpeed) |
+	              static_cast<uint64_t>(kReflectDamage) |
+	              static_cast<uint64_t>(kEnchanting) |
+	              static_cast<uint64_t>(kWaterbreathing) |
+	              static_cast<uint64_t>(kSmithing) |
+	              static_cast<uint64_t>(kSpeech) |
+	              static_cast<uint64_t>(kCarryWeight) |
+	              static_cast<uint64_t>(kPersuasion) |
+	              static_cast<uint64_t>(kAlchemy) |
+	              static_cast<uint64_t>(kFortifyHealth) |
+	              static_cast<uint64_t>(kFortifyMagicka) |
+	              static_cast<uint64_t>(kFortifyStamina),
+
+	// 7FE677EFFFFFFF
+	kAnyFood = static_cast<uint64_t>(kAnyPotion) |
+	           static_cast<uint64_t>(kAnyRegen) |
+	           static_cast<uint64_t>(kAnyFortify),
 
 };
 
