@@ -591,6 +591,9 @@ private:
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodall{};
 
 	static inline AlchemyEffectBase _alchemyEffectsFound;
+	static inline AlchemyEffectBase _potionEffectsFound;
+	static inline AlchemyEffectBase _poisonEffectsFound;
+	static inline AlchemyEffectBase _foodEffectsFound;
 
 	static inline bool _itemsInit = false;
 

@@ -2806,6 +2806,7 @@ void Settings::ClassifyItems()
 				if (std::get<2>(clas) == ItemType::kFood &&
 					(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
 					_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
+					_foodEffectsFound |= std::get<0>(clas);
 				} else if (std::get<2>(clas) == ItemType::kPoison &&
 						   (Settings::Poisons::_AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
 					switch (std::get<1>(clas)) {
@@ -2822,6 +2823,7 @@ void Settings::ClassifyItems()
 						_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
 						break;
 					}
+					_poisonEffectsFound |= std::get<0>(clas);
 				} else if (std::get<2>(clas) == ItemType::kPotion &&
 						   (Settings::Potions::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
 					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
@@ -2859,6 +2861,7 @@ void Settings::ClassifyItems()
 							break;
 						}
 					}
+					_potionEffectsFound |= std::get<0>(clas);
 				}
 				int dosage = 0;
 				if (item->IsPoison())
@@ -3171,27 +3174,54 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 
 void Settings::CleanAlchemyEffects()
 {
-	std::vector<AlchemyEffect> effectsToRemove;
+	std::vector<AlchemyEffect> effectsToRemovePotion;
+	std::vector<AlchemyEffect> effectsToRemovePoison;
+	std::vector<AlchemyEffect> effectsToRemoveFood;
 	// iterate over existing alchemy effects
 	for (uint64_t i = 0; i <= 63; i++) {
-		if (_alchemyEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
+		// potion
+		if (_potionEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
 			// found existing effect, which is not excluded
 		} else {
 			// effect excluded or not present in any items
 			// remove from all distribution rules
-			effectsToRemove.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
+			effectsToRemovePotion.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
+		}
+		// poison
+		if (_poisonEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
+			// found existing effect, which is not excluded
+		} else {
+			// effect excluded or not present in any items
+			// remove from all distribution rules
+			effectsToRemovePoison.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
+		}
+		// food
+		if (_foodEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
+			// found existing effect, which is not excluded
+		} else {
+			// effect excluded or not present in any items
+			// remove from all distribution rules
+			effectsToRemoveFood.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
 		}
 	}
 
 	// iterate over all rules
 	auto itr = Distribution::rules()->begin();
 	while (itr != Distribution::rules()->end()) {
-		for (int i = 0; i < effectsToRemove.size(); i++) {
-			(*itr)->RemoveAlchemyEffectPotion(effectsToRemove[i]);
-			(*itr)->RemoveAlchemyEffectPoison(effectsToRemove[i]);
-			(*itr)->RemoveAlchemyEffectFortifyPotion(effectsToRemove[i]);
-			(*itr)->RemoveAlchemyEffectFood(effectsToRemove[i]);
-			LOG2_3("{}[Settings] [CleanAlchemyEffects] Remove AlchemyEffect {} from rule {}.", Utility::ToString(effectsToRemove[i]), (*itr)->ruleName);
+		// potion
+		for (int i = 0; i < effectsToRemovePotion.size(); i++) {
+			(*itr)->RemoveAlchemyEffectPotion(effectsToRemovePotion[i]);
+			(*itr)->RemoveAlchemyEffectFortifyPotion(effectsToRemovePotion[i]);
+			LOG2_3("{}[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from potions in rule {}.", Utility::ToString(effectsToRemovePotion[i]), (*itr)->ruleName);
+		} // poison
+		for (int i = 0; i < effectsToRemovePoison.size(); i++) {
+			(*itr)->RemoveAlchemyEffectPoison(effectsToRemovePoison[i]);
+			LOG2_3("{}[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from poisons in rule {}.", Utility::ToString(effectsToRemovePoison[i]), (*itr)->ruleName);
+		}
+		// food
+		for (int i = 0; i < effectsToRemoveFood.size(); i++) {
+			(*itr)->RemoveAlchemyEffectFood(effectsToRemoveFood[i]);
+			LOG2_3("{}[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from food in rule {}.", Utility::ToString(effectsToRemoveFood[i]), (*itr)->ruleName);
 		}
 		itr++;
 	}
