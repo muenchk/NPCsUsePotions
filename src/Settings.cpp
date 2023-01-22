@@ -2776,6 +2776,7 @@ void Settings::ClassifyItems()
 					if (effects & static_cast<AlchemyEffectBase>(*itr)) {
 						Distribution::_excludedItems.insert(item->GetFormID());
 					}
+					itr++;
 				}
 				if (Distribution::excludedItems()->contains(item->GetFormID())) {
 					iter++;
