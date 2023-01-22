@@ -2782,6 +2782,23 @@ void Settings::ClassifyItems()
 					iter++;
 					continue;
 				}
+
+				// if the item has the ReflectDamage effect, with a strength of more than 50%, remove the item
+				if (std::get<0>(clas) & static_cast<AlchemyEffectBase>(AlchemyEffect::kReflectDamage)) {
+					for (int i = 0; i < (int)item->effects.size(); i++) {
+						if (item->effects[i]->baseEffect &&
+							((ConvertToAlchemyEffectPrimary(item->effects[i]->baseEffect) == AlchemyEffect::kReflectDamage) ||
+								(item->effects[i]->baseEffect->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (ConvertToAlchemyEffectSecondary(item->effects[i]->baseEffect) == AlchemyEffect::kReflectDamage)))) {
+							if (item->effects[i]->effectItem.magnitude > 50) {
+								Distribution::_excludedItems.insert(item->GetFormID());
+								LOGLE1_1("[Settings] [ClassifyItems] Excluded {} due to strong ReflectDamage effect", Utility::PrintForm(item));
+								iter++;
+								continue;
+							}
+						}
+					}
+				}
+
 				// since the item is not to be excluded, save which alchemic effects are present
 				_alchemyEffectsFound |= std::get<0>(clas);
 
