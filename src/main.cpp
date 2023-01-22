@@ -114,6 +114,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 			Settings::CheckActorsForRules();
 		// classify currently loaded game items
 		Settings::ClassifyItems();
+		Settings::CleanAlchemyEffects();
 		logger::info("Items classified");
 		// register eventhandlers
 		Events::RegisterAllEventHandlers();

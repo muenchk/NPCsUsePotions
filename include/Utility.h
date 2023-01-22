@@ -264,7 +264,7 @@ public:
 	/// <param name="map">unified effect map the distribution is calculated from</param>
 	/// <param name="range">range the distribution chances are computed for</param>
 	/// </summary>
-	static std::vector<std::tuple<int, AlchemyEffect>> GetDistribution(std::map<AlchemyEffect, float> map, int range);
+	static std::vector<std::tuple<int, AlchemyEffect>> GetDistribution(std::map<AlchemyEffect, float> map, int range, bool chance = false);
 
 	/// <summary>
 	/// Calculates a unified effect map, that contains at most one entry per AlchemyEffect present

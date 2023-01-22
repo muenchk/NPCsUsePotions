@@ -903,6 +903,34 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFood(ActorInfo* acinf
 	return std::vector<RE::AlchemyItem*>{ GetRandomFood_intern(acinfo) };
 }
 
+void Distribution::Rule::RemoveAlchemyEffectPotion(AlchemyEffect effect)
+{
+	potionEffectMap.erase(effect);
+	potionDistr = Utility::GetDistribution(potionEffectMap, RandomRange);
+	potionDistrChance = Utility::GetDistribution(potionEffectMap, RandomRange, true);
+}
+
+void Distribution::Rule::RemoveAlchemyEffectPoison(AlchemyEffect effect)
+{
+	poisonEffectMap.erase(effect);
+	poisonDistr = Utility::GetDistribution(poisonEffectMap, RandomRange);
+	poisonDistrChance = Utility::GetDistribution(poisonEffectMap, RandomRange, true);
+}
+
+void Distribution::Rule::RemoveAlchemyEffectFortifyPotion(AlchemyEffect effect)
+{
+	fortifyEffectMap.erase(effect);
+	fortifyDistr = Utility::GetDistribution(fortifyEffectMap, RandomRange);
+	fortifyDistrChance = Utility::GetDistribution(fortifyEffectMap, RandomRange, true);
+}
+
+void Distribution::Rule::RemoveAlchemyEffectFood(AlchemyEffect effect)
+{
+	foodEffectMap.erase(effect);
+	foodDistr = Utility::GetDistribution(foodEffectMap, RandomRange);
+	foodDistrChance = Utility::GetDistribution(foodEffectMap, RandomRange, true);
+}
+
 #pragma endregion
 
 #pragma region Distribution

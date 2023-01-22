@@ -590,6 +590,8 @@ private:
 	/// </summary>
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodall{};
 
+	static inline AlchemyEffectBase _alchemyEffectsFound;
+
 	static inline bool _itemsInit = false;
 
 	// tuples of effect, magnitude and duration
@@ -792,4 +794,9 @@ public:
 		}
 		return ret;
 	}
+
+	/// <summary>
+	/// Deletes all AlchemyEffects, that are not used by any potions, etc. from all distribution rules
+	/// </summary>
+	static void CleanAlchemyEffects();
 };

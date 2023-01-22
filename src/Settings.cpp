@@ -2782,6 +2782,8 @@ void Settings::ClassifyItems()
 					iter++;
 					continue;
 				}
+				// since the item is not to be excluded, save which alchemic effects are present
+				_alchemyEffectsFound |= std::get<0>(clas);
 
 				// determine the type of item
 				if (std::get<2>(clas) == ItemType::kFood &&
@@ -2856,6 +2858,9 @@ void Settings::ClassifyItems()
 					// just retrieve the effects, we will analyze them later
 					if (sett) {
 						ingredienteffectmap.push_back({ itemi->GetName(), Utility::ToString(ConvertToAlchemyEffectPrimary(sett)) });
+						
+						// the effects of ingredients may lead to valid potions being brewed, so we need to save that these effects actually exist in the game
+						_alchemyEffectsFound |= static_cast<uint64_t>(ConvertToAlchemyEffectPrimary(sett));
 					}
 				}
 			}
@@ -3145,6 +3150,34 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 		maxmag,
 		detrimental
 	};
+}
+
+void Settings::CleanAlchemyEffects()
+{
+	std::vector<AlchemyEffect> effectsToRemove;
+	// iterate over existing alchemy effects
+	for (uint64_t i = 1; i <= 63; i++) {
+		if (_alchemyEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
+			// found existing effect, which is not excluded
+		} else {
+			// effect excluded or not present in any items
+			// remove from all distribution rules
+			effectsToRemove.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
+		}
+	}
+
+	// iterate over all rules
+	auto itr = Distribution::rules()->begin();
+	while (itr != Distribution::rules()->end()) {
+		for (int i = 0; i < effectsToRemove.size(); i++) {
+			(*itr)->RemoveAlchemyEffectPotion(effectsToRemove[i]);
+			(*itr)->RemoveAlchemyEffectPoison(effectsToRemove[i]);
+			(*itr)->RemoveAlchemyEffectFortifyPotion(effectsToRemove[i]);
+			(*itr)->RemoveAlchemyEffectFood(effectsToRemove[i]);
+			LOG2_3("{}[Settings] [CleanAlchemyEffects] Remove AlchemyEffect {} from rule {}.", Utility::ToString(effectsToRemove[i]), (*itr)->ruleName);
+		}
+		itr++;
+	}
 }
 
 #pragma endregion

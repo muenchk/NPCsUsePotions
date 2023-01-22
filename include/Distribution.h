@@ -424,6 +424,28 @@ public:
 		/// <param name="type">Determines which items effect property is consulted</param>
 		/// <returns></returns>
 		AlchemyEffect GetRandomEffectChance(Settings::ItemType type);
+
+	public:
+		/// <summary>
+		/// Removes an AlchemyEffect from the list of valid potion effects
+		/// </summary>
+		/// <param name="effect"></param>
+		void RemoveAlchemyEffectPotion(AlchemyEffect effect);
+		/// <summary>
+		/// Removes an AlchemyEffect from the list of valid poison effects
+		/// </summary>
+		/// <param name="effect"></param>
+		void RemoveAlchemyEffectPoison(AlchemyEffect effect);
+		/// <summary>
+		/// Removes an AlchemyEffect from the list of valid fortify potion effects
+		/// </summary>
+		/// <param name="effect"></param>
+		void RemoveAlchemyEffectFortifyPotion(AlchemyEffect effect);
+		/// <summary>
+		/// Removes an AlchemyEffect from the list of valid food effects
+		/// </summary>
+		/// <param name="effect"></param>
+		void RemoveAlchemyEffectFood(AlchemyEffect effect);
 	};
 
 	/// <summary>

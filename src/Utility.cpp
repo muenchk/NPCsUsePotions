@@ -1386,9 +1386,12 @@ std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::vector
 	return ret;
 }
 
-std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::map<AlchemyEffect, float> map, int range)
+std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::map<AlchemyEffect, float> map, int range, bool chance)
 {
 	LOG_3("{}[Utility] [GetDistributionMap]");
+	if (chance) {
+		map.insert_or_assign(static_cast<AlchemyEffect>(AlchemyEffect::kCustom), 1.0f);
+	}
 	std::vector<std::tuple<int, AlchemyEffect>> ret;
 	if (map.size() == 0)
 		return ret;
