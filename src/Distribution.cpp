@@ -1347,6 +1347,10 @@ bool Distribution::ExcludedNPC(RE::Actor* actor)
 	           (Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID())) ||
 	           actor->IsGhost() ||
 	           actor->GetActorBase()->IsSummonable();
+	if (actor->GetActorBase()->Bleeds() == false && Utility::ToLower(std::string(actor->GetActorBase()->GetFormEditorID())).find("ghost") != std::string::npos) {
+		Distribution::ForceExcludeNPC(actor->GetFormID());
+		return true;
+	}
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 	if (!Distribution::npcMap()->contains(actor->GetFormID()) && ret == false) {
 		auto base = actor->GetActorBase();
@@ -1410,6 +1414,10 @@ bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 	           npc->IsInFaction(Settings::CurrentHirelingFaction) ||
 	           npc->IsGhost() ||
 	           npc->IsSummonable();
+	if (npc->Bleeds() == false && Utility::ToLower(std::string(npc->GetFormEditorID())).find("ghost") != std::string::npos) {
+		Distribution::ForceExcludeNPC(npc->GetFormID());
+		return true;
+	}
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 	if (!Distribution::npcMap()->contains(npc->GetFormID()) && ret == false) {
 		for (uint32_t i = 0; i < npc->numKeywords; i++) {
