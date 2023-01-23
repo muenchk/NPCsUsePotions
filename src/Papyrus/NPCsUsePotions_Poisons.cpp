@@ -52,7 +52,7 @@ namespace Papyrus
 				actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 			} else {
 				ied = actor->GetEquippedEntryData(true);
-				if (ied) {
+				if (ied && ied->object && ied->object->IsWeapon()) {
 					ied->AddExtraList(extra);
 					actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 				}

@@ -1451,7 +1451,7 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 	auto ied = actor->GetEquippedEntryData(false);
 	RE::ExtraPoison* pois = nullptr;
 	if (ied) {
-		if (ied->extraLists) {
+		if (ied->extraLists && ied->IsPoisoned()) {
 			for (const auto& extraL : *(ied->extraLists)) {
 				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
 				if (pois)
@@ -1462,14 +1462,7 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 	if (pois == nullptr && Compatibility::GetSingleton()->CanApplyPoisonToLeftHand()) {
 		ied = actor->GetEquippedEntryData(true);
 		if (ied && ied->extraLists) {
-#ifdef GetObject
-#	undef GetObject
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#	define GetObject GetObjectA
-#else
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#endif
-			if (obj && obj->IsWeapon()) {
+			if (ied->IsPoisoned()) {
 				for (const auto& extraL : *(ied->extraLists)) {
 					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
 					if (pois)
@@ -1489,7 +1482,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 {
 	auto ied = actor->GetEquippedEntryData(false);
 	if (ied) {
-		if (ied->extraLists) {
+		if (ied->extraLists && ied->IsPoisoned()) {
 			for (const auto& extraL : *(ied->extraLists)) {
 				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
 				if (pois)
@@ -1499,20 +1492,11 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 	}
 	if (pois == nullptr && Compatibility::GetSingleton()->CanApplyPoisonToLeftHand()) {
 		ied = actor->GetEquippedEntryData(true);
-		if (ied && ied->extraLists) {
-#ifdef GetObject
-#	undef GetObject
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#	define GetObject GetObjectA
-#else
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#endif
-			if (obj && obj->IsWeapon()) {
-				for (const auto& extraL : *(ied->extraLists)) {
-					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-					if (pois)
-						break;
-				}
+		if (ied && ied->extraLists && ied->IsPoisoned()) {
+			for (const auto& extraL : *(ied->extraLists)) {
+				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+				if (pois)
+					break;
 			}
 		}
 	}
