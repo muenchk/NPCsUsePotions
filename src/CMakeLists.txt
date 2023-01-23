@@ -9,6 +9,7 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Events.cpp"
 	"${SOURCE_DIR}/Settings.cpp"
 	"${SOURCE_DIR}/SettingsLoadSave.cpp"
+	"${SOURCE_DIR}/Distribution.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
 	"${SOURCE_DIR}/Distribution.cpp"
 	"${SOURCE_DIR}/Console.cpp"
@@ -16,7 +17,6 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Game.cpp"
 	"${SOURCE_DIR}/Utility.cpp"
 	"${SOURCE_DIR}/NUPInterface.cpp"
-	"${SOURCE_DIR}/AlchemyEffect.cpp"
 	"${SOURCE_DIR}/PCH.h"
 	"${SOURCE_DIR}/DataStorage.cpp"
 	"${SOURCE_DIR}/Data.cpp" 
@@ -70,7 +70,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 			"/Zc:preprocessor"	# Enable preprocessor conformance mode
 
 			"/D_CRT_SECURE_NO_WARNINGS"
-
+			"/D_CRT_SECURE_NO_WARNINGS_GLOBALS"
+			
 			"/wd5105"
 			# disable warnings
 			"/wd4189"
@@ -117,22 +118,12 @@ target_include_directories(
 		"${SOURCE_DIR}"
 )
 
-if (DEFINED CACHE{SKYRIM_SUPPORT_AE353})
-	add_compile_definitions(SKYRIM_SUPPORT_AE353=1)
-	add_subdirectory($ENV{CommonLibSSE353Path} CommonLibSSE)
-	target_link_libraries(
-		"${PROJECT_NAME}"
-		PRIVATE
-			CommonLibSSE::CommonLibSSE
-	)
-else()
-	add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE)
-	target_link_libraries(
-		"${PROJECT_NAME}"
-		PRIVATE
-			CommonLibSSE::CommonLibSSE
-	)
-endif()
+add_subdirectory($ENV{CommonLibVRPath} CommonLibVR)
+target_link_libraries(
+	"${PROJECT_NAME}"
+	PRIVATE
+		CommonLibVR::CommonLibVR
+)
 
 target_precompile_headers(
 	"${PROJECT_NAME}"
