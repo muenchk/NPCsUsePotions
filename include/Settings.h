@@ -119,6 +119,10 @@ public:
 		/// [Settings] Disables the processing of actors out-of-combat
 		/// </summary>
 		static inline bool _DisableOutOfCombatProcessing = false;    // disables npc processing if they are out-of-combat
+		/// <summary>
+		/// [Settings] Disables the usage of items for NPCs that are excluded from distribution
+		/// </summary>
+		static inline bool _DisableItemUsageForExcludedNPCs = false; // disables the usage of items for NPCs that are excluded from distribution
 	};
 
 	/// <summary>
@@ -362,9 +366,14 @@ public:
 	struct Whitelist
 	{
 		/// <summary>
-		/// [Settings] Whether whitelist mode is enabled
+		/// [Settings] Enables whitelist mode for Items
 		/// </summary>
-		static inline bool Enabled = false;
+		static inline bool EnabledItems = false;
+
+		/// <summary>
+		/// [Settings] Enables whitelist mode for NPCs
+		/// </summary>
+		static inline bool EnabledNPCs = false;
 	};
 
 	/// <summary>

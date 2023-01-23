@@ -105,6 +105,10 @@ public:
 	/// </summary>
 	std::string pluginname;
 	/// <summary>
+	/// ID of the plugin in the current loadorder [runtime]
+	/// </summary>
+	uint32_t pluginID;
+	/// <summary>
 	/// name of the actor
 	/// </summary>
 	std::string name;
@@ -167,6 +171,15 @@ public:
 	/// cooldown until next potion / poison / food can be used
 	/// </summary>
 	int globalCooldownTimer = 0;
+
+	/// <summary>
+	/// Whether the NPC has been whitelisted
+	/// </summary>
+	bool whitelisted = false;
+	/// <summary>
+	/// Whether it has been calculated whether the npc is whitelisted
+	/// </summary>
+	bool whitelistedcalculated = false;
 
 	/// <summary>
 	/// version of class [used for save and load]

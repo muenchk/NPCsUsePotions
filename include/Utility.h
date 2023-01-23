@@ -307,6 +307,20 @@ public:
 	static const char* GetPluginName(RE::TESForm* form);
 
 	/// <summary>
+	/// Returns the plugin index of the given plugin [returns 0x1 on failure]
+	/// </summary>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
+	static uint32_t GetPluginIndex(std::string pluginname);
+
+	/// <summary>
+	/// Returns the plugin index of the given form [returns 0x1 on failure]
+	/// </summary>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
+	static uint32_t GetPluginIndex(RE::TESForm* form);
+
+	/// <summary>
 	/// Returns a vector with all forms of the given type in the plugin
 	/// </summary>
 	/// <typeparam name="T">form type</typeparam>
@@ -356,6 +370,19 @@ public:
 			return false;
 		return true;
 	}
+
+	/// <summary>
+	/// Extracts template information from an NPC
+	/// </summary>
+	/// <param name="npc"></param>
+	/// <returns></returns>
+	static Misc::NPCTPLTInfo ExtractTemplateInfo(RE::TESNPC* npc);
+	/// <summary>
+	/// Exctracts template information from a Leveled Character
+	/// </summary>
+	/// <param name="lvl"></param>
+	/// <returns></returns>
+	static Misc::NPCTPLTInfo ExtractTemplateInfo(RE::TESLevCharacter* lvl);
 	#pragma endregion
 
 };

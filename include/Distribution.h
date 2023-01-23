@@ -2,6 +2,7 @@
 
 #include "AlchemyEffect.h"
 #include "CustomItem.h"
+#include "Misc.h"
 
 	/// <summary>
 /// Class handling all functions related to item distribution
@@ -448,34 +449,6 @@ public:
 		void RemoveAlchemyEffectFood(AlchemyEffect effect);
 	};
 
-	/// <summary>
-	/// Stores information about a template npc
-	/// </summary>
-	class NPCTPLTInfo
-	{
-	public:
-		/// <summary>
-		/// factions associated with the template npc
-		/// </summary>
-		std::vector<RE::TESFaction*> tpltfactions;
-		/// <summary>
-		/// keywords associated with the template npc
-		/// </summary>
-		std::vector<RE::BGSKeyword*> tpltkeywords;
-		/// <summary>
-		/// race of the template npc
-		/// </summary>
-		RE::TESRace* tpltrace = nullptr;
-		/// <summary>
-		/// combat style of the template npc
-		/// </summary>
-		RE::TESCombatStyle* tpltstyle = nullptr;
-		/// <summary>
-		/// class of the template npc
-		/// </summary>
-		RE::TESClass* tpltclass = nullptr;
-	};
-
 	// Storage for custom items
 	class CustomItemStorage
 	{
@@ -592,6 +565,10 @@ private:
 	/// map that contains from distribution excluded effects
 	/// </summary>
 	static inline std::unordered_set<AlchemyEffect> _excludedEffects;
+
+	static inline std::unordered_set<uint32_t> _excludedPlugins_NPCs;
+	static inline std::unordered_set<RE::FormID> _whitelistNPCs;
+	static inline std::unordered_set<uint32_t> _whitelistNPCsPlugin;
 	
 public:
 	static inline std::vector<Rule*> _dummyVecR;
@@ -606,6 +583,7 @@ public:
 	static inline std::unordered_set<uint8_t> _dummySet2;
 	static inline std::unordered_set<uint16_t> _dummySet3;
 	static inline std::unordered_set<AlchemyEffect> _dummySet4;
+	static inline std::unordered_set<uint32_t> _dummySet5;
 
 	/// <summary>
 	/// Returns the vector containing all rules
@@ -690,7 +668,17 @@ public:
 	/// <returns></returns>
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>>* dosageEffectMap() { return initialised ? &_dosageEffectMap : &_dummyMap6; }
 
+	/// <summary>
+	/// return the set of excluded alchemy effects
+	/// </summary>
+	/// <returns></returns>
 	static inline std::unordered_set<AlchemyEffect>* excludedEffects() { return initialised ? &_excludedEffects : &_dummySet4; }
+
+	static inline std::unordered_set<uint32_t>* excludedPlugins_NPCs() { return initialised ? &_excludedPlugins_NPCs : &_dummySet5; }
+	static inline std::unordered_set<RE::FormID>* whitelistNPCs() { return initialised ? &_whitelistNPCs : &_dummySet1; }
+	static inline std::unordered_set<uint32_t>* whitelistNPCsPlugin() { return initialised ? &_whitelistNPCsPlugin : &_dummySet5; }
+
+
 
 	static std::vector<std::tuple<int, AlchemyEffect>> GetVector(int i, AlchemyEffect alch)
 	{
@@ -778,6 +766,12 @@ public:
 	/// <returns></returns>
 	static bool ExcludedNPC(RE::TESNPC* npc);
 	/// <summary>
+	/// Returns whether a NPC has been excluded from distribution
+	/// </summary>
+	/// <param name="acinfo"></param>
+	/// <returns></returns>
+	static bool ExcludedNPC(ActorInfo* acinfo);
+	/// <summary>
 	/// Returns whether an actor has been excluded from handling
 	/// </summary>
 	/// <param name="actor"></param>
@@ -812,14 +806,14 @@ private:
 	/// <param name="tpltinfo">template information of the NPC if available</param>
 	/// <param name="custItems">[overwrite] custom items of the NPC</param>
 	/// <returns></returns>
-	static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
+	static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, Misc::NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
 	/// <summary>
 	/// Calculates the rule, actor strength, item strength, and the custom items for an NPC
 	/// </summary>
 	/// <param name="acinfo">the ActorInfo of the actor to calculate for [infomation us updated]</param>
 	/// <param name="tpltinfo">template information of the actor, if available</param>
 	/// <returns></returns>
-	static Rule* CalcRule(ActorInfo* acinfo, NPCTPLTInfo* tpltinfo = nullptr);
+	static Rule* CalcRule(ActorInfo* acinfo, Misc::NPCTPLTInfo* tpltinfo = nullptr);
 	static std::vector<std::tuple<int, Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
 	/// <summary>
@@ -835,19 +829,6 @@ private:
 		}
 		return nullptr;
 	}
-
-	/// <summary>
-	/// Extracts template information from an NPC
-	/// </summary>
-	/// <param name="npc"></param>
-	/// <returns></returns>
-	static NPCTPLTInfo ExtractTemplateInfo(RE::TESNPC* npc);
-	/// <summary>
-	/// Exctracts template information from a Leveled Character
-	/// </summary>
-	/// <param name="lvl"></param>
-	/// <returns></returns>
-	static NPCTPLTInfo ExtractTemplateInfo(RE::TESLevCharacter* lvl);
 
 	/// <summary>
 	/// Resets all custom items

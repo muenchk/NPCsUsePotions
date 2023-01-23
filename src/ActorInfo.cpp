@@ -22,6 +22,11 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 		formid = _actor->GetFormID();
 		name = std::string(_actor->GetName());
 		pluginname = std::string(Utility::GetPluginName(actor));
+		pluginID = Utility::GetPluginIndex(pluginname);
+		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
+		if (pluginID == 0x1) {
+			pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
 	}
@@ -32,6 +37,7 @@ ActorInfo::ActorInfo()
 {
 	actor = nullptr;
 	formid = 0;
+	pluginID = 0;
 	citems = new CustomItems();
 }
 
@@ -660,6 +666,12 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
 				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
 				_boss = Buffer::ReadBool(buffer, offset);
+
+				// init dependend stuff
+				pluginID = Utility::GetPluginIndex(pluginname);
+				if (pluginID == 0x1) {
+					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+				}
 			}
 			return true;
 		case 0x00000002:
@@ -693,6 +705,12 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				_boss = Buffer::ReadBool(buffer, offset);
 				Animation_busy = Buffer::ReadBool(buffer, offset);
 				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
+
+				// init dependend stuff
+				pluginID = Utility::GetPluginIndex(pluginname);
+				if (pluginID == 0x1) {
+					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+				}
 			}
 			return true;
 		default:

@@ -1452,19 +1452,10 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 	RE::ExtraPoison* pois = nullptr;
 	if (ied) {
 		if (ied->extraLists) {
-#ifdef GetObject
-#	undef GetObject
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#	define GetObject GetObjectA
-#else
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#endif
-			if (obj && obj->IsWeapon()) {
-				for (const auto& extraL : *(ied->extraLists)) {
-					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-					if (pois)
-						break;
-				}
+			for (const auto& extraL : *(ied->extraLists)) {
+				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+				if (pois)
+					break;
 			}
 		}
 	}
@@ -1499,19 +1490,10 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 	auto ied = actor->GetEquippedEntryData(false);
 	if (ied) {
 		if (ied->extraLists) {
-#ifdef GetObject
-#	undef GetObject
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#	define GetObject GetObjectA
-#else
-			RE::TESObjectREFR* obj = ied->GetObject()->As<RE::TESObjectREFR>();
-#endif
-			if (obj && obj->IsWeapon()) {
-				for (const auto& extraL : *(ied->extraLists)) {
-					pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
-					if (pois)
-						break;
-				}
+			for (const auto& extraL : *(ied->extraLists)) {
+				pois = (RE::ExtraPoison*)extraL->GetByType<RE::ExtraPoison>();
+				if (pois)
+					break;
 			}
 		}
 	}
@@ -1568,6 +1550,8 @@ const char* Utility::GetPluginName(RE::TESForm* form)
 		}
 		name = file->GetFilename();
 	}
+	if ((form->GetFormID() >> 24) == 0x00)
+		return "Skyrim.esm";
 	//loginfo("iter 5.1");
 	if (name.empty()) {
 		//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
@@ -1580,10 +1564,145 @@ const char* Utility::GetPluginName(RE::TESForm* form)
 	return name.data();
 }
 
+uint32_t Utility::GetPluginIndex(std::string pluginname)
+{
+	static std::unordered_map<std::string, uint32_t> indexMap;
+	auto itr = indexMap.find(pluginname);
+	if (itr != indexMap.end()) {
+		return itr->second;
+	} else {
+		auto datahandler = RE::TESDataHandler::GetSingleton();
+		int8_t mainindex = datahandler->GetLoadedModIndex(pluginname).value_or(-1);
+		int16_t subindex = datahandler->GetLoadedLightModIndex(pluginname).value_or(-1);
+		uint32_t index = 0;
+		if (mainindex > -1 && mainindex < 0xFE) {
+			// index is a normal mod
+			index = (uint32_t)mainindex << 24;
+			indexMap.insert_or_assign(pluginname, index);
+			return index;
+		} else if (subindex > -1 && subindex <= 0xFFF) {
+			// we have a valid light mod
+			index = 0xFE000000 & ((uint32_t)subindex << 12);
+			indexMap.insert_or_assign(pluginname, index);
+			return index;
+		} else {
+			return 0x1;
+		}
+	}
+}
+
+uint32_t Utility::GetPluginIndex(RE::TESForm* form)
+{
+	return GetPluginIndex(std::string(GetPluginName(form)));
+}
+
 bool Utility::ValidateActor(RE::Actor* actor)
 {
 	if (actor == nullptr || actor->IsDeleted() || actor->IsMarkedForDeletion() || actor->GetFormID() == 0 || actor->IsDisabled())
 		return false; 
 
 	return true;
+}
+
+Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESLevCharacter* lvl)
+{
+	if (lvl == nullptr)
+		return Misc::NPCTPLTInfo{};
+	// just try to grab the first entry of the leveled list, since they should all share
+	// factions 'n stuff
+	if (lvl->entries.size() > 0) {
+		uint32_t plugID = Utility::GetPluginIndex(lvl);
+		RE::TESForm* entry = lvl->entries[0].form;
+		RE::TESNPC* tplt = entry->As<RE::TESNPC>();
+		RE::TESLevCharacter* lev = entry->As<RE::TESLevCharacter>();
+		if (tplt)
+			return [&tplt, &plugID]() { auto info = ExtractTemplateInfo(tplt); if (plugID != 0x1) {info.pluginID = plugID;}return info; }();
+
+		else if (lev)
+			return [&lev, &plugID]() { auto info = ExtractTemplateInfo(lev); if (plugID != 0x1) {info.pluginID = plugID;} return info; }();
+		else
+			;  //loginfo("template invalid");
+	}
+	return Misc::NPCTPLTInfo{};
+}
+
+Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESNPC* npc)
+{
+	Misc::NPCTPLTInfo info;
+	if (npc == nullptr)
+		return info;
+	if (npc->baseTemplateForm == nullptr) {
+		// we are at the base, so do the main work
+		info.tpltrace = npc->GetRace();
+		info.tpltstyle = npc->combatStyle;
+		info.tpltclass = npc->npcClass;
+		for (uint32_t i = 0; i < npc->numKeywords; i++) {
+			if (npc->keywords[i])
+				info.tpltkeywords.push_back(npc->keywords[i]);
+		}
+		for (uint32_t i = 0; i < npc->factions.size(); i++) {
+			if (npc->factions[i].faction)
+				info.tpltfactions.push_back(npc->factions[i].faction);
+		}
+
+		uint32_t plugID = Utility::GetPluginIndex(npc);
+		if (plugID != 0x1) {
+			info.pluginID = plugID;
+		}
+		return info;
+	}
+	RE::TESNPC* tplt = npc->baseTemplateForm->As<RE::TESNPC>();
+	RE::TESLevCharacter* lev = npc->baseTemplateForm->As<RE::TESLevCharacter>();
+	Misc::NPCTPLTInfo tpltinfo;
+	if (tplt) {
+		// get info about template and then integrate into our local information according to what we use
+		tpltinfo = ExtractTemplateInfo(tplt);
+	} else if (lev) {
+		tpltinfo = ExtractTemplateInfo(lev);
+	} else {
+		//loginfo("template invalid");
+	}
+
+	info.pluginID = tpltinfo.pluginID;
+
+	uint32_t plugID = Utility::GetPluginIndex(npc);
+	if (plugID != 0x1) {
+		info.pluginID = plugID;
+	}
+
+	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kFactions) {
+		info.tpltfactions = tpltinfo.tpltfactions;
+	} else {
+		for (uint32_t i = 0; i < npc->factions.size(); i++) {
+			if (npc->factions[i].faction)
+				info.tpltfactions.push_back(npc->factions[i].faction);
+		}
+	}
+	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kKeywords) {
+		info.tpltkeywords = tpltinfo.tpltkeywords;
+	} else {
+		for (uint32_t i = 0; i < npc->numKeywords; i++) {
+			if (npc->keywords[i])
+				info.tpltkeywords.push_back(npc->keywords[i]);
+		}
+	}
+	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kTraits) {
+		// race
+		info.tpltrace = tpltinfo.tpltrace;
+	} else {
+		info.tpltrace = npc->GetRace();
+	}
+	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kStats) {
+		// class
+		info.tpltclass = tpltinfo.tpltclass;
+	} else {
+		info.tpltclass = npc->npcClass;
+	}
+	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kAIData) {
+		// combatstyle
+		info.tpltstyle = tpltinfo.tpltstyle;
+	} else {
+		info.tpltstyle = npc->combatStyle;
+	}
+	return info;
 }

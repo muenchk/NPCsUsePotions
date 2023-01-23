@@ -123,8 +123,8 @@ void Settings::Load()
 		Compatibility::_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode);
 		loginfo("[SETTINGS] {} {}", "Compatibility", std::to_string(Compatibility::_CompatibilityMode));
 
-		Whitelist::Enabled = ini.GetBoolValue("Compatibility", "WhitelistMode", Whitelist::Enabled);
-		loginfo("[SETTINGS] {} {}", "WhitelistMode", std::to_string(Whitelist::Enabled));
+		Whitelist::EnabledItems = ini.GetBoolValue("Compatibility", "WhitelistMode", Whitelist::EnabledItems);
+		loginfo("[SETTINGS] {} {}", "WhitelistMode", std::to_string(Whitelist::EnabledItems));
 
 		Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
 		loginfo("[SETTINGS] {} {}", "DisableCreaturesWithoutRules", std::to_string(Compatibility::_DisableCreaturesWithoutRules));
@@ -316,13 +316,15 @@ void Settings::Load()
 		
 
 		// usage
-		Usage::_DisableItemUsageWhileStaggered = ini.GetBoolValue("Features", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered);
+		Usage::_DisableItemUsageWhileStaggered = ini.GetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered);
 		loginfo("[SETTINGS] {} {}", "DisableItemUsageWhileStaggered", std::to_string(Usage::_DisableItemUsageWhileStaggered));
-		Usage::_DisableNonFollowerNPCs = ini.GetBoolValue("Features", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs);
+		Usage::_DisableNonFollowerNPCs = ini.GetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs);
 		loginfo("[SETTINGS] {} {}", "DisableNonFollowerNPCs", std::to_string(Usage::_DisableNonFollowerNPCs));
-		Usage::_DisableOutOfCombatProcessing = ini.GetBoolValue("Features", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing);
+		Usage::_DisableOutOfCombatProcessing = ini.GetBoolValue("Usage", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing);
 		loginfo("[SETTINGS] {} {}", "DisableOutOfCombatProcessing", std::to_string(Usage::_DisableOutOfCombatProcessing));
-		Usage::_globalCooldown = ini.GetBoolValue("Features", "GlobalItemCooldown", Usage::_globalCooldown);
+		Usage::_DisableItemUsageForExcludedNPCs = ini.GetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Usage::_DisableItemUsageForExcludedNPCs);
+		loginfo("[SETTINGS] {} {}", "DisableItemUsageForExcludedNPCs", std::to_string(Usage::_DisableItemUsageForExcludedNPCs));
+		Usage::_globalCooldown = ini.GetBoolValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown);
 		loginfo("[SETTINGS] {} {}", "GlobalItemCooldown", std::to_string(Usage::_globalCooldown));
 
 
@@ -374,8 +376,10 @@ void Settings::Load()
 
 
 		// whitelist mode
-		Whitelist::Enabled = ini.GetBoolValue("Whitelist Mode", "EnableWhitelistMode", Whitelist::Enabled);
-		loginfo("[SETTINGS] {} {}", "EnableWhitelistMode", std::to_string(Whitelist::Enabled));
+		Whitelist::EnabledItems = ini.GetBoolValue("Whitelist Mode", "EnableWhitelistItems", Whitelist::EnabledItems);
+		loginfo("[SETTINGS] {} {}", "EnableWhitelistItems", std::to_string(Whitelist::EnabledItems));
+		Whitelist::EnabledNPCs = ini.GetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Whitelist::EnabledNPCs);
+		loginfo("[SETTINGS] {} {}", "EnableWhitelistNPCs", std::to_string(Whitelist::EnabledNPCs));
 
 
 		// fixes
@@ -578,6 +582,7 @@ void Settings::Save()
 	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, ";NPCs that are staggered aren't able to use any potions and poisons.");
 	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs, ";NPCs that are not currently followers of the player won't use potions, etc.");
 	ini.SetBoolValue("Usage", "DisableOutOfCombatUsage", Usage::_DisableOutOfCombatProcessing, ";NPCs are only handled when they are fighting -> Old handling method until version 3.");
+	ini.SetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Usage::_DisableItemUsageForExcludedNPCs, ";NPCs that are excluded from item distribution, will not use any Potions, Fortifypotions, Poisons or Food from any other in-game source.");
 	ini.SetLongValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown, ";Cooldown in milliseconds for item usage (potions, poisons, food, etc.).\n;0 means that items will be used according to the CycleWaitTime (one potion and one poison per cycle)");
 
 
@@ -610,7 +615,8 @@ void Settings::Save()
 
 
 	// whitelist mode
-	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistMode", Whitelist::Enabled, ";Enables the whitelist mode. Items that shall be distributed must not\n;be explicitly stated in the rules. This is the opposite to the standard (blacklist) behaviour.\n;Only use this if your loadorder causes you CTDs etc due to items being distributed that should not.\n;If you know which mod is causing the issue please do report it, such that appropriate rules can be created. This should only be a temporary solution.");
+	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistItems", Whitelist::EnabledItems, ";Enables the whitelist mode for items. Items that shall be distributed must\n;be explicitly whitelisted in the rules. This is the opposite to the standard (blacklist) behaviour.");
+	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Whitelist::EnabledNPCs, ";Enables the whitelist mode for NPCs. NPCs that shall be given potions, etc. and shall use potions, etc. MUST be explicitly whitelisted in the rules. This is the opposite of the standard (blacklist) behaviour");
 
 
 	// fixes

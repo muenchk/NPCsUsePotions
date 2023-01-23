@@ -595,6 +595,21 @@ void Settings::LoadDistrConfig()
 										case Distribution::AssocType::kItem:
 											Distribution::_whitelistItems.insert(std::get<1>(items[i]));
 											break;
+										case Distribution::AssocType::kNPC:
+										case Distribution::AssocType::kActor:
+										case Distribution::AssocType::kClass:
+										case Distribution::AssocType::kCombatStyle:
+										case Distribution::AssocType::kFaction:
+										case Distribution::AssocType::kKeyword:
+										case Distribution::AssocType::kRace:
+											Distribution::_whitelistNPCs.insert(std::get<1>(items[i]));
+											if (Logging::EnableLoadLog) {
+												LOGLE1_2("[Settings] [LoadDistrRules] whitelisted object {}.", Utility::GetHex(std::get<1>(items[i])));
+											}
+											break;
+										default:
+											LOGLE1_2("[Settings] [LoadDistrRules] cannot whitelist object {}.", Utility::GetHex(std::get<1>(items[i])));
+											break;
 										}
 										if (Logging::EnableLoadLog) {
 											if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
@@ -1094,6 +1109,46 @@ void Settings::LoadDistrConfig()
 									AlchemyEffect e = static_cast<AlchemyEffect>(eff);
 									if (e != AlchemyEffect::kNone) {
 										Distribution::_excludedEffects.insert(e);
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 17:  // exclude plugin NPCs
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string plugin = splits->at(splitindex);
+									splitindex++;
+									uint32_t plugindex = Utility::GetPluginIndex(plugin);
+									if (plugindex != 0x1) {
+										// valid plugin index
+										Distribution::_excludedPlugins_NPCs.insert(plugindex);
+										loginfo("[Settings] [LoadDistrRules] Rule 17 excluded plugin {}. It is either not loaded or not present", plugin);
+									} else {
+										loginfo("[Settings] [LoadDistrRules] Rule 17 cannot exclude plugin {}. It is either not loaded or not present", plugin);
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 18:  // whitelist plugin NPCs
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string plugin = splits->at(splitindex);
+									splitindex++;
+									uint32_t plugindex = Utility::GetPluginIndex(plugin);
+									if (plugindex != 0x1) {
+										// valid plugin index
+										Distribution::_whitelistNPCsPlugin.insert(plugindex);
+										loginfo("[Settings] [LoadDistrRules] Rule 18 whitelisted plugin {}. It is either not loaded or not present", plugin);
+									} else {
+										loginfo("[Settings] [LoadDistrRules] Rule 18 cannot whitelist plugin {}. It is either not loaded or not present", plugin);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -2081,95 +2136,6 @@ static bool IsLeveledChar(RE::TESNPC* npc)
 	return false;
 }
 
-Distribution::NPCTPLTInfo Distribution::ExtractTemplateInfo(RE::TESLevCharacter* lvl)
-{
-	if (lvl == nullptr)
-		return Distribution::NPCTPLTInfo{};
-	// just try to grab the first entry of the leveled list, since they should all share
-	// factions 'n stuff
-	if (lvl->entries.size() > 0) {
-		RE::TESForm* entry = lvl->entries[0].form;
-		RE::TESNPC* tplt = entry->As<RE::TESNPC>();
-		RE::TESLevCharacter* lev = entry->As<RE::TESLevCharacter>();
-		if (tplt)
-			return ExtractTemplateInfo(tplt);
-		else if (lev)
-			return ExtractTemplateInfo(lev);
-		else
-			;  //loginfo("template invalid");
-	}
-	return Distribution::NPCTPLTInfo{};
-}
-
-Distribution::NPCTPLTInfo Distribution::ExtractTemplateInfo(RE::TESNPC* npc)
-{
-	Distribution::NPCTPLTInfo info;
-	if (npc == nullptr)
-		return info; 
-	if (npc->baseTemplateForm == nullptr) {
-		// we are at the base, so do the main work
-		info.tpltrace = npc->GetRace();
-		info.tpltstyle = npc->combatStyle;
-		info.tpltclass = npc->npcClass;
-		for (uint32_t i = 0; i < npc->numKeywords; i++) {
-			if (npc->keywords[i])
-				info.tpltkeywords.push_back(npc->keywords[i]);
-		}
-		for (uint32_t i = 0; i < npc->factions.size(); i++) {
-			if (npc->factions[i].faction)
-				info.tpltfactions.push_back(npc->factions[i].faction);
-		}
-		return info;
-	}
-	RE::TESNPC* tplt = npc->baseTemplateForm->As<RE::TESNPC>();
-	RE::TESLevCharacter* lev = npc->baseTemplateForm->As<RE::TESLevCharacter>();
-	Distribution::NPCTPLTInfo tpltinfo;
-	if (tplt) {
-		// get info about template and then integrate into our local information according to what we use
-		tpltinfo = ExtractTemplateInfo(tplt);
-	} else if (lev) {
-		tpltinfo = ExtractTemplateInfo(lev);
-	} else {
-		//loginfo("template invalid");
-	}
-
-	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kFactions) {
-		info.tpltfactions = tpltinfo.tpltfactions;
-	} else {
-		for (uint32_t i = 0; i < npc->factions.size(); i++) {
-			if (npc->factions[i].faction)
-				info.tpltfactions.push_back(npc->factions[i].faction);
-		}
-	}
-	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kKeywords) {
-		info.tpltkeywords = tpltinfo.tpltkeywords;
-	} else {
-		for (uint32_t i = 0; i < npc->numKeywords; i++) {
-			if (npc->keywords[i])
-				info.tpltkeywords.push_back(npc->keywords[i]);
-		}
-	}
-	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kTraits) {
-		// race
-		info.tpltrace = tpltinfo.tpltrace;
-	} else {
-		info.tpltrace = npc->GetRace();
-	}
-	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kStats) {
-		// class
-		info.tpltclass = tpltinfo.tpltclass;
-	} else {
-		info.tpltclass = npc->npcClass;
-	}
-	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kAIData) {
-		// combatstyle
-		info.tpltstyle = tpltinfo.tpltstyle;
-	} else {
-		info.tpltstyle = npc->combatStyle;
-	}
-	return info;
-}
-
 void Settings::CheckActorsForRules()
 {
 	loginfo("[Settings] [CheckActorsForRules] checking...");
@@ -2243,7 +2209,7 @@ void Settings::CheckActorsForRules()
 						}
 						//loginfo("check 2");
 						// get rule
-						Distribution::NPCTPLTInfo npcinfo = Distribution::ExtractTemplateInfo(npc);
+						Misc::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
 						Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
 						//loginfo("check 3");
 						//logwarn("[CheckActorsForRules] got rule");
@@ -2376,15 +2342,15 @@ void Settings::CheckActorsForRules()
 							//loginfo("iter 5.3");
 						}
 
+						ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
+						// get rule
+						Distribution::Rule* rl = Distribution::CalcRule(acinfo);
 						// check wether there is a rule that applies
-						if (Distribution::ExcludedNPC(act)) {
+						if (Distribution::ExcludedNPC(acinfo)) {
 							iter++;
 							//coun++;
 							continue;  // the npc is covered by an exclusion
 						}
-						// get rule
-						ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
-						Distribution::Rule* rl = Distribution::CalcRule(acinfo);
 						delete acinfo;
 						//loginfo("check 23");
 						//logwarn("[CheckActorsForRules] got rule");
@@ -2548,14 +2514,14 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 								//loginfo("iter 5.3");
 							}
 							//loginfo("iter 6");
-							if (Distribution::ExcludedNPC(act)) {
+							ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
+							// get rule
+							Distribution::Rule* rl = Distribution::CalcRule(acinfo);
+							if (Distribution::ExcludedNPC(acinfo)) {
 								excluded = true;
 								LOG_1("{}[CheckCellForActors] excluded");
 							}
 							//loginfo("iter 7");
-							// get rule
-							ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
-							Distribution::Rule* rl = Distribution::CalcRule(acinfo);
 							delete acinfo;
 							//loginfo("iter 8");
 							//loginfo("check 23");
@@ -2658,7 +2624,7 @@ void Settings::ApplySkillBoostPerks()
 			if (Settings::Compatibility::_DisableCreaturesWithoutRules && (npc->GetRace()->HasKeyword(Settings::ActorTypeCreature) || npc->GetRace()->HasKeyword(ActorTypeAnimal))) {
 				ActorStrength acs;
 				ItemStrength is;
-				auto tplt = Distribution::ExtractTemplateInfo(npc);
+				auto tplt = Utility::ExtractTemplateInfo(npc);
 				auto rule = Distribution::CalcRule(npc, acs, is, &tplt);
 				if (rule->ruleName == Distribution::emptyRule->ruleName || rule->ruleName == Distribution::defaultRule->ruleName) {
 					// blacklist the npc
@@ -2733,7 +2699,7 @@ void Settings::ClassifyItems()
 				// check whether item is excluded, or whether it is not whitelisted when in whitelist mode
 				// if it is excluded and whitelisted it is still excluded
 				if (Distribution::excludedItems()->contains(item->GetFormID()) ||
-					Settings::Whitelist::Enabled &&
+					Settings::Whitelist::EnabledItems &&
 						!Distribution::whitelistItems()->contains(item->GetFormID())
 					) {
 					iter++;

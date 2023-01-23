@@ -658,12 +658,12 @@ namespace Events
 					// if actor is valid and not dead
 					if (curr->actor && !(curr->actor->IsDead()) && curr->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
 						// update durations
-						curr->durHealth -= Settings::System::_cycletime;
-						curr->durMagicka -= Settings::System::_cycletime;
-						curr->durStamina -= Settings::System::_cycletime;
-						curr->durFortify -= Settings::System::_cycletime;
-						curr->durRegeneration -= Settings::System::_cycletime;
-						curr->globalCooldownTimer -= Settings::System::_cycletime;
+						if(curr->durHealth >= 0) curr->durHealth -= Settings::System::_cycletime;
+						if(curr->durMagicka >= 0) curr->durMagicka -= Settings::System::_cycletime;
+						if (curr->durStamina >= 0) curr->durStamina -= Settings::System::_cycletime;
+						if (curr->durFortify >= 0) curr->durFortify -= Settings::System::_cycletime;
+						if (curr->durRegeneration >= 0) curr->durRegeneration -= Settings::System::_cycletime;
+						if (curr->globalCooldownTimer >= 0) curr->globalCooldownTimer -= Settings::System::_cycletime;
 						LOG6_1("{}[Events] [CheckActors] [Actor] cooldown: {} {} {} {} {} {}", curr->durHealth, curr->durMagicka, curr->durStamina, curr->durFortify, curr->durRegeneration, curr->globalCooldownTimer);
 
 						// if global cooldown greater zero, we can skip everything
@@ -739,7 +739,7 @@ namespace Events
 										LOG2_4("{}[Events] [CheckActors] use stamina pot with duration {} and magnitude {}", curr->durStamina, std::get<0>(tup));
 									}
 									// check if we have a valid duration
-									if (std::get<0>(tup) != -1) {
+									if (std::get<1>(tup) != -1) {
 										counter++;
 										curr->globalCooldownTimer = comp->GetGlobalCooldown();
 									} 
@@ -760,7 +760,7 @@ namespace Events
 							}
 							loginfo("[Events] [CheckActors] target {}", Utility::PrintForm(target));
 
-							if (curr->globalCooldownTimer <= 0 &&
+							if (curr->globalCooldownTimer <= tolerance &&
 								Settings::FortifyPotions::_enableFortifyPotions &&
 								counter < Settings::System::_maxPotionsPerCycle &&
 								(!(curr->actor->IsPlayerRef()) || Settings::Player::_playerFortifyPotions)) {
@@ -813,7 +813,7 @@ namespace Events
 							CheckDeadCheckHandlerLoop;
 
 							if (curr->durCombat > 1000 &&
-								curr->globalCooldownTimer <= 0 &&
+								curr->globalCooldownTimer <= tolerance &&
 								Settings::Poisons::_enablePoisons &&
 								(Settings::Poisons::_UsePoisonChance == 100 || rand100(rand) < Settings::Poisons::_UsePoisonChance) &&
 								(!curr->actor->IsPlayerRef() || Settings::Player::_playerPoisons)) {
@@ -858,7 +858,7 @@ namespace Events
 										}
 										LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects);
 										auto tup = ACM::ActorUsePoison(curr, effects);
-										if (std::get<0>(tup) != -1)
+										if (std::get<1>(tup) != -1) // check whether an effect was applied
 											curr->globalCooldownTimer = comp->GetGlobalCooldown();
 										//if (std::get<1>(tup) != AlchemyEffect::kNone)
 										//	loginfo("Used poison on actor:\t{}", Utility::PrintForm(curr->actor));
@@ -884,7 +884,7 @@ namespace Events
 							}
 						SkipPoison:;
 
-							if (curr->globalCooldownTimer <= 0 &&
+							if (curr->globalCooldownTimer <= tolerance &&
 								Settings::Food::_enableFood &&
 								RE::Calendar::GetSingleton()->GetDaysPassed() >= curr->nextFoodTime &&
 								(!curr->actor->IsPlayerRef() || Settings::Player::_playerFood) && 
@@ -953,7 +953,7 @@ namespace Events
 	{
 		// check wether this charackter maybe a follower
 		if (acinfo->lastDistrTime == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->lastDistrTime > 1) {
-			if (!Distribution::ExcludedNPC(acinfo->actor)) {
+			if (!Distribution::ExcludedNPC(acinfo)) {
 				// begin with compatibility mode removing items before distributing new ones
 				if (Settings::Debug::_CompatibilityRemoveItemsBeforeDist) {
 					auto items = ACM::GetAllPotions(acinfo);
@@ -1482,7 +1482,7 @@ namespace Events
 				UnregisterNPC(actor);
 				// as with potion distribution, exlude excluded actors and potential followers
 				ActorInfo* acinfo = data->FindActor(actor);
-				if (!Distribution::ExcludedNPC(actor)) {
+				if (!Distribution::ExcludedNPC(acinfo)) {
 					// create and insert new event
 					deads.insert(actor->GetFormID());
 					LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));

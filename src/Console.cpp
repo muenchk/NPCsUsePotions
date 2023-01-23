@@ -21,6 +21,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 		return false;
 	}
 	//logger::info("console 3");
+	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
@@ -35,9 +36,11 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "Race:\t\t\t\t\t" + Utility::PrintForm(actor->GetActorBase()->GetRace()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
-	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(actor));
+	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(acinfo));
 	console->Print(tmp.c_str());
-	//logger::info("console 6");
+	tmp = "Whitelisted:\t\t\t\t\t" + std::to_string(acinfo->whitelisted);
+	console->Print(tmp.c_str());
+	tmp = "Whitelist calculated:\t\t\t\t\t" + std::to_string(acinfo->whitelistedcalculated);
 	console->Print(tmp.c_str());
 	tmp = "Combat data:\t\t\t\t" + Utility::ToStringCombatStyle(Utility::GetCombatData(actor));
 	console->Print(tmp.c_str());
@@ -72,7 +75,6 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 
 	console->Print("");
 	console->Print("Current Actor Info");
-	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
 	Distribution::CalcRule(acinfo);
 	// durHealth
 	tmp = "Duration Health:\t\t\t\t" + std::to_string(acinfo->durHealth);
@@ -115,6 +117,8 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	// AnimationBusy
 	tmp = "Animation Busy:\t\t\t\t" + std::to_string(acinfo->Animation_busy);
+	console->Print(tmp.c_str());
+	tmp = "pluginID:\t\t\t\t\t" + Utility::GetHex(acinfo->pluginID);
 	console->Print(tmp.c_str());
 
 	console->Print("CustomItems");

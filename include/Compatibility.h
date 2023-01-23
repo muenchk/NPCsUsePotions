@@ -70,7 +70,7 @@ public:
 
 	RE::TESGlobal* AnPoti_TogglePlayerPotionAnimation = nullptr;
 
-	int AnPoti_GlobalCooldown = 3;
+	int AnPoti_GlobalCooldown = 3000;
 
 	// ZUPA
 	int ZUPA_GlobalCooldown = 2500;
