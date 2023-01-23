@@ -171,7 +171,7 @@ public:
 	/// <summary>
 	/// version of class [used for save and load]
 	/// </summary>
-	static inline const uint32_t version = 0x00000001;
+	static inline const uint32_t version = 0x00000002;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
 	ActorInfo();

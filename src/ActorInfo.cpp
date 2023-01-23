@@ -557,15 +557,21 @@ int32_t ActorInfo::GetDataSize()
 	//size += 4;
 	// lastDistrTime
 	//size += 4;
+	// durCombat
+	//size += 4;
 	// distributedCustomItems
 	//size += 1;
 	// actorStrength, itemStrength -> int
 	//size += 8;
 	// _boss
 	//size += 1;
+	// Animation_busy
+	//size += 1;
+	// globalCooldownTimer;
+	//size += 4;
 
 	// all except string are constant:
-	size += 46;
+	size += 55;
 	return size;
 }
 
@@ -574,6 +580,8 @@ int32_t ActorInfo::GetMinDataSize(int32_t vers)
 	switch (vers) {
 	case 1:
 		return 46;
+	case 2:
+		return 55;
 	default:
 		return 0;
 	}
@@ -602,6 +610,8 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(nextFoodTime, buffer, offset);
 	// lastDistrTime
 	Buffer::Write(lastDistrTime, buffer, offset);
+	// durCombat
+	Buffer::Write(durCombat, buffer, offset);
 	// distributedCustomItems
 	Buffer::Write(_distributedCustomItems, buffer, offset);
 	// actorStrength
@@ -610,6 +620,10 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(static_cast<uint32_t>(itemStrength), buffer, offset);
 	// _boss
 	Buffer::Write(_boss, buffer, offset);
+	// Animation_busy
+	Buffer::Write(Animation_busy, buffer, offset);
+	// globalCooldownTimer
+	Buffer::Write(globalCooldownTimer, buffer, offset);
 	return true;
 }
 
@@ -618,7 +632,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 	int ver = Buffer::ReadUInt32(buffer, offset);
 	try {
 		switch (ver) {
-		case 1:
+		case 0x00000001:
 			{
 				// first try to make sure that the buffer contains all necessary data and we do not go out of bounds
 				int size = GetMinDataSize(ver);
@@ -646,6 +660,39 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
 				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
 				_boss = Buffer::ReadBool(buffer, offset);
+			}
+			return true;
+		case 0x00000002:
+			{
+				// first try to make sure that the buffer contains all necessary data and we do not go out of bounds
+				int size = GetMinDataSize(ver);
+				int strsize = (int)Buffer::CalcStringLength(buffer, offset + 4);  // offset + actorid is begin of pluginname
+				if (length < size + strsize)
+					return false;
+
+				formid = Buffer::ReadUInt32(buffer, offset);
+				pluginname = Buffer::ReadString(buffer, offset);
+				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
+				if (!form)
+					return false;
+				actor = form->As<RE::Actor>();
+				if (!actor)
+					return false;
+				name = actor->GetName();
+				durHealth = Buffer::ReadInt32(buffer, offset);
+				durMagicka = Buffer::ReadInt32(buffer, offset);
+				durStamina = Buffer::ReadInt32(buffer, offset);
+				durFortify = Buffer::ReadInt32(buffer, offset);
+				durRegeneration = Buffer::ReadInt32(buffer, offset);
+				nextFoodTime = Buffer::ReadFloat(buffer, offset);
+				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				durCombat = Buffer::ReadInt32(buffer, offset);
+				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
+				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
+				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
+				_boss = Buffer::ReadBool(buffer, offset);
+				Animation_busy = Buffer::ReadBool(buffer, offset);
+				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
 			}
 			return true;
 		default:
