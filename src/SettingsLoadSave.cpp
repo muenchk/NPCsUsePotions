@@ -539,125 +539,206 @@ void Settings::Save()
 	ini.SetUnicode();
 
 	// potions
-	ini.SetBoolValue("Potions", "EnableHealthRestoration", Potions::_enableHealthRestoration, ";NPCs use health potions to restore their missing hp in combat.");
-	ini.SetBoolValue("Potions", "EnableMagickaRestoration", Potions::_enableMagickaRestoration, ";NPCs use magicka potions to restore their missing magicka in combat.");
-	ini.SetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration, ";NPCs use stamina potions to restore their missing stamina in combat.");
-	ini.SetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects, ";Allows NPCs to use potions that have detrimental effects.\n;!!!This setting also affects fortify potions");
-	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold, ";Upon reaching this threshold, NPCs will start to use health potions");
-	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold, ";Upon reaching this threshold, NPCs will start to use magicka potions");
-	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold, ";Upon reaching this threshold, NPCs will start to use stamina potions");
-	ini.SetLongValue("Potions", "UsePotionChance", Potions::_UsePotionChance, ";Chance that an NPC will use a potion if they can. Set to 100 to always take a potion, when appropiate.");
+	ini.SetBoolValue("Potions", "EnableHealthRestoration", Potions::_enableHealthRestoration, "// NPCs use health potions to restore their missing hp in combat.");
+	ini.SetBoolValue("Potions", "EnableMagickaRestoration", Potions::_enableMagickaRestoration, "// NPCs use magicka potions to restore their missing magicka in combat.");
+	ini.SetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration, "// NPCs use stamina potions to restore their missing stamina in combat.");
+	ini.SetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects, "// If this is enabled NPCs will use potions that contain detrimental\n"
+																								"// effects. For instance, impure potions, that restore health and damage magicka.\n"
+																								"// !!!This setting also affects fortify potions");
+	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold, "// Upon reaching this threshold, NPCs will start to use health potions");
+	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold, "// Upon reaching this threshold, NPCs will start to use magicka potions");
+	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold, "// Upon reaching this threshold, NPCs will start to use stamina potions");
+	ini.SetLongValue("Potions", "UsePotionChance", Potions::_UsePotionChance, "// Chance that an NPC will use a potion if they can. Set to 100 to always \n"
+																				"// take a potion, when appropiate.\n"
+																				"// An NPC can use a potion if they (1) have a potion in their inventory, \n"
+																				"// and (2) when the respective value falls below the threshold.");
 
 
 	// poisons
-	ini.SetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons, ";NPCs use poisons in combat.\n;Followers will use poisons only on appropiate enemies.\n;Generic NPCs will randomly use their poisons.");
-	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, ";This allows NPCs to use poisons that apply positive effects to their opponents");
-	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, ";Scaling factor when NPCs start using poisons on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use poisons.");
-	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold, ";When the number of NPCs in a fight is at least at this value, followers start to use poisons regardless of the enemies level, to faster help out the player.\n;This includes hostile and non-hostile NPCs.");
-	ini.SetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance, ";Chance that an NPC will use a fortify potion if they can.");
-	ini.SetLongValue("Poisons", "Dosage", Poisons::_Dosage, ";The dosage describes the number of hits a poison lasts on your weapons.\n;This does not affect all poisons, like paralysis poisons, to enforce balancing");
+	ini.SetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons, "// NPCs use appropiate poisons in combat. Poisons are considered appropiate,\n"
+																				"// if they can harm the enemy. For instance, damaging Magicka of an enemy \n"
+																				"// that does not use spells, is not appropiate.");
+	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, "// This allows NPCs to use poisons that apply positive effects to their opponents");
+	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, "// If the enemy they are facing has a level greater equal \n"
+																										"// 'this value' * PlayerLevel followers use poisons.");
+	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold, "// When the number of NPCs in a fight is at least at this value, followers\n"
+																								"// start to use poisons regardless of the enemies level, to faster help out \n"
+																								"// the player.\n"
+																								"// This includes hostile and non-hostile NPCs.");
+	ini.SetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance, "// Chance that an NPC will use a poison if they possess one with an \n// appropiate effect.");
+	ini.SetLongValue("Poisons", "Dosage", Poisons::_Dosage, "// The dosage describes the number of hits a poison lasts on your weapons.\n"
+															"// The dosage for specific poisons, or alchemic effects can also be defined \n"
+															"// by distribution rules and may outrule this setting.");
 
 
 	// fortify potions
-	ini.SetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions, ";NPCs use fortify potions in combat.\n;Potions are used based on the equipped weapons and spells.");
-	ini.SetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", FortifyPotions::_EnemyLevelScalePlayerLevelFortify, ";Scaling factor when NPCs start using fortify potions on enemies.\n;If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use fortify potions.");
-	ini.SetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", FortifyPotions::_EnemyNumberThresholdFortify, ";When the number of NPCs in a fight is at least at this value, followers start to use fortify potions regardless of the enemies level.\n;This includes hostile and non-hostile NPCs.");
-	ini.SetLongValue("FortifyPotions", "UseFortifyPotionChance", FortifyPotions::_UseFortifyPotionChance, ";Chance that an NPC will use a potion if they can. Set to 100 to always take a potion, when appropiate.");
+	ini.SetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions, "// NPCs use fortify potions in combat.\n"
+																											"// Potions are used based on the equipped weapons and spells.");
+	ini.SetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", FortifyPotions::_EnemyLevelScalePlayerLevelFortify, "// If the enemy they are facing has a level greater equal \n"
+																																	"// 'this value' * PlayerLevel followers use fortify potions.");
+	ini.SetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", FortifyPotions::_EnemyNumberThresholdFortify, "// When the number of NPCs in a fight is at least at this value, followers \n"
+																															"// start to use fortify potions regardless of the enemies level.\n"
+																															"// This includes hostile and non-hostile NPCs.");
+	ini.SetLongValue("FortifyPotions", "UseFortifyPotionChance", FortifyPotions::_UseFortifyPotionChance, "// Chance that an NPC will use a fortify potion if they can. They can use a \n"
+																											"// potion, if they have one in their inventory, and its effects are \n"
+																											"// beneficial to their current choice of weapons.\n"
+																											"// An NPC will not use a Fortify Light Armor potion if they are wearing \n"
+																											"// Heavy Armor, for instance.\n");
 
 
 	// food
-	ini.SetBoolValue("Food", "EnableFoodUsage", Food::_enableFood, ";Normally one would assume that NPCs eat during the day. This features simulates.");
-	ini.SetBoolValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects, ";This allows NPCs to use food that has detrimental effects.");
-	ini.SetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart, ";NPCs will only eat food at the beginning of combat, instead of eating it, once the foods buff runs out. This is the way it worked until version 3.0.");
+	ini.SetBoolValue("Food", "EnableFoodUsage", Food::_enableFood, "// Allows NPCs to use food items, to gain beneficial effects.");
+	ini.SetBoolValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects, "// This allows NPCs to use food that has detrimental effects.");
+	ini.SetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart, "// NPCs will only eat food at the beginning of combat. This is the way \n"
+																							"// it worked until version 3.0.0\n"
+																							"// If disabled, NPCs will try to eat more food as soon as an existing \n"
+																							"// food buff runs out.");
 
 
 	// player
-	ini.SetBoolValue("Player", "EnablePlayerPotions", Player::_playerPotions, ";All activated restoration features are applied to the player, while they are in Combat.");
-	ini.SetBoolValue("Player", "EnablePlayerPoisonUsage", Player::_playerPoisons, ";Player will automatically use poisons.");
-	ini.SetBoolValue("Player", "EnablePlayerFortifyPotionUsage", Player::_playerFortifyPotions, ";Player will use fortify potions the way followers do.");
-	ini.SetBoolValue("Player", "EnablePlayerFoodUsage", Player::_playerFood, ";Player will use food the way npcs do.");
+	ini.SetBoolValue("Player", "EnablePlayerPotions", Player::_playerPotions, "// All activated restoration features are applied to the player, while \n"
+																				"// they are in Combat.");
+	ini.SetBoolValue("Player", "EnablePlayerPoisonUsage", Player::_playerPoisons, "// Player will automatically use poisons.");
+	ini.SetBoolValue("Player", "EnablePlayerFortifyPotionUsage", Player::_playerFortifyPotions, "// Player will use fortify potions the way followers do.");
+	ini.SetBoolValue("Player", "EnablePlayerFoodUsage", Player::_playerFood, "// Player will use food the way npcs do.");
 
 
 	// usage
-	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, ";NPCs that are staggered aren't able to use any potions and poisons.");
-	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs, ";NPCs that are not currently followers of the player won't use potions, etc.");
-	ini.SetBoolValue("Usage", "DisableOutOfCombatUsage", Usage::_DisableOutOfCombatProcessing, ";NPCs are only handled when they are fighting -> Old handling method until version 3.");
-	ini.SetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Usage::_DisableItemUsageForExcludedNPCs, ";NPCs that are excluded from item distribution, will not use any Potions, Fortifypotions, Poisons or Food from any other in-game source.");
-	ini.SetLongValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown, ";Cooldown in milliseconds for item usage (potions, poisons, food, etc.).\n;0 means that items will be used according to the CycleWaitTime (one potion and one poison per cycle)");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs, "// NPCs that are not currently followers of the player won't use potions, etc.");
+	ini.SetBoolValue("Usage", "DisableOutOfCombatUsage", Usage::_DisableOutOfCombatProcessing, "// NPCs are only handled when they are fighting -> Old handling method \n"
+																								"// until version 3.\n"
+																								"// If disabled, NPCs will use Health potions outside of combat. \n"
+																								"// For instance, if they run into traps.");
+	ini.SetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Usage::_DisableItemUsageForExcludedNPCs, "// NPCs that are excluded from item distribution, will not use \n// any Potions, Fortifypotions, Poisons or Food from any other in-game source.");
+	ini.SetLongValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown, "// Cooldown in milliseconds for item usage (potions, poisons, food, etc.).\n"
+																			"// 0 means that items will be used according to the \n"
+																			"// CycleWaitTime defined in [System] (one potion and one poison per cycle)");
 
 
 	// distribution
-	ini.SetBoolValue("Distribution", "DistributePotions", Distr::_DistributePotions, ";NPCs are given potions when they enter combat.");
-	ini.SetBoolValue("Distribution", "DistributePoisons", Distr::_DistributePoisons, ";NPCs are give poisons when they enter combat.");
-	ini.SetBoolValue("Distribution", "DistributeFood", Distr::_DistributeFood, ";NPCs are given food items when they enter combat, and will use them immediately.");
-	ini.SetBoolValue("Distribution", "DistributeFortifyPotions", Distr::_DistributeFortifyPotions, ";NPCs are give fortify potions when they enter combat.");
-	ini.SetBoolValue("Distribution", "DistributeCustomItems", Distr::_DistributeCustomItems, ";NPCs are given custom items definable with rules. This does not affect custom potions, poisons, fortify potions and food.");
+	ini.SetBoolValue("Distribution", "DistributePotions", Distr::_DistributePotions, "// NPCs are given potions.");
+	ini.SetBoolValue("Distribution", "DistributePoisons", Distr::_DistributePoisons, "// NPCs are give poisons.");
+	ini.SetBoolValue("Distribution", "DistributeFood", Distr::_DistributeFood, "// NPCs are given food items.");
+	ini.SetBoolValue("Distribution", "DistributeFortifyPotions", Distr::_DistributeFortifyPotions, "// NPCs are given fortify potions.");
+	ini.SetBoolValue("Distribution", "DistributeCustomItems", Distr::_DistributeCustomItems, "// NPCs are given custom items definable with rules. This does not \n"
+																								"// affect custom potions, poisons, fortify potions and food. \n"
+																								"// They are affected by the above settings.");
 
-	ini.SetLongValue("Distribution", "LevelEasy", Distr::_LevelEasy, ";NPC lower or equal this level are considered weak.");
-	ini.SetLongValue("Distribution", "LevelNormal", Distr::_LevelNormal, ";NPC lower or equal this level are considered normal in terms of strength.");
-	ini.SetLongValue("Distribution", "LevelDifficult", Distr::_LevelDifficult, ";NPC lower or equal this level are considered difficult.");
-	ini.SetLongValue("Distribution", "LevelInsane", Distr::_LevelInsane, ";NPC lower or equal this level are considered insane. Everything above this is always treated as a boss.");
+	ini.SetLongValue("Distribution", "LevelEasy", Distr::_LevelEasy, "// NPC lower or equal this level are considered weak.");
+	ini.SetLongValue("Distribution", "LevelNormal", Distr::_LevelNormal, "// NPC lower or equal this level are considered normal in terms of strength.");
+	ini.SetLongValue("Distribution", "LevelDifficult", Distr::_LevelDifficult, "// NPC lower or equal this level are considered difficult.");
+	ini.SetLongValue("Distribution", "LevelInsane", Distr::_LevelInsane, "// NPC lower or equal this level are considered insane. \n"
+																			"// Everything above this is always treated as a boss.");
 
-	ini.SetBoolValue("Distribution", "GameDifficultyScaling", Distr::_GameDifficultyScaling, ";Disables NPC level scaling, but scales chance according to game difficulty.");
+	ini.SetBoolValue("Distribution", "GameDifficultyScaling", Distr::_GameDifficultyScaling, "// Disables NPC level scaling, but scales distribution according \n"
+																								"// to game difficulty.");
 
-	ini.SetLongValue("Distribution", "MaxMagnitudeWeak", Distr::_MaxMagnitudeWeak, ";Items with this or lower magnitude*duration are considered weak.");
-	ini.SetLongValue("Distribution", "MaxMagnitudeStandard", Distr::_MaxMagnitudeStandard, ";Items with this or lower magnitude*duration are considered normal.");
-	ini.SetLongValue("Distribution", "MaxMagnitudePotent", Distr::_MaxMagnitudePotent, ";Items with this or lower magnitude*duration are considered potent. Everything above this is considered Insane tier");
+	ini.SetLongValue("Distribution", "MaxMagnitudeWeak", Distr::_MaxMagnitudeWeak, "// Items with this or lower magnitude*duration are considered weak.");
+	ini.SetLongValue("Distribution", "MaxMagnitudeStandard", Distr::_MaxMagnitudeStandard, "// Items with this or lower magnitude*duration are considered normal.");
+	ini.SetLongValue("Distribution", "MaxMagnitudePotent", Distr::_MaxMagnitudePotent, "// Items with this or lower magnitude*duration are considered potent. \n"
+																						"// Everything above this is considered Insane tier");
 
-	ini.SetDoubleValue("Distribution", "StyleScalingPrimary", Distr::_StyleScalingPrimary, ";Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the primary combat type of an npc.");
-	ini.SetDoubleValue("Distribution", "StyleScalingSecondary", Distr::_StyleScalingSecondary, ";Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the secondary combat type of an npc.");
+	ini.SetDoubleValue("Distribution", "StyleScalingPrimary", Distr::_StyleScalingPrimary, "// Scaling for the weight of different alchemic effects for the \n"
+																							"// distribution of potions, poison, fortify potions and food \n"
+																							"// according to the primary combat type of an npc.");
+	ini.SetDoubleValue("Distribution", "StyleScalingSecondary", Distr::_StyleScalingSecondary, "// Scaling for the weight of different alchemic effects for the \n"
+																								"// distribution of potions, poison, fortify potions and food \n"
+																								"// according to the secondary combat type of an npc.");
 
 
 	// removal
-	ini.SetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath, ";Remove items from NPCs after they died.");
-	ini.SetLongValue("Removal", "ChanceToRemoveItem", Removal::_ChanceToRemoveItem, ";Chance to remove items on death of NPC. (range: 0 to 100)");
-	ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", Removal::_MaxItemsLeft, ";Maximum number of items chances are rolled for during removal. Everything that goes above this value is always removed.");
+	ini.SetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath, "// Remove items from NPCs after they died.");
+	ini.SetLongValue("Removal", "ChanceToRemoveItem", Removal::_ChanceToRemoveItem, "// Chance to remove items on death of NPC. (range: 0 to 100)");
+	ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", Removal::_MaxItemsLeft, "// Maximum number of items chances are rolled for during removal. \n"
+																					"// Everything that goes above this value is always removed.");
 
 
 	// whitelist mode
-	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistItems", Whitelist::EnabledItems, ";Enables the whitelist mode for items. Items that shall be distributed must\n;be explicitly whitelisted in the rules. This is the opposite to the standard (blacklist) behaviour.");
-	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Whitelist::EnabledNPCs, ";Enables the whitelist mode for NPCs. NPCs that shall be given potions, etc. and shall use potions, etc. MUST be explicitly whitelisted in the rules. This is the opposite of the standard (blacklist) behaviour");
+	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistItems", Whitelist::EnabledItems, "// Enables the whitelist mode for items. Items that shall be \n"
+																						"// distributed must be explicitly whitelisted in the rules. \n"
+																						"// This is the opposite to the standard (blacklist) behaviour.");
+	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Whitelist::EnabledNPCs, "// Enables the whitelist mode for NPCs. NPCs that shall be \n"
+																						"// given potions, etc. and shall use potions, etc. MUST be \n"
+																						"// explicitly whitelisted in the rules. This is the opposite \n"
+																						"// of the standard (blacklist) behaviour");
 
 
 	// fixes
-	ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", Fixes::_ApplySkillBoostPerks, ";Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply.");
-	ini.SetBoolValue("Fixes", "ForceFixPotionSounds", Fixes::_ForceFixPotionSounds, ";Forcefully fixes all sounds used by consumables in the game without regard for other mods changes. If deactivate the changes of other mods that should have the same effect are respected.");
+	ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", Fixes::_ApplySkillBoostPerks, "// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts \n"
+																					"// to npcs which are needed for fortify etc. potions to apply.");
+	ini.SetBoolValue("Fixes", "ForceFixPotionSounds", Fixes::_ForceFixPotionSounds, "// Forcefully fixes all sounds used by consumables in the game \n"
+																					"// without regard for other mods changes. If deactivate the changes \n"
+																					"// of other mods that should have the same effect are respected.");
 
 
 	// system
-	ini.SetLongValue("System", "CycleWaitTime", System::_cycletime, ";Time between two periods in milliseconds.\n;Set to smaller values to increase reactivity. Set to larger values to decrease performance impact");
+	ini.SetLongValue("System", "CycleWaitTime", System::_cycletime, "// Time between two periods in milliseconds.\n"
+																	"// Set to smaller values to increase reactivity. Set to larger \n"
+																	"// values to decrease performance impact.");
 
 
 	// compatibility
-	ini.SetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules, ";Disables item distribution, potion usage and Skill Boost Perk distribution for NPCs with races with the ActorTypeCreature of ActorTypeAnimal keywords if and only if the NPC does not have any distribution rule assigned to them.\n;If you experience problems with your game CTDing, try to enable this. Some CTDs are caused by the Skill Boost perks being added to certain creatures.\n;If your game stops CTDing afterwards, the issue was caused by some creature.\n;You can also enable this if you see lots of mod added animals using potions. Please make sure to report such mods to the author nonetheless, so that proper rules can be made.\n;Be aware that this may also exclude NPCs from Mods that should not be excluded, due to many NPCs being assigned the creature keywword that should not have them.\n;Passivley disables custom item distribution for those npcs.");
-	ini.SetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode, ";General Compatibility Mode. If set to true, all items will be equiped using Papyrus workaround. Requires the Skyrim esp plugin.");
+	ini.SetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules, "// Disables item distribution and item usage for NPCs that do not\n"
+																													"// not have any distribution rule and have the ActorTypeAnimal or\n"
+																													"// ActorTypeCreature keywords. The Skill Boost Perks are also not\n"
+																													"// distributed to these NPCs.\n"
+																													"// \n"
+																													"// If you experience problems with your game CTDing, try to enable this. \n"
+																													"// Some CTDs are caused by the Skill Boost perks being added to certain creatures.\n"
+																													"// If your game stops CTDing afterwards, the issue was caused by some creature.\n"
+																													"// You can also enable this if you see lots of mod added animals using potions. \n"
+																													"// \n"
+																													"// Many NPCs and creatures are in normal NPC factions \n"
+																													"// (for instance FalmerFaction), and will not be excluded by this setting.\n"
+																													"// \n"
+																													"// Be aware that this may also exclude NPCs that should not be \n"
+																													"// excluded, due to many NPCs being assigned the creature keyword even \n"
+																													"// though they should not have them.\n"
+																													"// Passiveley disables custom item distribution for those npcs.");
+	ini.SetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode, "// General Compatibility Mode. If set to true, all items will be\n"
+																						  "// equipped using Papyrus workaround. Requires the Skyrim esp plugin.");
 
 	// compatibility zxlices ultimate potion animation
-	ini.SetBoolValue("Compatibility: zxliceUltimatePotions", "EnablePotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. Only uses compatibility mode for Health, Stamina and Magicka Potions.");
-	ini.SetBoolValue("Compatibility: zxliceUltimatePotions", "EnableFortifyPotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify, ";Compatibility mode for \"zxlice's ultimate potion animation\". Requires the Skyrim esp plugin. Uses compatibility mode for Fortify Potions.");
+	ini.SetBoolValue("Compatibility: zxliceUltimatePotions", "EnablePotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, "// Compatibility mode for \"zxlice's ultimate potion animation\". \n"
+																																								 "// Requires the Skyrim esp plugin. Only uses compatibility mode \n"
+																																								 "// for Health, Stamina and Magicka Potions.");
+	ini.SetBoolValue("Compatibility: zxliceUltimatePotions", "EnableFortifyPotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify, "// Compatibility mode for \"zxlice's ultimate potion animation\". \n"
+																																											   "// Requires the Skyrim esp plugin. Uses compatibility mode for \n"
+																																											   "// Fortify Potions.");
 
 	// compatibility animated poisons
-	ini.SetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable, ";Enables the automatic usage of poison animations for npcs.");
-	ini.SetBoolValue("Compatibility: Animated Poisons", "UseAnimatedPoisonsDosageSystem", Compatibility::AnimatedPoisons::_UsePoisonDosage, ";Uses the dosage system introduced by Animated Poisons, over the dosage system of this mod.");
+	ini.SetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable, "// Enables the automatic usage of poison animations for npcs.");
+	ini.SetBoolValue("Compatibility: Animated Poisons", "UseAnimatedPoisonsDosageSystem", Compatibility::AnimatedPoisons::_UsePoisonDosage, "// Uses the dosage system introduced by Animated Poisons, over \n"
+																																			"// the dosage system of this mod.");
 
 	// compatibility animated potions
-	ini.SetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Compatibility::AnimatedPotions::_Enable, ";Enables the automatic usage of potion animations for npcs.");
+	ini.SetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Compatibility::AnimatedPotions::_Enable, "// Enables the automatic usage of potion animations for npcs.");
 
 	
 	// debug
-	ini.SetBoolValue("Debug", "EnableLogging", Debug::EnableLog, ";Enables logging output. Use with care as log may get very large");
-	ini.SetBoolValue("Debug", "EnableLoadLogging", Debug::EnableLoadLog, ";Enables logging output for plugin load, use if you want to log rule issues");
-	ini.SetLongValue("Debug", "LogLevel", Debug::LogLevel, ";1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, 4 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions. ");
-	ini.SetBoolValue("Debug", "EnableProfiling", Debug::EnableProfiling, ";Enables profiling output.");
-	ini.SetLongValue("Debug", "ProfileLevel", Debug::ProfileLevel, ";1 - only highest level functions write their executions times to the log, 2 - lower level functions are written, 3 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.");
+	ini.SetBoolValue("Debug", "EnableLogging", Debug::EnableLog, "// Enables logging output. Use with care as logs may get very large.");
+	ini.SetBoolValue("Debug", "EnableLoadLogging", Debug::EnableLoadLog, "// Enables logging output for plugin load, use if you want to \n"
+																		 "// log rule issues");
+	ini.SetLongValue("Debug", "LogLevel", Debug::LogLevel, "// 1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, \n"
+														   "// 4 - layer 4 log entries. Affects which functions write log entries, \n"
+														   "// as well as what is written by those functions. ");
+	ini.SetBoolValue("Debug", "EnableProfiling", Debug::EnableProfiling, "// Enables profiling output.");
+	ini.SetLongValue("Debug", "ProfileLevel", Debug::ProfileLevel, "// 1 - only highest level functions write their executions times to \n"
+																	"// the profile log, 2 - lower level functions are written, 3 - lowest level \n"
+																	"// functions are written. Be aware that not all functions are supported \n"
+																	"// as Profiling costs execution time.");
 
-	ini.SetBoolValue("Debug", "CheckActorWithoutRules", Debug::_CheckActorsWithoutRules, ";Checks all actors in the game on game start whether they are applied the default distribution rule.");
-	ini.SetBoolValue("Debug", "CalculateCellRules", Debug::_CalculateCellRules, ";When entering a new cell in game, all distribution rules are calculatet once.\n;The result of the evaluation is written to a csv file, for rule debugging");
-	ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", Debug::_Test, ";10 seconds after loading a save game the function for \"CalculateAllCellRules\" is applied to all cells in the game");
+	ini.SetBoolValue("Debug", "CheckActorWithoutRules", Debug::_CheckActorsWithoutRules, "// Checks all actors in the game on game start whether they are applied the \n"
+																							"// default distribution rule.");
+	ini.SetBoolValue("Debug", "CalculateCellRules", Debug::_CalculateCellRules, "// When entering a new cell in game, all distribution rules are calculatet once.\n"
+																				"// The result of the evaluation is written to a csv file, for rule debugging");
+	ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", Debug::_Test, "// 10 seconds after loading a save game the function for \"CalculateCellRules\" \n"
+																			"// is applied to all cells in the game");
 
-	ini.SetBoolValue("Debug", "RemoveItemsBeforeDist", Debug::_CompatibilityRemoveItemsBeforeDist, ";Removes all distributables items from npcs before distributing new items.");
-	ini.SetBoolValue("Debug", "RemoveItemsStartup", Debug::_CompatibilityRemoveItemsStartup, ";Removes all distributables items from npcs 5 seconds after loading a game");
-	ini.SetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded, ";Removes only excluded items from npcs");
+	ini.SetBoolValue("Debug", "RemoveItemsBeforeDist", Debug::_CompatibilityRemoveItemsBeforeDist, "// Removes all distributables items from npcs before distributing new items.");
+	ini.SetBoolValue("Debug", "RemoveItemsStartup", Debug::_CompatibilityRemoveItemsStartup, "// Removes all distributables items from npcs 5 seconds after loading a game");
+	ini.SetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded, "// Removes only excluded items from npcs");
 
 	ini.SaveFile(path);
 }
