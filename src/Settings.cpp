@@ -47,6 +47,9 @@ void Settings::InitGameStuff()
 	}
 	// 0xFF... is reserved for objects created by the game during runtime 
 	pluginnames[255] = "runtime";
+
+#ifndef BUILD_SKYRIMVR
+	// skyrim vr does not support esl plugins
 	for (int i = 0; i <= 4095; i++) {
 		file = datahandler->LookupLoadedLightModByIndex((uint16_t)i);
 		if (file) {
@@ -57,6 +60,7 @@ void Settings::InitGameStuff()
 		} else
 			pluginnames[256 + i] = "";
 	}
+#endif
 
 	Settings::Equip_LeftHand = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x13F43);
 	Settings::Equip_RightHand = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x13F42);

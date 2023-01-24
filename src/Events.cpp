@@ -124,12 +124,12 @@ namespace Events
 		return EventResult::kContinue;       \
 	}
 
-#define ReEvalPlayerDeath                                         \
-	if (RE::PlayerCharacter::GetSingleton()->IsDead() == false) { \
+#define ReEvalPlayerDeath  ;                                      \
+	if (!(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead) == false) { \
 		playerdied = false;                                       \
 	}                                                             
 	//LOG1_1("{}[ReevalPlayerDeath] {}", playerdied);
-
+	
 	/// <summary>
 	/// thread which executes varying test functions
 	/// </summary>
@@ -161,11 +161,18 @@ namespace Events
 
 #pragma endregion
 
+	// needed in vr, since load game is likely to not fire
+	bool loadgamefired = false;
+	// forward definition
+	void LoadGameSub();
+
 	/// <summary>
 	/// initializes important variables, which need to be initialized every time a game is loaded
 	/// </summary>
 	void InitializeCompatibilityObjects()
 	{
+		if (!loadgamefired)
+			LoadGameSub();
 		EvalProcessing();
 		// now that the game was loaded we can try to initialize all our variables we conuldn't before
 		if (!initialized) {
@@ -656,7 +663,7 @@ namespace Events
 						LOG1_1("{}[Events] [CheckActors] [Actor] {}", Utility::PrintForm((curr->actor)));
 					}
 					// if actor is valid and not dead
-					if (curr->actor && !(curr->actor->IsDead()) && curr->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
+					if (curr->actor && !(curr->actor->boolBits & RE::Actor::BOOL_BITS::kDead) && curr->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
 						// update durations
 						if(curr->durHealth >= 0) curr->durHealth -= Settings::System::_cycletime;
 						if(curr->durMagicka >= 0) curr->durMagicka -= Settings::System::_cycletime;
@@ -988,7 +995,7 @@ namespace Events
 				// if we have characters that should not get items, the function
 				// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 				auto items = Distribution::GetDistrItems(acinfo);
-				if (acinfo->actor->IsDead()) {
+				if ((acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead)) {
 					return;
 				}
 				if (items.size() > 0) {
@@ -1286,7 +1293,7 @@ namespace Events
 		ActorInfo* acinfo = data->FindActor(actor);
 		// find out whether to insert the actor, if yes insert him into the temp insert list
 		sem.acquire();
-		if (!acset.contains(acinfo)) {
+		 if (!acset.contains(acinfo)) {
 			acinsert.insert(actor);
 			if (acremove.contains(actor)) {
 				acremove.erase(actor);
@@ -1299,7 +1306,7 @@ namespace Events
 
 		ProcessDistribution(acinfo);
 		EvalProcessing();
-		if (actor->IsDead())
+		if (actor->boolBits & RE::Actor::BOOL_BITS::kDead)
 			return;
 
 		LOG_1("{}[Events] [RegisterNPC] finished registering NPC");
@@ -1366,6 +1373,7 @@ namespace Events
 	/// </summary>
 	void LoadGameSub()
 	{
+		loadgamefired = true;
 		auto begin = std::chrono::steady_clock::now();
 		LOG_1("{}[Events] [LoadGameSub]");
 		// if we canceled the main thread, reset that
@@ -1388,6 +1396,7 @@ namespace Events
 		deads.clear();
 		// set player to alive
 		ReEvalPlayerDeath;
+		playerdied = false;
 
 		enableProcessing = true;
 
@@ -1404,7 +1413,7 @@ namespace Events
 				LOG_1("{}[Events] [LoadGameSub] Started RemoveItemsHandler");
 			}
 		}
-
+		/*
 		// when loading the game, the attach detach events for actors aren't fired until cells have been changed
 		// thus we need to get all currently loaded npcs manually
 		RE::TESObjectCELL* cell = nullptr;
@@ -1430,7 +1439,7 @@ namespace Events
 				while (itr != gamecells[i]->references.end()) {
 					if (itr->get()) {
 						RE::Actor* actor = itr->get()->As<RE::Actor>();
-						if (Utility::ValidateActor(actor) && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
+						if (Utility::ValidateActor(actor) && deads.find(actor->GetFormID()) == deads.end() && !(actor->boolBits & RE::Actor::BOOL_BITS::kDead) && !actor->IsPlayerRef()) {
 							if (Distribution::ExcludedNPCFromHandling(actor) == false)
 								RegisterNPC(actor);
 						}
@@ -1438,7 +1447,7 @@ namespace Events
 					itr++;
 				}
 			}
-		}
+		}*/
 
 		InitializeCompatibilityObjects();
 
@@ -1457,10 +1466,9 @@ namespace Events
 	EventResult EventHandler::ProcessEvent(const RE::TESDeathEvent* a_event, RE::BSTEventSource<RE::TESDeathEvent>*)
 	{
 		Statistics::Events_TESDeathEvent++;
+		LOG_1("{}[Events] [TESDeathEvent]");
 		EvalProcessingEvent();
 		auto begin = std::chrono::steady_clock::now();
-		LOG_1("{}[Events] [TESDeathEvent]");
-		InitializeCompatibilityObjects();
 		RE::Actor* actor = nullptr;
 		if (a_event == nullptr || a_event->actorDying == nullptr) {
 			LOG_4("{}[Events] [TESDeathEvent] Died due to invalid event");
@@ -1549,6 +1557,8 @@ namespace Events
 	EventResult EventHandler::ProcessEvent(const RE::TESHitEvent* a_event, RE::BSTEventSource<RE::TESHitEvent>*)
 	{
 		Statistics::Events_TESHitEvent++;
+		LOG_1("{}[Events] [TESHitEvent]");
+		InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		
 		if (a_event && a_event->target.get()) {
@@ -1588,14 +1598,18 @@ namespace Events
 	EventResult EventHandler::ProcessEvent(const RE::TESCombatEvent* a_event, RE::BSTEventSource<RE::TESCombatEvent>*)
 	{
 		Statistics::Events_TESCombatEvent++;
+		LOG_1("{}[Events] [TESCombatEvent]");
+		InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		//if (!Settings::_featDisableOutOfCombatProcessing)
 		//	return EventResult::kContinue;
 		auto begin = std::chrono::steady_clock::now();
-		LOG_1("{}[Events] [TESCombatEvent]");
-		InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
-		if (Utility::ValidateActor(actor) && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+		if ((actor->boolBits & RE::Actor::BOOL_BITS::kDead)) {
+			LOG_1("{}[Events] [TESCombatEvent] actor supposedly dead");
+			return EventResult::kContinue;
+		}
+		if (Utility::ValidateActor(actor) && actor->GetFormID() != 0x14 && actor->IsChild() == false) {
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				if (Distribution::ExcludedNPCFromHandling(actor) == false)
 					RegisterNPC(actor);
@@ -1626,7 +1640,7 @@ namespace Events
 
 		if (a_event && a_event->reference) {
 			RE::Actor* actor = a_event->reference->As<RE::Actor>();
-			if (Utility::ValidateActor(actor) && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
+			if (Utility::ValidateActor(actor) && deads.find(actor->GetFormID()) == deads.end() && !(actor->boolBits & RE::Actor::BOOL_BITS::kDead) && !actor->IsPlayerRef()) {
 				if (a_event->attached) {
 					if (Distribution::ExcludedNPCFromHandling(actor) == false)
 						RegisterNPC(actor);
