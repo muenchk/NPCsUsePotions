@@ -21,8 +21,8 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 	if (_actor) {
 		formid = _actor->GetFormID();
 		name = std::string(_actor->GetName());
-		pluginname = std::string(Utility::GetPluginName(actor));
-		pluginID = Utility::GetPluginIndex(pluginname);
+		pluginname = Utility::Mods::GetPluginName(actor);
+		pluginID = Utility::Mods::GetPluginIndex(pluginname);
 		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
 		if (pluginID == 0x1) {
 			pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
@@ -668,7 +668,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				_boss = Buffer::ReadBool(buffer, offset);
 
 				// init dependend stuff
-				pluginID = Utility::GetPluginIndex(pluginname);
+				pluginID = Utility::Mods::GetPluginIndex(pluginname);
 				if (pluginID == 0x1) {
 					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
 				}
@@ -707,7 +707,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
 
 				// init dependend stuff
-				pluginID = Utility::GetPluginIndex(pluginname);
+				pluginID = Utility::Mods::GetPluginIndex(pluginname);
 				if (pluginID == 0x1) {
 					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
 				}

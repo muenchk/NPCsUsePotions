@@ -746,6 +746,8 @@ public:
 	[[deprecated]] static inline bool FixedFoodEat = true;
 
 	static inline std::string pluginnames[256+4096];
+	static inline std::unordered_map<std::string, uint32_t> pluginNameMap;
+	static inline std::unordered_map<uint32_t, std::string> pluginIndexMap;
 
 	/// <summary>
 	/// Loads game objects

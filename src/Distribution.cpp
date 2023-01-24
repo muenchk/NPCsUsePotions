@@ -1389,8 +1389,8 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 	if (Settings::Usage::_DisableItemUsageForExcludedNPCs) {
 		// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
 		bool ret = Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
-		           Distribution::excludedPlugins_NPCs()->contains(Utility::GetPluginIndex(actor)) ||
-		           (Utility::GetPluginIndex(actor) == 0x1 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID)) ||
+		           Distribution::excludedPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(actor)) ||
+		           (Utility::Mods::GetPluginIndex(actor) == 0x1 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID)) ||
 		           Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID()) ||
 		           actor->IsGhost() ||
 		           actor->GetActorBase()->IsSummonable();

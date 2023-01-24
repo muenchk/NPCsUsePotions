@@ -7,8 +7,10 @@ class Compatibility
 public:
 
 	// apothecary
+	static inline std::string Apothecary = "Apothecary.esp";
 
 	// caco
+	static inline std::string CACO = "Complete Alchemy & Cooking Overhaul.esp";
 
 	// animated poisons
 	static inline std::string AnimatedPoisons = "AnimatedPoisons.esp";

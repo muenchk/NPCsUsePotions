@@ -536,11 +536,7 @@ private:
 	/// <summary>
 	/// from distribution excluded plugins
 	/// </summary>
-	static inline std::unordered_set<uint8_t> _excludedPlugins;
-	/// <summary>
-	/// from distribution excluded light plugins
-	/// </summary>
-	static inline std::unordered_set<uint16_t> _excludedPluginsLight;
+	static inline std::unordered_set<uint32_t> _excludedPlugins;
 	/// <summary>
 	/// map that contains rule based item strength associations
 	/// </summary>
@@ -639,12 +635,7 @@ public:
 	/// returns the set of from distribution excluded plugins
 	/// </summary>
 	/// <returns></returns>
-	static const std::unordered_set<std::uint8_t>* excludedPlugins() { return initialised ? &_excludedPlugins : &_dummySet2; }
-	/// <summary>
-	/// returns the set of from distribution excluded light plugins
-	/// </summary>
-	/// <returns></returns>
-	static const std::unordered_set<std::uint16_t>* excludedPluginsLight() { return initialised ? &_excludedPluginsLight : &_dummySet3; }
+	static const std::unordered_set<std::uint32_t>* excludedPlugins() { return initialised ? &_excludedPlugins : &_dummySet5; }
 	/// <summary>
 	/// returns the map that contains rule based item strength associations
 	/// </summary>
