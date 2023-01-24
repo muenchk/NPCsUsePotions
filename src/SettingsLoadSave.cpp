@@ -324,7 +324,7 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "DisableOutOfCombatProcessing", std::to_string(Usage::_DisableOutOfCombatProcessing));
 		Usage::_DisableItemUsageForExcludedNPCs = ini.GetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Usage::_DisableItemUsageForExcludedNPCs);
 		loginfo("[SETTINGS] {} {}", "DisableItemUsageForExcludedNPCs", std::to_string(Usage::_DisableItemUsageForExcludedNPCs));
-		Usage::_globalCooldown = ini.GetBoolValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown);
+		Usage::_globalCooldown = ini.GetLongValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown);
 		loginfo("[SETTINGS] {} {}", "GlobalItemCooldown", std::to_string(Usage::_globalCooldown));
 
 
@@ -467,11 +467,10 @@ void Settings::Load()
 		Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation = true;
 		loginfo("[SETTINGS] [OVERRIDE] Compatibility - {} hase been overwritten and set to true", "UltimatePotionAnimation");
 	}
-	auto datahandler = RE::TESDataHandler::GetSingleton();
 	loginfo("[SETTINGS] checking for plugins");
 
 	// search for PotionAnimatedFx.esp for compatibility
-	if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ Comp::PotionAnimatedfx }); plugin) {
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::PotionAnimatedfx); index != 0x1) {
 		Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx = true; 
 		loginfo("[SETTINGS] Found plugin PotionAnimatedfx.esp and activated compatibility mode");
 	} else {
@@ -479,18 +478,18 @@ void Settings::Load()
 	}
 
 	// search for AnimatedPoisons.esp
-	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Comp::AnimatedPoisons }); plugin) {
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons); index != 0x1) {
 		Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons = true;
 		loginfo("[SETTINGS] Found plugin AnimatedPoisons.esp and activated compatibility mode");
 	}
 
 	// search for AnimatedPotions.esp
-	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Comp::AnimatedPotions_4_4 }); plugin) {
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_4); index != 0x1) {
 		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
 		Comp::GetSingleton()->AnPoti_Version = 44;
 		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
 	}
-	if (const RE::TESFile* plugin = datahandler->LookupLoadedLightModByName(std::string_view{ Comp::AnimatedPotions_4_3 }); plugin) {
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_3); index != 0x1) {
 		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
 		Comp::GetSingleton()->AnPoti_Version = 43;
 		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
@@ -498,13 +497,13 @@ void Settings::Load()
 
 	// plugin check
 	if (Compatibility::_CompatibilityMode) {
-		if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ PluginName }); plugin) {
+		if (const uint32_t index = Utility::Mods::GetPluginIndex(PluginName); index != 0x1) {
 			loginfo("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
 		} else {
 			loginfo("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, all use of potions, poisons and food is effectively disabled, except you have another sink for the papyrus events. Distribution is not affected");
 		}
 	} else if (Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation) {
-		if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ PluginName }); plugin) {
+		if (const uint32_t index = Utility::Mods::GetPluginIndex(PluginName); index != 0x1) {
 			loginfo("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
 		} else {
 			loginfo("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, Potion drinking will be effectively disabled, except you have another plugin that listens to the Papyrus Mod Events. Other functionality is not affected");
@@ -512,14 +511,14 @@ void Settings::Load()
 	}
 	// Check for CACO
 	{
-		if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ "Complete Alchemy & Cooking Overhaul.esp" }); plugin) {
+		if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::CACO); index != 0x1) {
 			loginfo("[SETTINGS] Complete Alchemy & Cooking Overhaul.esp is loaded, activating compatibility mode!");
 			Compatibility::CACO::_CompatibilityCACO = true;
 		}
 	}
 	// Check for Apothecary
 	{
-		if (const RE::TESFile* plugin = datahandler->LookupModByName(std::string_view{ "Apothecary.esp" }); plugin) {
+		if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::Apothecary); index != 0x1) {
 			loginfo("[SETTINGS] Apothecary.esp is loaded, activating compatibility mode!");
 			Compatibility::Apothecary::_CompatibilityApothecary = true;
 		}

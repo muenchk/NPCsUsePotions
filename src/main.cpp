@@ -101,6 +101,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		auto begin = std::chrono::steady_clock::now();
 		// init Data
 		Data::GetSingleton()->Init();
+		// init game objects and load pluginnames
+		Settings::InitGameStuff();
 		// load settings
 		Settings::Load(); // also resaves the file
 		logger::info("Settings loaded");

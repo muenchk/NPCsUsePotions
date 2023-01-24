@@ -302,56 +302,6 @@ public:
 	static bool VerifyActorInfo(ActorInfo* acinfo);
 
 	/// <summary>
-	/// Returns the pluginname the form is defined in
-	/// </summary>
-	static const char* GetPluginName(RE::TESForm* form);
-
-	/// <summary>
-	/// Returns the plugin index of the given plugin [returns 0x1 on failure]
-	/// </summary>
-	/// <param name="pluginname"></param>
-	/// <returns></returns>
-	static uint32_t GetPluginIndex(std::string pluginname);
-
-	/// <summary>
-	/// Returns the plugin index of the given form [returns 0x1 on failure]
-	/// </summary>
-	/// <param name="pluginname"></param>
-	/// <returns></returns>
-	static uint32_t GetPluginIndex(RE::TESForm* form);
-
-	/// <summary>
-	/// Returns a vector with all forms of the given type in the plugin
-	/// </summary>
-	/// <typeparam name="T">form type</typeparam>
-	/// <param name="pluginname">name of the plugin</param>
-	/// <returns></returns>
-	template <class T>
-	static std::vector<T*> GetFormsInPlugin(std::string pluginname)
-	{
-		auto datahandler = RE::TESDataHandler::GetSingleton();
-		const RE::TESFile* file = datahandler->LookupLoadedModByName(pluginname);
-		std::vector<T*> ret;
-		if (file != nullptr) {
-			uint32_t mask = 0;
-			uint32_t index = 0;
-			if (file->IsLight()) {
-				mask = 0xFFFFF000;
-				index = file->GetPartialIndex() << 12;
-			} else {
-				mask = 0xFF000000;
-				index = file->GetPartialIndex() << 24;
-			}
-			auto forms = datahandler->GetFormArray<T>();
-			for (int i = 0; i < (int)forms.size(); i++) {
-				if ((forms[i]->GetFormID() & mask) == index)
-					ret.push_back(forms[i]);
-			}
-		}
-		return ret;
-	}
-
-	/// <summary>
 	/// Returns whether an actor is valid and safe to work with
 	/// </summary>
 	/// <param name="actor">Actor to validate</param>
@@ -372,7 +322,13 @@ public:
 	}
 
 	/// <summary>
-	/// Extracts template information from an NPC
+	/// Extracts template information from an Actor
+	/// </summary>
+	/// <param name="npc"></param>
+	/// <returns></returns>
+	static Misc::NPCTPLTInfo ExtractTemplateInfo(RE::Actor* actor);
+	/// <summary>
+	/// Extracts template information from a NPC
 	/// </summary>
 	/// <param name="npc"></param>
 	/// <returns></returns>
@@ -385,4 +341,72 @@ public:
 	static Misc::NPCTPLTInfo ExtractTemplateInfo(RE::TESLevCharacter* lvl);
 	#pragma endregion
 
+
+	#pragma region Mods
+
+	class Mods
+	{
+	public:
+		/// <summary>
+		/// Returns the pluginname the form is defined in
+		/// </summary>
+		static std::string GetPluginName(RE::TESForm* form);
+
+		/// <summary>
+		/// Returns the pluginname corresponding to the pluginIndex
+		/// </summary>
+		static std::string GetPluginName(uint32_t pluginIndex);
+
+		/// <summary>
+		/// Returns the plugin index of the given plugin [returns 0x1 on failure]
+		/// </summary>
+		/// <param name="pluginname"></param>
+		/// <returns></returns>
+		static uint32_t GetPluginIndex(std::string pluginname);
+
+		/// <summary>
+		/// Returns the plugin index of the given form [returns 0x1 on failure]
+		/// </summary>
+		/// <param name="pluginname"></param>
+		/// <returns></returns>
+		static uint32_t GetPluginIndex(RE::TESForm* form);
+
+		/// <summary>
+		/// Returns a vector with all forms of the given type in the plugin
+		/// </summary>
+		/// <typeparam name="T">form type</typeparam>
+		/// <param name="pluginname">name of the plugin</param>
+		/// <returns></returns>
+		template <class T>
+		static std::vector<T*> GetFormsInPlugin(std::string pluginname)
+		{
+			auto datahandler = RE::TESDataHandler::GetSingleton();
+			const RE::TESFile* file = nullptr;
+			uint32_t pindex = Utility::Mods::GetPluginIndex(pluginname);
+			if ((pindex & 0x00FFF000) != 0)  // light mod
+				file = datahandler->LookupLoadedLightModByIndex((uint16_t)((pindex & 0x00FFF000) >> 12));
+			else  // normal mod
+				file = datahandler->LookupLoadedModByIndex((uint8_t)(pindex >> 24));
+			std::vector<T*> ret;
+			if (file != nullptr) {
+				uint32_t mask = 0;
+				uint32_t index = 0;
+				if (file->IsLight()) {
+					mask = 0xFFFFF000;
+					index = file->GetPartialIndex() << 12;
+				} else {
+					mask = 0xFF000000;
+					index = file->GetPartialIndex() << 24;
+				}
+				auto forms = datahandler->GetFormArray<T>();
+				for (int i = 0; i < (int)forms.size(); i++) {
+					if ((forms[i]->GetFormID() & mask) == index)
+						ret.push_back(forms[i]);
+				}
+			}
+			return ret;
+		}
+	};
+
+	#pragma endregion
 };

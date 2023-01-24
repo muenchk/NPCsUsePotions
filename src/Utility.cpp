@@ -1520,7 +1520,7 @@ bool Utility::VerifyActorInfo(ActorInfo* acinfo)
 	return true;
 }
 
-const char* Utility::GetPluginName(RE::TESForm* form)
+std::string Utility::Mods::GetPluginName(RE::TESForm* form)
 {
 	auto datahandler = RE::TESDataHandler::GetSingleton();
 	const RE::TESFile* file = nullptr;
@@ -1528,56 +1528,41 @@ const char* Utility::GetPluginName(RE::TESForm* form)
 	if ((form->GetFormID() >> 24) == 0xFF)
 		return "";
 	if ((form->GetFormID() >> 24) != 0xFE) {
-		file = datahandler->LookupLoadedModByIndex((uint8_t)(form->GetFormID() >> 24));
-		if (file == nullptr) {
-			return "";
-		}
-		name = file->GetFilename();
+		auto itr = Settings::pluginIndexMap.find(form->GetFormID() & 0xFF000000);
+		if (itr != Settings::pluginIndexMap.end())
+			return itr->second;
+		return "";
 	}
 	if ((form->GetFormID() >> 24) == 0x00)
 		return "Skyrim.esm";
-	//loginfo("iter 5.1");
-	if (name.empty()) {
-		//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
-		file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((form->GetFormID() & 0x00FFF000)) >> 12));
-		if (file == nullptr) {
-			return "";
-		}
-		name = file->GetFilename();
-	}
-	return name.data();
-}
-
-uint32_t Utility::GetPluginIndex(std::string pluginname)
-{
-	static std::unordered_map<std::string, uint32_t> indexMap;
-	auto itr = indexMap.find(pluginname);
-	if (itr != indexMap.end()) {
+	// light mod
+	auto itr = Settings::pluginIndexMap.find(form->GetFormID() & 0xFFFFF000);
+	if (itr != Settings::pluginIndexMap.end())
 		return itr->second;
-	} else {
-		auto datahandler = RE::TESDataHandler::GetSingleton();
-		int8_t mainindex = datahandler->GetLoadedModIndex(pluginname).value_or(-1);
-		int16_t subindex = datahandler->GetLoadedLightModIndex(pluginname).value_or(-1);
-		uint32_t index = 0;
-		if (mainindex > -1 && mainindex < 0xFE) {
-			// index is a normal mod
-			index = (uint32_t)mainindex << 24;
-			indexMap.insert_or_assign(pluginname, index);
-			return index;
-		} else if (subindex > -1 && subindex <= 0xFFF) {
-			// we have a valid light mod
-			index = 0xFE000000 & ((uint32_t)subindex << 12);
-			indexMap.insert_or_assign(pluginname, index);
-			return index;
-		} else {
-			return 0x1;
-		}
-	}
+	return "";
 }
 
-uint32_t Utility::GetPluginIndex(RE::TESForm* form)
+std::string Utility::Mods::GetPluginName(uint32_t pluginIndex)
 {
-	return GetPluginIndex(std::string(GetPluginName(form)));
+	auto itr = Settings::pluginIndexMap.find(pluginIndex);
+	if (itr != Settings::pluginIndexMap.end())
+		return itr->second;
+	else
+		return "";
+}
+
+uint32_t Utility::Mods::GetPluginIndex(std::string pluginname)
+{
+	auto itr = Settings::pluginNameMap.find(pluginname);
+	if (itr != Settings::pluginNameMap.end()) {
+		return itr->second;
+	} else
+		return 0x1;
+}
+
+uint32_t Utility::Mods::GetPluginIndex(RE::TESForm* form)
+{
+	return GetPluginIndex(GetPluginName(form));
 }
 
 bool Utility::ValidateActor(RE::Actor* actor)
@@ -1595,7 +1580,7 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESLevCharacter* lvl)
 	// just try to grab the first entry of the leveled list, since they should all share
 	// factions 'n stuff
 	if (lvl->entries.size() > 0) {
-		uint32_t plugID = Utility::GetPluginIndex(lvl);
+		uint32_t plugID = Utility::Mods::GetPluginIndex(lvl);
 		RE::TESForm* entry = lvl->entries[0].form;
 		RE::TESNPC* tplt = entry->As<RE::TESNPC>();
 		RE::TESLevCharacter* lev = entry->As<RE::TESLevCharacter>();
@@ -1629,7 +1614,7 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESNPC* npc)
 				info.tpltfactions.push_back(npc->factions[i].faction);
 		}
 
-		uint32_t plugID = Utility::GetPluginIndex(npc);
+		uint32_t plugID = Utility::Mods::GetPluginIndex(npc);
 		if (plugID != 0x1) {
 			info.pluginID = plugID;
 		}
@@ -1649,7 +1634,7 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESNPC* npc)
 
 	info.pluginID = tpltinfo.pluginID;
 
-	uint32_t plugID = Utility::GetPluginIndex(npc);
+	uint32_t plugID = Utility::Mods::GetPluginIndex(npc);
 	if (plugID != 0x1) {
 		info.pluginID = plugID;
 	}
@@ -1689,4 +1674,17 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESNPC* npc)
 		info.tpltstyle = npc->combatStyle;
 	}
 	return info;
+}
+
+Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::Actor* actor)
+{
+	if (actor != nullptr) {
+		Misc::NPCTPLTInfo tpltinfo = ExtractTemplateInfo(actor->GetActorBase());
+		uint32_t plugID = Utility::Mods::GetPluginIndex(actor);
+		if (plugID != 0x1) {
+			tpltinfo.pluginID = plugID;
+		}
+		return tpltinfo;
+	}
+	return Misc::NPCTPLTInfo{};
 }

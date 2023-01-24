@@ -34,10 +34,14 @@ void Settings::InitGameStuff()
 	loginfo("[SETTINGS] [InitGameStuff] init pluginnames");
 	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 	const RE::TESFile* file = nullptr;
+	uint32_t index = 0;
 	for (int i = 0; i <= 254; i++) {
 		file = datahandler->LookupLoadedModByIndex((uint8_t)i);
 		if (file) {
 			pluginnames[i] = std::string(file->GetFilename());
+			index = (uint32_t)i << 24;
+			pluginNameMap.insert_or_assign(pluginnames[i], index);
+			pluginIndexMap.insert_or_assign(index, pluginnames[i]);
 		} else
 			pluginnames[i] = "";
 	}
@@ -47,6 +51,9 @@ void Settings::InitGameStuff()
 		file = datahandler->LookupLoadedLightModByIndex((uint16_t)i);
 		if (file) {
 			pluginnames[256 + i] = std::string(file->GetFilename());
+			index = 0xFE000000 | ((uint32_t)i << 12);
+			pluginNameMap.insert_or_assign(pluginnames[256 + i], index);
+			pluginIndexMap.insert_or_assign(index, pluginnames[256 + i]);
 		} else
 			pluginnames[256 + i] = "";
 	}
@@ -66,9 +73,6 @@ void Settings::LoadDistrConfig()
 {
 	// set to false, to avoid other funcions running stuff on our variables
 	Distribution::initialised = false;
-
-	// init game objects etc. before we begin
-	InitGameStuff();
 
 	// disable generic logging, if load logging is disabled
 	if (Logging::EnableLoadLog == false)
@@ -829,16 +833,12 @@ void Settings::LoadDistrConfig()
 									}
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
-									int8_t mainindex = datahandler->GetLoadedModIndex(plugin).value_or(-1);
-									int16_t subindex = datahandler->GetLoadedLightModIndex(plugin).value_or(-1);
-									if (mainindex > -1 && mainindex < 0xFE) {
+									uint32_t index = Utility::Mods::GetPluginIndex(plugin);
+
+									if (index != 0x1) {
 										// index is a normal mod
-										Distribution::_excludedPlugins.insert(mainindex);
-										loginfo("[Settings] [LoadDistrRules] Rule 9 excluded plugin {} with index {}", plugin, mainindex);
-									} else if (subindex > -1 && subindex <= 0xFFF) {
-										// we have a valid light mod
-										Distribution::_excludedPluginsLight.insert(subindex);
-										loginfo("[Settings] [LoadDistrRules] Rule 9 excluded light plugin {} with subindex {}", plugin, subindex);
+										Distribution::_excludedPlugins.insert(index);
+										loginfo("[Settings] [LoadDistrRules] Rule 9 excluded plugin {} with index {}", plugin, Utility::GetHex(index));
 									} else {
 										loginfo("[Settings] [LoadDistrRules] Rule 9 cannot exclude plugin {}. It is either not loaded or not present", plugin);
 									}
@@ -964,7 +964,7 @@ void Settings::LoadDistrConfig()
 									std::string pluginname = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									auto forms = Utility::GetFormsInPlugin<RE::AlchemyItem>(pluginname);
+									auto forms = Utility::Mods::GetFormsInPlugin<RE::AlchemyItem>(pluginname);
 									for (int i = 0; i < forms.size(); i++) {
 										Distribution::_whitelistItems.insert(forms[i]->GetFormID());
 										if (Logging::EnableLoadLog)
@@ -1122,7 +1122,7 @@ void Settings::LoadDistrConfig()
 									}
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
-									uint32_t plugindex = Utility::GetPluginIndex(plugin);
+									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_excludedPlugins_NPCs.insert(plugindex);
@@ -1142,7 +1142,7 @@ void Settings::LoadDistrConfig()
 									}
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
-									uint32_t plugindex = Utility::GetPluginIndex(plugin);
+									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_whitelistNPCsPlugin.insert(plugindex);
@@ -2142,64 +2142,33 @@ void Settings::CheckActorsForRules()
 	std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_NPCs_without_Rule.csv");
 	std::ofstream outpris("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_NPCs_without_Rule_Prisoners.txt");
 	out << "PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
-	//PluginBase;
-
-	auto datahandler = RE::TESDataHandler::GetSingleton();
-	std::string_view name = std::string_view{ "" };
-	bool lightplugin = false;
-	const RE::TESFile* file = nullptr;
 
 	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
 	auto end = hashtable->end();
 	auto iter = hashtable->begin();
-	std::set<RE::FormID> visited;
+	std::set<RE::FormID> visited{};
 	RE::Actor* act = nullptr;
 	RE::TESNPC* npc = nullptr;
 	ActorStrength acs;
 	ItemStrength is;
-	//auto arr = datahandler->GetFormArray<RE::TESNPC>();
-	//auto coun = 0;
+	uint32_t index;
+	std::string name;
 	while (iter != hashtable->end()) {
-		//while (arr.size() > (unsigned int)coun) {
 		try {
 			if ((*iter).second) {
-				lightplugin = false;
-				//npc = arr[coun];
-				//act = nullptr;
 				act = (*iter).second->As<RE::Actor>();
 				npc = (*iter).second->As<RE::TESNPC>();
 				logwarn("[Settings] [CheckActorsForRules] act {}\t\t npc {}", act ? Utility::PrintForm(act) : "", npc ? Utility::PrintForm(npc) : "");
 				if (npc && npc->GetFormID() != 0x07 && (npc->GetFormID() >> 24) != 0xFF) {
 					if (!visited.contains(npc->GetFormID())) {
 						visited.insert(npc->GetFormID());
-						//loginfo("check 1");
 						{
-							//loginfo("iter 5 {}", Utility::GetHex(npc->GetFormID()));
-							name = std::string_view{ "" };
-							if ((npc->GetFormID() >> 24) != 0xFE) {
-								file = datahandler->LookupLoadedModByIndex((uint8_t)(npc->GetFormID() >> 24));
-								if (file == nullptr) {
-									iter++;
-									//loginfo("invalid plugin");
-									continue;
-								}
-								name = file->GetFilename();
+							index = Utility::ExtractTemplateInfo(npc).pluginID;
+							if (index == 0x1) {
+								iter++;
+								continue;
 							}
-							//loginfo("iter 5.1");
-							if (name.empty()) {
-								//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
-								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() & 0x00FFF000)) >> 12));
-								if (file == nullptr) {
-									iter++;
-									//loginfo("invalid plugin");
-									continue;
-								}
-								name = file->GetFilename();
-								lightplugin = true;
-							}
-							//loginfo("iter 5.2");
-							//loginfo("[CheckActorsForRules] {} named {} from {}", Utility::GetHex(npc->GetFormID()), npc->GetName(), name);
-							//loginfo("iter 5.3");
+							name = Utility::Mods::GetPluginName(index);
 						}
 						// check wether there is a rule that applies
 						if (Distribution::ExcludedNPC(npc)) {
@@ -2207,54 +2176,20 @@ void Settings::CheckActorsForRules()
 							//coun++;
 							continue;  // the npc is covered by an exclusion
 						}
-						//loginfo("check 2");
 						// get rule
 						Misc::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
 						Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
-						//loginfo("check 3");
-						//logwarn("[CheckActorsForRules] got rule");
 
 						//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
 						if (rl && rl->ruleName == DefaultRuleName && !IsLeveledChar(npc)) {
-							// lookup plugin of the actor red
-							//loginfo("check 4");
-							name = std::string_view{ "" };
-
-							if ((npc->GetFormID() >> 24) != 0xFE) {
-								file = datahandler->LookupLoadedModByIndex((uint8_t)(npc->GetFormID() >> 24));
-								if (file == nullptr) {
-									iter++;
-									continue;
-								}
-								name = file->GetFilename();
-							}
-							//loginfo("check 4.1");
-							if (name.empty()) {
-								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() & 0x00FFF000)) >> 12));
-								if (file == nullptr) {
-									iter++;
-									continue;
-								}
-								name = file->GetFilename();
-								lightplugin = true;
-							}
-							//loginfo("check 4.2");
-							if (lightplugin && (npc->GetFormID() & 0x00000FFF) < 0x800) {
-								iter++;
-								//coun++;
-								continue;
-							}
 							if (name.empty() == false)
 								out << name << ";";
 							else
 								out << ";";
-							//loginfo("check 5");
 							// we found an actor that does not have a rule, so print that to the output
 							out << npc->GetName() << ";"
 								<< "0x" << Utility::GetHex(npc->GetFormID()) << ";"
 								<< ";";
-							//loginfo("check 6");
-							//logwarn("[CheckActorsForRules] Actor: {} {} {} does not have a valid rule", act->GetName(), Utility::GetHex(act->GetActorBase()->GetFormID()), Utility::GetHex(act->GetFormID()));
 
 							if (npc->GetRace())
 								out << npc->GetRace()->GetFormEditorID() << ";"
@@ -2262,14 +2197,10 @@ void Settings::CheckActorsForRules()
 							else
 								out << ";;";
 
-							//loginfo("check 7");
-
 							for (uint32_t i = 0; i < npc->factions.size(); i++) {
 								out << ";"
 									<< "0x" << Utility::GetHex(npc->factions[i].faction->GetFormID());
 							}
-							//loginfo("check 8");
-							//logwarn("[CheckActorsForRules] end");
 							out << "\n";
 							out.flush();
 
@@ -2283,7 +2214,7 @@ void Settings::CheckActorsForRules()
 											<< Utility::GetHex((npc->GetFormID() & 0x00FFFFFF))
 											<< ","
 											<< ">";
-								else if (lightplugin) {
+								else if ((index & 0x00FFF000) != 0) { // light plugin
 									outpris << "<"
 											<< Utility::GetHex((npc->GetFormID() & 0x00000FFF))
 											<< ","
@@ -2302,45 +2233,17 @@ void Settings::CheckActorsForRules()
 				} else if (act && act->GetFormID() != 0x14 && (act->GetFormID() >> 24) != 0xFF) {
 					if (!visited.contains(act->GetFormID())) {
 						// lookup pluing of the actor base
-						/* name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetActorBase()->GetFormID() >> 24))->GetFilename();
-					if (name.empty())
-						name = datahandler->LookupLoadedLightModByIndex((uint16_t)((act->GetActorBase()->GetFormID() << 8)) >> 20)->GetFilename();
-					if (name.empty() == false)
-						out << name << ";";
-					else
-						out << ";";*/
+						{
+							index = Utility::ExtractTemplateInfo(act).pluginID;
+							if (index == 0x1) {
+								iter++;
+								continue;
+							}
+							name = Utility::Mods::GetPluginName(index);
+						}
 
 						// we didn't consider the current actors base so far
 						visited.insert(act->GetFormID());
-
-						{
-							//loginfo("iter 5 {}", Utility::GetHex(act->GetFormID()));
-							name = std::string_view{ "" };
-							if ((act->GetFormID() >> 24) != 0xFE) {
-								file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
-								if (file == nullptr) {
-									iter++;
-									loginfo("invalid plugin");
-									continue;
-								}
-								name = file->GetFilename();
-							}
-							//loginfo("iter 5.1");
-							if (name.empty()) {
-								//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
-								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
-								if (file == nullptr) {
-									iter++;
-									loginfo("invalid plugin");
-									continue;
-								}
-								name = file->GetFilename();
-								lightplugin = true;
-							}
-							//loginfo("iter 5.2");
-							loginfo("[Settings] [CheckCellForActors] {} named {} from {}", Utility::GetHex(act->GetFormID()), act->GetName(), name);
-							//loginfo("iter 5.3");
-						}
 
 						ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
 						// get rule
@@ -2352,67 +2255,33 @@ void Settings::CheckActorsForRules()
 							continue;  // the npc is covered by an exclusion
 						}
 						delete acinfo;
-						//loginfo("check 23");
 						//logwarn("[CheckActorsForRules] got rule");
 						if (rl && rl->ruleName == DefaultRuleName) {
 							// lookup plugin of the actor red
-							//loginfo("check 24");
-							name = std::string_view{ "" };
-							if ((act->GetFormID() >> 24) != 0xFE && (act->GetFormID() >> 24) != 0xFF) {
-								file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
-								if (file == nullptr) {
-									iter++;
-									continue;
-								}
-								name = file->GetFilename();
-							}
-							if (name.empty()) {
-								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
-								if (file == nullptr) {
-									iter++;
-									continue;
-								}
-								name = file->GetFilename();
-								lightplugin = true;
-							}
-							if (lightplugin && (act->GetFormID() & 0x00000FFF) < 0x800) {
-								iter++;
-								//coun++;
-								continue;
-							}
 							if (name.empty() == false)
 								out << name << ";";
 							else
 								out << ";";
-							//loginfo("check 25");
 							// we found an actor that does not have a rule, so print that to the output
 							out << act->GetName() << ";"
 								<< "0x" << Utility::GetHex(act->GetActorBase()->GetFormID()) << ";"
 								<< "0x" << Utility::GetHex(act->GetFormID()) << ";";
-							//logwarn("[CheckActorsForRules] Actor: {} {} {} does not have a valid rule", act->GetName(), Utility::GetHex(act->GetActorBase()->GetFormID()), Utility::GetHex(act->GetFormID()));
 
-							//loginfo("check 26");
 							if (act->GetRace())
 								out << act->GetRace()->GetFormEditorID() << ";"
 									<< "0x" << Utility::GetHex(act->GetRace()->GetFormID()) << ";";
 							else
 								out << ";;";
-							//loginfo("check 27");
-							//logwarn("[CheckActorsForRules] Race: {} {}", act->GetRace()->GetFormEditorID(), Utility::GetHex(act->GetRace()->GetFormID()));
+
 							if (act->GetSaveParentCell())
 								out << act->GetSaveParentCell()->GetName();
 
-							//loginfo("check 28");
-							//logwarn("[CheckActorsForRules] factions");
 							act->VisitFactions([&out](RE::TESFaction* a_faction, std::int8_t) {
 								if (a_faction)
 									out << ";"
 										<< "0x" << Utility::GetHex(a_faction->GetFormID());
-								//logwarn("[CheckActorsForRules] Faction: {}", Utility::GetHex(a_faction->GetFormID()));
 								return false;
 							});
-							//loginfo("check 29");
-							//logwarn("[CheckActorsForRules] end");
 							out << "\n";
 							out.flush();
 						}
@@ -2420,14 +2289,11 @@ void Settings::CheckActorsForRules()
 				}
 			}
 		} catch (...) {
-			//logwarn("catch");
 			out << ";";
 		}
 		try {
 			iter++;
-			//coun++;
 		} catch (...) {
-			//logwarn("catch finished");
 			break;
 		}
 	}
@@ -2444,16 +2310,14 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 	//out << "RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
 	//PluginBase;
 
-	auto datahandler = RE::TESDataHandler::GetSingleton();
-	std::string_view name = std::string_view{ "" };
-	bool lightplugin = false;
 
 	std::set<RE::FormID> visited;
 	RE::Actor* act = nullptr;
 
 	RE::TESForm* tmp = RE::TESForm::LookupByID(cellid);
 	RE::TESObjectCELL* cell = nullptr;
-	const RE::TESFile* file = nullptr;
+	uint32_t index;
+	std::string name;
 	if (tmp)
 		cell = tmp->As<RE::TESObjectCELL>();
 	if (cell) {
@@ -2462,148 +2326,78 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 		while (iter != hashtable.end()) {
 			try {
 				if ((*iter).get()) {
-					lightplugin = false;
-					//npc = arr[coun];
-					//act = nullptr;
-					//loginfo("iter 1");
 					act = (*iter)->As<RE::Actor>();
-					//loginfo("iter 2");
 					if (Utility::ValidateActor(act) && act->GetFormID() != 0x14) {
-						//loginfo("iter 3");
 						if (!visited.contains(act->GetFormID())) {
-							//loginfo("iter 4");
-							// lookup pluing of the actor base
-							/* name = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetActorBase()->GetFormID() >> 24))->GetFilename();
-					if (name.empty())
-						name = datahandler->LookupLoadedLightModByIndex((uint16_t)((act->GetActorBase()->GetFormID() << 8)) >> 20)->GetFilename();
-					if (name.empty() == false)
-						out << name << ";";
-					else
-						out << ";";*/
-
 							// we didn't consider the current actors base so far
 							visited.insert(act->GetFormID());
+							{
+								index = Utility::ExtractTemplateInfo(act).pluginID;
+								if (index == 0x1) {
+									iter++;
+									continue;
+								}
+								name = Utility::Mods::GetPluginName(index);
+							}
 							bool excluded = false;
 							// check wether there is a rule that applies
 							if (Logging::EnableLog) {
-								//loginfo("iter 5 {}", Utility::GetHex(act->GetFormID()));
-								name = std::string_view{ "" };
-								if ((act->GetFormID() >> 24) != 0xFE) {
-									file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
-									if (file == nullptr) {
-										iter++;
-										loginfo("invalid plugin");
-										continue;
-									}
-									name = file->GetFilename();
+								ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
+								// get rule
+								Distribution::Rule* rl = Distribution::CalcRule(acinfo);
+								if (Distribution::ExcludedNPC(acinfo)) {
+									excluded = true;
+									LOG_1("{}[CheckCellForActors] excluded");
 								}
-								//loginfo("iter 5.1");
-								if (name.empty()) {
-									//name = datahandler->LookupLoadedLightModByIndex((uint16_t)(((npc->GetFormID() << 8)) >> 20))->GetFilename();
-									file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
-									if (file == nullptr) {
-										iter++;
-										loginfo("invalid plugin");
-										continue;
-									}
-									name = file->GetFilename();
-									lightplugin = true;
-								}
-								//loginfo("iter 5.2");
-								loginfo("[Settings] [CheckCellForActors] {} named {} from {}", Utility::GetHex(act->GetFormID()), act->GetName(), name);
-								//loginfo("iter 5.3");
-							}
-							//loginfo("iter 6");
-							ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
-							// get rule
-							Distribution::Rule* rl = Distribution::CalcRule(acinfo);
-							if (Distribution::ExcludedNPC(acinfo)) {
-								excluded = true;
-								LOG_1("{}[CheckCellForActors] excluded");
-							}
-							//loginfo("iter 7");
-							delete acinfo;
-							//loginfo("iter 8");
-							//loginfo("check 23");
-							//logwarn("[CheckActorsForRules] got rule");
-							// lookup plugin of the actor red
-							//loginfo("check 24");
-							out << cell->GetFormEditorID() << ";";
-							if (excluded)
-								out << "Excluded"
-									<< ";";
-							else
-								out << rl->ruleName << ";";
-							name = std::string_view{ "" };
-							if ((act->GetFormID() >> 24) != 0xFE && (act->GetFormID() >> 24) != 0xFF) {
-								file = datahandler->LookupLoadedModByIndex((uint8_t)(act->GetFormID() >> 24));
-								if (file == nullptr) {
-									iter++;
-									continue;
-								}
-								name = file->GetFilename();
-							}
-							if (name.empty()) {
-								file = datahandler->LookupLoadedLightModByIndex((uint16_t)(((act->GetFormID() & 0x00FFF000)) >> 12));
-								if (file == nullptr) {
-									iter++;
-									continue;
-								}
-								name = file->GetFilename();
-								lightplugin = true;
-							}
-							if (lightplugin && (act->GetFormID() & 0x00000FFF) < 0x800) {
-								iter++;
-								continue;
-							}
-							if (name.empty() == false)
-								out << name << ";";
-							else
-								out << ";";
-							//loginfo("check 25");
-							// we found an actor that does not have a rule, so print that to the output
-							out << act->GetName() << ";"
-								<< "0x" << Utility::GetHex(act->GetActorBase()->GetFormID()) << ";"
-								<< "0x" << Utility::GetHex(act->GetFormID()) << ";";
-							//logwarn("[CheckActorsForRules] Actor: {} {} {} does not have a valid rule", act->GetName(), Utility::GetHex(act->GetActorBase()->GetFormID()), Utility::GetHex(act->GetFormID()));
+								delete acinfo;
 
-							//loginfo("check 26");
-							if (act->GetRace())
-								out << act->GetRace()->GetFormEditorID() << ";"
-									<< "0x" << Utility::GetHex(act->GetRace()->GetFormID()) << ";";
-							else
-								out << ";;";
-							//loginfo("check 27");
-							//logwarn("[CheckActorsForRules] Race: {} {}", act->GetRace()->GetFormEditorID(), Utility::GetHex(act->GetRace()->GetFormID()));
-							if (act->GetSaveParentCell())
-								out << act->GetSaveParentCell()->GetName();
+								out << cell->GetFormEditorID() << ";";
+								if (excluded)
+									out << "Excluded"
+										<< ";";
+								else
+									out << rl->ruleName << ";";
 
-							//loginfo("check 28");
-							//logwarn("[CheckActorsForRules] factions");
-							act->VisitFactions([&out](RE::TESFaction* a_faction, std::int8_t) {
-								if (a_faction)
-									out << ";"
-										<< "0x" << Utility::GetHex(a_faction->GetFormID());
-								//logwarn("[CheckActorsForRules] Faction: {}", Utility::GetHex(a_faction->GetFormID()));
-								return false;
-							});
-							//loginfo("check 29");
-							//logwarn("[CheckActorsForRules] end");
-							out << "\n";
-							out.flush();
+								if (name.empty() == false)
+									out << name << ";";
+								else
+									out << ";";
+
+								// we found an actor that does not have a rule, so print that to the output
+								out << act->GetName() << ";"
+									<< "0x" << Utility::GetHex(act->GetActorBase()->GetFormID()) << ";"
+									<< "0x" << Utility::GetHex(act->GetFormID()) << ";";
+
+								if (act->GetRace())
+									out << act->GetRace()->GetFormEditorID() << ";"
+										<< "0x" << Utility::GetHex(act->GetRace()->GetFormID()) << ";";
+								else
+									out << ";;";
+
+								if (act->GetSaveParentCell())
+									out << act->GetSaveParentCell()->GetName();
+
+								act->VisitFactions([&out](RE::TESFaction* a_faction, std::int8_t) {
+									if (a_faction)
+										out << ";"
+											<< "0x" << Utility::GetHex(a_faction->GetFormID());
+									return false;
+								});
+
+								out << "\n";
+								out.flush();
+							}
 						}
+						//loginfo("end iter");
 					}
-					//loginfo("end iter");
 				}
 			} catch (...) {
-				//logwarn("catch");
 				out << ";";
 			}
 			try {
 				iter++;
 				//coun++;
 			} catch (...) {
-				//logwarn("catch finished");
 				break;
 			}
 		}
@@ -2636,18 +2430,9 @@ void Settings::ApplySkillBoostPerks()
 			}
 			npc->AddPerk(Settings::AlchemySkillBoosts, 1);
 			npc->AddPerk(Settings::PerkSkillBoosts, 1);
-			LOGL1_3("{}[Settings] [AddPerks] Added perks to npc {}", Utility::PrintForm(npc));
+			LOGL1_4("{}[Settings] [AddPerks] Added perks to npc {}", Utility::PrintForm(npc));
 		}
 	}
-	/*
-	if (actor->HasPerk(Settings::AlchemySkillBoosts) == false) {
-		actor->AddPerk(Settings::AlchemySkillBoosts, 1);
-		loginfo("Adding Perk AlchemySkillBoosts");
-	}
-	if (actor->HasPerk(Settings::PerkSkillBoosts) == false) {
-		actor->AddPerk(Settings::PerkSkillBoosts, 1);
-		loginfo("Adding Perk PerkSkillBoosts");
-	}*/
 
 }
 
@@ -2706,12 +2491,7 @@ void Settings::ClassifyItems()
 					continue;
 				}
 				// check whether the plugin is excluded
-				if ((item->GetFormID() >> 24) != 0xFE && Distribution::excludedPlugins()->contains(uint8_t(item->GetFormID() >> 24)) == true) {
-					iter++;
-					continue;
-				}
-				// check whether the light plugin is excluded
-				if ((item->GetFormID() >> 24) == 0xFE && Distribution::excludedPluginsLight()->contains((uint16_t)((item->GetFormID() & 0x00FFF000) >> 12)) == true) {
+				if (Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(item)) == true) {
 					iter++;
 					continue;
 				}
