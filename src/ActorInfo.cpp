@@ -599,7 +599,16 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	// version
 	Buffer::Write(version, buffer, offset);
 	// actor id
-	Buffer::Write(formid, buffer, offset);
+	if ((formid & 0xFF000000) == 0xFF000000) {
+		// temporary id, save whole id
+		Buffer::Write(formid, buffer, offset);
+	} else if ((formid & 0xFF000000) == 0xFE000000) {
+		// only save index in light plugin
+		Buffer::Write(formid & 0x00000FFF, buffer, offset);
+	} else {
+		// save index in normal plugin
+		Buffer::Write(formid & 0x00FFFFFF, buffer, offset);
+	}
 	// pluginname
 	Buffer::Write(pluginname, buffer, offset);
 	// durHealth
@@ -649,11 +658,13 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				formid = Buffer::ReadUInt32(buffer, offset);
 				pluginname = Buffer::ReadString(buffer, offset);
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
-				if (!form)
+				if (!form) {
 					return false;
+				}
 				actor = form->As<RE::Actor>();
-				if (!actor)
+				if (!actor) {
 					return false;
+				}
 				name = actor->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);
@@ -685,11 +696,19 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				formid = Buffer::ReadUInt32(buffer, offset);
 				pluginname = Buffer::ReadString(buffer, offset);
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
-				if (!form)
-					return false;
+				if (!form) {
+					logcritical("Cannnot find formid1 {}", Utility::GetHex(formid));
+					form = RE::TESForm::LookupByID(formid);
+					if (!form) {
+						logcritical("Cannnot find formid2");
+						return false;
+					}
+				}
 				actor = form->As<RE::Actor>();
-				if (!actor)
+				if (!actor) {
 					return false;
+					logcritical("Cannnot find actor2");
+				}
 				name = actor->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);

@@ -118,16 +118,17 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Settings::ClassifyItems();
 		Settings::CleanAlchemyEffects();
 		logger::info("Items classified");
+		// register data storage
+		// datastorage must always register game callbacks before events, to ensure read data is present
+		Storage::Register();
+		// register compatibility
+		Compatibility::Register();
 		// register eventhandlers
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
 		// register console commands
 		Console::RegisterConsoleCommands();
 		logger::info("Registered Console Commands");
-		// register data storage
-		Storage::Register();
-		// register compatibility
-		Compatibility::Register();
 		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 }
