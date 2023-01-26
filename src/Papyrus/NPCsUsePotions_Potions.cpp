@@ -45,7 +45,8 @@ namespace Papyrus
 			RE::ExtraDataList* extra = new RE::ExtraDataList();
 			extra->SetOwner(actor);
 
-			RE::ActorEquipManager::GetSingleton()->EquipObject(actor, potion, extra, 1, nullptr, true, false, false);
+			actor->DrinkPotion(potion, extra);
+			//RE::ActorEquipManager::GetSingleton()->EquipObject(actor, potion, extra, 1, nullptr, true, false, false);
 
 			LOG1_2("{}[Papyrus] [Potion] [AnimatedPotions_Callback] Use Potion {}", Utility::PrintForm(potion));
 			

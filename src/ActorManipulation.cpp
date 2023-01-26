@@ -513,8 +513,9 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 					Statistics::Misc_PotionsAdministered++;
 					RE::ExtraDataList* extra = new RE::ExtraDataList();
 					extra->SetOwner(acinfo->actor);
-
-					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
+					acinfo->actor->DrinkPotion(std::get<2>(ls.front()), extra);
+					//RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
 				}
 				std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
 				ls.pop_front();
