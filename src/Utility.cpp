@@ -1349,7 +1349,6 @@ std::vector<std::tuple<uint64_t, float>> Utility::ParseAlchemyEffects(std::strin
 
 std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::vector<std::tuple<uint64_t, float>> effectmap, int range, bool chance)
 {
-	LOG_3("{}[Utility] [GetDistribution]");
 	std::vector<std::tuple<int, AlchemyEffect>> ret;
 	if (effectmap.size() == 0)
 		return ret;
@@ -1388,7 +1387,6 @@ std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::vector
 
 std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::map<AlchemyEffect, float> map, int range, bool chance)
 {
-	LOG_3("{}[Utility] [GetDistributionMap]");
 	if (chance) {
 		map.insert_or_assign(static_cast<AlchemyEffect>(AlchemyEffect::kCustom), 1.0f);
 	}
@@ -1415,7 +1413,6 @@ std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::map<Al
 
 std::map<AlchemyEffect, float> Utility::UnifyEffectMap(std::vector<std::tuple<uint64_t, float>> effectmap)
 {
-	LOG_3("{}[Utility] [UnifyEffectMap]");
 	uint64_t tmp = 0;
 	std::map<AlchemyEffect, float> map;
 	// iterate over all effects in effect map
@@ -1433,15 +1430,12 @@ std::map<AlchemyEffect, float> Utility::UnifyEffectMap(std::vector<std::tuple<ui
 
 uint64_t Utility::SumAlchemyEffects(std::vector<std::tuple<int, AlchemyEffect>> list, bool chance)
 {
-	LOG_3("{}[Utility] [SumAlchemyEffects]");
 	uint64_t ret = 0;
 	for (int i = 0; i < list.size(); i++) {
-		LOG1_4("{}[Utility] [SumAlchemyEffects] effect to sum: {}", GetHex(static_cast<uint64_t>(std::get<1>(list[i]))));
 		ret |= static_cast<uint64_t>(std::get<1>(list[i]));
 	}
 	if (chance)
 		ret |= static_cast<uint64_t>(AlchemyEffect::kCustom);
-	LOG1_4("{}[SumAlchemyEffects] summed effects: {}", GetHex(ret));
 	return ret;
 }
 
@@ -1480,6 +1474,7 @@ bool Utility::CanApplyPoison(RE::Actor* actor)
 
 bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 {
+	LOG_3("{}[Utility] [GetAppliedPoison]");
 	auto ied = actor->GetEquippedEntryData(false);
 	if (ied) {
 		if (ied->extraLists && ied->IsPoisoned()) {
@@ -1500,7 +1495,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 			}
 		}
 	}
-	LOG3_4("[Utility] [GetAppliedPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
+	LOG3_4("{}[Utility] [GetAppliedPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
 
 	if (pois && pois->count > 0)
 		return true;

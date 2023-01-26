@@ -2958,16 +2958,16 @@ void Settings::CleanAlchemyEffects()
 		for (int i = 0; i < effectsToRemovePotion.size(); i++) {
 			(*itr)->RemoveAlchemyEffectPotion(effectsToRemovePotion[i]);
 			(*itr)->RemoveAlchemyEffectFortifyPotion(effectsToRemovePotion[i]);
-			LOG2_3("{}[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from potions in rule {}.", Utility::ToString(effectsToRemovePotion[i]), (*itr)->ruleName);
+			LOGLE2_3("[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from potions in rule {}.", Utility::ToString(effectsToRemovePotion[i]), (*itr)->ruleName);
 		} // poison
 		for (int i = 0; i < effectsToRemovePoison.size(); i++) {
 			(*itr)->RemoveAlchemyEffectPoison(effectsToRemovePoison[i]);
-			LOG2_3("{}[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from poisons in rule {}.", Utility::ToString(effectsToRemovePoison[i]), (*itr)->ruleName);
+			LOGLE2_3("[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from poisons in rule {}.", Utility::ToString(effectsToRemovePoison[i]), (*itr)->ruleName);
 		}
 		// food
 		for (int i = 0; i < effectsToRemoveFood.size(); i++) {
 			(*itr)->RemoveAlchemyEffectFood(effectsToRemoveFood[i]);
-			LOG2_3("{}[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from food in rule {}.", Utility::ToString(effectsToRemoveFood[i]), (*itr)->ruleName);
+			LOGLE2_3("[Settings] [CleanAlchemyEffects] Removed AlchemyEffect {} from food in rule {}.", Utility::ToString(effectsToRemoveFood[i]), (*itr)->ruleName);
 		}
 		itr++;
 	}
