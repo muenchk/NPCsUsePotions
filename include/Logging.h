@@ -149,11 +149,11 @@
 	if (Logging::EnableLoadLog) \
 		static_cast<void>(logger::info(s, t, u));
 
-#define LOGLE2_1(s, t, u, v) \
+#define LOGLE3_1(s, t, u, v) \
 	if (Logging::EnableLoadLog) \
 		static_cast<void>(logger::info(s, t, u, v));
 
-#define LOGLE2_1(s, t, u, v, w) \
+#define LOGLE4_1(s, t, u, v, w) \
 	if (Logging::EnableLoadLog)    \
 		static_cast<void>(logger::info(s, t, u, v, w));
 
@@ -181,6 +181,9 @@
 	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, t, u, v, x, y));
 
+#define LOGLE2_3(s, t, u)                                 \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 2) \
+		static_cast<void>(logger::info(s, t, u));
 
 // regular logging with timestamps
 
@@ -330,7 +333,7 @@
 		((void)0);
 #else
 #	define LogConsole(c_str) \
-		RE::ConsoleLog::GetSingleton()->Print(c_str);
+		((void)0);  //RE::ConsoleLog::GetSingleton()->Print(c_str);
 #endif
 
 class Profile

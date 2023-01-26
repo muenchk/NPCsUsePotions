@@ -1,5 +1,8 @@
 build/
 buildvr/
+buildAE353/
+buildSE/
+buildAE/
 .vs/
 src/.vs/
 src/.vscode
