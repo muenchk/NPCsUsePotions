@@ -31,7 +31,7 @@ static std::uniform_int_distribution<signed> rand100(1, 100);
 
 void Settings::InitGameStuff()
 {
-	loginfo("[SETTINGS] [InitGameStuff] init pluginnames");
+	loginfo("[SETTINGS] [InitGameStuff] Load Game Stuff");
 	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 	const RE::TESFile* file = nullptr;
 	uint32_t index = 0;
@@ -66,7 +66,7 @@ void Settings::InitGameStuff()
 	Settings::Equip_Voice = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x25BEE);
 	Settings::Equip_Potion = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x35698);
 
-	loginfo("[SETTINGS] [InitGameStuff] finished");
+	loginfo("[SETTINGS] [InitGameStuff] Finished");
 }
 
 void Settings::LoadDistrConfig()
@@ -767,7 +767,6 @@ void Settings::LoadDistrConfig()
 										delete citems;
 										continue;
 									}
-									loginfo("[Settings] [LoadDistrRules] rule contains items {} {} {} {} {} {}", citems->items.size(), citems->death.size(), citems->food.size(), citems->fortify.size(), citems->poisons.size(), citems->potions.size());
 
 									int cx = 0;
 									// now parse associations
@@ -838,9 +837,9 @@ void Settings::LoadDistrConfig()
 									if (index != 0x1) {
 										// index is a normal mod
 										Distribution::_excludedPlugins.insert(index);
-										loginfo("[Settings] [LoadDistrRules] Rule 9 excluded plugin {} with index {}", plugin, Utility::GetHex(index));
+										LOGLE2_2("[Settings] [LoadDistrRules] Rule 9 excluded plugin {} with index {}", plugin, Utility::GetHex(index));
 									} else {
-										loginfo("[Settings] [LoadDistrRules] Rule 9 cannot exclude plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 9 cannot exclude plugin {}. It is either not loaded or not present", plugin);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1126,9 +1125,9 @@ void Settings::LoadDistrConfig()
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_excludedPlugins_NPCs.insert(plugindex);
-										loginfo("[Settings] [LoadDistrRules] Rule 17 excluded plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 17 excluded plugin {}. It is either not loaded or not present", plugin);
 									} else {
-										loginfo("[Settings] [LoadDistrRules] Rule 17 cannot exclude plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 17 cannot exclude plugin {}. It is either not loaded or not present", plugin);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1146,9 +1145,9 @@ void Settings::LoadDistrConfig()
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_whitelistNPCsPlugin.insert(plugindex);
-										loginfo("[Settings] [LoadDistrRules] Rule 18 whitelisted plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 18 whitelisted plugin {}. It is either not loaded or not present", plugin);
 									} else {
-										loginfo("[Settings] [LoadDistrRules] Rule 18 cannot whitelist plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 18 cannot whitelist plugin {}. It is either not loaded or not present", plugin);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -2055,27 +2054,27 @@ void Settings::LoadDistrConfig()
 		Settings::ApplySkillBoostPerks();
 
 	if (Logging::EnableLoadLog) {
-		loginfo("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules()->size());
-		loginfo("[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Associations: {}", Distribution::assocMap()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Associations: {}", Distribution::assocMap()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Bosses: {}", Distribution::bosses()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Bosses: {}", Distribution::bosses()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Excluded NPCs: {}", Distribution::excludedNPCs()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Excluded NPCs: {}", Distribution::excludedNPCs()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Excluded Associations: {}", Distribution::excludedAssoc()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Excluded Associations: {}", Distribution::excludedAssoc()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Excluded Items: {}", Distribution::excludedItems()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Associations: {}", Distribution::assocMap()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Associations: {}", Distribution::assocMap()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Bosses: {}", Distribution::bosses()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Bosses: {}", Distribution::bosses()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Excluded NPCs: {}", Distribution::excludedNPCs()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Excluded NPCs: {}", Distribution::excludedNPCs()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Excluded Associations: {}", Distribution::excludedAssoc()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Excluded Associations: {}", Distribution::excludedAssoc()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Excluded Items: {}", Distribution::excludedItems()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
 		/*for (int i = 0; i < Distribution::_rules.size(); i++) {
-			loginfo("rule {} pointer {}", i, Utility::GetHex((uintptr_t)Distribution::_rules[i]));
+			LOGLE1_2("{}rule {} pointer {}", i, Utility::GetHex((uintptr_t)Distribution::_rules[i]));
 		}
 		auto iter = Distribution::_assocMap.begin();
 		while (iter != Distribution::_assocMap.end()) {
-			loginfo("assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
+			LOGLE1_2("{}assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
 			iter++;
 		}*/
 

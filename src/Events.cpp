@@ -555,9 +555,12 @@ namespace Events
 	}
 
 	int tolerance = 0;
+	int actorsincombat;
 
 	void HandleActorPotions(ActorInfo* acinfo)
 	{
+		if (acinfo->isincombat == false || acinfo->handleactor == false)
+			return;
 		AlchemyEffectBase alch = 0;
 		AlchemyEffectBase alch2 = 0;
 		AlchemyEffectBase alch3 = 0;
@@ -610,26 +613,16 @@ namespace Events
 		}
 	}
 
-	void HandleActorFortifyPotions(ActorInfo* acinfo, int actorsincombat)
+	void HandleActorFortifyPotions(ActorInfo* acinfo)
 	{
-		// get combatdata of current actor
-		uint32_t combatdata = Utility::GetCombatData(acinfo->actor);
-		uint32_t tcombatdata = 0;
-		// retrieve target of current actor if present
-		RE::ActorHandle handle = acinfo->actor->currentCombatTarget;
-		RE::Actor* target = nullptr;
-		if (handle && handle.get() && handle.get().get()) {
-			// we can make the usage dependent on the target
-			target = handle.get().get();
-			tcombatdata = Utility::GetCombatData(target);
-		}
-		loginfo("[Events] [CheckActors] target {}", Utility::PrintForm(target));
+		if (acinfo->isincombat == false || acinfo->handleactor == false)
+			return;
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::FortifyPotions::_enableFortifyPotions &&
 			(!(acinfo->actor->IsPlayerRef()) || Settings::Player::_playerFortifyPotions)) {
 			//LOG_2("{}[Events] [CheckActors] [fortify]");
 
-			if ((acinfo->IsFollower() || acinfo->actor->IsPlayerRef()) && !(Settings::FortifyPotions::_EnemyNumberThresholdFortify < actorsincombat || (target && target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify))) {
+			if ((acinfo->IsFollower() || acinfo->actor->IsPlayerRef()) && !(Settings::FortifyPotions::_EnemyNumberThresholdFortify < actorsincombat || (acinfo->target && acinfo->target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify))) {
 				return;
 			}
 			// handle fortify potions
@@ -639,11 +632,11 @@ namespace Events
 
 				// determine valid regeneration effects
 				if (acinfo->durRegeneration < tolerance) {
-					effects |= CalcRegenEffects(acinfo, combatdata);
+					effects |= CalcRegenEffects(acinfo, acinfo->combatdata);
 				}
 				// determine valid fortify effects
 				if (acinfo->durFortify < tolerance) {
-					effects |= CalcFortifyEffects(acinfo, combatdata, tcombatdata);
+					effects |= CalcFortifyEffects(acinfo, acinfo->combatdata, acinfo->tcombatdata);
 				}
 
 				// std::tuple<int, AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffect>>>
@@ -666,19 +659,10 @@ namespace Events
 		}
 	}
 
-	void HandleActorPoisons(ActorInfo* acinfo, int actorsincombat)
+	void HandleActorPoisons(ActorInfo* acinfo)
 	{
-		// get combatdata of current actor
-		uint32_t combatdata = Utility::GetCombatData(acinfo->actor);
-		uint32_t tcombatdata = 0;
-		// retrieve target of current actor if present
-		RE::ActorHandle handle = acinfo->actor->currentCombatTarget;
-		RE::Actor* target = nullptr;
-		if (handle && handle.get() && handle.get().get()) {
-			// we can make the usage dependent on the target
-			target = handle.get().get();
-			tcombatdata = Utility::GetCombatData(target);
-		}
+		if (acinfo->isincombat == false || acinfo->handleactor == false)
+			return;
 		if (acinfo->durCombat > 1000 &&
 			acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Poisons::_enablePoisons &&
@@ -686,8 +670,8 @@ namespace Events
 			(!acinfo->actor->IsPlayerRef() || Settings::Player::_playerPoisons)) {
 			LOG_2("{}[Events] [CheckActors] [poisons]");
 			// handle poisons
-			if (combatdata != 0 && (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
-				(combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0 /* &&
+			if (acinfo->combatdata != 0 && (acinfo->combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
+				(acinfo->combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0 /* &&
 									comp->AnPois_FindActorPoison(curr->actor->GetFormID()) == nullptr*/
 				&&
 				Utility::CanApplyPoison(acinfo->actor)) {
@@ -695,30 +679,30 @@ namespace Events
 				// they only use poisons if there are many npcs in the fight, or if the enemies they are targetting
 				// have a high enough level, like starting at PlayerLevel*0.8 or so
 				if (((acinfo->IsFollower() || acinfo->actor->IsPlayerRef()) &&
-						(Settings::Poisons::_EnemyNumberThreshold < actorsincombat || (target && target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::Poisons::_EnemyLevelScalePlayerLevel))) ||
+						(Settings::Poisons::_EnemyNumberThreshold < actorsincombat || (acinfo->target && acinfo->target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::Poisons::_EnemyLevelScalePlayerLevel))) ||
 					acinfo->IsFollower() == false && acinfo->actor->IsPlayerRef() == false) {
 					// time to use some poisons
 					uint64_t effects = 0;
 					// kResistMagic, kResistFire, kResistFrost, kResistMagic should only be used if the follower is a spellblade
-					if (combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) ||
-						combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword))) {
+					if (acinfo->combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) ||
+						acinfo->combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword))) {
 						effects |= static_cast<uint64_t>(AlchemyEffect::kResistMagic);
-						if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
-							if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire))
+						if (acinfo->combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
+							if (acinfo->combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire))
 								effects |= static_cast<uint64_t>(AlchemyEffect::kResistFire);
-							if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost))
+							if (acinfo->combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost))
 								effects |= static_cast<uint64_t>(AlchemyEffect::kResistFrost);
-							if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock))
+							if (acinfo->combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock))
 								effects |= static_cast<uint64_t>(AlchemyEffect::kResistShock);
 						}
 					}
 					// incorporate enemy specific data, player is recognized here
-					if (target) {
+					if (acinfo->target) {
 						// we can make the usage dependent on the target
-						if (target->GetRace()->HasKeyword(Settings::ActorTypeDwarven) || target->GetActorBase()->HasKeyword(Settings::ActorTypeDwarven))
+						if (acinfo->target->GetRace()->HasKeyword(Settings::ActorTypeDwarven) || acinfo->target->GetActorBase()->HasKeyword(Settings::ActorTypeDwarven))
 							return;
-						effects |= CalcRegenEffects(tcombatdata);
-						effects |= CalcPoisonEffects(combatdata, target, tcombatdata);
+						effects |= CalcRegenEffects(acinfo->tcombatdata);
+						effects |= CalcPoisonEffects(acinfo->combatdata, acinfo->target, acinfo->tcombatdata);
 					} else {
 						// we dont have a target so just use any poison
 						effects |= static_cast<uint64_t>(AlchemyEffect::kAnyPoison);
@@ -729,7 +713,7 @@ namespace Events
 						acinfo->globalCooldownTimer = comp->GetGlobalCooldown();
 				}
 			}
-			if (combatdata == 0)
+			if (acinfo->combatdata == 0)
 				LOG1_2("{}[Events] [CheckActors] couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo->actor));
 			// else Mage or Hand to Hand which cannot use poisons
 		}
@@ -737,17 +721,8 @@ namespace Events
 
 	void HandleActorFood(ActorInfo* acinfo)
 	{
-		// get combatdata of current actor
-		uint32_t combatdata = Utility::GetCombatData(acinfo->actor);
-		uint32_t tcombatdata = 0;
-		// retrieve target of current actor if present
-		RE::ActorHandle handle = acinfo->actor->currentCombatTarget;
-		RE::Actor* target = nullptr;
-		if (handle && handle.get() && handle.get().get()) {
-			// we can make the usage dependent on the target
-			target = handle.get().get();
-			tcombatdata = Utility::GetCombatData(target);
-		}
+		if (acinfo->isincombat == false || acinfo->handleactor == false)
+			return;
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Food::_enableFood &&
 			RE::Calendar::GetSingleton()->GetDaysPassed() >= acinfo->nextFoodTime &&
@@ -756,8 +731,8 @@ namespace Events
 			// use food at the beginning of the fight to simulate acinfo npc having eaten
 			// calc effects that we want to be applied
 			AlchemyEffectBase effects = 0;
-			effects |= CalcFortifyEffects(acinfo, combatdata, tcombatdata);
-			effects |= CalcRegenEffects(acinfo, combatdata);
+			effects |= CalcFortifyEffects(acinfo, acinfo->combatdata, acinfo->tcombatdata);
+			effects |= CalcRegenEffects(acinfo, acinfo->combatdata);
 			auto [dur, effect] = ACM::ActorUseFood(acinfo, effects, false);
 			if (effect == 0) {  // nothing found
 				auto tup = ACM::ActorUseFood(acinfo);
@@ -770,6 +745,8 @@ namespace Events
 
 	void HandleActorOOCPotions(ActorInfo* acinfo)
 	{
+		if (acinfo->isincombat == true || acinfo->handleactor == false)
+			return;
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && acinfo->durHealth < tolerance &&
 			ACM::GetAVPercentage(acinfo->actor, RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
@@ -781,6 +758,66 @@ namespace Events
 				LOG2_4("{}[Events] [CheckActors] use health pot with duration {} and magnitude {}", acinfo->durHealth, std::get<0>(tup));
 			}
 		}
+	}
+
+	void HandleActorRuntimeData(ActorInfo* acinfo)
+	{
+		// if global cooldown greater zero, we can skip everything
+		if (acinfo->globalCooldownTimer > tolerance) {
+			acinfo->handleactor = false;
+			return;
+		}
+		if (acinfo->citems == nullptr)
+			acinfo->citems = new ActorInfo::CustomItems();
+		// check for staggered option
+		// check for paralyzed
+		if (comp->DisableItemUsageWhileParalyzed() &&
+			(acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kParalyzed ||
+				acinfo->actor->IsFlying() ||
+				acinfo->actor->IsInKillMove() ||
+				acinfo->actor->IsInMidair() ||
+				acinfo->actor->IsInRagdollState() ||
+				acinfo->actor->IsUnconscious() ||
+				acinfo->actor->actorState2.staggered ||
+				acinfo->actor->IsBleedingOut())) {
+			LOG_1("{}[Events] [CheckActors] [Actor] Actor is unable to use items");
+			acinfo->handleactor = false;
+			return;
+		}
+		// check for non-follower option
+		if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->actor->IsPlayerRef() == false) {
+			LOG_1("{}[Events] [CheckActors] [Actor] Actor is not a follower, and non-follower processing has been disabled");
+			acinfo->handleactor = false;
+			return;
+		}
+
+		// get combatdata of current actor
+		acinfo->combatdata = Utility::GetCombatData(acinfo->actor);
+		acinfo->tcombatdata = 0;
+		// retrieve target of current actor if present
+		RE::ActorHandle handle = acinfo->actor->currentCombatTarget;
+		acinfo->target = nullptr;
+		if (handle && handle.get() && handle.get().get()) {
+			// we can make the usage dependent on the target
+			acinfo->target = handle.get().get();
+			acinfo->tcombatdata = Utility::GetCombatData(acinfo->target);
+		}
+
+		// if actor is valid and not dead
+		if (acinfo->actor && !(acinfo->actor->IsDead()) && acinfo->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
+			acinfo->handleactor = true;
+		} else
+			acinfo->handleactor = false;
+
+		acinfo->isincombat = acinfo->actor->IsInCombat();
+		if (acinfo->isincombat) {
+			// increase time spent in combat
+			acinfo->durCombat += 1000;
+		} else {
+			// reset time spent in combat
+			acinfo->durCombat = 0;
+		}
+
 	}
 
 	/// <summary>
@@ -869,8 +906,8 @@ namespace Events
 
 					// calc actors in combat
 					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
-					int actorsincombat = 0;
-					std::for_each(acset.begin(), acset.end(), [&actorsincombat](ActorInfo* acinfo) {
+					actorsincombat = 0;
+					std::for_each(acset.begin(), acset.end(), [](ActorInfo* acinfo) {
 						if (acinfo->actor->IsInCombat())
 							actorsincombat++;
 					});
@@ -879,57 +916,32 @@ namespace Events
 					EvalProcessing();
 					CheckDeadCheckHandlerLoop;
 
-					// handle actors
+					// collect actor runtime data
 					sem.acquire();
-					std::for_each(acset.begin(), acset.end(), [&actorsincombat](ActorInfo* acinfo) {
-						if (acinfo->citems == nullptr)
-							acinfo->citems = new ActorInfo::CustomItems();
-						// check for staggered option
-						// check for paralyzed
-						if (comp->DisableItemUsageWhileParalyzed() &&
-							(acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kParalyzed ||
-								acinfo->actor->IsFlying() ||
-								acinfo->actor->IsInKillMove() ||
-								acinfo->actor->IsInMidair() ||
-								acinfo->actor->IsInRagdollState() ||
-								acinfo->actor->IsUnconscious() ||
-								acinfo->actor->actorState2.staggered ||
-								acinfo->actor->IsBleedingOut())) {
-							LOG_1("{}[Events] [CheckActors] [Actor] Actor is unable to use items");
-							return;
-						}
-						// check for non-follower option
-						if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->actor->IsPlayerRef() == false) {
-							LOG_1("{}[Events] [CheckActors] [Actor] Actor is not a follower, and non-follower processing has been disabled");
-							return;
-						}
-						if (Logging::EnableLog) {
-							LOG1_1("{}[Events] [CheckActors] [Actor] {}", Utility::PrintForm((acinfo->actor)));
-						}
-						// if actor is valid and not dead
-						if (acinfo->actor && !(acinfo->actor->IsDead()) && acinfo->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
-							// if global cooldown greater zero, we can skip everything
-							if (acinfo->globalCooldownTimer > tolerance)
-								return;
-							// check for out-of-combat option
-							if (acinfo->actor->IsInCombat() == false) {
-								// reset time spent in combat
-								acinfo->durCombat = 0;
-								if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
-									// option deactivated -> do someting, otherwise don't do anything
-									HandleActorOOCPotions(acinfo);
-								}
-							} else {
-								// increase time spent in combat
-								acinfo->durCombat += 1000;
-								// handle potions
-								HandleActorPotions(acinfo);
-								HandleActorFortifyPotions(acinfo, actorsincombat);
-								HandleActorPoisons(acinfo, actorsincombat);
-								HandleActorFood(acinfo);
-							}
-						}
-					});
+					std::for_each(acset.begin(), acset.end(), HandleActorRuntimeData);
+					sem.release();
+
+					// handle potions
+					sem.acquire();
+					if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
+						std::for_each(acset.begin(), acset.end(), HandleActorOOCPotions);
+					}
+					std::for_each(acset.begin(), acset.end(), HandleActorPotions);
+					sem.release();
+
+					// handle fortify potions
+					sem.acquire();
+					std::for_each(acset.begin(), acset.end(), HandleActorFortifyPotions);
+					sem.release();
+
+					// handle poisons
+					sem.acquire();
+					std::for_each(acset.begin(), acset.end(), HandleActorPoisons);
+					sem.release();
+
+					// handle food
+					sem.acquire();
+					std::for_each(acset.begin(), acset.end(), HandleActorFood);
 					sem.release();
 				}
 				catch (std::bad_alloc& e) {

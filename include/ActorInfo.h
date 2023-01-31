@@ -181,6 +181,14 @@ public:
 	/// </summary>
 	bool whitelistedcalculated = false;
 
+
+	// temporary targeting variables
+	uint32_t combatdata = 0;
+	uint32_t tcombatdata = 0;
+	RE::Actor* target = nullptr;
+	bool handleactor = true;
+	bool isincombat = false;
+
 	/// <summary>
 	/// version of class [used for save and load]
 	/// </summary>

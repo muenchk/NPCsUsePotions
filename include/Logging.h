@@ -8,7 +8,8 @@
 	}
 
 #define logwarn(...) \
-	static_cast<void>(logger::warn(__VA_ARGS__));
+	if (Logging::EnableLog) \
+		static_cast<void>(logger::warn(__VA_ARGS__));
 
 #define logcritical(...) \
 	static_cast<void>(logger::critical(__VA_ARGS__));
