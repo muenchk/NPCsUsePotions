@@ -61,6 +61,11 @@ namespace Events
 #define EvalProcessing()   \
 	if (!enableProcessing) \
 		return;
+#define GetProcessing() \
+	enableProcessing
+#define WaitProcessing() \
+	while (!enableProcessing) \
+		std::this_thread::sleep_for(100ms);
 #define EvalProcessingEvent() \
 	if (!enableProcessing)    \
 		return EventResult::kContinue;
@@ -825,7 +830,10 @@ namespace Events
 	/// </summary>
 	void CheckActors()
 	{
-		EvalProcessing();
+		// wait until processing is allowed, or we should kill ourselves
+		while (!GetProcessing() && stopactorhandler == false)
+			std::this_thread::sleep_for(10ms);
+
 		LOG_1("{}[Events] [CheckActors]");
 		actorhandlerrunning = true;
 		/// static section
@@ -835,14 +843,6 @@ namespace Events
 		// tolerance for potion drinking, to diminish effects of computation times
 		// on cycle time
 		tolerance = Settings::System::_cycletime / 5;
-
-		/// player vars
-		/* int durhp = 0;  // duration health player
-		int durmp = 0; // duration magicka player
-		int dursp = 0; // duration stamina player
-		// to get this to 0 you would need to play nearly 600 hours
-		int durotherp = 0;  //INT_MAX; // duration of buff potions for the player
-		int durregp = 0;    //INT_MAX; // duration of reg potions for the player*/
 
 		ActorInfo* playerinfo = data->FindActor(RE::PlayerCharacter::GetSingleton());
 
@@ -858,7 +858,8 @@ namespace Events
 
 		// main loop, if the thread should be stopped, exit the loop
 		while (!stopactorhandler) {
-			EvalProcessing();
+			if (!GetProcessing())
+				goto CheckActorsSkipIteration;
 			// update active actors
 			UpdateAcSet();
 			actorhandlerworking = true;
@@ -884,7 +885,9 @@ namespace Events
 				}
 
 				LOG1_1("{}[Events] [CheckActors] Handling {} registered Actors", std::to_string(acset.size()));
-				EvalProcessing();
+
+				if (!GetProcessing())
+					goto CheckActorsSkipIteration;
 
 				try {
 					// validate actorsets
@@ -896,7 +899,8 @@ namespace Events
 					});
 					sem.release();
 
-					EvalProcessing();
+					if (!GetProcessing())
+						goto CheckActorsSkipIteration;
 					CheckDeadCheckHandlerLoop;
 
 					// first decrease all cooldowns for all registered actors
@@ -913,7 +917,8 @@ namespace Events
 					});
 					sem.release();
 
-					EvalProcessing();
+					if (!GetProcessing())
+						goto CheckActorsSkipIteration;
 					CheckDeadCheckHandlerLoop;
 
 					// collect actor runtime data
@@ -962,6 +967,7 @@ namespace Events
 			} else {
 				LOG_1("{}[Events] [CheckActors] Skip round.")
 			}
+		CheckActorsSkipIteration:
 			actorhandlerworking = false;
 			// update the set again before sleeping, to account for all stuff that happended while we were busy
 			// otherwise we may encounter already deleted actors and such dangerous stuff
@@ -1815,7 +1821,7 @@ namespace Events
 	{
 		// very important event. Allows to catch actors and other stuff that gets deleted, without dying, which could cause CTDs otherwise
 		Statistics::Events_TESFormDeleteEvent++;
-		if (a_event) {
+		if (a_event && a_event->formID != 0) {
 			data->DeleteActor(a_event->formID);
 			data->DeleteFormCustom(a_event->formID);
 			comp->AnPois_DeleteActorPoison(a_event->formID);
