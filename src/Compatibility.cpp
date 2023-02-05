@@ -178,8 +178,14 @@ void Compatibility::Load()
 	
 
 	// potion animated fx
-	PAF_NPCDrinkingCoolDownEffect = RE::TESForm::LookupByEditorID<RE::EffectSetting>(std::string_view{ PAF_NPCDrinkingCoolDownEffect_name });
-	PAF_NPCDrinkingCoolDownSpell = RE::TESForm::LookupByEditorID<RE::SpellItem>(std::string_view{ PAF_NPCDrinkingCoolDownSpell_name });
+	// lookup for non esp version
+	PAF_NPCDrinkingCoolDownEffect = datahandler->LookupForm<RE::EffectSetting>(0x056EAE, PotionAnimatedfx);
+	if (PAF_NPCDrinkingCoolDownEffect == nullptr) // espfe variant
+		PAF_NPCDrinkingCoolDownEffect = datahandler->LookupForm<RE::EffectSetting>(0x81F, PotionAnimatedfx);
+	PAF_NPCDrinkingCoolDownSpell = datahandler->LookupForm<RE::SpellItem>(0x056EAC, PotionAnimatedfx);
+	if (PAF_NPCDrinkingCoolDownSpell == nullptr) // espfe variant
+		PAF_NPCDrinkingCoolDownSpell = datahandler->LookupForm<RE::SpellItem>(0x820, PotionAnimatedfx);
+
 	if (PAF_NPCDrinkingCoolDownEffect && PAF_NPCDrinkingCoolDownSpell) {
 		_loadedPotionAnimatedFx = true;
 		if (Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx)

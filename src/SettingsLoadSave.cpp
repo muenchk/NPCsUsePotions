@@ -411,8 +411,13 @@ void Settings::Load()
 
 	// search for PotionAnimatedFx.esp for compatibility
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::PotionAnimatedfx); index != 0x1) {
-		Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx = true; 
-		loginfo("[SETTINGS] Found plugin PotionAnimatedfx.esp and activated compatibility mode");
+		// only activate compatibility mode for potion animated fx, if compatibility plugin has been installed.
+		if (const uint32_t idx = Utility::Mods::GetPluginIndex(PluginName); idx != 0x1) {
+			Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx = true;
+			loginfo("[SETTINGS] Found plugin PotionAnimatedfx.esp and activated compatibility mode");
+		} else {
+			loginfo("[SETTINGS] Compatibility mode has not been activated. Compatibility for Potion Animated Fx has not been activated");
+		}
 	} else {
 		// if we cannot find the plugin then we need to disable all related compatibility options, otherwise we WILL get CTDs
 	}

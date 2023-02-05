@@ -972,7 +972,8 @@ namespace Events
 			// update the set again before sleeping, to account for all stuff that happended while we were busy
 			// otherwise we may encounter already deleted actors and such dangerous stuff
 			UpdateAcSet();
-			std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::System::_cycletime));
+			if (!stopactorhandler)
+				std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::System::_cycletime));
 		}
 		LOG_1("{}[Events] [CheckActors] Exit.");
 		stopactorhandler = false;

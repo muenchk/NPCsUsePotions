@@ -457,7 +457,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 		if (comp->LoadedAnimatedPotionFx()) {
 			// compatibility mode for PotionAnimatedfx.esp activated, we may only use a potion if it is not on cooldown
 			// if the actor does not have the cooldown effect we may use a potion
-			if (!(acinfo->actor->HasMagicEffect(comp->PAF_NPCDrinkingCoolDownEffect))) {
+			if (comp->PAF_NPCDrinkingCoolDownEffect == nullptr || !(acinfo->actor->HasMagicEffect(comp->PAF_NPCDrinkingCoolDownEffect))) {
 				return true;
 			} else
 				return false;
