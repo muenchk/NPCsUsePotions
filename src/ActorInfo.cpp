@@ -29,8 +29,10 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
+		CalcCustomItems();
+		// set to valid
+		valid = true;
 	}
-	CalcCustomItems();
 }
 
 ActorInfo::ActorInfo()
@@ -43,6 +45,8 @@ ActorInfo::ActorInfo()
 
 std::string ActorInfo::ToString()
 {
+	if (!valid)
+		return "Invalid Actor Info";
 	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor)) + "\tactor:" + Utility::PrintForm(actor);
 }
 
@@ -61,8 +65,8 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0)
 			continue;
-		bool valid = CalcDistrConditions(itms[i]);
-		if (valid == true)
+		bool val = CalcDistrConditions(itms[i]);
+		if (val == true)
 			dist.push_back(itms[i]);
 	}
 	return dist;
@@ -75,9 +79,9 @@ bool ActorInfo::CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0)
 			continue;
-		bool valid = CalcDistrConditions(itms[i]);
-		if (valid == true)
-			distributable |= valid;
+		bool val = CalcDistrConditions(itms[i]);
+		if (val == true)
+			distributable |= val;
 	}
 	return distributable;
 }
@@ -91,8 +95,8 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<
 			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr] error");
 			continue;
 		}
-		bool valid = CalcUsageConditions(itms[i]);
-		if (valid == true)
+		bool val = CalcUsageConditions(itms[i]);
+		if (val == true)
 			dist.push_back(itms[i]);
 	}
 	return dist;
@@ -107,8 +111,8 @@ std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector
 			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems] error");
 			continue;
 		}
-		bool valid = CalcDistrConditions(itms[i]);
-		if (valid == true)
+		bool val = CalcDistrConditions(itms[i]);
+		if (val == true)
 			dist.push_back(itms[i]);
 	}
 	return dist;
@@ -122,9 +126,9 @@ bool ActorInfo::CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
 			continue;
 		}
-		bool valid = CalcDistrConditions(itms[i]);
-		if (valid == true)
-			distributable |= valid;
+		bool val = CalcDistrConditions(itms[i]);
+		if (val == true)
+			distributable |= val;
 	}
 	return distributable;
 }
@@ -227,6 +231,8 @@ bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 
 bool ActorInfo::CalcUsageConditions(CustomItem* item)
 {
+	if (!valid)
+		return false;
 	LOG_3("{}[ActorInfo] [CalcUsageConditions]");
 	// obligatory conditions (all must be fulfilled)
 	// only if there are conditions
@@ -335,6 +341,8 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 
 bool ActorInfo::CalcDistrConditions(CustomItem* item)
 {
+	if (!valid)
+		return false;
 	LOG_3("{}[ActorInfo] [CalcDistrConditions]");
 	// only check these if there are conditions
 	for (int i = 0; i < item->conditionsall.size(); i++) {
@@ -474,8 +482,20 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 	return false;
 }
 
+bool ActorInfo::IsInCombat()
+{
+	if (!valid)
+		return false;
+	else if (combatstate == CombatState::InCombat || combatstate == CombatState::Searching)
+		return true;
+	else // combatstate == CombatState::OutOfCombat
+		return false;
+}
+
 bool ActorInfo::IsFollower()
 {
+	if (!valid)
+		return false;
 	bool follower = actor->IsInFaction(Settings::CurrentFollowerFaction) || actor->IsInFaction(Settings::CurrentHirelingFaction);
 	if (follower)
 		return true;
@@ -575,9 +595,13 @@ int32_t ActorInfo::GetDataSize()
 	//size += 1;
 	// globalCooldownTimer;
 	//size += 4;
+	// valid
+	//size += 1;
+	// combatstate
+	//size += 4;
 
 	// all except string are constant:
-	size += 55;
+	size += 60;
 	return size;
 }
 
@@ -588,6 +612,8 @@ int32_t ActorInfo::GetMinDataSize(int32_t vers)
 		return 46;
 	case 2:
 		return 55;
+	case 3:
+		return 60;
 	default:
 		return 0;
 	}
@@ -639,6 +665,10 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(Animation_busy, buffer, offset);
 	// globalCooldownTimer
 	Buffer::Write(globalCooldownTimer, buffer, offset);
+	// valid
+	Buffer::Write(valid, buffer, offset);
+	// combatstate
+	Buffer::Write(static_cast<uint32_t>(combatstate), buffer, offset);
 	return true;
 }
 
@@ -724,6 +754,55 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				_boss = Buffer::ReadBool(buffer, offset);
 				Animation_busy = Buffer::ReadBool(buffer, offset);
 				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
+
+				// init dependend stuff
+				pluginID = Utility::Mods::GetPluginIndex(pluginname);
+				if (pluginID == 0x1) {
+					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+				}
+			}
+			return true;
+		case 0x00000003:
+			{
+				// first try to make sure that the buffer contains all necessary data and we do not go out of bounds
+				int size = GetMinDataSize(ver);
+				int strsize = (int)Buffer::CalcStringLength(buffer, offset + 4);  // offset + actorid is begin of pluginname
+				if (length < size + strsize)
+					return false;
+
+				formid = Buffer::ReadUInt32(buffer, offset);
+				pluginname = Buffer::ReadString(buffer, offset);
+				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
+				if (!form) {
+					logcritical("Cannnot find formid1 {}", Utility::GetHex(formid));
+					form = RE::TESForm::LookupByID(formid);
+					if (!form) {
+						logcritical("Cannnot find formid2");
+						return false;
+					}
+				}
+				actor = form->As<RE::Actor>();
+				if (!actor) {
+					return false;
+					logcritical("Cannnot find actor2");
+				}
+				name = actor->GetName();
+				durHealth = Buffer::ReadInt32(buffer, offset);
+				durMagicka = Buffer::ReadInt32(buffer, offset);
+				durStamina = Buffer::ReadInt32(buffer, offset);
+				durFortify = Buffer::ReadInt32(buffer, offset);
+				durRegeneration = Buffer::ReadInt32(buffer, offset);
+				nextFoodTime = Buffer::ReadFloat(buffer, offset);
+				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				durCombat = Buffer::ReadInt32(buffer, offset);
+				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
+				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
+				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
+				_boss = Buffer::ReadBool(buffer, offset);
+				Animation_busy = Buffer::ReadBool(buffer, offset);
+				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
+				valid = Buffer::ReadBool(buffer, offset);
+				combatstate = static_cast<CombatState>(Buffer::ReadUInt32(buffer, offset));
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);

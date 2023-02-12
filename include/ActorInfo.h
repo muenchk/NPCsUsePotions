@@ -38,6 +38,12 @@ enum CustomItemFlag
 	Object = 1 << 30,
 };
 
+enum class CombatState
+{
+	OutOfCombat = 0,
+	InCombat = 1 << 0,
+	Searching = 1 << 1,
+};
 
 /// <summary>
 /// Stores information about an actor.
@@ -181,18 +187,28 @@ public:
 	/// </summary>
 	bool whitelistedcalculated = false;
 
+	/// <summary>
+	/// Combat state of the actor
+	/// </summary>
+	CombatState combatstate = CombatState::OutOfCombat;
+
 
 	// temporary targeting variables
 	uint32_t combatdata = 0;
 	uint32_t tcombatdata = 0;
 	RE::Actor* target = nullptr;
 	bool handleactor = true;
-	bool isincombat = false;
+
+
+	/// <summary>
+	/// if [true] the ActorInfo is valid and can be used, if [false] the ActorInfo is a dummy object
+	/// </summary>
+	bool valid = false;
 
 	/// <summary>
 	/// version of class [used for save and load]
 	/// </summary>
-	static inline const uint32_t version = 0x00000002;
+	static inline const uint32_t version = 0x00000003;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
 	ActorInfo();
@@ -236,6 +252,25 @@ public:
 	std::vector<std::tuple<int, AlchemyEffect>> fortifyDistf;
 
 public:
+
+	/// <summary>
+	/// Returns whether the ActorInfo is valid
+	/// </summary>
+	bool IsValid() { return valid; }
+	/// <summary>
+	/// Sets the ActorInfo to valid
+	/// </summary>
+	void SetValid() { valid = true; }
+	/// <summary>
+	/// Sets the ActorInfo to invalid
+	/// </summary>
+	void SetInvalid() { valid = false; }
+
+	/// <summary>
+	/// Whether the NPC is currently in combat
+	/// </summary>
+	bool IsInCombat();
+
 	/// <summary>
 	/// calculates the custom items available
 	/// </summary>

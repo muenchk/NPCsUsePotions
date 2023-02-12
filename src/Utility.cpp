@@ -1504,7 +1504,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 
 bool Utility::VerifyActorInfo(ActorInfo* acinfo)
 {
-	if (acinfo == nullptr || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {
+	if (acinfo == nullptr || acinfo->IsValid() == false || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {
 		LOG_1("{}[Utility] [VerifyActorInfo] actor info damaged");
 		return false;
 	}
@@ -1517,21 +1517,23 @@ bool Utility::VerifyActorInfo(ActorInfo* acinfo)
 
 std::string Utility::Mods::GetPluginName(RE::TESForm* form)
 {
-	auto datahandler = RE::TESDataHandler::GetSingleton();
-	const RE::TESFile* file = nullptr;
-	std::string_view name = std::string_view{ "" };
-	if ((form->GetFormID() >> 24) == 0xFF)
+	return Utility::Mods::GetPluginNameFromID(form->GetFormID());
+}
+
+std::string Utility::Mods::GetPluginNameFromID(RE::FormID formid)
+{
+	if ((formid >> 24) == 0xFF)
 		return "";
-	if ((form->GetFormID() >> 24) != 0xFE) {
-		auto itr = Settings::pluginIndexMap.find(form->GetFormID() & 0xFF000000);
+	if ((formid >> 24) != 0xFE) {
+		auto itr = Settings::pluginIndexMap.find(formid & 0xFF000000);
 		if (itr != Settings::pluginIndexMap.end())
 			return itr->second;
 		return "";
 	}
-	if ((form->GetFormID() >> 24) == 0x00)
+	if ((formid >> 24) == 0x00)
 		return "Skyrim.esm";
 	// light mod
-	auto itr = Settings::pluginIndexMap.find(form->GetFormID() & 0xFFFFF000);
+	auto itr = Settings::pluginIndexMap.find(formid & 0xFFFFF000);
 	if (itr != Settings::pluginIndexMap.end())
 		return itr->second;
 	return "";
@@ -1558,6 +1560,35 @@ uint32_t Utility::Mods::GetPluginIndex(std::string pluginname)
 uint32_t Utility::Mods::GetPluginIndex(RE::TESForm* form)
 {
 	return GetPluginIndex(GetPluginName(form));
+}
+
+uint32_t Utility::Mods::GetIndexLessFormID(RE::TESForm* form)
+{
+	if (form == nullptr)
+		return 0;
+	if ((form->GetFormID() & 0xFF000000) == 0xFF000000) {
+		// temporary id, save whole id
+		return form->GetFormID();
+	} else if ((form->GetFormID() & 0xFF000000) == 0xFE000000) {
+		// only save index in light plugin
+		return form->GetFormID() & 0x00000FFF;
+	} else {
+		// save index in normal plugin
+		return form->GetFormID() & 0x00FFFFFF;
+	}
+}
+uint32_t Utility::Mods::GetIndexLessFormID(RE::FormID formid)
+{
+	if ((formid & 0xFF000000) == 0xFF000000) {
+		// temporary id, save whole id
+		return formid;
+	} else if ((formid & 0xFF000000) == 0xFE000000) {
+		// only save index in light plugin
+		return formid & 0x00000FFF;
+	} else {
+		// save index in normal plugin
+		return formid & 0x00FFFFFF;
+	}
 }
 
 bool Utility::ValidateActor(RE::Actor* actor)

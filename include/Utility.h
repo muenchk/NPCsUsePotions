@@ -353,6 +353,11 @@ public:
 		static std::string GetPluginName(RE::TESForm* form);
 
 		/// <summary>
+		/// Returns the pluginname the form is defined in
+		/// </summary>
+		static std::string GetPluginNameFromID(RE::FormID formid);
+
+		/// <summary>
 		/// Returns the pluginname corresponding to the pluginIndex
 		/// </summary>
 		static std::string GetPluginName(uint32_t pluginIndex);
@@ -370,6 +375,16 @@ public:
 		/// <param name="pluginname"></param>
 		/// <returns></returns>
 		static uint32_t GetPluginIndex(RE::TESForm* form);
+
+		/// <summary>
+		/// Returns the formid with the plugin index
+		/// </summary>
+		static uint32_t GetIndexLessFormID(RE::TESForm* form);
+
+		/// <summary>
+		/// Returns the formid with the plugin index
+		/// </summary>
+		static uint32_t GetIndexLessFormID(RE::FormID formid);
 
 		/// <summary>
 		/// Returns a vector with all forms of the given type in the plugin

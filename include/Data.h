@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include "ActorInfo.h"
 #include "AlchemyEffect.h"
@@ -12,6 +13,10 @@ private:
 	/// map that contains information about any npc that has entered combat during runtime
 	/// </summary>
 	std::unordered_map<uint32_t, ActorInfo*> actorinfoMap;
+	/// <summary>
+	/// set that contains the ids of all deleted actors, so we do not accidentally create new actor infos for invalid actors
+	/// </summary>
+	std::unordered_set<uint32_t> deletedActors;
 
 	/// <summary>
 	/// map that maps potionids to potion properties (effect, duration, magnitude, detrimental, dosage)
@@ -74,7 +79,15 @@ public:
 	/// </summary>
 	/// <param name="a_intfc"></param>
 	/// <return>Returns number of bytes read</return>
-	long ReadActorInfoMap(SKSE::SerializationInterface* a_intfc);
+	long ReadActorInfoMap(SKSE::SerializationInterface* a_intfc, uint32_t length, int& accounter, int& acdcounter, int& acfcounter);
+	/// <summary>
+	/// Saves the list of deleted actors
+	/// </summary>
+	long SaveDeletedActors(SKSE::SerializationInterface* a_intfc);
+	/// <summary>
+	/// Reads the list of deleted actors
+	/// </summary>
+	long ReadDeletedActors(SKSE::SerializationInterface* a_intfc, uint32_t length);
 
 	/// <summary>
 	/// Saves the alchemic effects of an AlchemyItem for later use

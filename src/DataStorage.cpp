@@ -113,8 +113,34 @@ namespace Storage
 		long size = 0;
 
 		LOG_1("{}[DataStorage] [ReadData] Beginning data load...");
+
+		uint32_t type = 0;
+		uint32_t version = 0;
+		uint32_t length = 0;
+
+		// for actor info map
+		int accounter = 0;
+		int acfcounter = 0;
+		int acdcounter = 0;
+
 		
-		size += data->ReadActorInfoMap(a_intfc);
+		while (a_intfc->GetNextRecordInfo(type, version, length)) {
+			LOG2_1("{}[DataStorage] [ReadData] found record with type {} and length {}", type, length);
+			size += length;
+			switch (type) {
+			case 'ACIF':  // ActorInfo
+				size += data->ReadActorInfoMap(a_intfc, length, accounter, acdcounter, acfcounter);
+				break;
+			case 'DAID':  // Deleted Actor
+				size += data->ReadDeletedActors(a_intfc, length);
+				break; 
+			}
+		}
+
+		Statistics::Storage_ActorsReadLast = accounter;
+		LOG1_1("{}[Data] [ReadActorInfoMap] Read {} ActorInfos", accounter);
+		LOG1_1("{}[Data] [ReadActorInfoMap] Read {} dead, deleted or invalid ActorInfos", acdcounter);
+		LOG1_1("{}[Data] [ReadActorInfoMap] Failed to read {} ActorInfos", acfcounter);
 
 		LOG_1("{}[DataStorage] [ReadData] Finished loading data");
 		if (preproc) {  // if processing was enabled before locking
@@ -137,7 +163,8 @@ namespace Storage
 
 		LOG_1("{}[DataStorage] [WriteData] Beginning to write data...");
 		
-		size +=data->SaveActorInfoMap(a_intfc);
+		size += data->SaveActorInfoMap(a_intfc);
+		size += data->SaveDeletedActors(a_intfc);
 
 		LOG_1("{}[DataStorage] [WriteData] Finished writing data");
 

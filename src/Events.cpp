@@ -101,14 +101,6 @@ namespace Events
 	/// </summary>
 	static std::unordered_set<ActorInfo*> acset{};
 	/// <summary>
-	/// contains actors to insert into the active list
-	/// </summary>
-	static std::unordered_set<RE::Actor*> acinsert{};
-	/// <summary>
-	/// conatins actors to remove from the active list
-	/// </summary>
-	static std::unordered_set<RE::Actor*> acremove{};
-	/// <summary>
 	/// semaphore used to sync access to actor handling, to prevent list changes while operations are done
 	/// </summary>
 	static std::binary_semaphore sem(1);
@@ -504,47 +496,10 @@ namespace Events
 		return CalcRegenEffects(combatdata);
 	} 
 
-	/// <summary>
-	/// Updates the working set of registered actors
-	/// </summary>
-	void UpdateAcSet()
-	{
-		LOG_1("{}[UpdateAcSet] begin");
-		sem.acquire();
-		ActorInfo* acinfo = nullptr;
-		LOG1_1("{}[UpdateAcSet] remove {}", acremove.size());
-		auto itr = acremove.begin();
-		while (itr != acremove.end()) {
-			if (Utility::ValidateActor(*itr)) {
-				LOG1_1("{}[UpdateAcSet] remove actor {}", Utility::PrintForm((*itr)));
-				acinfo = data->FindActor(*itr);
-				acset.erase(acinfo);
-				acinfo->durHealth = 0;
-				acinfo->durMagicka = 0;
-				acinfo->durStamina = 0;
-				acinfo->durFortify = 0;
-				acinfo->durRegeneration = 0;
-			}
-			itr++;
-		}
-		acremove.clear();
-		LOG1_1("{}[UpdateAcSet] insert {}", acinsert.size());
-		auto itra = acinsert.begin();
-		while (itra != acinsert.end()) {
-			if (Utility::ValidateActor(*itra)) {
-				LOG1_1("{}[UpdateAcSet] insert actor {}", Utility::PrintForm((*itra)));
-				acinfo = data->FindActor(*itra);
-				acset.insert(acinfo);
-			}
-			itra++;
-		}
-		acinsert.clear();
-		sem.release();
-		LOG_1("{}[UpdateAcSet] end");
-	}
-
 	void DecreaseActorCooldown(ActorInfo* acinfo)
 	{
+		if (!acinfo->IsValid())
+			return;
 		if (acinfo->durHealth >= 0)
 			acinfo->durHealth -= Settings::System::_cycletime;
 		if (acinfo->durMagicka >= 0)
@@ -564,7 +519,9 @@ namespace Events
 
 	void HandleActorPotions(ActorInfo* acinfo)
 	{
-		if (acinfo->isincombat == false || acinfo->handleactor == false)
+		if (!acinfo->IsValid())
+			return;
+		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
 		AlchemyEffectBase alch = 0;
 		AlchemyEffectBase alch2 = 0;
@@ -620,7 +577,9 @@ namespace Events
 
 	void HandleActorFortifyPotions(ActorInfo* acinfo)
 	{
-		if (acinfo->isincombat == false || acinfo->handleactor == false)
+		if (!acinfo->IsValid())
+			return;
+		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::FortifyPotions::_enableFortifyPotions &&
@@ -666,7 +625,9 @@ namespace Events
 
 	void HandleActorPoisons(ActorInfo* acinfo)
 	{
-		if (acinfo->isincombat == false || acinfo->handleactor == false)
+		if (!acinfo->IsValid())
+			return;
+		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
 		if (acinfo->durCombat > 1000 &&
 			acinfo->globalCooldownTimer <= tolerance &&
@@ -726,7 +687,9 @@ namespace Events
 
 	void HandleActorFood(ActorInfo* acinfo)
 	{
-		if (acinfo->isincombat == false || acinfo->handleactor == false)
+		if (!acinfo->IsValid())
+			return;
+		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Food::_enableFood &&
@@ -750,7 +713,9 @@ namespace Events
 
 	void HandleActorOOCPotions(ActorInfo* acinfo)
 	{
-		if (acinfo->isincombat == true || acinfo->handleactor == false)
+		if (!acinfo->IsValid())
+			return;
+		if (acinfo->IsInCombat() == true || acinfo->handleactor == false)
 			return;
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && acinfo->durHealth < tolerance &&
@@ -767,6 +732,8 @@ namespace Events
 
 	void HandleActorRuntimeData(ActorInfo* acinfo)
 	{
+		if (!acinfo->IsValid())
+			return;
 		// if global cooldown greater zero, we can skip everything
 		if (acinfo->globalCooldownTimer > tolerance) {
 			acinfo->handleactor = false;
@@ -814,8 +781,7 @@ namespace Events
 		} else
 			acinfo->handleactor = false;
 
-		acinfo->isincombat = acinfo->actor->IsInCombat();
-		if (acinfo->isincombat) {
+		if (acinfo->IsInCombat()) {
 			// increase time spent in combat
 			acinfo->durCombat += 1000;
 		} else {
@@ -861,7 +827,6 @@ namespace Events
 			if (!GetProcessing())
 				goto CheckActorsSkipIteration;
 			// update active actors
-			UpdateAcSet();
 			actorhandlerworking = true;
 
 			ReEvalPlayerDeath;
@@ -912,7 +877,7 @@ namespace Events
 					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
 					actorsincombat = 0;
 					std::for_each(acset.begin(), acset.end(), [](ActorInfo* acinfo) {
-						if (acinfo->actor->IsInCombat())
+						if (acinfo->IsInCombat())
 							actorsincombat++;
 					});
 					sem.release();
@@ -965,13 +930,12 @@ namespace Events
 				LOG1_1("{}[Events] [CheckActors] checked {} actors", std::to_string(acset.size()));
 				// release lock.
 			} else {
-				LOG_1("{}[Events] [CheckActors] Skip round.")
+				LOG_1("{}[Events] [CheckActors] Skip round.");
 			}
 		CheckActorsSkipIteration:
 			actorhandlerworking = false;
 			// update the set again before sleeping, to account for all stuff that happended while we were busy
 			// otherwise we may encounter already deleted actors and such dangerous stuff
-			UpdateAcSet();
 			if (!stopactorhandler)
 				std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::System::_cycletime));
 		}
@@ -1510,10 +1474,12 @@ namespace Events
 			// if not already dead, do stuff
 			if (deads.contains(actor->GetFormID()) == false) {
 				EvalProcessingEvent();
+				// invalidate actor
+				ActorInfo* acinfo = data->FindActor(actor);
+				acinfo->SetInvalid();
 				// all npcs must be unregistered, even if distribution oes not apply to them
 				UnregisterNPC(actor);
 				// as with potion distribution, exlude excluded actors and potential followers
-				ActorInfo* acinfo = data->FindActor(actor);
 				if (!Distribution::ExcludedNPC(acinfo)) {
 					// create and insert new event
 					deads.insert(actor->GetFormID());
@@ -1628,13 +1594,25 @@ namespace Events
 		InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
 		if (Utility::ValidateActor(actor) && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+			// register / unregister
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
+				// register for tracking
 				if (Distribution::ExcludedNPCFromHandling(actor) == false)
 					RegisterNPC(actor);
 			} else {
 				if (Settings::Usage::_DisableOutOfCombatProcessing)
 					UnregisterNPC(actor);
 			}
+
+			// save combat state of npc
+			ActorInfo* acinfo = data->FindActor(actor);
+			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat)
+				acinfo->combatstate = CombatState::InCombat;
+			else if (a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching)
+				acinfo->combatstate = CombatState::Searching;
+			else if (a_event->newState == RE::ACTOR_COMBAT_STATE::kNone)
+				acinfo->combatstate = CombatState::OutOfCombat;
+
 		}
 		PROF1_2("{}[Events] [TESCombatEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		return EventResult::kContinue;
