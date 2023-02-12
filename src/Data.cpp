@@ -41,11 +41,13 @@ ActorInfo* Data::FindActor(RE::Actor* actor)
 	if (itr == actorinfoMap.end()) {
 		acinfo = new ActorInfo(actor, 0, 0, 0, 0, 0);
 		actorinfoMap.insert_or_assign(actor->GetFormID(), acinfo);
-	} else if (itr->second == nullptr || itr->second->actor == nullptr || itr->second->actor->GetFormID() == 0 || itr->second->actor->GetFormID() != actor->GetFormID()) {
+	} else if (itr->second == nullptr || itr->second->IsValid() && (itr->second->actor == nullptr || itr->second->actor->GetFormID() == 0 || itr->second->actor->GetFormID() != actor->GetFormID())) {
 		// either delete acinfo, deleted actor, actor fid 0 or acinfo belongs to wrong actor
 		actorinfoMap.erase(actor->GetFormID());
 		acinfo = new ActorInfo(actor, 0, 0, 0, 0, 0);
 		actorinfoMap.insert_or_assign(actor->GetFormID(), acinfo);
+	} else if (itr->second->IsValid() == false) {
+		acinfo = itr->second;
 	} else {
 		acinfo = itr->second;
 		if (acinfo->citems == nullptr)
@@ -70,13 +72,16 @@ ActorInfo* Data::FindActor(RE::FormID actorid)
 
 void Data::DeleteActor(RE::FormID actorid)
 {
+	// if we delete the object itself, we may have problems when someone tries to access the deleted object
+	// so just flag it as invalid and move it to the list of empty actor refs
 	ActorInfo* acinfo = nullptr;
 	lockdata.acquire();
 	auto itr = actorinfoMap.find(actorid);
 	if (itr != actorinfoMap.end()) {
 		acinfo = itr->second;
 		actorinfoMap.erase(actorid);
-		delete acinfo;
+		acinfo->SetInvalid();
+		emptyActorInfos.push_back(acinfo);
 		acinfo = nullptr;
 		// save deleted actors, so we do not create new actorinfos for these
 		deletedActors.insert(actorid);
@@ -183,7 +188,7 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 				LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if not nullptr", i);
 				if (acvec[i]->actor != nullptr) {
 					LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not null", i);
-					if (acvec[i]->actor->IsDeleted() == false) {
+					if ((acvec[i]->actor->formFlags & RE::TESForm::RecordFlags::kDeleted) == 0) {
 						LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not deleted", i);
 						if (acvec[i]->actor->GetFormID() != 0) {
 							LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if id not 0", i);
@@ -269,7 +274,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	} else if (acinfo->IsValid() == false) {
 		acdcounter++;
 		logwarn("[Data] [ReadActorInfoMap] actor invalid {}", acinfo->name);
-	} else if (acinfo->actor->IsDeleted() || acinfo->actor->IsDead()) {
+	} else if ((acinfo->actor->formFlags & RE::TESForm::RecordFlags::kDeleted) || acinfo->actor->IsDead()) {
 		acdcounter++;
 		logwarn("[Data] [ReadActorInfoMap] actor dead or deleted {}", acinfo->name);
 	} else {
@@ -297,7 +302,7 @@ void Data::DeleteActorInfoMap()
 	}
 	actorinfoMap.clear();
 	// delete temporary ActorInfos
-	for (size_t i = emptyActorInfos.size() - 1; i >= 0; i--) {
+	for (int i = (int)emptyActorInfos.size() - 1; i >= 0; i--) {
 		delete emptyActorInfos[i];
 	}
 	emptyActorInfos.clear();

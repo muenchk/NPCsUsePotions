@@ -1593,7 +1593,7 @@ uint32_t Utility::Mods::GetIndexLessFormID(RE::FormID formid)
 
 bool Utility::ValidateActor(RE::Actor* actor)
 {
-	if (actor == nullptr || actor->IsDeleted() || actor->IsMarkedForDeletion() || actor->GetFormID() == 0 || actor->IsDisabled())
+	if (actor == nullptr || (actor->formFlags & RE::TESForm::RecordFlags::kDeleted) || (actor->inGameFormFlags & RE::TESForm::InGameFormFlag::kRefPermanentlyDeleted) || (actor->inGameFormFlags & RE::TESForm::InGameFormFlag::kWantsDelete) || actor->GetFormID() == 0 || (actor->formFlags & RE::TESForm::RecordFlags::kDisabled))
 		return false; 
 
 	return true;

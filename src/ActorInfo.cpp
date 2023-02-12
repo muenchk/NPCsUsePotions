@@ -624,6 +624,8 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	int addoff = 0;
 	// version
 	Buffer::Write(version, buffer, offset);
+	// valid
+	Buffer::Write(valid, buffer, offset);
 	// actor id
 	if ((formid & 0xFF000000) == 0xFF000000) {
 		// temporary id, save whole id
@@ -665,8 +667,6 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(Animation_busy, buffer, offset);
 	// globalCooldownTimer
 	Buffer::Write(globalCooldownTimer, buffer, offset);
-	// valid
-	Buffer::Write(valid, buffer, offset);
 	// combatstate
 	Buffer::Write(static_cast<uint32_t>(combatstate), buffer, offset);
 	return true;
@@ -764,6 +764,8 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 			return true;
 		case 0x00000003:
 			{
+				valid = Buffer::ReadBool(buffer, offset);
+
 				// first try to make sure that the buffer contains all necessary data and we do not go out of bounds
 				int size = GetMinDataSize(ver);
 				int strsize = (int)Buffer::CalcStringLength(buffer, offset + 4);  // offset + actorid is begin of pluginname
@@ -772,19 +774,22 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 
 				formid = Buffer::ReadUInt32(buffer, offset);
 				pluginname = Buffer::ReadString(buffer, offset);
-				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
-				if (!form) {
-					logcritical("Cannnot find formid1 {}", Utility::GetHex(formid));
-					form = RE::TESForm::LookupByID(formid);
+				// if the actorinfo is not valid, then do not evaluate the actor
+				if (!valid) {
+					RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
 					if (!form) {
-						logcritical("Cannnot find formid2");
-						return false;
+						logcritical("Cannnot find formid1 {}", Utility::GetHex(formid));
+						form = RE::TESForm::LookupByID(formid);
+						if (!form) {
+							logcritical("Cannnot find formid2");
+							return false;
+						}
 					}
-				}
-				actor = form->As<RE::Actor>();
-				if (!actor) {
-					return false;
-					logcritical("Cannnot find actor2");
+					actor = form->As<RE::Actor>();
+					if (!actor) {
+						return false;
+						logcritical("Cannnot find actor2");
+					}
 				}
 				name = actor->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -801,7 +806,6 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				_boss = Buffer::ReadBool(buffer, offset);
 				Animation_busy = Buffer::ReadBool(buffer, offset);
 				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
-				valid = Buffer::ReadBool(buffer, offset);
 				combatstate = static_cast<CombatState>(Buffer::ReadUInt32(buffer, offset));
 
 				// init dependend stuff
@@ -817,4 +821,13 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 	} catch (std::exception&) {
 		return false;
 	}
+}
+
+void ActorInfo::Update()
+{
+	if (!valid)
+		return;
+	actor = RE::TESForm::LookupByID<RE::Actor>(formid);
+	if (actor == nullptr)
+		valid = false;
 }

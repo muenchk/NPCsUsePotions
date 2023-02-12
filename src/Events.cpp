@@ -857,11 +857,14 @@ namespace Events
 				try {
 					// validate actorsets
 					sem.acquire();
-					std::for_each(acset.begin(), acset.end(), [](ActorInfo* acinfo) {
-						if (acinfo == nullptr || !Utility::ValidateActor(acinfo->actor)) {
-							acset.erase(acinfo);
-						}
-					});
+					auto itr = acset.begin();
+					while (itr != acset.end()) {
+						if ((*itr) == nullptr)
+							acset.erase(itr);
+						else if ((*itr)->Update(); (*itr)->IsValid() == false)
+							acset.erase(itr);
+						itr++;
+					}
 					sem.release();
 
 					if (!GetProcessing())
@@ -1802,11 +1805,11 @@ namespace Events
 		Statistics::Events_TESFormDeleteEvent++;
 		if (a_event && a_event->formID != 0) {
 			data->DeleteActor(a_event->formID);
+			UnregisterNPC(a_event->formID);
 			data->DeleteFormCustom(a_event->formID);
 			comp->AnPois_DeleteActorPoison(a_event->formID);
 			comp->AnPoti_DeleteActorPotion(a_event->formID);
 			comp->AnPoti_DeleteActorPoison(a_event->formID);
-			UnregisterNPC(a_event->formID);
 		}
 		return EventResult::kContinue;
 	}

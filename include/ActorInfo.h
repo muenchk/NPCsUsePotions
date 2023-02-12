@@ -429,4 +429,9 @@ public:
 	/// <param name="length">maximal length to read</param>
 	/// <returns>Whether the read operation was successful</returns>
 	bool ReadData(unsigned char* buffer, int offset, int length);
+
+	/// <summary>
+	/// Updates the actor and whether the ActorInfo is valid
+	/// </summary>
+	void Update();
 };
