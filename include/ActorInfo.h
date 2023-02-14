@@ -204,6 +204,10 @@ public:
 	/// if [true] the ActorInfo is valid and can be used, if [false] the ActorInfo is a dummy object
 	/// </summary>
 	bool valid = false;
+	/// <summary>
+	/// Whether the actor has been deleted;
+	/// </summary>
+	bool deleted = false;
 
 	/// <summary>
 	/// version of class [used for save and load]
@@ -265,6 +269,20 @@ public:
 	/// Sets the ActorInfo to invalid
 	/// </summary>
 	void SetInvalid() { valid = false; }
+	/// <summary>
+	/// Sets the ActorInfo to deleted
+	/// </summary>
+	void SetDeleted() { deleted = true; }
+	/// <summary>
+	/// Returns whether the actor has been deleted
+	/// </summary>
+	bool GetDeleted() { return deleted; }
+
+	/// <summary>
+	/// Resets the actorinfo to default values
+	/// </summary>
+	/// <param name="actor"></param>
+	void Reset(RE::Actor* _actor);
 
 	/// <summary>
 	/// Whether the NPC is currently in combat

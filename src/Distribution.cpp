@@ -1333,6 +1333,8 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase eff
 
 bool Distribution::ExcludedNPC(ActorInfo* acinfo)
 {
+	if (!acinfo->IsValid())
+		return true;
 	if (Settings::Whitelist::EnabledNPCs) {
 		if (acinfo->whitelistedcalculated) {
 			if (!acinfo->whitelisted)
@@ -2096,7 +2098,7 @@ bool CheckDistributability(ActorInfo* acinfo, Distribution::CustomItemStorage* c
 Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, Misc::NPCTPLTInfo* tpltinfo)
 {
 	auto begin = std::chrono::steady_clock::now();
-	if (acinfo == nullptr)
+	if (acinfo == nullptr || acinfo->IsValid() == false)
 		return emptyRule;
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {

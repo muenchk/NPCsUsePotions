@@ -81,6 +81,7 @@ void Data::DeleteActor(RE::FormID actorid)
 		acinfo = itr->second;
 		actorinfoMap.erase(actorid);
 		acinfo->SetInvalid();
+		acinfo->SetDeleted();
 		emptyActorInfos.push_back(acinfo);
 		acinfo = nullptr;
 		// save deleted actors, so we do not create new actorinfos for these
@@ -136,6 +137,7 @@ long Data::SaveDeletedActors(SKSE::SerializationInterface* a_intfc)
 		}
 	}
 	LOG_1("{}[Data] [SaveDeletedActors] Writing Deleted Actors finished.");
+	lockdata.release();
 
 	return size;
 }

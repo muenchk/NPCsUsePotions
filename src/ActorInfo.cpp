@@ -35,6 +35,54 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 	}
 }
 
+void ActorInfo::Reset(RE::Actor* _actor)
+{
+	LOG_1("{}[ActorInfo] [Reset]");
+	actor = _actor;
+	durHealth = 0;
+	durMagicka = 0;
+	durStamina = 0;
+	durFortify = 0;
+	durRegeneration = 0;
+	globalCooldownTimer = 0;
+	if (citems != nullptr)
+		delete citems;
+	citems = new CustomItems();
+	formid = 0;
+	pluginname = "";
+	pluginID = 1;
+	name = "";
+	nextFoodTime = 0;
+	lastDistrTime = 0;
+	durCombat = 0;
+	_distributedCustomItems = 0;
+	_boss = false;
+	_automaton = false;
+	Animation_busy = false;
+	whitelisted = false;
+	whitelistedcalculated = false;
+	combatstate = CombatState::OutOfCombat;
+	combatdata = 0;
+	tcombatdata = 0;
+	target = nullptr;
+	handleactor = false;
+	if (_actor) {
+		formid = _actor->GetFormID();
+		name = std::string(_actor->GetName());
+		pluginname = Utility::Mods::GetPluginName(actor);
+		pluginID = Utility::Mods::GetPluginIndex(pluginname);
+		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
+		if (pluginID == 0x1) {
+			pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+		}
+		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
+			_automaton = true;
+		CalcCustomItems();
+		// set to valid
+		valid = true;
+	}
+}
+
 ActorInfo::ActorInfo()
 {
 	actor = nullptr;
@@ -695,6 +743,9 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (!actor) {
 					return false;
 				}
+				// set formid to the full formid including plugin index
+				formid = actor->GetFormID();
+
 				name = actor->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);
@@ -707,6 +758,12 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
 				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
 				_boss = Buffer::ReadBool(buffer, offset);
+
+				// set new variables
+				Animation_busy = true;
+				globalCooldownTimer = 0;
+				valid = true;
+				combatstate = CombatState::OutOfCombat;
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
@@ -739,6 +796,9 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					return false;
 					logcritical("Cannnot find actor2");
 				}
+				// set formid to the full formid including plugin index
+				formid = actor->GetFormID();
+
 				name = actor->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);
@@ -754,6 +814,10 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				_boss = Buffer::ReadBool(buffer, offset);
 				Animation_busy = Buffer::ReadBool(buffer, offset);
 				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
+
+				// set new variables
+				valid = true;
+				combatstate = CombatState::OutOfCombat;
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
@@ -775,22 +839,23 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				formid = Buffer::ReadUInt32(buffer, offset);
 				pluginname = Buffer::ReadString(buffer, offset);
 				// if the actorinfo is not valid, then do not evaluate the actor
-				if (!valid) {
-					RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
+				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
+				if (!form) {
+					logcritical("Cannnot find formid1 {}", Utility::GetHex(formid));
+					form = RE::TESForm::LookupByID(formid);
 					if (!form) {
-						logcritical("Cannnot find formid1 {}", Utility::GetHex(formid));
-						form = RE::TESForm::LookupByID(formid);
-						if (!form) {
-							logcritical("Cannnot find formid2");
-							return false;
-						}
-					}
-					actor = form->As<RE::Actor>();
-					if (!actor) {
+						logcritical("Cannnot find formid2");
 						return false;
-						logcritical("Cannnot find actor2");
 					}
 				}
+				actor = form->As<RE::Actor>();
+				if (!actor) {
+					return false;
+					logcritical("Cannnot find actor2");
+				}
+				// set formid to the full formid including plugin index
+				formid = actor->GetFormID();
+
 				name = actor->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);

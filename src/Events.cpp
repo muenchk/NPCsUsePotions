@@ -859,13 +859,18 @@ namespace Events
 					sem.acquire();
 					auto itr = acset.begin();
 					while (itr != acset.end()) {
-						if ((*itr) == nullptr)
+						if ((*itr) == nullptr) {
+							LOG_1("{}[Events] [CheckActors] Removed nullptr");
 							acset.erase(itr);
-						else if ((*itr)->Update(); (*itr)->IsValid() == false)
+						} else if ((*itr)->Update(); (*itr)->IsValid() == false) {
+							LOG_1("{}[Events] [CheckActors] Removed invalid actor");
 							acset.erase(itr);
+						}
 						itr++;
 					}
 					sem.release();
+
+					LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(acset.size()));
 
 					if (!GetProcessing())
 						goto CheckActorsSkipIteration;
@@ -1286,6 +1291,18 @@ namespace Events
 			return;
 		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
 		ActorInfo* acinfo = data->FindActor(actor);
+		// if actor was deleted, exit
+		if (acinfo->GetDeleted()) {
+			LOG_1("{}[Events] [RegisterNPC] Actor already deleted");
+			return;
+		}
+		// if actor was invalidated but not deleted, reset them
+		if (acinfo->IsValid() == false)
+			acinfo->Reset(actor);
+		if (acinfo->IsValid() == false) {
+			LOG_1("{}[Events] [RegisterNPC] Actor reset failed");
+			return;
+		}
 		// find out whether to insert the actor, if yes insert him into the temp insert list
 		sem.acquire();
 		if (!acset.contains(acinfo)) {
