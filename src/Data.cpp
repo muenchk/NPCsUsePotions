@@ -153,7 +153,9 @@ long Data::ReadDeletedActors(SKSE::SerializationInterface* a_intfc, uint32_t len
 	a_intfc->ReadRecordData(buffer, length);
 	if (length >= 12) {
 		int offset = 0;
-		RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(Buffer::ReadUInt32(buffer, offset), Buffer::ReadString(buffer, offset));
+		uint32_t formid = Buffer::ReadUInt32(buffer, offset);
+		std::string pluginname = Buffer::ReadString(buffer, offset);
+		RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formid, pluginname);
 		if (form)
 			deletedActors.insert(form->GetFormID());
 	}
