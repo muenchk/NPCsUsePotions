@@ -60,6 +60,7 @@
       "toolset": "v143"
     },
     {
+      "binaryDir": "${sourceDir}/buildSE",
       "cacheVariables": {
         "SKYRIM_SUPPORT_AE": "OFF"
       },
@@ -67,6 +68,7 @@
       "name": "se"
     },
     {
+      "binaryDir": "${sourceDir}/buildAE",
       "cacheVariables": {
         "SKYRIM_SUPPORT_AE": "ON"
       },
@@ -74,6 +76,7 @@
       "name": "ae"
     },
     {
+      "binaryDir": "${sourceDir}/buildAE353",
       "cacheVariables": {
         "SKYRIM_SUPPORT_AE": {
           "type": "BOOL",
