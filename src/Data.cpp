@@ -35,6 +35,7 @@ ActorInfo* Data::FindActor(RE::Actor* actor)
 		// create dummy ActorInfo
 		acinfo = new ActorInfo();
 		emptyActorInfos.push_back(acinfo);
+		lockdata.release();
 		return acinfo;
 	}
 	auto itr = actorinfoMap.find(actor->GetFormID());
