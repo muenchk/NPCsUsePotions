@@ -22,6 +22,8 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	}
 	//logger::info("console 3");
 	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
+	if (actor->IsPlayerRef())
+		acinfo = Data::GetSingleton()->FindActor(RE::PlayerCharacter::GetSingleton());
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
@@ -39,6 +41,13 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	tmp = "Valid:\t\t\t\t\t" + std::to_string(acinfo->IsValid());
 	console->Print(tmp.c_str());
 	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(acinfo));
+	console->Print(tmp.c_str());
+	if (acinfo->combatstate == CombatState::OutOfCombat)
+		tmp = "CombatState:\t\t\t\t" + std::string("Out of Combat");
+	else if (acinfo->combatstate == CombatState::InCombat)
+		tmp = "CombatState:\t\t\t\t" + std::string("In Combat");
+	else if (acinfo->combatstate == CombatState::Searching)
+		tmp = "CombatState:\t\t\t\t" + std::string("Searching");
 	console->Print(tmp.c_str());
 	tmp = "Whitelisted:\t\t\t\t\t" + std::to_string(acinfo->whitelisted);
 	console->Print(tmp.c_str());
