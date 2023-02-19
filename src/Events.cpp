@@ -1503,11 +1503,12 @@ namespace Events
 					EvalProcessingEvent();
 					// invalidate actor
 					ActorInfo* acinfo = data->FindActor(actor);
+					bool excluded = Distribution::ExcludedNPC(acinfo);
 					acinfo->SetInvalid();
 					// all npcs must be unregistered, even if distribution oes not apply to them
 					UnregisterNPC(actor);
 					// as with potion distribution, exlude excluded actors and potential followers
-					if (!Distribution::ExcludedNPC(acinfo)) {
+					if (!excluded) {
 						// create and insert new event
 						deads.insert(actor->GetFormID());
 						if (Settings::Removal::_RemoveItemsOnDeath) {
