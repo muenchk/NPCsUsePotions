@@ -870,6 +870,12 @@ namespace Events
 					}
 					sem.release();
 
+					// the player should always be valid. If they don't the game doesn't work either anyway
+					if (playerinfo->actor->IsInCombat())
+						playerinfo->combatstate = CombatState::InCombat;
+					else
+						playerinfo->combatstate = CombatState::OutOfCombat;
+
 					LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(acset.size()));
 
 					if (!GetProcessing())

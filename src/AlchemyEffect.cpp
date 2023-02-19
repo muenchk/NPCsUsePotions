@@ -184,11 +184,7 @@ AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val)
 	case RE::ActorValue::kMagickaRate:
 		return (AlchemyEffect::kMagickaRate);
 		break;
-#if defined(SKYRIM_SUPPORT_AE353) // newer commonlib has case error corrected
-	case RE::ActorValue::KStaminaRate:
-#else
 	case RE::ActorValue::kStaminaRate:
-#endif
 		return (AlchemyEffect::kStaminaRate);
 		break;
 	case RE::ActorValue::kSpeedMult:
@@ -254,11 +250,7 @@ AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val)
 	case RE::ActorValue::kStaminaRateMult:
 		return (AlchemyEffect::kStaminaRateMult);
 		break;
-#if defined(SKYRIM_SUPPORT_AE353) // spelling error corrected in newer version
-	case RE::ActorValue::kAggresion:
-#else
 	case RE::ActorValue::kAggression:
-#endif
 		return (AlchemyEffect::kFrenzy);
 		break;
 	case RE::ActorValue::kConfidence:
@@ -328,11 +320,7 @@ RE::ActorValue ConvertAlchemyEffect(AlchemyEffect eff)
 		return RE::ActorValue::kMagickaRate;
 		break;
 	case AlchemyEffect::kStaminaRate:
-#if defined(SKYRIM_SUPPORT_AE353) // case error corrected in newer version
-		return RE::ActorValue::KStaminaRate;
-#else
 		return RE::ActorValue::kStaminaRate;
-#endif
 		break;
 	case AlchemyEffect::kSpeedMult:
 		return RE::ActorValue::kSpeedMult;
@@ -404,11 +392,7 @@ RE::ActorValue ConvertAlchemyEffect(AlchemyEffect eff)
 		return RE::ActorValue::kConfidence;
 		break;
 	case AlchemyEffect::kFrenzy:
-#if defined(SKYRIM_SUPPORT_AE353) // spelling error corrected in newer version
-		return RE::ActorValue::kAggresion;
-#else
 		return RE::ActorValue::kAggression;
-#endif
 		break;
 	case AlchemyEffect::kReflectDamage:
 		return RE::ActorValue::kReflectDamage;
