@@ -97,14 +97,17 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
-	if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
-		auto begin = std::chrono::steady_clock::now();
+	auto begin = std::chrono::steady_clock::now();
+	switch (a_msg->type) {
+	case SKSE::MessagingInterface::kDataLoaded:
+		// init ActorInfo's statics
+		ActorInfo::Init();
 		// init Data
 		Data::GetSingleton()->Init();
 		// init game objects and load pluginnames
 		Settings::InitGameStuff();
 		// load settings
-		Settings::Load(); // also resaves the file
+		Settings::Load();  // also resaves the file
 		logger::info("Settings loaded");
 		// init ACM data access
 		ACM::Init();
@@ -130,6 +133,10 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Console::RegisterConsoleCommands();
 		logger::info("Registered Console Commands");
 		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		break;
+	case SKSE::MessagingInterface::kPostLoad:
+		Settings::Interfaces::RequestAPIs();
+		break;
 	}
 }
 

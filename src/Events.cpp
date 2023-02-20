@@ -111,6 +111,11 @@ namespace Events
 	static std::unordered_set<RE::FormID> deads;
 
 	/// <summary>
+	/// list of npcs that are currently in combat
+	/// </summary>
+	std::forward_list<ActorInfo*> combatants;
+
+	/// <summary>
 	/// signals whether the player has died
 	/// </summary>
 	static bool playerdied = false;
@@ -515,7 +520,8 @@ namespace Events
 	}
 
 	int tolerance = 0;
-	int actorsincombat;
+	int actorsincombat = 0;
+	int hostileactors = 0;
 
 	void HandleActorPotions(ActorInfo* acinfo)
 	{
@@ -523,6 +529,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
+		LOG1_1("{}[Events] [CheckActors] [HandleActorPotions] {}", Utility::PrintForm(acinfo->actor));
 		AlchemyEffectBase alch = 0;
 		AlchemyEffectBase alch2 = 0;
 		AlchemyEffectBase alch3 = 0;
@@ -581,12 +588,13 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
+		LOG1_1("{}[Events] [CheckActors] [HandleActorFortifyPotions] {}", Utility::PrintForm(acinfo->actor));
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::FortifyPotions::_enableFortifyPotions &&
 			(!(acinfo->actor->IsPlayerRef()) || Settings::Player::_playerFortifyPotions)) {
 			//LOG_2("{}[Events] [CheckActors] [fortify]");
 
-			if ((acinfo->IsFollower() || acinfo->actor->IsPlayerRef()) && !(Settings::FortifyPotions::_EnemyNumberThresholdFortify < actorsincombat || (acinfo->target && acinfo->target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify))) {
+			if ((acinfo->IsFollower() || acinfo->actor->IsPlayerRef()) && !(Settings::FortifyPotions::_EnemyNumberThresholdFortify < hostileactors || (acinfo->target && acinfo->target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify))) {
 				return;
 			}
 			// handle fortify potions
@@ -629,6 +637,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
+		LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] {}", Utility::PrintForm(acinfo->actor));
 		if (acinfo->durCombat > 1000 &&
 			acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Poisons::_enablePoisons &&
@@ -645,7 +654,7 @@ namespace Events
 				// they only use poisons if there are many npcs in the fight, or if the enemies they are targetting
 				// have a high enough level, like starting at PlayerLevel*0.8 or so
 				if (((acinfo->IsFollower() || acinfo->actor->IsPlayerRef()) &&
-						(Settings::Poisons::_EnemyNumberThreshold < actorsincombat || (acinfo->target && acinfo->target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::Poisons::_EnemyLevelScalePlayerLevel))) ||
+						(Settings::Poisons::_EnemyNumberThreshold < hostileactors || (acinfo->target && acinfo->target->GetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::Poisons::_EnemyLevelScalePlayerLevel))) ||
 					acinfo->IsFollower() == false && acinfo->actor->IsPlayerRef() == false) {
 					// time to use some poisons
 					uint64_t effects = 0;
@@ -691,6 +700,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
+		LOG1_1("{}[Events] [CheckActors] [HandleActorFood] {}", Utility::PrintForm(acinfo->actor));
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Food::_enableFood &&
 			RE::Calendar::GetSingleton()->GetDaysPassed() >= acinfo->nextFoodTime &&
@@ -717,6 +727,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == true || acinfo->handleactor == false)
 			return;
+		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo->actor));
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && acinfo->durHealth < tolerance &&
 			ACM::GetAVPercentage(acinfo->actor, RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
@@ -730,6 +741,10 @@ namespace Events
 		}
 	}
 
+	/// <summary>
+	/// Refreshes important runtime data of an ActorInfo, including combatdata and status
+	/// </summary>
+	/// <param name="acinfo"></param>
 	void HandleActorRuntimeData(ActorInfo* acinfo)
 	{
 		if (!acinfo->IsValid())
@@ -739,6 +754,7 @@ namespace Events
 			acinfo->handleactor = false;
 			return;
 		}
+		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo->actor));
 		if (acinfo->citems == nullptr)
 			acinfo->citems = new ActorInfo::CustomItems();
 		// check for staggered option
@@ -763,16 +779,51 @@ namespace Events
 			return;
 		}
 
-		// get combatdata of current actor
-		acinfo->combatdata = Utility::GetCombatData(acinfo->actor);
-		acinfo->tcombatdata = 0;
-		// retrieve target of current actor if present
-		RE::ActorHandle handle = acinfo->actor->currentCombatTarget;
+		auto CheckHandle = [](RE::ActorHandle handle) {
+			if (handle && handle.get() && handle.get().get())
+				return handle.get().get();
+			else
+				return (RE::Actor*)nullptr;
+		};
+
+		// reset target
 		acinfo->target = nullptr;
-		if (handle && handle.get() && handle.get().get()) {
-			// we can make the usage dependent on the target
-			acinfo->target = handle.get().get();
-			acinfo->tcombatdata = Utility::GetCombatData(acinfo->target);
+		acinfo->tcombatdata = 0;
+
+		// only try to get combat target, if the actor is actually in combat
+		if (acinfo->IsInCombat()) {
+			// get combatdata of current actor
+			acinfo->combatdata = Utility::GetCombatData(acinfo->actor);
+			RE::ActorHandle handle;
+			if (acinfo->actor->IsPlayerRef() == false) {
+				// retrieve target of current actor if present
+				acinfo->target = CheckHandle(acinfo->actor->currentCombatTarget);
+				if (acinfo->target) {
+					// we can make the usage dependent on the target
+					acinfo->tcombatdata = Utility::GetCombatData(acinfo->target);
+				}
+			} else {
+				// try to find out the players combat target, since we cannot get it the normal way
+
+				// if we have access to the True Directional Movement API and target lock is activated
+				// try to get the actor from there
+				if (Settings::Interfaces::tdm_api != nullptr && Settings::Interfaces::tdm_api->GetTargetLockState() == true) {
+					acinfo->target = CheckHandle(Settings::Interfaces::tdm_api->GetCurrentTarget());
+				}
+				if (acinfo->target == nullptr) {
+					// try to infer the target from the npcs that are in combat
+					// get the combatant with the shortest range to player, which is hostile to the player
+					auto GetClosestEnemy = []() {
+						ActorInfo* current = nullptr;
+						for (auto aci : combatants) {
+							if (current == nullptr || (aci != nullptr && aci->playerHostile && aci->playerDistance < current->playerDistance))
+								current = aci;
+						}
+						return current != nullptr ? current->actor : nullptr;
+					};
+					acinfo->target = GetClosestEnemy();
+				}
+			}
 		}
 
 		// if actor is valid and not dead
@@ -854,7 +905,14 @@ namespace Events
 				if (!GetProcessing())
 					goto CheckActorsSkipIteration;
 
+				
+
 				try {
+					// store position of player character
+					ActorInfo::SetPlayerPosition(playerinfo->actor->GetPosition());
+					// reset player combat state, we don't want to include them in our checks
+					playerinfo->combatstate = CombatState::OutOfCombat;
+
 					// validate actorsets
 					sem.acquire();
 					auto itr = acset.begin();
@@ -870,12 +928,6 @@ namespace Events
 					}
 					sem.release();
 
-					// the player should always be valid. If they don't the game doesn't work either anyway
-					if (playerinfo->actor->IsInCombat())
-						playerinfo->combatstate = CombatState::InCombat;
-					else
-						playerinfo->combatstate = CombatState::OutOfCombat;
-
 					LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(acset.size()));
 
 					if (!GetProcessing())
@@ -890,11 +942,22 @@ namespace Events
 					// calc actors in combat
 					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
 					actorsincombat = 0;
+					hostileactors = 0;
 					std::for_each(acset.begin(), acset.end(), [](ActorInfo* acinfo) {
-						if (acinfo->IsInCombat())
+						if (acinfo->IsInCombat()) {
 							actorsincombat++;
+							combatants.push_front(acinfo);
+							if (acinfo->playerHostile)
+								hostileactors++;
+						}
 					});
 					sem.release();
+					
+					// the player should always be valid. If they don't the game doesn't work either anyway
+					if (playerinfo->actor->IsInCombat())
+						playerinfo->combatstate = CombatState::InCombat;
+					else
+						playerinfo->combatstate = CombatState::OutOfCombat;
 
 					if (!GetProcessing())
 						goto CheckActorsSkipIteration;
@@ -927,8 +990,7 @@ namespace Events
 					sem.acquire();
 					std::for_each(acset.begin(), acset.end(), HandleActorFood);
 					sem.release();
-				}
-				catch (std::bad_alloc& e) {
+				} catch (std::bad_alloc& e) {
 					logcritical("[Events] [CheckActors] Failed to execute due to memory allocation issues: {}", std::string(e.what()));
 					sem.release();
 				}
@@ -946,7 +1008,9 @@ namespace Events
 			} else {
 				LOG_1("{}[Events] [CheckActors] Skip round.");
 			}
-		CheckActorsSkipIteration:
+CheckActorsSkipIteration:
+			// reset combatants
+			combatants.clear();
 			actorhandlerworking = false;
 			// update the set again before sleeping, to account for all stuff that happended while we were busy
 			// otherwise we may encounter already deleted actors and such dangerous stuff
@@ -1408,6 +1472,8 @@ namespace Events
 		}
 		// reset the list of actors that died
 		deads.clear();
+		// reset list of actors in combat
+		combatants.clear();
 		// set player to alive
 		ReEvalPlayerDeath;
 

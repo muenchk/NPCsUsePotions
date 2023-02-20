@@ -42,13 +42,22 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(acinfo));
 	console->Print(tmp.c_str());
-	if (acinfo->combatstate == CombatState::OutOfCombat)
+	if (acinfo->combatstate == CombatState::OutOfCombat) {
 		tmp = "CombatState:\t\t\t\t" + std::string("Out of Combat");
-	else if (acinfo->combatstate == CombatState::InCombat)
+		console->Print(tmp.c_str());
+	}
+	else if (acinfo->combatstate == CombatState::InCombat) {
 		tmp = "CombatState:\t\t\t\t" + std::string("In Combat");
-	else if (acinfo->combatstate == CombatState::Searching)
+		console->Print(tmp.c_str());
+		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->target);
+		console->Print(tmp.c_str());
+
+	} else if (acinfo->combatstate == CombatState::Searching) {
 		tmp = "CombatState:\t\t\t\t" + std::string("Searching");
-	console->Print(tmp.c_str());
+		console->Print(tmp.c_str());
+		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->target);
+		console->Print(tmp.c_str());
+	}
 	tmp = "Whitelisted:\t\t\t\t\t" + std::to_string(acinfo->whitelisted);
 	console->Print(tmp.c_str());
 	tmp = "Whitelist calculated:\t\t\t\t\t" + std::to_string(acinfo->whitelistedcalculated);

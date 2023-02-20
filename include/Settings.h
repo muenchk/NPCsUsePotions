@@ -24,6 +24,7 @@
 #include <Console.h>
 #include <Logging.h>
 #include <AlchemyEffect.h>
+#include "APIs/TrueDirectionalMovementAPI.h"
 
 class Settings
 {
@@ -537,6 +538,14 @@ public:
 		/// whether the cure disease effect is activated
 		/// </summary>
 		static inline bool _useCureDiseaseEffect = true;
+	};
+
+	class Interfaces
+	{
+	public:
+		static inline TDM_API::IVTDM1* tdm_api = nullptr;
+
+		static void RequestAPIs();
 	};
 
 	// intern

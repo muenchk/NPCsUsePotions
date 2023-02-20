@@ -50,6 +50,31 @@ enum class CombatState
 /// </summary>
 class ActorInfo
 {
+#pragma region static
+
+private:
+	/// <summary>
+	/// current position of the player character, for faster access
+	/// </summary>
+	static inline RE::NiPoint3 playerPosition;
+	/// <summary>
+	/// PlayerRef
+	/// </summary>
+	static inline RE::Actor* playerRef = RE::PlayerCharacter::GetSingleton();
+
+public:
+	/// <summary>
+	/// Sets the current position of the player character
+	/// </summary>
+	/// <param name="position"></param>
+	static void SetPlayerPosition(RE::NiPoint3 position) { playerPosition = position; }
+	/// <summary>
+	/// Inits static class data
+	/// </summary>
+	static void Init();
+#pragma endregion
+
+#pragma region runtime
 public:
 	std::vector<NPCsUsePotions::NUPActorInfoHandle*> handles;
 
@@ -194,10 +219,19 @@ public:
 
 
 	// temporary targeting variables
+	
+	// own combat data
 	uint32_t combatdata = 0;
+	// target combat data
 	uint32_t tcombatdata = 0;
+	// current target
 	RE::Actor* target = nullptr;
+	// whether to process the actor
 	bool handleactor = true;
+	// distance to player
+	float playerDistance = 0;
+	// hostile to player
+	bool playerHostile = false;
 
 
 	/// <summary>
@@ -254,6 +288,12 @@ public:
 	/// custom fortify distribution to be applied
 	/// </summary>
 	std::vector<std::tuple<int, AlchemyEffect>> fortifyDistf;
+
+	/// <summary>
+	/// Updates certain actor metrics
+	/// [Should only be called, directly after updating the actor value]
+	/// </summary>
+	void UpdateMetrics();
 
 public:
 
@@ -452,4 +492,6 @@ public:
 	/// Updates the actor and whether the ActorInfo is valid
 	/// </summary>
 	void Update();
+
+#pragma endregion
 };

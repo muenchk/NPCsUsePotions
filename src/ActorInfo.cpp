@@ -8,6 +8,11 @@
 #include "ActorManipulation.h"
 #include "Data.h"
 
+void ActorInfo::Init()
+{
+	playerRef = RE::PlayerCharacter::GetSingleton();
+}
+
 ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
 {
 	LOG_3("{}[ActorInfo] [ActorInfo]");
@@ -30,6 +35,8 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
 		CalcCustomItems();
+		// Run since [actor] is valid
+		UpdateMetrics();
 		// set to valid
 		valid = true;
 	}
@@ -78,6 +85,8 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
 		CalcCustomItems();
+		// Run since [actor] is valid
+		UpdateMetrics();
 		// set to valid
 		valid = true;
 	}
@@ -102,6 +111,12 @@ void ActorInfo::CalcCustomItems()
 {
 	LOG_3("{}[ActorInfo] [CalcCustomItems]");
 	Distribution::CalcRule(this);
+}
+
+void ActorInfo::UpdateMetrics()
+{
+	playerDistance = actor->GetPosition().GetSquaredDistance(playerPosition);
+	playerHostile = actor->IsHostileToActor(playerRef);
 }
 
 #define CV(x) static_cast<uint64_t>(x)
@@ -895,4 +910,8 @@ void ActorInfo::Update()
 	actor = RE::TESForm::LookupByID<RE::Actor>(formid);
 	if (actor == nullptr)
 		valid = false;
+	else {
+		// update the metrics, since we are sure our object is valid
+		UpdateMetrics();
+	}
 }

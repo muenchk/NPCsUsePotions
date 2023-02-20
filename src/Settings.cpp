@@ -29,6 +29,21 @@ static std::uniform_int_distribution<signed> rand100(1, 100);
 
 #pragma region Settings
 
+void Settings::Interfaces::RequestAPIs()
+{
+	loginfo("[SETTINGS] [RequestInterfaces]");
+	// get tmp api
+	if (!tdm_api) {
+		loginfo("[SETTINGS] [RequestInterfaces] Trying to get True Directional Movement API");
+		tdm_api = reinterpret_cast<TDM_API::IVTDM1*>(TDM_API::RequestPluginAPI(TDM_API::InterfaceVersion::V1));
+		if (tdm_api) {
+			loginfo("[SETTINGS] [RequestInterfaces] Acquired True Directional Movement API");
+		} else {
+			loginfo("[SETTINGS] [RequestInterfaces] Failed to get True Directional Movement API");
+		}
+	}
+}
+
 void Settings::InitGameStuff()
 {
 	loginfo("[SETTINGS] [InitGameStuff] Load Game Stuff");
