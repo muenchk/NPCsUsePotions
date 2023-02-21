@@ -511,10 +511,8 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 					}
 					// save statistics
 					Statistics::Misc_PotionsAdministered++;
-					RE::ExtraDataList* extra = new RE::ExtraDataList();
-					extra->SetOwner(acinfo->actor);
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
-					acinfo->actor->DrinkPotion(std::get<2>(ls.front()), extra);
+					acinfo->actor->DrinkPotion(std::get<2>(ls.front()), nullptr);
 					//RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
 				}
 				std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
@@ -567,9 +565,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, AlchemyEf
 				ev->sender = std::get<2>(ls.front());
 				SKSE::GetModCallbackEventSource()->SendEvent(ev);
 			} else {
-				RE::ExtraDataList* extra = new RE::ExtraDataList();
-				extra->SetOwner(acinfo->actor);
-				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), nullptr, 1, nullptr, true, false, false);
 			}
 			return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 		}
@@ -610,9 +606,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo)
 				ev->sender = std::get<2>(item);
 				SKSE::GetModCallbackEventSource()->SendEvent(ev);
 			} else {
-				RE::ExtraDataList* extra = new RE::ExtraDataList();
-				extra->SetOwner(acinfo->actor);
-				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(item), extra, 1, nullptr, true, false, false);
+				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(item), nullptr, 1, nullptr, true, false, false);
 			}
 			return { std::get<1>(item), std::get<3>(item) };
 		}

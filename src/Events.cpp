@@ -1036,27 +1036,21 @@ CheckActorsSkipIteration:
 					auto items = ACM::GetAllPotions(acinfo);
 					auto it = items.begin();
 					while (it != items.end()) {
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(acinfo->actor);
-						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllPoisons(acinfo);
 					it = items.begin();
 					while (it != items.end()) {
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(acinfo->actor);
-						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllFood(acinfo);
 					it = items.begin();
 					while (it != items.end()) {
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(acinfo->actor);
-						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
@@ -1073,9 +1067,7 @@ CheckActorsSkipIteration:
 						if (items[i] == nullptr) {
 							continue;
 						}
-						RE::ExtraDataList* extra = new RE::ExtraDataList();
-						extra->SetOwner(acinfo->actor);
-						acinfo->actor->AddObjectToContainer(items[i], extra, 1, nullptr);
+						acinfo->actor->AddObjectToContainer(items[i], nullptr, 1, nullptr);
 						LOG2_4("{}[Events] [ProcessDistribution] added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo->actor));
 					}
 					acinfo->lastDistrTime = RE::Calendar::GetSingleton()->GetDaysPassed();
@@ -1307,9 +1299,7 @@ CheckActorsSkipIteration:
 								it++;
 								continue;
 							}
-							RE::ExtraDataList* extra = new RE::ExtraDataList();
-							extra->SetOwner(actor);
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 							it++;
 						}
@@ -1320,9 +1310,7 @@ CheckActorsSkipIteration:
 								it++;
 								continue;
 							}
-							RE::ExtraDataList* extra = new RE::ExtraDataList();
-							extra->SetOwner(actor);
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 							it++;
 						}
@@ -1333,9 +1321,7 @@ CheckActorsSkipIteration:
 								it++;
 								continue;
 							}
-							RE::ExtraDataList* extra = new RE::ExtraDataList();
-							extra->SetOwner(actor);
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 							it++;
 						}
@@ -1584,9 +1570,7 @@ CheckActorsSkipIteration:
 							if (items.size() > 0) {
 								// remove items that are too much
 								while (items.size() > Settings::Removal::_MaxItemsLeft) {
-									RE::ExtraDataList* extra = new RE::ExtraDataList();
-									extra->SetOwner(actor);
-									actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+									actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 									LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items.back()));
 									items.pop_back();
 								}
@@ -1595,9 +1579,7 @@ CheckActorsSkipIteration:
 								if (Settings::Removal::_ChanceToRemoveItem < 100) {
 									for (int i = (int)items.size() - 1; i >= 0; i--) {
 										if (rand100(rand) <= Settings::Removal::_ChanceToRemoveItem) {
-											RE::ExtraDataList* extra = new RE::ExtraDataList();
-											extra->SetOwner(actor);
-											actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, extra, nullptr);
+											actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 											LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items[i]));
 										} else {
 											LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", Utility::PrintForm(items[i]));
@@ -1617,9 +1599,7 @@ CheckActorsSkipIteration:
 						// calc chances
 						if (rand100(rand) <= ditems[i]->chance) {
 							// distr item
-							RE::ExtraDataList* extra = new RE::ExtraDataList();
-							extra->SetOwner(actor);
-							actor->AddObjectToContainer(ditems[i]->object, extra, ditems[i]->num, nullptr);
+							actor->AddObjectToContainer(ditems[i]->object, nullptr, ditems[i]->num, nullptr);
 						}
 					}
 					// delete actor from data
