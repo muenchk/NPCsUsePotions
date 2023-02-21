@@ -110,6 +110,8 @@ namespace Events
 	/// </summary>
 	static std::unordered_set<RE::FormID> deads;
 
+	static std::unordered_map<RE::FormID, std::forward_list<RE::FormID>*> validLoot;
+
 	/// <summary>
 	/// list of npcs that are currently in combat
 	/// </summary>
@@ -1472,6 +1474,9 @@ CheckActorsSkipIteration:
 		}
 		// reset the list of actors that died
 		deads.clear();
+		// delete all lists in the valid loot
+		std::for_each(validLoot.begin(), validLoot.end(), [](std::pair<RE::FormID, std::forward_list<RE::FormID>*> pair) { delete pair.second; });
+		validLoot.clear();
 		// reset list of actors in combat
 		combatants.clear();
 		// set player to alive
@@ -1570,17 +1575,16 @@ CheckActorsSkipIteration:
 					// invalidate actor
 					ActorInfo* acinfo = data->FindActor(actor);
 					bool excluded = Distribution::ExcludedNPC(acinfo);
-					acinfo->SetInvalid();
 					// all npcs must be unregistered, even if distribution oes not apply to them
 					UnregisterNPC(actor);
 					// as with potion distribution, exlude excluded actors and potential followers
 					if (!excluded) {
 						// create and insert new event
 						deads.insert(actor->GetFormID());
+						auto items = Distribution::GetMatchingInventoryItems(acinfo);
+						LOG1_1("{}[Events] [TESDeathEvent] found {} items", items.size());
 						if (Settings::Removal::_RemoveItemsOnDeath) {
 							LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
-							auto items = Distribution::GetMatchingInventoryItems(acinfo);
-							LOG1_1("{}[Events] [TESDeathEvent] found {} items", items.size());
 							if (items.size() > 0) {
 								// remove items that are too much
 								while (items.size() > Settings::Removal::_MaxItemsLeft) {
@@ -1601,8 +1605,31 @@ CheckActorsSkipIteration:
 											LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items[i]));
 										} else {
 											LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", Utility::PrintForm(items[i]));
+											// if we did not remove an item on purpose, we need
+											// to remember that the player should get the item
+											// without it being marked as stolen
+											auto itr = validLoot.find(actor->GetFormID());
+											if (itr != validLoot.end()) {
+												itr->second->push_front(items[i]->GetFormID());
+											} else {
+												std::forward_list<RE::FormID>* ls = new std::forward_list<RE::FormID>();
+												ls->push_front(items[i]->GetFormID());
+												validLoot.insert_or_assign(actor->GetFormID(), ls);
+											}
 										}
 									}
+								}
+							}
+						} else {
+							// even if we don't remove items, we need to remember valid loot
+							for (int i = 0; i < items.size(); i++) {
+								auto itr = validLoot.find(actor->GetFormID());
+								if (itr != validLoot.end()) {
+									itr->second->push_front(items[i]->GetFormID());
+								} else {
+									std::forward_list<RE::FormID>* ls = new std::forward_list<RE::FormID>();
+									ls->push_front(items[i]->GetFormID());
+									validLoot.insert_or_assign(actor->GetFormID(), ls);
 								}
 							}
 						}
@@ -1623,6 +1650,7 @@ CheckActorsSkipIteration:
 						}
 					}
 					// delete actor from data
+					acinfo->SetInvalid();
 					data->DeleteActor(actor->GetFormID());
 					comp->AnPois_RemoveActorPoison(actor->GetFormID());
 					comp->AnPoti_RemoveActorPotion(actor->GetFormID());
@@ -1845,19 +1873,83 @@ CheckActorsSkipIteration:
 	/// <param name="count">The number of items added</param>
 	/// <param name="sourceContainer">The container the item was in before</param>
 	/// <param name="a_event">The event information</param>
-	void OnItemAdded(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* /*sourceContainer*/, const RE::TESContainerChangedEvent* /*a_event*/)
+	void OnItemAdded(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* sourceContainer, const RE::TESContainerChangedEvent* /*a_event*/)
 	{
 		LOG2_1("{}[Events] [OnItemAddedEvent] {} added to {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
 		RE::Actor* actor = container->As<RE::Actor>();
 		if (actor) {
 			// handle event for an actor
-			ActorInfo* acinfo = data->FindActor(actor);
-			if (acinfo) {
 
+			// if the source is an actor and dead and the item has been added to the player, 
+			// try to remove the stolen flag
+			if (actor->IsPlayerRef() && sourceContainer != nullptr && deads.contains(sourceContainer->GetFormID())) {
+				
+				auto vitr = validLoot.find(sourceContainer->GetFormID());
+				if (vitr != validLoot.end()) {
+					std::forward_list<RE::FormID>* items = vitr->second;
+					auto litr = items->begin();
+					auto last = items->begin();
+					while (litr != items->end()) {
+						if (*litr == baseObj->GetFormID()) {
 
+							// we can search for our item and remove the stolen flag
+							RE::InventoryChanges* changes = actor->GetInventoryChanges();
+							if (changes) {
+								auto itr = changes->entryList->begin();
+								while (itr != changes->entryList->end()) {
+									// skim list until we find our item
+									auto obj = *itr;
+									// make sure its an alchemyitem, so we cannot cause side effects for any other items
+									if (obj && obj->object == baseObj && baseObj->As<RE::AlchemyItem>() != nullptr) {
+										// get extralists
+										if (obj->extraLists) {
+											auto iter = obj->extraLists->begin();
+											// skim extralists for the ownership extradata
+											while (iter != obj->extraLists->end()) {
+												auto list = *iter;
+												auto itra = list->begin();
+												while (itra != list->end()) {
+													if (itra->GetType() == RE::ExtraDataType::kOwnership)  // ExtraOwnership
+													{
+														// get data and set the owner to null
+														// -> remove owner and thus stolen flag
+														RE::ExtraOwnership* extra = list->GetByType<RE::ExtraOwnership>();
+														if (extra)
+															extra->owner = nullptr;
+														LOG1_4("{}[Events] [OnItemAdded] Potentially fixed stolen flag for {}", Utility::PrintForm(baseObj));
+													}
+													static_cast<void>(itra++);
+												}
+												static_cast<void>(iter++);
+											}
+										}
 
+										// if we removed ownership, nice
+										// if we didn't, then there was none, so we don't need to
+										// remove the error, remove the item from the list anyway
+										if (litr == last)
+											items->pop_front();
+										else
+											items->erase_after(last);
 
+									}
+									static_cast<void>(itr++);
+								}
+							}
+							break;
+						}
+						last = litr;
+						litr++;
+					}
 
+					if (items->empty()) {
+						// list is empty
+						// we can delete the list and remove the entry from the map
+						validLoot.erase(actor->GetFormID());
+						delete items;
+					}
+				}
+				
 			}
 		}
 		
