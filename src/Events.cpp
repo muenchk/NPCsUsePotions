@@ -700,6 +700,8 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
+		if (Settings::Food::_DisableFollowers && acinfo->IsFollower())
+			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorFood] {}", Utility::PrintForm(acinfo->actor));
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Food::_enableFood &&
@@ -1365,6 +1367,7 @@ CheckActorsSkipIteration:
 			acset.insert(acinfo);
 		} else {
 			sem.release();
+			LOG_1("{}[Events] [RegisterNPC] Actor already registered");
 			return;
 		}
 		sem.release();

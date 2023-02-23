@@ -244,6 +244,10 @@ public:
 		/// [Settings] Whether to restrict food usage to the beginning of combat
 		/// </summary>
 		static inline bool _RestrictFoodToCombatStart = false;  // restricts the usage of food to the beginning of the combat
+		/// <summary>
+		/// [Settings] Disables food usage for followers | used for survival mods
+		/// </summary>
+		static inline bool _DisableFollowers = false; 
 	};
 
 	/// <summary>

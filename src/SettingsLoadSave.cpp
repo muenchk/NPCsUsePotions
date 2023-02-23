@@ -242,7 +242,8 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "AllowDetrimentalEffects", std::to_string(Food::_AllowDetrimentalEffects));
 		Food::_RestrictFoodToCombatStart = ini.GetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart);
 		loginfo("[SETTINGS] {} {}", "OnlyAllowFoodAtCombatStart", std::to_string(Food::_RestrictFoodToCombatStart));
-
+		Food::_DisableFollowers = ini.GetBoolValue("Food", "DisableFollowers", Food::_DisableFollowers);
+		loginfo("[SETTINGS] {} {}", "DisableFollowers", std::to_string(Food::_DisableFollowers));
 
 		// player
 		Player::_playerPotions = ini.GetBoolValue("Player", "EnablePlayerPotions", Player::_playerPotions);
@@ -537,6 +538,8 @@ void Settings::Save()
 																							"// it worked until version 3.0.0\n"
 																							"// If disabled, NPCs will try to eat more food as soon as an existing \n"
 																							"// food buff runs out.");
+	ini.SetBoolValue("Food", "DisableFollowers", Food::_DisableFollowers, "// Disables food usage for followers only. You can use this to prevent your followers\n"
+																			"// from eating food, if you are using survival mods, without impacting other NPCs.");
 
 
 	// player
