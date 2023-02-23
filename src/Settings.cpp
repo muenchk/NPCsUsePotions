@@ -2816,6 +2816,10 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 			if (sett) {
 				mag[i] = item->effects[i]->effectItem.magnitude;
 				dur[i] = item->effects[i]->effectItem.duration;
+
+				// force area to zero, to avoid CTDs when using the item.
+				item->effects[i]->effectItem.area = 0;
+
 				detrimental |= sett->IsDetrimental();
 				positive |= !sett->IsDetrimental();
 
