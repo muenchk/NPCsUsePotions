@@ -529,7 +529,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorPotions] {}", Utility::PrintForm(acinfo->actor));
+		LOG1_1("{}[Events] [CheckActors] [HandleActorPotions] {}", Utility::PrintForm(acinfo));
 		AlchemyEffectBase alch = 0;
 		AlchemyEffectBase alch2 = 0;
 		AlchemyEffectBase alch3 = 0;
@@ -588,7 +588,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorFortifyPotions] {}", Utility::PrintForm(acinfo->actor));
+		LOG1_1("{}[Events] [CheckActors] [HandleActorFortifyPotions] {}", Utility::PrintForm(acinfo));
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::FortifyPotions::_enableFortifyPotions &&
 			(!(acinfo->actor->IsPlayerRef()) || Settings::Player::_playerFortifyPotions)) {
@@ -637,7 +637,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] {}", Utility::PrintForm(acinfo->actor));
+		LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] {}", Utility::PrintForm(acinfo));
 		if (acinfo->durCombat > 1000 &&
 			acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Poisons::_enablePoisons &&
@@ -689,7 +689,7 @@ namespace Events
 				}
 			}
 			if (acinfo->combatdata == 0)
-				LOG1_2("{}[Events] [CheckActors] couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo->actor));
+				LOG1_2("{}[Events] [CheckActors] couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo));
 			// else Mage or Hand to Hand which cannot use poisons
 		}
 	}
@@ -702,7 +702,7 @@ namespace Events
 			return;
 		if (Settings::Food::_DisableFollowers && acinfo->IsFollower())
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorFood] {}", Utility::PrintForm(acinfo->actor));
+		LOG1_1("{}[Events] [CheckActors] [HandleActorFood] {}", Utility::PrintForm(acinfo));
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Food::_enableFood &&
 			RE::Calendar::GetSingleton()->GetDaysPassed() >= acinfo->nextFoodTime &&
@@ -729,7 +729,7 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == true || acinfo->handleactor == false)
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo->actor));
+		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo));
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && acinfo->durHealth < tolerance &&
 			ACM::GetAVPercentage(acinfo->actor, RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
@@ -756,7 +756,7 @@ namespace Events
 			acinfo->handleactor = false;
 			return;
 		}
-		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo->actor));
+		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo));
 		if (acinfo->citems == nullptr)
 			acinfo->citems = new ActorInfo::CustomItems();
 		// check for staggered option
@@ -1070,7 +1070,7 @@ CheckActorsSkipIteration:
 							continue;
 						}
 						acinfo->actor->AddObjectToContainer(items[i], nullptr, 1, nullptr);
-						LOG2_4("{}[Events] [ProcessDistribution] added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo->actor));
+						LOG2_4("{}[Events] [ProcessDistribution] added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo));
 					}
 					acinfo->lastDistrTime = RE::Calendar::GetSingleton()->GetDaysPassed();
 				}

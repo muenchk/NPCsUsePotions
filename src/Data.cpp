@@ -285,7 +285,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	} else {
 		accounter++;
 		actorinfoMap.insert_or_assign(acinfo->actor->GetFormID(), acinfo);
-		LOG1_3("{}[Data] [ReadActorInfoMap] read ActorInfo. actor: {}", Utility::PrintForm(acinfo->actor));
+		LOG1_3("{}[Data] [ReadActorInfoMap] read ActorInfo. actor: {}", Utility::PrintForm(acinfo));
 	}
 	delete[] buffer;
 	// release lock

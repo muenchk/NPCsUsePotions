@@ -92,6 +92,7 @@ public:
 
 		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
 	}
+	static std::string PrintForm(ActorInfo* form);
 
 	/// <summary>
 	/// Converts all symbols in a string into lower case.

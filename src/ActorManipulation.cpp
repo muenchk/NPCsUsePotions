@@ -332,7 +332,7 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(A
 			count++;
 		}
 		if (count == 1000) {
-			logcritical("[ActorManipulation] [GetRandomFood] Maximum number of Items Exceeded! Forcibly excluding Actor {}", Utility::PrintForm(acinfo->actor));
+			logcritical("[ActorManipulation] [GetRandomFood] Maximum number of Items Exceeded! Forcibly excluding Actor {}", Utility::PrintForm(acinfo));
 			Distribution::ForceExcludeNPC(acinfo->actor->GetFormID());
 			return { 0.0f, 0, nullptr, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone) };
 		}
@@ -708,7 +708,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 /* CTDs consistently when playing animations from here
 bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 {
-	LOG2_4("{}[AnimatedPoison_ApplyPoison] actor {} poison {}", Utility::PrintForm(acinfo->actor), Utility::PrintForm(poison))
+	LOG2_4("{}[AnimatedPoison_ApplyPoison] actor {} poison {}", Utility::PrintForm(acinfo), Utility::PrintForm(poison))
 
 	// if parameters are invalid or compatibility disabled return
 	if (!comp->LoadedAnimatedPoisons() || acinfo == nullptr || poison == nullptr || acinfo->Animation_busy || acinfo->actor == nullptr || acinfo->actor->IsPlayerRef()) {

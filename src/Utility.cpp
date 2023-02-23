@@ -8,6 +8,13 @@ bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffe
 	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
 }
 
+std::string Utility::PrintForm(ActorInfo* acinfo)
+{
+	if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
+		return "None";
+	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+}
+
 std::string Utility::ToString(ActorStrength acs)
 {
 	switch (acs) {
