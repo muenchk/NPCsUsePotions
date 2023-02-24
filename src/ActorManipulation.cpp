@@ -121,7 +121,15 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 		auto iter = itemmap.begin();
 		RE::AlchemyItem* item = nullptr;
 		while (iter != itemmap.end() && alchemyEffect != 0) {
-			if (Utility::ValidateForm(iter->first) && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			if (Utility::ValidateForm(iter->first) &&
+				std::get<1>(iter->second).get() &&
+				std::get<1>(iter->second).get()->IsQuestObject() == false &&
+				(acinfo->actor->IsPlayerRef() == false ||
+					acinfo->actor->IsPlayerRef() &&
+						(Settings::Player::_UseFavoritedItemsOnly == false ||
+							std::get<1>(iter->second).get()->IsFavorited()) &&
+						(Settings::Player::_DontUseFavoritedItems == false ||
+							std::get<1>(iter->second).get()->IsFavorited() == false))) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetMatchingPotions] checking item");
 				if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
@@ -134,7 +142,6 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 						//logger::info("[ActorManipulation] [GetMatchingPotions] dur {} mag {} effect {}", std::get<2>(res), std::get<1>(res), static_cast<uint64_t>(std::get<3>(res)));
 					}
-					
 				}
 			}
 			iter++;
@@ -176,7 +183,15 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 		auto iter = itemmap.begin();
 		RE::AlchemyItem* item = nullptr;
 		while (iter != itemmap.end() && alchemyEffect != 0) {
-			if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			if (Utility::ValidateForm(iter->first) &&
+				std::get<1>(iter->second).get() &&
+				std::get<1>(iter->second).get()->IsQuestObject() == false &&
+				(acinfo->actor->IsPlayerRef() == false ||
+					acinfo->actor->IsPlayerRef() &&
+						(Settings::Player::_UseFavoritedItemsOnly == false ||
+							std::get<1>(iter->second).get()->IsFavorited()) &&
+						(Settings::Player::_DontUseFavoritedItems == false ||
+							std::get<1>(iter->second).get()->IsFavorited() == false))) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetMatchingPoisons] checking item");
 				if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
@@ -185,7 +200,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
 					else if (res = HasAlchemyEffect(item, alchemyEffect);
 							 std::get<0>(res) &&
-							 (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/))	{
+							 (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 					}
 				}
@@ -230,7 +245,15 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 		auto iter = itemmap.begin();
 		RE::AlchemyItem* item = nullptr;
 		while (iter != itemmap.end() && alchemyEffect != 0) {
-			if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			if (Utility::ValidateForm(iter->first) &&
+				std::get<1>(iter->second).get() &&
+				std::get<1>(iter->second).get()->IsQuestObject() == false &&
+				(acinfo->actor->IsPlayerRef() == false ||
+					acinfo->actor->IsPlayerRef() &&
+						(Settings::Player::_UseFavoritedItemsOnly == false ||
+							std::get<1>(iter->second).get()->IsFavorited()) &&
+						(Settings::Player::_DontUseFavoritedItems == false ||
+							std::get<1>(iter->second).get()->IsFavorited() == false))) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetMatchingFood] checking item");
 				if (item && raw == false && (item->IsFood() || item->HasKeyword(Settings::VendorItemFood))) {
@@ -298,7 +321,15 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(A
 		AlchemyEffectBase out = 0;
 		int count = 0;
 		while (iter != itemmap.end() && count < 1000) {
-			if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+			if (Utility::ValidateForm(iter->first) &&
+				std::get<1>(iter->second).get() &&
+				std::get<1>(iter->second).get()->IsQuestObject() == false &&
+				(acinfo->actor->IsPlayerRef() == false ||
+					acinfo->actor->IsPlayerRef() &&
+						(Settings::Player::_UseFavoritedItemsOnly == false ||
+							std::get<1>(iter->second).get()->IsFavorited()) &&
+						(Settings::Player::_DontUseFavoritedItems == false ||
+							std::get<1>(iter->second).get()->IsFavorited() == false))) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetRandomFood] checking item");
 				if (item && (item->IsFood() || item->HasKeyword(Settings::VendorItemFoodRaw) || item->HasKeyword(Settings::VendorItemFood))) {

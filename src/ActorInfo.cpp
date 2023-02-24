@@ -853,17 +853,14 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				// if the actorinfo is not valid, then do not evaluate the actor
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
 				if (!form) {
-					logcritical("Cannnot find formid1 {}", Utility::GetHex(formid));
 					form = RE::TESForm::LookupByID(formid);
 					if (!form) {
-						logcritical("Cannnot find formid2");
 						return false;
 					}
 				}
 				actor = form->As<RE::Actor>();
 				if (!actor) {
 					return false;
-					logcritical("Cannnot find actor2");
 				}
 				// set formid to the full formid including plugin index
 				formid = actor->GetFormID();

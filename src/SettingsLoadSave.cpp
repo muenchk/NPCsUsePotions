@@ -254,7 +254,13 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "Player:            EnablePlayerFortifyPotionUsage", std::to_string(Player::_playerFortifyPotions));
 		Player::_playerFood = ini.GetBoolValue("Player", "EnablePlayerFoodUsage", Player::_playerFood);
 		loginfo("[SETTINGS] {} {}", "Player:            EnablePlayerFoodUsage", std::to_string(Player::_playerFood));
-		
+
+		Player::_UseFavoritedItemsOnly = ini.GetBoolValue("Player", "UseFavoritedItemsOnly", Player::_UseFavoritedItemsOnly);
+		loginfo("[SETTINGS] {} {}", "Player:            UseFavoritedItemsOnly", std::to_string(Player::_UseFavoritedItemsOnly));
+		Player::_DontUseFavoritedItems = ini.GetBoolValue("Player", "DontUseFavoritedItems", Player::_DontUseFavoritedItems);
+		loginfo("[SETTINGS] {} {}", "Player:            DontUseFavoritedItems", std::to_string(Player::_DontUseFavoritedItems));
+		if (Player::_UseFavoritedItemsOnly && Player::_DontUseFavoritedItems)
+			Player::_UseFavoritedItemsOnly = false;
 
 		// usage
 		Usage::_DisableItemUsageWhileStaggered = ini.GetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered);
@@ -549,6 +555,10 @@ void Settings::Save()
 	ini.SetBoolValue("Player", "EnablePlayerFortifyPotionUsage", Player::_playerFortifyPotions, "// Player will use fortify potions the way followers do.");
 	ini.SetBoolValue("Player", "EnablePlayerFoodUsage", Player::_playerFood, "// Player will use food the way npcs do.");
 
+	ini.SetBoolValue("Player", "UseFavoritedItemsOnly", Player::_UseFavoritedItemsOnly, "// Player will only use items that have been added to the favorites.");
+	ini.SetBoolValue("Player", "DontUseFavoritedItems", Player::_DontUseFavoritedItems, "// Player will not use any items that have been added to the favorites.\n"
+																						"// If both UseFavoritedItemsOnly and DontUseFavoritedItems are set to true\n"
+																						"// UseFavoritedItemsOnly = false will be set automatically upon loading the game.");
 
 	// usage
 	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered aren't able to use any potions and poisons.");

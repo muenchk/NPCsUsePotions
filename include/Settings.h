@@ -271,6 +271,14 @@ public:
 		/// [Settings] Whether the player will automatically consume food
 		/// </summary>
 		static inline bool _playerFood = false;             // enables automatic usage of food for player
+		/// <summary>
+		/// [Settings] The player will only use items that have been marked as favorite
+		/// </summary>
+		static inline bool _UseFavoritedItemsOnly = false;
+		/// <summary>
+		/// [Settings] The player will not use favorited items
+		/// </summary>
+		static inline bool _DontUseFavoritedItems = false;
 	};
 
 	/// <summary>
