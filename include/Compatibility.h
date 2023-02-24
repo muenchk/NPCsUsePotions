@@ -8,9 +8,11 @@ public:
 
 	// apothecary
 	static inline std::string Apothecary = "Apothecary.esp";
+	RE::BGSKeyword* Apot_SH_AlcoholDrinkKeyword = nullptr;
 
 	// caco
 	static inline std::string CACO = "Complete Alchemy & Cooking Overhaul.esp";
+	RE::BGSKeyword* CACO_VendorItemDrinkAlcohol = nullptr;
 
 	// animated poisons
 	static inline std::string AnimatedPoisons = "AnimatedPoisons.esp";

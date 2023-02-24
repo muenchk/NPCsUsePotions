@@ -117,6 +117,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// Debug stuff
 		if (Settings::Debug::_CheckActorsWithoutRules)
 			Settings::CheckActorsForRules();
+		// before classifying items make sure compatibility loads everything it can
+		Compatibility::GetSingleton()->Load();
 		// classify currently loaded game items
 		Settings::ClassifyItems();
 		Settings::CleanAlchemyEffects();

@@ -15,7 +15,9 @@
 #include "Distribution.h"
 #include "AlchemyEffect.h"
 #include "Data.h"
+#include "Compatibility.h"
 
+using Comp = Compatibility;
 using ActorStrength = ActorStrength;
 using ItemStrength = ItemStrength;
 using ItemType = Settings::ItemType;
@@ -2496,6 +2498,7 @@ void Settings::ClassifyItems()
 
 	Data* data = Data::GetSingleton();
 	data->ResetAlchItemEffects();
+	Comp* comp = Comp::GetSingleton();
 
 	std::vector<std::tuple<std::string, std::string>> ingredienteffectmap;
 
@@ -2581,6 +2584,11 @@ void Settings::ClassifyItems()
 							}
 						}
 					}
+				}
+
+				// check if item has known alcohol keywords and add it to list of alcohol
+				if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol)) {
+					Distribution::_alcohol.insert(item->GetFormID());
 				}
 
 				// since the item is not to be excluded, save which alchemic effects are present
