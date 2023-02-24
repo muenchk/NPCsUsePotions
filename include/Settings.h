@@ -279,6 +279,14 @@ public:
 		/// [Settings] The player will not use favorited items
 		/// </summary>
 		static inline bool _DontUseFavoritedItems = false;
+		/// <summary>
+		/// [Settings] The player will not consume food with the Keyword VendorItemFoodRaw
+		/// </summary>
+		static inline bool _DontEatRawFood = false;
+		/// <summary>
+		/// [Settings] The player will not consume anything regarded as alcohol
+		/// </summary>
+		static inline bool _DontDrinkAlcohol = false;
 	};
 
 	/// <summary>

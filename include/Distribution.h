@@ -522,6 +522,10 @@ private:
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedItems;
 	/// <summary>
+	/// set that contains item IDs that are excluded for the player only
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _excludedItemsPlayer;
+	/// <summary>
 	/// set that contains association objects excluded from baseline distribution
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _baselineExclusions;
@@ -561,10 +565,23 @@ private:
 	/// map that contains from distribution excluded effects
 	/// </summary>
 	static inline std::unordered_set<AlchemyEffect> _excludedEffects;
-
+	/// <summary>
+	/// set of plugin indexes for plugins, which npcs are excluded
+	/// </summary>
 	static inline std::unordered_set<uint32_t> _excludedPlugins_NPCs;
+	/// <summary>
+	/// set of whitelisted npcs
+	/// </summary>
 	static inline std::unordered_set<RE::FormID> _whitelistNPCs;
+	/// <summary>
+	/// set of plugin indexes for plugins, which npcs are whitelisted
+	/// </summary>
 	static inline std::unordered_set<uint32_t> _whitelistNPCsPlugin;
+	/// <summary>
+	/// set that contains the IDs of alcoholic items
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _alcohol;
+
 	
 public:
 	static inline std::vector<Rule*> _dummyVecR;
@@ -617,6 +634,10 @@ public:
 	/// <returns></returns>
 	static const std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
 	/// <summary>
+	/// returns the set that contains item IDs that are excluded for the player only
+	/// </summary>
+	static inline std::unordered_set<RE::FormID>* excludedItemsPlayer() { return initialised ? &_excludedItemsPlayer : &_dummySet1; }
+	/// <summary>
 	/// returns the set of assoc objects excluded from baseline distribution
 	/// </summary>
 	/// <returns></returns>
@@ -658,16 +679,28 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>>* dosageEffectMap() { return initialised ? &_dosageEffectMap : &_dummyMap6; }
-
 	/// <summary>
 	/// return the set of excluded alchemy effects
 	/// </summary>
 	/// <returns></returns>
 	static inline std::unordered_set<AlchemyEffect>* excludedEffects() { return initialised ? &_excludedEffects : &_dummySet4; }
-
+	/// <summary>
+	/// returns the set of plugin indexes for plugins which npcs are excluded
+	/// </summary>
 	static inline std::unordered_set<uint32_t>* excludedPlugins_NPCs() { return initialised ? &_excludedPlugins_NPCs : &_dummySet5; }
+	/// <summary>
+	/// returns the set of whitelisted npcs
+	/// </summary>
+	/// <returns></returns>
 	static inline std::unordered_set<RE::FormID>* whitelistNPCs() { return initialised ? &_whitelistNPCs : &_dummySet1; }
+	/// <summary>
+	/// returns the set of plugin indexes for plugins, which npcs are whitelisted
+	/// </summary>
 	static inline std::unordered_set<uint32_t>* whitelistNPCsPlugin() { return initialised ? &_whitelistNPCsPlugin : &_dummySet5; }
+	/// <summary>
+	/// returns the set that contains the IDs of alcoholic items
+	/// </summary>
+	static inline std::unordered_set<RE::FormID>* alcohol() { return initialised ? &_alcohol : &_dummySet1; }
 
 
 

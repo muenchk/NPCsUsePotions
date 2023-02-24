@@ -715,7 +715,7 @@ namespace Events
 			effects |= CalcRegenEffects(acinfo, acinfo->combatdata);
 			auto [dur, effect] = ACM::ActorUseFood(acinfo, effects, false);
 			if (effect == 0) {  // nothing found
-				auto tup = ACM::ActorUseFood(acinfo);
+				auto tup = acinfo->actor->IsPlayerRef() && Settings::Player::_DontEatRawFood ? ACM::ActorUseFood(acinfo, false) : ACM::ActorUseFood(acinfo, true);
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}

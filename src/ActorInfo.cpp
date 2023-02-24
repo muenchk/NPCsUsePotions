@@ -852,14 +852,14 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				pluginname = Buffer::ReadString(buffer, offset);
 				// if the actorinfo is not valid, then do not evaluate the actor
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
-				if (!form) {
+				if (form == nullptr) {
 					form = RE::TESForm::LookupByID(formid);
 					if (!form) {
 						return false;
 					}
 				}
 				actor = form->As<RE::Actor>();
-				if (!actor) {
+				if (actor == nullptr) {
 					return false;
 				}
 				// set formid to the full formid including plugin index

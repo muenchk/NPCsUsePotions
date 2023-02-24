@@ -253,25 +253,24 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						(Settings::Player::_UseFavoritedItemsOnly == false ||
 							std::get<1>(iter->second).get()->IsFavorited()) &&
 						(Settings::Player::_DontUseFavoritedItems == false ||
-							std::get<1>(iter->second).get()->IsFavorited() == false))) {
+							std::get<1>(iter->second).get()->IsFavorited() == false) &&
+						(Settings::Player::_DontDrinkAlcohol == false || 
+							Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false))) 
+			{
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetMatchingFood] checking item");
-				if (item && raw == false && (item->IsFood() || item->HasKeyword(Settings::VendorItemFood))) {
+
+				if (item &&
+					(item->IsFood() ||
+						item->HasKeyword(Settings::VendorItemFood) ||
+						(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
+					(raw == true || !item->HasKeyword(Settings::VendorItemFoodRaw))) {
 					LOG1_4("{}[ActorManipulation] [GetMatchingFood] found food {}", Utility::PrintForm(item));
 					if (acinfo->CanUseFood(item->GetFormID()))
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
 					else if (res = HasAlchemyEffect(item, alchemyEffect);
 							 std::get<0>(res) &&
 							 (Settings::Food::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
-						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
-					}
-				} else if (item && raw == true && item->HasKeyword(Settings::VendorItemFoodRaw)) {
-					LOG1_4("{}[ActorManipulation] [GetMatchingFood] found food raw {}", Utility::PrintForm(item));
-					if (acinfo->CanUseFood(item->GetFormID()))
-						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
-					else if (res = HasAlchemyEffect(item, alchemyEffect);
-							 std::get<0>(res) &&
-							 (Settings::Potions::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 					}
 				}
@@ -306,7 +305,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllFood(ActorInfo* acinfo)
 	return ret;
 }
 
-std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(ActorInfo* acinfo)
+std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(ActorInfo* acinfo, bool raw)
 {
 	LOG_3("{}[ActorManipulation] [GetRandomFood]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -332,7 +331,12 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(A
 							std::get<1>(iter->second).get()->IsFavorited() == false))) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetRandomFood] checking item");
-				if (item && (item->IsFood() || item->HasKeyword(Settings::VendorItemFoodRaw) || item->HasKeyword(Settings::VendorItemFood))) {
+
+				if (item &&
+					(item->IsFood() ||
+						item->HasKeyword(Settings::VendorItemFood) ||
+						(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
+					(raw == true || !item->HasKeyword(Settings::VendorItemFoodRaw))) {
 					mag = 0;
 					dur = 0;
 					out = 0;
@@ -605,7 +609,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, AlchemyEf
 	return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone) };
 }
 
-std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo)
+std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, bool raw)
 {
 	LOG_2("{}[ActorManipulation] [ActorUseFood-Random]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -614,7 +618,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo)
 		auto iter = itemmap.begin();
 		auto end = itemmap.end();
 		LOG_2("{}[ActorManipulation] [ActorUseFood-Random] trying to find food");
-		auto item = GetRandomFood(acinfo);
+		auto item = GetRandomFood(acinfo, raw);
 		//LOG_2("{}[ActorManipulation] [ActorUseFood-Random] step1");
 		// use the random food
 		if (std::get<2>(item)) {

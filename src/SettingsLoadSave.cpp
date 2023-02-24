@@ -261,6 +261,11 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "Player:            DontUseFavoritedItems", std::to_string(Player::_DontUseFavoritedItems));
 		if (Player::_UseFavoritedItemsOnly && Player::_DontUseFavoritedItems)
 			Player::_UseFavoritedItemsOnly = false;
+		Player::_DontEatRawFood = ini.GetBoolValue("Player", "DontEatRawFood", Player::_DontEatRawFood);
+		loginfo("[SETTINGS] {} {}", "Player:            DontEatRawFood", std::to_string(Player::_DontEatRawFood));
+		Player::_DontDrinkAlcohol = ini.GetBoolValue("Player", "DontDrinkAlcohol", Player::_DontDrinkAlcohol);
+		loginfo("[SETTINGS] {} {}", "Player:            DontDrinkAlcohol", std::to_string(Player::_DontDrinkAlcohol));
+
 
 		// usage
 		Usage::_DisableItemUsageWhileStaggered = ini.GetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered);
@@ -559,6 +564,9 @@ void Settings::Save()
 	ini.SetBoolValue("Player", "DontUseFavoritedItems", Player::_DontUseFavoritedItems, "// Player will not use any items that have been added to the favorites.\n"
 																						"// If both UseFavoritedItemsOnly and DontUseFavoritedItems are set to true\n"
 																						"// UseFavoritedItemsOnly = false will be set automatically upon loading the game.");
+	ini.SetBoolValue("Player", "DontEatRawFood", Player::_DontEatRawFood, "// If enabled, the player will not consume food with the Keyword VendorItemFoodRaw");
+	ini.SetBoolValue("Player", "DontDrinkAlcohol", Player::_DontDrinkAlcohol, "// If enabled, the player will not consume anything regarded as alcohol");
+	
 
 	// usage
 	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered aren't able to use any potions and poisons.");

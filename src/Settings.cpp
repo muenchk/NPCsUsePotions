@@ -1168,6 +1168,30 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
+							case 19:  // mark item as alcoholic
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kItem:
+											Distribution::_alcohol.insert(std::get<1>(items[i]));
+											LOGLE1_2("[Settings] [LoadDistrRules] marked {} as alcoholic", Utility::GetHex(std::get<1>(items[i])));
+											break;
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+
 							default:
 								logwarn("[Settings] [LoadDistrRules] Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;
@@ -2648,6 +2672,15 @@ void Settings::ClassifyItems()
 		iter++;
 	}
 	PROF1_1("{}[ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+
+	// add alcoholic items to player exclusion list
+	if (Settings::Player::_DontDrinkAlcohol) {
+		auto itr = Distribution::_alcohol.begin();
+		while (itr != Distribution::_alcohol.end()) {
+			Distribution::_excludedItemsPlayer.insert(*itr);
+			itr++;
+		}
+	}
 
 	// items initialised
 	_itemsInit = true;
