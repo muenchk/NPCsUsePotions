@@ -1032,7 +1032,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 			acinfo->potionDistr.clear();
 			acinfo->potionDistr.shrink_to_fit();
 			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching potions");
-			auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+			auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions, true);
 			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 			// if the number of found items is less then the number of items to add
 			// then add the difference in numbers
@@ -1068,7 +1068,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 			acinfo->fortifyDistf.clear();
 			acinfo->fortifyDistf.shrink_to_fit();
 			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching fortify");
-			auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+			auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 			// if the number of found items is less then the number of items to add
 			// then add the difference in numbers
@@ -1142,7 +1142,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(ActorInfo* acinfo)
 	auto ritems = rule->GetRandomPotions(acinfo);
 	acinfo->potionDistr.clear();
 	acinfo->potionDistr.shrink_to_fit();
-	auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+	auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions, false);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
 	// return an empty list
@@ -1176,7 +1176,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrFortifyPotions(ActorInfo* ac
 	auto ritems = rule->GetRandomFortifyPotions(acinfo);
 	acinfo->fortifyDistf.clear();
 	acinfo->fortifyDistf.shrink_to_fit();
-	auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+	auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
 	// return an empty list
@@ -1208,7 +1208,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(Acto
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::Distr::_DistributePotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions, false);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
@@ -1220,7 +1220,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(Acto
 		}
 	}
 	if (Settings::Distr::_DistributeFortifyPotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
@@ -1242,7 +1242,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::Distr::_DistributePotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions, false);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| potions {} | found: {}", Utility::GetHex(rule->validPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
@@ -1256,7 +1256,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 		}
 	}
 	if (Settings::Distr::_DistributeFortifyPotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| fortify {} | found: {}", Utility::GetHex(rule->validFortifyPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));

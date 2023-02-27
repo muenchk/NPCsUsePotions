@@ -119,7 +119,7 @@ std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::
 	}
 }
 
-std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect)
+std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool fortify)
 {
 	LOG_3("{}[ActorManipulation] [GetMatchingPotions]");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ret{};
@@ -143,7 +143,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 				LOG_5("{}[ActorManipulation] [GetMatchingPotions] checking item");
 				if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
 					LOG1_4("{}[ActorManipulation] [GetMatchingPotions] found medicine {}", Utility::PrintForm(item));
-					if (acinfo->CanUsePot(item->GetFormID())) {
+					if (fortify && acinfo->CanUseFortify(item->GetFormID()) || !fortify && acinfo->CanUsePotion(item->GetFormID())) {
 						auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
 						ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
 					} else if (res = HasAlchemyEffect(item, alchemyEffect);
@@ -474,7 +474,7 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(ActorInfo
 	return ret;
 }
 
-std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ACM::ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatibility)
+std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ACM::ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatibility, bool fortify)
 {
 	LOG_2("{}[ActorManipulation] [ActorUsePotion]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -488,7 +488,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 		auto end = itemmap.end();
 		//RE::EffectSetting* sett = nullptr;
 		LOG_2("{}[ActorManipulation] [ActorUsePotion] trying to find potion");
-		auto ls = GetMatchingPotions(acinfo, alchemyEffect);
+		auto ls = GetMatchingPotions(acinfo, alchemyEffect, fortify);
 		ls.sort(Utility::SortMagnitude);
 		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> tup) { return (bool)(std::get<3>(tup) & ULong(AlchemyEffect::kCureDisease)) && acinfo->CanUsePot(std::get<2>(tup)->GetFormID()) == false; });
 		// got all potions the actor has sorted by magnitude.

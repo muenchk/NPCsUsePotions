@@ -87,8 +87,9 @@ public:
 	/// </summary>
 	/// <param name="actor">actor to search</param>
 	/// <param name="eff">effect to search for</param>
+	/// <param name="fortify">whether to search for a fortify potion</param>
 	/// <returns>list of matching items with magnitudes and durations</returns>
-	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect);
+	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool fortify);
 
 	/// <summary>
 	/// Searches for and returns all potions in the actors inventory
@@ -150,8 +151,10 @@ public:
 	/// </summary>
 	/// <param name="acinfo">actor to apply potion on</param>
 	/// <param name="eff">effect to apply</param>
+	/// <param name="compatibility">whether to use items in compatibility mode</param>
+	/// <param name="fortify">whether to search for fortify potions</param>
 	/// <returns>Wether a potion was consumed</returns>
-	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatiblity = false);
+	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatiblity = false, bool fortify = false);
 
 	/// <summary>
 	/// takes an already computed list and uses the first item in the list

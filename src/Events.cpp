@@ -560,7 +560,7 @@ namespace Events
 				auto avmag = acinfo->actor->GetActorValue(RE::ActorValue::kMagicka);
 				auto avhealth = acinfo->actor->GetActorValue(RE::ActorValue::kHealth);
 				auto avstam = acinfo->actor->GetActorValue(RE::ActorValue::kStamina);
-				auto tup = ACM::ActorUsePotion(acinfo, alch, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation);
+				auto tup = ACM::ActorUsePotion(acinfo, alch, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
 				LOG1_2("{}[Events] [CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<1>(tup)));
 				if (static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth) & std::get<1>(tup)) {
 					acinfo->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
@@ -617,7 +617,7 @@ namespace Events
 				// std::tuple<int, AlchemyEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffect>>>
 				//loginfo("take fortify with effects: {}", Utility::GetHex(effects));
 				LOG1_4("{}[Events] [CheckActors] check for fortify potion with effect {}", Utility::GetHex(effects));
-				auto tup = ACM::ActorUsePotion(acinfo, effects, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify);
+				auto tup = ACM::ActorUsePotion(acinfo, effects, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify, true);
 				if (std::get<0>(tup) != -1) {
 					acinfo->globalCooldownTimer = comp->GetGlobalCooldown();
 					AlchemyEffectBase eff = std::get<1>(tup);
@@ -738,7 +738,7 @@ namespace Events
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && acinfo->durHealth < tolerance &&
 			ACM::GetAVPercentage(acinfo->actor, RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
-			auto tup = ACM::ActorUsePotion(acinfo, static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth), false);
+			auto tup = ACM::ActorUsePotion(acinfo, static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth), Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
 			if (static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth) & std::get<1>(tup)) {
 				acinfo->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
 				// update global cooldown
