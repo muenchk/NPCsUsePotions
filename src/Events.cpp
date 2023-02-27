@@ -1573,7 +1573,7 @@ CheckActorsSkipIteration:
 						deads.insert(actor->GetFormID());
 						if (Settings::Removal::_RemoveItemsOnDeath) {
 							LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
-							auto items = Distribution::GetMatchingInventoryItems(acinfo);
+							auto items = Distribution::GetAllInventoryItems(acinfo);
 							LOG1_1("{}[Events] [TESDeathEvent] found {} items", items.size());
 							if (items.size() > 0) {
 								// remove items that are too much

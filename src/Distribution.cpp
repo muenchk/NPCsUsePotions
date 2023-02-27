@@ -1285,6 +1285,51 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 	return ret;
 }
 
+std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(ActorInfo* acinfo)
+{
+	//logger::info("[SettingsDistribution] GetMatchingInventoryItems enter");
+	Rule* rule = CalcRule(acinfo);
+	std::vector<RE::AlchemyItem*> ret;
+	if (Settings::Distr::_DistributePotions) {
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, Base(AlchemyEffect::kAnyPotion), false);
+		for (auto i : items) {
+			ret.insert(ret.end(), std::get<2>(i));
+		}
+	}
+	if (Settings::Distr::_DistributePoisons) {
+		std::list<RE::AlchemyItem*> items = ACM::GetAllPotions(acinfo);
+		for (auto i : items) {
+			ret.insert(ret.end(), i);
+		}
+	}
+	if (Settings::Distr::_DistributeFortifyPotions) {
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, Base(AlchemyEffect::kAnyFortify), true);
+		for (auto i : items) {
+			ret.insert(ret.end(), std::get<2>(i));
+		}
+	}
+	if (Settings::Distr::_DistributeFood) {
+		std::list<RE::AlchemyItem*> items = ACM::GetAllFood(acinfo);
+		for (auto i : items) {
+			ret.insert(ret.end(), i);
+		}
+	}
+	if (ret.size() != 0) {
+		if (ret.back() == nullptr)
+			ret.pop_back();
+		auto map = acinfo->actor->GetInventoryCounts();
+		size_t currsize = ret.size();
+		for (int i = 0; i < currsize; i++) {
+			if (auto it = map.find(ret[i]); it != map.end()) {
+				if (it->second > 1)
+					for (int c = 1; c < it->second; c++)
+						ret.push_back(ret[i]);
+			}
+		}
+	}
+	return ret;
+}
+
 int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase effects)
 {
 	int dosage = 0;

@@ -294,8 +294,6 @@ bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 
 bool ActorInfo::CalcUsageConditions(CustomItem* item)
 {
-	if (!valid)
-		return false;
 	LOG_3("{}[ActorInfo] [CalcUsageConditions]");
 	// obligatory conditions (all must be fulfilled)
 	// only if there are conditions
@@ -406,8 +404,6 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 
 bool ActorInfo::CalcDistrConditions(CustomItem* item)
 {
-	if (!valid)
-		return false;
 	LOG_3("{}[ActorInfo] [CalcDistrConditions]");
 	// only check these if there are conditions
 	for (int i = 0; i < item->conditionsall.size(); i++) {

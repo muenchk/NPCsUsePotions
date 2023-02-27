@@ -780,6 +780,12 @@ public:
 	/// <returns></returns>
 	static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(ActorInfo* acinfo);
 	/// <summary>
+	/// Returns all inventory items (duplicates as extra vector entries)
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static std::vector<RE::AlchemyItem*> GetAllInventoryItems(ActorInfo* acinfo);
+	/// <summary>
 	/// Returns the dosage of a poison
 	/// </summary>
 	/// <param name="poison"></param>

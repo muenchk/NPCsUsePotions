@@ -2727,7 +2727,7 @@ void Settings::ClassifyItems()
 					dosage = Distribution::GetPoisonDosage(item, std::get<0>(clas));
 				// add item into effect map
 				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas), dosage);
-				LOGLE3_1("[Settings] [ClassifyItems] Saved effects for {} dur {} mag {}", Utility::PrintForm(item), std::get<3>(clas), std::get<4>(clas));
+				LOGLE4_1("[Settings] [ClassifyItems] Saved effects for {} dur {} mag {} effect {}", Utility::PrintForm(item), std::get<3>(clas), std::get<4>(clas), Utility::GetHex(std::get<0>(clas)));
 			}
 
 			itemi = (*iter).second->As<RE::IngredientItem>();
