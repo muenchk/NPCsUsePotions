@@ -451,6 +451,9 @@ namespace Events
 			effects |= static_cast<uint64_t>(AlchemyEffect::kLightArmor);
 		if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
 			effects |= static_cast<uint64_t>(AlchemyEffect::kHeavyArmor);
+
+		// shield potions
+		effects |= static_cast<uint64_t>(AlchemyEffect::kShield);
 		return effects;
 	}
 

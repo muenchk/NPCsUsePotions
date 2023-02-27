@@ -1,5 +1,6 @@
 #include "AlchemyEffect.h"
 #include "Settings.h"
+#include "Distribution.h"
 
 AlchemyEffect ConvertToAlchemyEffect(RE::EffectSetting* effect)
 {
@@ -70,6 +71,10 @@ AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect)
 			// Silence
 			if (id == 0x73F2B)
 				eff = AlchemyEffect::kMagickaRate;
+		}
+		auto itr = Distribution::magicEffectAlchMap()->find(id);
+		if (itr != Distribution::magicEffectAlchMap()->end()) {
+			eff = itr->second;
 		}
 		return eff;
 	}

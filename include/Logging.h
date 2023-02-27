@@ -230,7 +230,7 @@
 
 #define LOG3_2(s, t, u, v)                               \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v));
 
 #define LOG4_2(s, t, u, v, w)                               \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \

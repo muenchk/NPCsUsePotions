@@ -302,6 +302,28 @@ std::string Utility::ToString(AlchemyEffectBase ae)
 	return ret;
 }
 
+std::vector<std::string> Utility::SplitString(std::string str, char delimiter, bool removeEmpty)
+{
+	std::vector<std::string> splits;
+	size_t pos = str.find(delimiter);
+	while (pos != std::string::npos) {
+		splits.push_back(str.substr(0, pos));
+		str.erase(0, pos + 1);
+		pos = str.find(delimiter);
+	}
+	if (str.length() != 0)
+		splits.push_back(str);
+	if (removeEmpty) {
+		auto itr = splits.begin();
+		while (itr != splits.end()) {
+			if (*itr == "")
+				splits.erase(itr);
+			itr++;
+		}
+	}
+	return splits;
+}
+
 std::string Utility::ToStringCombatStyle(uint32_t style)
 {
 	std::string flags = "|";
@@ -1299,6 +1321,9 @@ Distribution::AssocType Utility::MatchValidFormType(RE::FormType type, bool& val
 	case RE::FormType::SoulGem:
 		valid = true;
 		return Distribution::AssocType::kItem;
+	case RE::FormType::MagicEffect:
+		valid = true;
+		return Distribution::AssocType::kEffectSetting;
 	default:
 		valid = false;
 		return Distribution::AssocType::kKeyword;

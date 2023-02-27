@@ -49,6 +49,8 @@ std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::
 		uint64_t tmp = 0;
 		bool found = false;
 		if (item->effects.size() > 0) {
+			int durtmp = 0;
+			float magtmp = 0;
 			for (uint32_t i = 0; i < item->effects.size(); i++) {
 				sett = item->effects[i]->baseEffect;
 				if (sett) {
@@ -60,14 +62,20 @@ std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::
 					detrimental |= sett->IsDetrimental();
 					positive |= !sett->IsDetrimental();
 					uint32_t formid = sett->GetFormID();
+					magtmp = item->effects[i]->effectItem.magnitude;
+					if (magtmp == 0)
+						magtmp = 1;
+					durtmp = item->effects[i]->effectItem.duration;
+					if (durtmp == 0)
+						durtmp = 1;
 					if ((tmp = (static_cast<uint64_t>(ConvertToAlchemyEffectPrimary(sett)) & alchemyEffect)) > 0) {
 						found = true;
 
 						//logger::info("[ActorManipulation] [HasAlchemyEffect] alch effect id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.primaryAV));
 						out |= tmp;
-						if (mag * dur < item->effects[i]->effectItem.magnitude * item->effects[i]->effectItem.duration) {
-							mag = item->effects[i]->effectItem.magnitude;
-							dur = item->effects[i]->effectItem.duration;
+						if (mag * dur < magtmp * durtmp) {
+							mag = magtmp;
+							dur = durtmp;
 						}
 					} else if (tmp != 0)
 						out |= tmp;
@@ -76,9 +84,9 @@ std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::
 
 						//logger::info("[ActorManipulation] [HasAlchemyEffect] alch effect2 id{} searched {}, target {}", std::to_string(tmp), alchemyEffect, ConvAlchULong(sett->data.secondaryAV));
 						out |= tmp;
-						if (mag * dur < item->effects[i]->effectItem.magnitude * item->effects[i]->effectItem.duration) {
-							mag = item->effects[i]->effectItem.magnitude;
-							dur = item->effects[i]->effectItem.duration;
+						if (mag * dur < magtmp * durtmp) {
+							mag = magtmp;
+							dur = durtmp;
 						}
 					} else if (tmp != 0)
 						out |= tmp;
@@ -129,16 +137,18 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						(Settings::Player::_UseFavoritedItemsOnly == false ||
 							std::get<1>(iter->second).get()->IsFavorited()) &&
 						(Settings::Player::_DontUseFavoritedItems == false ||
-							std::get<1>(iter->second).get()->IsFavorited() == false))) {
+							std::get<1>(iter->second).get()->IsFavorited() == false) &&
+						Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetMatchingPotions] checking item");
 				if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
 					LOG1_4("{}[ActorManipulation] [GetMatchingPotions] found medicine {}", Utility::PrintForm(item));
-					if (acinfo->CanUsePot(item->GetFormID()))
-						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
-					else if (res = HasAlchemyEffect(item, alchemyEffect);
-							 std::get<0>(res) &&
-							 (Settings::Potions::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
+					if (acinfo->CanUsePot(item->GetFormID())) {
+						auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+						ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					} else if (res = HasAlchemyEffect(item, alchemyEffect);
+							   std::get<0>(res) &&
+							   (Settings::Potions::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 						//logger::info("[ActorManipulation] [GetMatchingPotions] dur {} mag {} effect {}", std::get<2>(res), std::get<1>(res), static_cast<uint64_t>(std::get<3>(res)));
 					}
@@ -191,13 +201,16 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						(Settings::Player::_UseFavoritedItemsOnly == false ||
 							std::get<1>(iter->second).get()->IsFavorited()) &&
 						(Settings::Player::_DontUseFavoritedItems == false ||
-							std::get<1>(iter->second).get()->IsFavorited() == false))) {
+							std::get<1>(iter->second).get()->IsFavorited() == false) &&
+						Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetMatchingPoisons] checking item");
 				if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
 					LOG1_4("{}[ActorManipulation] [GetMatchingPoisons] found poison {}", Utility::PrintForm(item));
-					if (acinfo->CanUsePoison(item->GetFormID()))
-						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					if (acinfo->CanUsePoison(item->GetFormID())) {
+						auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+						ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					}
 					else if (res = HasAlchemyEffect(item, alchemyEffect);
 							 std::get<0>(res) &&
 							 (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
@@ -254,9 +267,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 							std::get<1>(iter->second).get()->IsFavorited()) &&
 						(Settings::Player::_DontUseFavoritedItems == false ||
 							std::get<1>(iter->second).get()->IsFavorited() == false) &&
-						(Settings::Player::_DontDrinkAlcohol == false || 
-							Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false))) 
-			{
+						Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 				item = iter->first->As<RE::AlchemyItem>();
 				LOG_5("{}[ActorManipulation] [GetMatchingFood] checking item");
 
@@ -266,8 +277,10 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
 					(raw == true || !item->HasKeyword(Settings::VendorItemFoodRaw))) {
 					LOG1_4("{}[ActorManipulation] [GetMatchingFood] found food {}", Utility::PrintForm(item));
-					if (acinfo->CanUseFood(item->GetFormID()))
-						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					if (acinfo->CanUseFood(item->GetFormID())) {
+						auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+						ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					}
 					else if (res = HasAlchemyEffect(item, alchemyEffect);
 							 std::get<0>(res) &&
 							 (Settings::Food::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
@@ -505,7 +518,8 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 		if (ls.size() > 0) {
 			RE::AlchemyItem* potion;
 			if (potion = std::get<2>(ls.front()); potion) {
-				LOG1_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {}", Utility::PrintForm(potion));
+				std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
+				LOG3_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {} with duration {} and magnitude {}", Utility::PrintForm(potion), std::get<1>(val), std::get<0>(val));
 				if (comp->LoadedAnimatedPotions() && acinfo->formid != 0x14) {
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] AnimatedPotions loaded, apply potion later");
 					comp->AnPoti_AddActorPotion(acinfo->actor->GetFormID(), potion);
@@ -536,7 +550,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 					ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
 					ev->strArg = RE::BSFixedString("");
 					ev->numArg = 0.0f;
-					ev->sender = std::get<2>(ls.front());
+					ev->sender = std::get<2>(val);
 					SKSE::GetModCallbackEventSource()->SendEvent(ev);
 				} else {
 					// apply compatibility stuff before using potion
@@ -547,10 +561,9 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 					// save statistics
 					Statistics::Misc_PotionsAdministered++;
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
-					acinfo->actor->DrinkPotion(std::get<2>(ls.front()), nullptr);
+					acinfo->actor->DrinkPotion(std::get<2>(val), nullptr);
 					//RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
 				}
-				std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
 				ls.pop_front();
 				return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
 			}
@@ -583,7 +596,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, AlchemyEf
 		if (ls.size() > 0 && std::get<2>(ls.front())) {
 			// add statistics
 			Statistics::Misc_FoodEaten++;
-			LOG1_2("{}[ActorManipulation] [ActorUseFood] Use Food {}", Utility::PrintForm(std::get<2>(ls.front())));
+			LOG3_2("{}[ActorManipulation] [ActorUseFood] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(ls.front())), std::get<1>(ls.front()), std::get<0>(ls.front()));
 			if (Settings::CompatibilityFoodPapyrus()) {
 				LOG_3("{}[ActorManipulation] [ActorUseFood] Compatibility Mode");
 				// use same event as for potions, since it takes a TESForm* and works for anything
@@ -624,7 +637,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, bool raw)
 		if (std::get<2>(item)) {
 			// save statistics
 			Statistics::Misc_FoodEaten++;
-			LOG1_2("{}[ActorManipulation] [ActorUseFood-Random] Use Food {}", Utility::PrintForm(std::get<2>(item)));
+			LOG3_2("{}[ActorManipulation] [ActorUseFood-Random] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
 			if (Settings::CompatibilityFoodPapyrus()) {
 				LOG_3("{}[ActorManipulation] [ActorUseFood-Random] Compatibility Mode");
 				// use same event as for potions, since it takes a TESForm* and works for anything
@@ -691,7 +704,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 					SKSE::GetModCallbackEventSource()->SendEvent(ev);
 					return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 				} else {
-					LOG1_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {}", Utility::PrintForm(poison));
+					LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
 					if (!audiomanager)
 						audiomanager = RE::BSAudioManager::GetSingleton();
 					RE::ExtraDataList* extra = new RE::ExtraDataList();

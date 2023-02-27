@@ -23,6 +23,7 @@ public:
 		kItem = 32,
 		kClass = 64,
 		kCombatStyle = 128,
+		kEffectSetting = 256,
 	};
 
 	class CustomItemStorage;
@@ -581,6 +582,10 @@ private:
 	/// set that contains the IDs of alcoholic items
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _alcohol;
+	/// <summary>
+	/// map that defines overwrites for AlchemyEffects for MagicEffects
+	/// </summary>
+	static inline std::unordered_map<RE::FormID, AlchemyEffect> _magicEffectAlchMap;
 
 	
 public:
@@ -592,6 +597,7 @@ public:
 	static inline std::unordered_map<RE::FormID, int> _dummyMap4;
 	static inline std::unordered_map<RE::FormID, std::tuple<bool, bool, int>> _dummyMap5;
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dummyMap6;
+	static inline std::unordered_map<RE::FormID, AlchemyEffect> _dummyMap7;
 	static inline std::unordered_set<RE::FormID> _dummySet1;
 	static inline std::unordered_set<uint8_t> _dummySet2;
 	static inline std::unordered_set<uint16_t> _dummySet3;
@@ -701,6 +707,10 @@ public:
 	/// returns the set that contains the IDs of alcoholic items
 	/// </summary>
 	static inline std::unordered_set<RE::FormID>* alcohol() { return initialised ? &_alcohol : &_dummySet1; }
+	/// <summary>
+	/// return the map that defines overwrites for AlchemyEffects for MagicEffects
+	/// </summary>
+	static inline std::unordered_map<RE::FormID, AlchemyEffect>* magicEffectAlchMap() { return initialised ? &_magicEffectAlchMap : &_dummyMap7; }
 
 
 

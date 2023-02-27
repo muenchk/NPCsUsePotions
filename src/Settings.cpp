@@ -1193,7 +1193,66 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
-
+							case 20: // define alchemy effect
+								{
+									if (splits->size() != 4) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									std::string effect = splits->at(splitindex);
+									splitindex++;
+									AlchemyEffectBase eff = 0;
+									try {
+										eff = std::stoull(effect, nullptr, 16);
+									} catch (std::exception&) {
+										logwarn("[Settings] [LoadDistrRules] expection in field \"Effect\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									}
+									AlchemyEffect e = static_cast<AlchemyEffect>(eff);
+									if (e != AlchemyEffect::kNone) {
+										bool error = false;
+										int total = 0;
+										auto items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+										for (int i = 0; i < items.size(); i++) {
+											switch (std::get<0>(items[i])) {
+											case Distribution::AssocType::kEffectSetting:
+												Distribution::_magicEffectAlchMap.insert_or_assign(std::get<1>(items[i]), e);
+												LOGLE2_2("[Settings] [LoadDistrRules] fixed {} to effect {}", Utility::GetHex(std::get<1>(items[i])), Utility::ToString(e));
+												break;
+											}
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 21:  // disallow player usage of items
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kEffectSetting:
+										case Distribution::AssocType::kItem:
+											Distribution::_excludedItemsPlayer.insert(std::get<1>(items[i]));
+											LOGLE1_2("[Settings] [LoadDistrRules] excluded {} for the player", Utility::GetHex(std::get<1>(items[i])));
+											break;
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
 							default:
 								logwarn("[Settings] [LoadDistrRules] Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;
@@ -2587,8 +2646,16 @@ void Settings::ClassifyItems()
 				}
 
 				// check if item has known alcohol keywords and add it to list of alcohol
-				if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol)) {
+				if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol) || comp->LoadedApothecary() && item->HasKeyword(comp->Apot_SH_AlcoholDrinkKeyword)) {
 					Distribution::_alcohol.insert(item->GetFormID());
+				}
+
+				// check for player excluded magiceffects
+				for (int i = 0; i < (int)item->effects.size(); i++) {
+					if (item->effects[i]->baseEffect && Distribution::excludedItemsPlayer()->contains(item->effects[i]->baseEffect->GetFormID())) {
+						LOGLE1_1("[Settings] [ClassifyItems] Excluded {} for player due to effect", Utility::PrintForm(item));
+						Distribution::_excludedItemsPlayer.insert(item->GetFormID());
+					}
 				}
 
 				// since the item is not to be excluded, save which alchemic effects are present
@@ -2660,6 +2727,7 @@ void Settings::ClassifyItems()
 					dosage = Distribution::GetPoisonDosage(item, std::get<0>(clas));
 				// add item into effect map
 				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas), dosage);
+				LOGLE3_1("[Settings] [ClassifyItems] Saved effects for {} dur {} mag {}", Utility::PrintForm(item), std::get<3>(clas), std::get<4>(clas));
 			}
 
 			itemi = (*iter).second->As<RE::IngredientItem>();
@@ -2908,19 +2976,13 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	float maxmag = 0;
 	int maxdur = 0;
 	for (int i = 0; i < 4; i++) {
-		if ((av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagicka)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStamina)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealRate)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagickaRate)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStaminaRate)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealRateMult)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagickaRateMult)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStaminaRateMult)) > 0) {
-			if (mag[i] * dur[i] > maxmag) {
-				maxmag = mag[i] * dur[i];
-				maxdur = dur[i];
-			}
+		if (mag[i] == 0)
+			mag[i] = 1;
+		if (dur[i] == 0)
+			dur[i] = 1;
+		if (mag[i] * dur[i] > maxmag) {
+			maxmag = mag[i] * dur[i];
+			maxdur = dur[i];
 		}
 		alch |= av[i];
 	}

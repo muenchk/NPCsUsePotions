@@ -136,6 +136,14 @@ public:
 	static std::string ToString(AlchemyEffectBase ae);
 
 	/// <summary>
+	/// Splits a string at a delimiter and optionally removes empty results
+	/// </summary>
+	/// <param name="delimiter"></param>
+	/// <param name="removeEmpty"></param>
+	/// <returns></returns>
+	static std::vector<std::string> SplitString(std::string str, char delimiter, bool removeEmpty = false);
+
+	/// <summary>
 	/// The current combat style of an actor
 	/// </summary>
 	enum class CurrentCombatStyle
