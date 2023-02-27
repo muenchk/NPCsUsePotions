@@ -345,6 +345,8 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 					return false;	
 			}
 			break;
+		case CustomItemConditionsAll::kNoCustomObjectUsage:
+			return false;
 		}
 	}
 

@@ -722,6 +722,8 @@ namespace Events
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}
+			if (effect != 0)
+				acinfo->nextFoodTime = RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24;
 			LOG2_1("{}[Events] [CheckActors] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->nextFoodTime));
 		}
 	}

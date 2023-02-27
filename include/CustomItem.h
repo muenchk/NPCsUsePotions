@@ -21,8 +21,9 @@ struct CustomItemConditionsAll
 		kActorStrengthGreaterEq = 1 << 10, // 400 // distribution
 		kActorStrengthLesserEq = 1 << 11,  // 800 // distribution
 		kIsInFaction = 1 << 12,             // 1000  // distribution
+		kNoCustomObjectUsage = 1 << 13,		// 2000  // usage		// used to force normal usage by the effect algorithm
 
-		kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven | kHasKeyword,
+		kAllUsage = kIsBoss | kHealthThreshold | kMagickaThreshold | kStaminaThreshold | kActorTypeDwarven | kHasKeyword | kNoCustomObjectUsage,
 		kAllDistr = kIsBoss | kActorTypeDwarven | kHasMagicEffect | kHasPerk | kHasKeyword | kIsGhost | kActorStrengthEq | kActorStrengthGreaterEq | kActorStrengthLesserEq | kIsInFaction,
 	};
 };
