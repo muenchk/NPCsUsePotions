@@ -376,6 +376,17 @@ namespace Events
 			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
 			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
 		}
+		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHanded)) {
+			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
+			           static_cast<uint64_t>(AlchemyEffect::kBlock) |
+			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
+			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
+			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
+			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
+			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
+			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded)) {
 			effects |= static_cast<uint64_t>(AlchemyEffect::kTwoHanded) |
 			           static_cast<uint64_t>(AlchemyEffect::kBlock) |
@@ -801,6 +812,7 @@ namespace Events
 		if (acinfo->IsInCombat()) {
 			// get combatdata of current actor
 			acinfo->combatdata = Utility::GetCombatData(acinfo->actor);
+			LOG1_2("{}[Events] [HandleActorRuntimeData] CombatData: {}", Utility::GetHex(acinfo->combatdata));
 			RE::ActorHandle handle;
 			if (acinfo->actor->IsPlayerRef() == false) {
 				// retrieve target of current actor if present
