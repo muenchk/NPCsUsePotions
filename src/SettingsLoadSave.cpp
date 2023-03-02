@@ -11,11 +11,41 @@ using Comp = Compatibility;
 /// </summary>
 void Settings::FixConsumables()
 {
+	// get ITMPoisonUse as sound for applying poisons
+	// ITMPoisonUse
+	PoisonUse = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0x106614);
+	// get ITMPotionUse for sound fixes
+	// ITMPotionUse
+	PotionUse = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0xB6435);
+	// ITMFoodEat
+	FoodEat = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0xCAF94);
+
 	RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
 	RE::TESForm* SOM_verb = RE::TESForm::LookupByID(0xd78b4);
 
+	static std::unordered_set<RE::FormID> exlsounds{ 
+		0x3EDC0 /*ITMPotionDownSD*/ ,
+		0x3EDBD /*ITMPotionUpSD*/,
+		0x3C7B9 /*ITMGenericDownSD*/,
+		0x3C7BA /*ITMGenericUpSD*/,
+		0xC8C6f /*UIAlchemyCreatePoison*/,
+		0xC8C74 /*UIAlchemyCreatePotion*/,
+		0xC8C72 /*UIAlchemyFail*/,
+		0xC8C77 /*UIAlchemyLearnEffect*/,
+		0x3C7B4 /*UIItemGenericDownSD*/,
+		0x3C7B0 /*UIItemGenericUpSD*/
+	};
+
 	if (SOM_player1st && SOM_verb) {
 		RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
+		SOMMono01400_verb->attenuation->data.curve[0] = 0;
+		SOMMono01400_verb->attenuation->data.curve[1] = 5;
+		SOMMono01400_verb->attenuation->data.curve[2] = 20;
+		SOMMono01400_verb->attenuation->data.curve[3] = 50;
+		SOMMono01400_verb->attenuation->data.curve[4] = 100;
+		SOMMono01400_verb->attenuation->data.minDistance = 150;
+		SOMMono01400_verb->attenuation->data.maxDistance = 1400;
+		SOMMono01400_verb->data.reverbSendPct = 100;
 		RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
 
 		RE::BGSSoundDescriptor* sounddesc = nullptr;
@@ -27,26 +57,27 @@ void Settings::FixConsumables()
 		for (auto& alch : alchs) {
 			if (alch && alch->GetFormID() != 0x7) {
 				if (alch->data.consumptionSound) {
-					// consumption sound is non-empty
-					sounddesc = alch->data.consumptionSound->soundDescriptor;
-					soundOM = (RE::BGSStandardSoundDef*)sounddesc;
-					if (Settings::Fixes::_ForceFixPotionSounds) {
-						soundOM->outputModel = SOMMono01400_verb;
-						LOGL1_4("{}[Settings] [FixConsumables] forcefully set output model for sound {}", Utility::PrintForm(alch->data.consumptionSound));
-					}
-					else if (soundOM->outputModel->GetFormID() == SOMMono01400Player1st->GetFormID()) {
-						soundOM->outputModel = SOMMono01400_verb;
-						LOGL1_4("{}[Settings] [FixConsumables] changed output model for sound {}", Utility::PrintForm(alch->data.consumptionSound));
+					if (alch->IsPoison() && exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
+						alch->data.consumptionSound = PoisonUse;
+						LOGL1_4("{}[Settings] [FixConsumables] changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
+					} else if (alch->IsFood() && exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
+						alch->data.consumptionSound = FoodEat;
+						LOGL1_4("{}[Settings] [FixConsumables] changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
+					} else if (exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
+						alch->data.consumptionSound = PotionUse;
+						LOGL1_4("{}[Settings] [FixConsumables] changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
+					} else {
+						// consumption sound is non-empty
+						sounddesc = alch->data.consumptionSound->soundDescriptor;
+						soundOM = (RE::BGSStandardSoundDef*)sounddesc;
+						if (Settings::Fixes::_ForceFixPotionSounds && soundOM->outputModel == SOMMono01400Player1st) {
+							soundOM->outputModel = SOMMono01400_verb;
+							LOGL2_4("{}[Settings] [FixConsumables] changed output model for sound {} used by item {}", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
+						}
 					}
 				}
 			}
 		}
-		// get ITMPoisonUse as sound for applying poisons
-		// ITMPoisonUse
-		RE::TESForm* PoisonUseF = RE::TESForm::LookupByID(0x106614);
-		PoisonUse = nullptr;
-		if (PoisonUseF)
-			PoisonUse = PoisonUseF->As<RE::BGSSoundDescriptorForm>();
 	}
 }
 

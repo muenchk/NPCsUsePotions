@@ -767,9 +767,9 @@ public:
 	/// </summary>
 	static inline RE::BGSEquipSlot* Equip_Potion;
 
-	[[deprecated]] static inline RE::BGSSoundDescriptorForm* PotionUse;
+	static inline RE::BGSSoundDescriptorForm* PotionUse;
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
-	[[deprecated]] static inline RE::BGSSoundDescriptorForm* FoodEat;
+	static inline RE::BGSSoundDescriptorForm* FoodEat;
 	[[deprecated]] static inline bool FixedPotionUse = true;
 	[[deprecated]] static inline bool FixedPoisonUse = true;
 	[[deprecated]] static inline bool FixedFoodEat = true;
