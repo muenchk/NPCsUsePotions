@@ -553,6 +553,13 @@ bool ActorInfo::IsInCombat()
 		return false;
 }
 
+bool ActorInfo::IsWeaponDrawn()
+{
+	if (!valid)
+		return false;
+	return weaponsDrawn;
+}
+
 bool ActorInfo::IsFollower()
 {
 	if (!valid)

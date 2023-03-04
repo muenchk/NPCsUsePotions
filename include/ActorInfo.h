@@ -232,6 +232,9 @@ public:
 	float playerDistance = 0;
 	// hostile to player
 	bool playerHostile = false;
+	// whether the weapons are drawn
+	bool weaponsDrawn = false;
+
 
 
 	/// <summary>
@@ -328,6 +331,11 @@ public:
 	/// Whether the NPC is currently in combat
 	/// </summary>
 	bool IsInCombat();
+	/// <summary>
+	/// Whether an NPC has drawn their weapons
+	/// </summary>
+	/// <returns></returns>
+	bool IsWeaponDrawn();
 
 	/// <summary>
 	/// calculates the custom items available

@@ -147,6 +147,10 @@ public:
 		/// [Settings] Whether to allow potions with detrimental effects
 		/// </summary>
 		static inline bool _AllowDetrimentalEffects = false;  // allows / disallows npcs to use potions with detrimental effects
+		/// <summary>
+		/// [Settings] When weapons are sheathed, potion handling for out of combat is applied
+		/// </summary>
+		static inline bool _HandleWeaponSheathedAsOutOfCombat = true;
 
 		/// <summary>
 		/// [Settings] Health threshold at which NPCs will begin using health potions
@@ -179,6 +183,10 @@ public:
 		/// [Settings] Whether to allow poisons with positive effects
 		/// </summary>
 		static inline bool _AllowPositiveEffects = false;  // allows / disallows npcs to use poisons with positive effects
+		/// <summary>
+		/// [Settings] Disallows the usage of poisons, while the weapons are sheathed
+		/// </summary>
+		static inline bool _DontUseWithWeaponsSheathed = true;
 
 		/// <summary>
 		/// [Settings] Scaling factor for when an NPC is considered powerful enough to warrant the usage of poisons
@@ -212,6 +220,10 @@ public:
 		/// [Settings] Whether the usage of fortify potions is enabled
 		/// </summary>
 		static inline bool _enableFortifyPotions = true;  // enables automatic usage of fortify potions for npcs
+		/// <summary>
+		/// [Settings] Disallows the usage of fortify potions, while the weapons are sheathed
+		/// </summary>
+		static inline bool _DontUseWithWeaponsSheathed = true;
 
 		/// <summary>
 		/// [Settings] Scaling factor for when an NPC is considered powerful enough to warrant the usage of fortify potions
@@ -247,7 +259,11 @@ public:
 		/// <summary>
 		/// [Settings] Disables food usage for followers | used for survival mods
 		/// </summary>
-		static inline bool _DisableFollowers = false; 
+		static inline bool _DisableFollowers = false;
+		/// <summary>
+		/// [Settings] Disallows the usage of fortify potions, while the weapons are sheathed
+		/// </summary>
+		static inline bool _DontUseWithWeaponsSheathed = false;
 	};
 
 	/// <summary>

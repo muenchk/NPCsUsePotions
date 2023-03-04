@@ -226,6 +226,9 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "Potions:           EnableStaminaRestoration", std::to_string(Potions::_enableStaminaRestoration));
 		Potions::_AllowDetrimentalEffects = static_cast<int>(ini.GetLongValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects));
 		loginfo("[SETTINGS] {} {}", "Potions:           AllowDetrimentalEffects", std::to_string(Potions::_AllowDetrimentalEffects));
+		Potions::_HandleWeaponSheathedAsOutOfCombat = static_cast<int>(ini.GetLongValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Potions::_HandleWeaponSheathedAsOutOfCombat));
+		loginfo("[SETTINGS] {} {}", "Potions:           HandleWeaponSheathedAsOutOfCombat", std::to_string(Potions::_HandleWeaponSheathedAsOutOfCombat));
+
 		Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold));
 		Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdLowerPercent", Potions::_healthThreshold));
 		if (Potions::_healthThreshold > 0.95f)
@@ -250,6 +253,8 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "Poisons:           EnablePoisonUsage", std::to_string(Poisons::_enablePoisons));
 		Poisons::_AllowPositiveEffects = static_cast<int>(ini.GetLongValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects));
 		loginfo("[SETTINGS] {} {}", "Poisons:           AllowPositiveEffects", std::to_string(Poisons::_AllowPositiveEffects));
+		Poisons::_DontUseWithWeaponsSheathed = static_cast<int>(ini.GetLongValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed));
+		loginfo("[SETTINGS] {} {}", "Poisons:           DontUseWithWeaponsSheathed", std::to_string(Poisons::_DontUseWithWeaponsSheathed));
 		Poisons::_EnemyLevelScalePlayerLevel = static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel));
 		loginfo("[SETTINGS] {} {}", "Poisons:           EnemyLevelScalePlayerLevel", std::to_string(Poisons::_EnemyLevelScalePlayerLevel));
 		Poisons::_EnemyNumberThreshold = ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold);
@@ -263,6 +268,8 @@ void Settings::Load()
 		// fortify potions
 		FortifyPotions::_enableFortifyPotions = ini.GetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions);
 		loginfo("[SETTINGS] {} {}", "Fortify Potions:   EnableFortifyPotionUsage", std::to_string(FortifyPotions::_enableFortifyPotions));
+		FortifyPotions::_DontUseWithWeaponsSheathed = ini.GetBoolValue("FortifyPotions", "DontUseWithWeaponsSheathed", FortifyPotions::_DontUseWithWeaponsSheathed);
+		loginfo("[SETTINGS] {} {}", "Fortify Potions:   DontUseWithWeaponsSheathed", std::to_string(FortifyPotions::_DontUseWithWeaponsSheathed));
 		FortifyPotions::_EnemyLevelScalePlayerLevelFortify = static_cast<float>(ini.GetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", FortifyPotions::_EnemyLevelScalePlayerLevelFortify));
 		loginfo("[SETTINGS] {} {}", "Fortify Potions:   EnemyLevelScalePlayerLevelFortify", std::to_string(FortifyPotions::_EnemyLevelScalePlayerLevelFortify));
 		FortifyPotions::_EnemyNumberThresholdFortify = ini.GetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", FortifyPotions::_EnemyNumberThresholdFortify);
@@ -280,6 +287,8 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "Food:              OnlyAllowFoodAtCombatStart", std::to_string(Food::_RestrictFoodToCombatStart));
 		Food::_DisableFollowers = ini.GetBoolValue("Food", "DisableFollowers", Food::_DisableFollowers);
 		loginfo("[SETTINGS] {} {}", "Food:              DisableFollowers", std::to_string(Food::_DisableFollowers));
+		Food::_DontUseWithWeaponsSheathed = ini.GetBoolValue("Food", "DontUseWithWeaponsSheathed", Food::_DontUseWithWeaponsSheathed);
+		loginfo("[SETTINGS] {} {}", "Food:              DontUseWithWeaponsSheathed", std::to_string(Food::_DontUseWithWeaponsSheathed));
 
 		// player
 		Player::_playerPotions = ini.GetBoolValue("Player", "EnablePlayerPotions", Player::_playerPotions);
@@ -537,6 +546,9 @@ void Settings::Save()
 	ini.SetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects, "// If this is enabled NPCs will use potions that contain detrimental\n"
 																								"// effects. For instance, impure potions, that restore health and damage magicka.\n"
 																								"// !!!This setting also affects fortify potions");
+	ini.SetBoolValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Potions::_HandleWeaponSheathedAsOutOfCombat, "// If weapons are not drawn in combat, it will be treated as Out-of-Combat.\n"
+																													"// This currently means only health potions will be used.");
+
 	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold, "// Upon reaching this threshold, NPCs will start to use health potions");
 	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold, "// Upon reaching this threshold, NPCs will start to use magicka potions");
 	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold, "// Upon reaching this threshold, NPCs will start to use stamina potions");
@@ -551,6 +563,7 @@ void Settings::Save()
 																				"// if they can harm the enemy. For instance, damaging Magicka of an enemy \n"
 																				"// that does not use spells, is not appropiate.");
 	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, "// This allows NPCs to use poisons that apply positive effects to their opponents");
+	ini.SetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed, "// If the weapons are sheathed, poisons will not be used.");
 	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, "// If the enemy they are facing has a level greater equal \n"
 																										"// 'this value' * PlayerLevel followers use poisons.");
 	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold, "// When the number of NPCs in a fight is at least at this value, followers\n"
@@ -566,6 +579,8 @@ void Settings::Save()
 	// fortify potions
 	ini.SetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions, "// NPCs use fortify potions in combat.\n"
 																											"// Potions are used based on the equipped weapons and spells.");
+	ini.SetBoolValue("FortifyPotions", "DontUseWithWeaponsSheathed", FortifyPotions::_DontUseWithWeaponsSheathed, "// When weapons are sheathed, no fortify potions will be used.");
+
 	ini.SetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", FortifyPotions::_EnemyLevelScalePlayerLevelFortify, "// If the enemy they are facing has a level greater equal \n"
 																																	"// 'this value' * PlayerLevel followers use fortify potions.");
 	ini.SetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", FortifyPotions::_EnemyNumberThresholdFortify, "// When the number of NPCs in a fight is at least at this value, followers \n"
@@ -587,6 +602,7 @@ void Settings::Save()
 																							"// food buff runs out.");
 	ini.SetBoolValue("Food", "DisableFollowers", Food::_DisableFollowers, "// Disables food usage for followers only. You can use this to prevent your followers\n"
 																			"// from eating food, if you are using survival mods, without impacting other NPCs.");
+	ini.SetBoolValue("Food", "DontUseWithWeaponsSheathed", Food::_DontUseWithWeaponsSheathed, "// When weapons are sheathed food will not be used.");
 
 
 	// player

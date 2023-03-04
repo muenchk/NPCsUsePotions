@@ -543,6 +543,8 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
+		if (Settings::Potions::_HandleWeaponSheathedAsOutOfCombat && !acinfo->IsWeaponDrawn())
+			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorPotions] {}", Utility::PrintForm(acinfo));
 		AlchemyEffectBase alch = 0;
 		AlchemyEffectBase alch2 = 0;
@@ -602,6 +604,8 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
 			return;
+		if (Settings::FortifyPotions::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
+			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorFortifyPotions] {}", Utility::PrintForm(acinfo));
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::FortifyPotions::_enableFortifyPotions &&
@@ -650,6 +654,8 @@ namespace Events
 		if (!acinfo->IsValid())
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
+			return;
+		if (Settings::Poisons::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] {}", Utility::PrintForm(acinfo));
 		if (acinfo->durCombat > 1000 &&
@@ -716,6 +722,8 @@ namespace Events
 			return;
 		if (Settings::Food::_DisableFollowers && acinfo->IsFollower())
 			return;
+		if (Settings::Food::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
+			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorFood] {}", Utility::PrintForm(acinfo));
 		if (acinfo->globalCooldownTimer <= tolerance &&
 			Settings::Food::_enableFood &&
@@ -743,7 +751,10 @@ namespace Events
 	{
 		if (!acinfo->IsValid())
 			return;
-		if (acinfo->IsInCombat() == true || acinfo->handleactor == false)
+		if (acinfo->IsInCombat() == true &&
+				(Settings::Potions::_HandleWeaponSheathedAsOutOfCombat == false /*if disabled we always use the combat handler*/ ||
+					Settings::Potions::_HandleWeaponSheathedAsOutOfCombat == true && acinfo->IsWeaponDrawn() == true /*if weapons are drawn we use the combat handler*/) ||
+			acinfo->handleactor == false)
 			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo));
 		// we are only checking for health here
@@ -859,6 +870,8 @@ namespace Events
 			acinfo->durCombat = 0;
 		}
 
+		// get whether weapons are drawn
+		acinfo->weaponsDrawn = acinfo->actor->IsWeaponDrawn();
 	}
 
 	/// <summary>
