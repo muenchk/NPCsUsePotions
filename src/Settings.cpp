@@ -2596,6 +2596,17 @@ void Settings::ClassifyItems()
 					continue;
 				}
 
+				// there is a little bit of a problem for some items that have wrong flags and no keywords set. Try to detect them by sound and set the flags
+				if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
+					if (item->data.consumptionSound == Settings::FoodEat) {
+						item->data.flags = RE::AlchemyItem::AlchemyFlag::kFoodItem | item->data.flags;
+					} else if (item->data.consumptionSound == Settings::PoisonUse) {
+						item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
+					} else if (item->data.consumptionSound == Settings::PotionUse) {
+						item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+					}
+				}
+
 				auto clas = ClassifyItem(item);
 				// set medicine flag for those who need it
 				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
@@ -3015,9 +3026,9 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	}
 
 	ItemType type = ItemType::kPotion;
-	if (item->IsFood())
+	if (item->IsFood() || item->HasKeyword(VendorItemFood) || item->HasKeyword(VendorItemFoodRaw))
 		type = ItemType::kFood;
-	else if (item->IsPoison()) {
+	else if (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison)) {
 		type = ItemType::kPoison;
 		return {
 			alch,
