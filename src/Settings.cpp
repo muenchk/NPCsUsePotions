@@ -1695,6 +1695,11 @@ void Settings::LoadDistrConfig()
 			std::string newname = (splits)->at(3);
 			
 			Distribution::Rule* rule = Distribution::FindRule(name);
+			if (rule == nullptr) {
+				logwarn("[Settings] [LoadDistrRules] base rule couldn't be found file: {}, rule:\"{}\", fields: {}", std::get<1>(cpy), std::get<2>(cpy), splits->size());
+				delete splits;
+				continue;
+			}
 			Distribution::Rule* newrule = rule->Clone();
 			newrule->ruleName = newname;
 			int prio = INT_MIN;
@@ -1714,7 +1719,7 @@ void Settings::LoadDistrConfig()
 												  newrule->rulePriority > Distribution::defaultRule->rulePriority))
 				Distribution::defaultRule = newrule;
 			delete splits;
-			LOGLE1_2("[Settings] [LoadDistrRules] rule {} successfully coinialised.", newrule->ruleName);
+			LOGLE1_2("[Settings] [LoadDistrRules] rule {} successfully coinitialised.", newrule->ruleName);
 		}
 	}
 

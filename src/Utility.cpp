@@ -1643,10 +1643,10 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESLevCharacter* lvl)
 		RE::TESNPC* tplt = entry->As<RE::TESNPC>();
 		RE::TESLevCharacter* lev = entry->As<RE::TESLevCharacter>();
 		if (tplt)
-			return [&tplt, &plugID]() { auto info = ExtractTemplateInfo(tplt); if (plugID != 0x1) {info.pluginID = plugID;}return info; }();
+			return [&tplt, &plugID, &lvl]() { auto info = ExtractTemplateInfo(tplt); if (plugID != 0x1) {info.pluginID = plugID;info.baselvl = lvl;} return info; }();
 
 		else if (lev)
-			return [&lev, &plugID]() { auto info = ExtractTemplateInfo(lev); if (plugID != 0x1) {info.pluginID = plugID;} return info; }();
+			return [&lev, &plugID, &lvl]() { auto info = ExtractTemplateInfo(lev); if (plugID != 0x1) {info.pluginID = plugID;info.baselvl = lvl;} return info; }();
 		else
 			;  //loginfo("template invalid");
 	}
@@ -1695,6 +1695,12 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESNPC* npc)
 	uint32_t plugID = Utility::Mods::GetPluginIndex(npc);
 	if (plugID != 0x1) {
 		info.pluginID = plugID;
+	}
+	info.base = tpltinfo.base;
+	info.baselvl = tpltinfo.baselvl;
+	if ((npc->GetFormID() & 0xFF000000) != 0xFF000000) {
+		// if pluginID not runtime, save the current actor as the base actor
+		info.base = npc;
 	}
 
 	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kFactions) {

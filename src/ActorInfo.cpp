@@ -338,6 +338,8 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 		case CustomItemConditionsAll::kHasKeyword:
 			{
 				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp == nullptr)
+					return false;
 				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
 				if (kwd == nullptr || (actor->HasKeyword(kwd) == false && actor->GetRace()->HasKeyword(kwd) == false))
 					return false;	
@@ -392,9 +394,11 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 		case CustomItemConditionsAny::kHasKeyword:
 			{
 				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
-				if (kwd != nullptr && (actor->HasKeyword(kwd) || actor->GetRace()->HasKeyword(kwd)))
-					return true;	
+				if (tmp != nullptr) {
+					RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+					if (kwd != nullptr && (actor->HasKeyword(kwd) || actor->GetRace()->HasKeyword(kwd)))
+						return true;
+				}
 			}
 			break;
 		}
@@ -433,6 +437,8 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 		case CustomItemConditionsAll::kHasKeyword:
 			{
 				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp == nullptr)
+					return false;
 				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
 				if (kwd == nullptr || (actor->HasKeyword(kwd) == false && actor->GetRace()->HasKeyword(kwd) == false))
 					return false;	
@@ -465,6 +471,8 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 		case CustomItemConditionsAll::kIsInFaction:
 			{
 				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+				if (tmp == nullptr)
+					return false;
 				RE::TESFaction* fac = tmp->As<RE::TESFaction>();
 				if (fac == nullptr || actor->IsInFaction(fac) == false)
 					return false;
@@ -533,9 +541,11 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 		case CustomItemConditionsAll::kIsInFaction:
 			{
 				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				RE::TESFaction* fac = tmp->As<RE::TESFaction>();
-				if (fac == nullptr || actor->IsInFaction(fac))
-					return true;
+				if (tmp != nullptr) {
+					RE::TESFaction* fac = tmp->As<RE::TESFaction>();
+					if (fac == nullptr || actor->IsInFaction(fac))
+						return true;
+				}
 			}
 			break;
 		}

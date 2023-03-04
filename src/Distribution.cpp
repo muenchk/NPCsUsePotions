@@ -2145,6 +2145,12 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, Misc::NPCTPLTInfo*
 	auto begin = std::chrono::steady_clock::now();
 	if (acinfo == nullptr || acinfo->IsValid() == false)
 		return emptyRule;
+	// get npc template info
+	Misc::NPCTPLTInfo tplt;
+	if (tpltinfo == nullptr) {
+		tplt = Utility::ExtractTemplateInfo(acinfo->actor);
+		tpltinfo = &tplt;
+	}
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
@@ -2272,6 +2278,35 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, Misc::NPCTPLTInfo*
 	}
 	if (calcwhite && whitelistNPCs()->contains(acinfo->actor->GetActorBase()->GetFormID()))
 		acinfo->whitelisted = true;
+	// perform check on tpltactorbaseinformation
+	if (tpltinfo->base != nullptr && tpltinfo->base != acinfo->actor->GetActorBase()) {
+		if (!ruleoverride) {
+			itnpc = npcMap()->find(tpltinfo->base->GetFormID());
+			if (itnpc != npcMap()->end()) {  // found the right rule!
+				rule = itnpc->second;        // this can be null if the specific npc is excluded
+				//logger::info("assign rule 2");
+				ruleoverride = true;
+				prio = INT_MAX;
+			}
+		}
+		bossoverride |= bosses()->contains(tpltinfo->base->GetFormID());
+		adjustacs(tpltinfo->base->GetFormID());
+		// get custom items
+		if (calccustitems) {
+			auto itc = customItems()->find(tpltinfo->base->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int b = 0; b < vec.size(); b++) {
+					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
+					}
+				}
+			}
+		}
+		if (calcwhite && whitelistNPCs()->contains(tpltinfo->base->GetFormID()))
+			acinfo->whitelisted = true;
+	}
 
 	if (tpltinfo && tpltinfo->tpltrace)
 		race = tpltinfo->tpltrace;
