@@ -651,12 +651,18 @@ namespace Events
 
 	void HandleActorPoisons(ActorInfo* acinfo)
 	{
-		if (!acinfo->IsValid())
+		if (!acinfo->IsValid()) {
+			LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] invalid {}", Utility::PrintForm(acinfo));
 			return;
-		if (acinfo->IsInCombat() == false || acinfo->handleactor == false)
+		}
+		if (acinfo->IsInCombat() == false || acinfo->handleactor == false) {
+			LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] out-of-combat or disabled {}", Utility::PrintForm(acinfo));
 			return;
-		if (Settings::Poisons::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
+		}
+		if (Settings::Poisons::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn()) {
+			LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] undrawn {}", Utility::PrintForm(acinfo));
 			return;
+		}
 		LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] {}", Utility::PrintForm(acinfo));
 		if (acinfo->durCombat > 1000 &&
 			acinfo->globalCooldownTimer <= tolerance &&

@@ -188,7 +188,7 @@ public:
 	/// <returns>wether a food was used</returns>
 	static std::pair<int, AlchemyEffectBase> ActorUsePoison(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect);
 
-	/* static bool AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison); */
+	static bool AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison); 
 
 	#pragma endregion
 };
