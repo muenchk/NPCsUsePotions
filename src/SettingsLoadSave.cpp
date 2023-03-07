@@ -5,6 +5,8 @@
 
 using Comp = Compatibility;
 
+std::unordered_map<RE::FormID, RE::BGSSoundDescriptorForm*> soundmap;
+RE::BGSSoundOutput* Copy_SOMMono01400_verb = nullptr;
 
 /// <summary>
 /// changes the output model of all consumable sounds to third person
@@ -22,7 +24,7 @@ void Settings::FixConsumables()
 
 	if (!Settings::Fixes::_ForceFixPotionSounds)
 		return;
-
+	
 	RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
 	RE::TESForm* SOM_verb = RE::TESForm::LookupByID(0xd78b4);
 
@@ -39,22 +41,45 @@ void Settings::FixConsumables()
 		0x3C7B0 /*UIItemGenericUpSD*/
 	};
 
+	
+
+	const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::BGSSoundOutput>();
+	const auto factorydescform = RE::IFormFactory::GetConcreteFormFactoryByType<RE::BGSSoundDescriptorForm>();
+	LOGL1_4("{}[Settings] [FixConsumables] factory {}", Utility::GetHex((uint64_t)(intptr_t)factory));
+
 	if (SOM_player1st && SOM_verb) {
-		RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
-		if (Utility::Mods::GetPluginIndex("Audio Overhaul Skyrim.esp") != 0x1) {
-			SOMMono01400_verb->attenuation->data.curve[0] = 100;
-			SOMMono01400_verb->attenuation->data.curve[1] = 50;
-			SOMMono01400_verb->attenuation->data.curve[2] = 20;
-			SOMMono01400_verb->attenuation->data.curve[3] = 5;
-			SOMMono01400_verb->attenuation->data.curve[4] = 0;
-			SOMMono01400_verb->attenuation->data.minDistance = 150;
-			SOMMono01400_verb->attenuation->data.maxDistance = 1400;
-			SOMMono01400_verb->data.reverbSendPct = 100;
+		if (Copy_SOMMono01400_verb == nullptr) {
+			RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
+			Copy_SOMMono01400_verb = factory->Create();
+			Copy_SOMMono01400_verb->data.reverbSendPct = 100;
+			Copy_SOMMono01400_verb->attenuation = (RE::BGSSoundOutput::DynamicAttenuationCharacteristics*)malloc(sizeof(RE::BGSSoundOutput::DynamicAttenuationCharacteristics));
+			memcpy(SOMMono01400_verb->attenuation, Copy_SOMMono01400_verb->attenuation, sizeof(RE::BGSSoundOutput::DynamicAttenuationCharacteristics));
+			Copy_SOMMono01400_verb->attenuation->data.minDistance = 150;
+			Copy_SOMMono01400_verb->attenuation->data.maxDistance = 1400;
+			Copy_SOMMono01400_verb->attenuation->data.curve[0] = 100;
+			Copy_SOMMono01400_verb->attenuation->data.curve[1] = 50;
+			Copy_SOMMono01400_verb->attenuation->data.curve[2] = 20;
+			Copy_SOMMono01400_verb->attenuation->data.curve[3] = 5;
+			Copy_SOMMono01400_verb->attenuation->data.curve[4] = 0;
+			Copy_SOMMono01400_verb->type = SOMMono01400_verb->type;
+			Copy_SOMMono01400_verb->data.flags = SOMMono01400_verb->data.flags;
+			Copy_SOMMono01400_verb->data.unk1 = SOMMono01400_verb->data.unk1;
+			Copy_SOMMono01400_verb->data.unk2 = SOMMono01400_verb->data.unk2;
+			Copy_SOMMono01400_verb->data.reverbSendPct = SOMMono01400_verb->data.reverbSendPct;
+
+			if (SOMMono01400_verb->speakerOutputs != nullptr) {
+				Copy_SOMMono01400_verb->speakerOutputs = (RE::BGSSoundOutput::SpeakerArrays*)malloc(sizeof(RE::BGSSoundOutput::SpeakerArrays));
+				Copy_SOMMono01400_verb->speakerOutputs->channels[0] = SOMMono01400_verb->speakerOutputs->channels[0];
+				Copy_SOMMono01400_verb->speakerOutputs->channels[1] = SOMMono01400_verb->speakerOutputs->channels[1];
+				Copy_SOMMono01400_verb->speakerOutputs->channels[2] = SOMMono01400_verb->speakerOutputs->channels[2];
+			}
+			LOGL1_4("{}[Settings] [FixConsumables] attenuation {} ", Utility::GetHex((uint64_t)(intptr_t)Copy_SOMMono01400_verb->attenuation));
 		}
 		RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
 
 		RE::BGSSoundDescriptor* sounddesc = nullptr;
 		RE::BGSStandardSoundDef* soundOM = nullptr;
+		RE::BGSStandardSoundDef* soundOMCopy = nullptr;
 
 		// get all alchemyitems and then fix their consumption sounds
 		auto datahandler = RE::TESDataHandler::GetSingleton();
@@ -72,18 +97,50 @@ void Settings::FixConsumables()
 						alch->data.consumptionSound = PotionUse;
 						LOGL1_4("{}[Settings] [FixConsumables] changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
 					} else {
-						// consumption sound is non-empty
-						sounddesc = alch->data.consumptionSound->soundDescriptor;
-						soundOM = (RE::BGSStandardSoundDef*)sounddesc;
-						if (soundOM->outputModel == SOMMono01400Player1st) {
-							soundOM->outputModel = SOMMono01400_verb;
-							LOGL2_4("{}[Settings] [FixConsumables] changed output model for sound {} used by item {}", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
+						// find copied sound
+						auto itr = soundmap.find(alch->data.consumptionSound->GetFormID());
+						if (itr != soundmap.end() && itr->second != nullptr) {
+							// get sound from list and assign it
+							alch->data.consumptionSound = itr->second;
+						} else {
+							// copy the unknown sound
+							//RE::TESForm* copy = //alch->data.consumptionSound->CreateDuplicateForm(false, nullptr);
+							RE::BGSSoundDescriptorForm* snd = factorydescform->Create();  //copy->As<RE::BGSSoundDescriptorForm>();
+							LOGL1_4("{}[Settings] [FixConsumables] snd init {}", snd->IsInitialized());
+							snd->InitItemImpl();
+							LOGL1_4("{}[Settings] [FixConsumables] snddesc {}", Utility::GetHex((uint64_t)(intptr_t)snd->soundDescriptor));
+							soundmap.insert_or_assign(alch->data.consumptionSound->GetFormID(), snd);
+							LOGL1_4("{}[Settings] [FixConsumables] orig {} ", Utility::GetHex((uint64_t)(intptr_t)alch->data.consumptionSound));
+							LOGL1_4("{}[Settings] [FixConsumables] snd {} ", Utility::GetHex((uint64_t)(intptr_t)snd));
+							// get sound descriptor
+							soundOM = (RE::BGSStandardSoundDef*)alch->data.consumptionSound->soundDescriptor;
+							// allocate new sound descriptor
+							soundOMCopy = (RE::BGSStandardSoundDef*)malloc(sizeof(RE::BGSStandardSoundDef));
+							// UNSAFE copy of sound descriptor
+							memcpy(soundOM, soundOMCopy, sizeof(RE::BGSStandardSoundDef));
+							const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::BGSSoundDescriptor>();
+
+							LOGL1_4("{}[Settings] [FixConsumables] soundOM {} ", Utility::GetHex((uint64_t)(intptr_t)soundOM));
+							LOGL1_4("{}[Settings] [FixConsumables] soundOMCopy {} ", Utility::GetHex((uint64_t)(intptr_t)soundOMCopy));
+
+							soundOMCopy->outputModel = Copy_SOMMono01400_verb;
+							snd->soundDescriptor = soundOMCopy;
+							LOGL2_4("{}[Settings] [FixConsumables] forcefully set output model for sound {} used by item {}", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
+
+							alch->data.consumptionSound = snd;
+							soundmap.insert_or_assign(alch->data.consumptionSound->GetFormID(), snd);
 						}
 					}
 				}
 			}
 		}
 	}
+}
+
+void Settings::ResetConsumables()
+{
+	soundmap.clear();
+	Copy_SOMMono01400_verb = nullptr;
 }
 
 void Settings::Load()
@@ -527,7 +584,7 @@ void Settings::Load()
 	}
 	loginfo("[SETTINGS] checking for plugins end");
 
-	FixConsumables();
+	//FixConsumables();
 }
 
 

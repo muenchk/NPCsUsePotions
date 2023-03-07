@@ -1939,6 +1939,7 @@ CheckActorsSkipIteration:
 	{
 		LOG_1("{}[Events] [LoadGameCallback]");
 		LoadGameSub();
+		Settings::FixConsumables();
 	}
 
 	/// <summary>
@@ -1948,6 +1949,7 @@ CheckActorsSkipIteration:
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [RevertGameCallback]");
+		Settings::ResetConsumables();
 		enableProcessing = false;
 		stopactorhandler = true;
 		std::this_thread::sleep_for(10ms);

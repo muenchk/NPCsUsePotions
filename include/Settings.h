@@ -74,6 +74,7 @@ public:
 	/// changes the output model of all consumable sounds to third person
 	/// </summary>
 	static void FixConsumables();
+	static void ResetConsumables();
 
 	/// <summary>
 	/// Max duration tracked for potions in milliseconds
