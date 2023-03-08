@@ -591,7 +591,7 @@ namespace Events
 					LOG2_4("{}[Events] [CheckActors] use stamina pot with duration {} and magnitude {}", acinfo->durStamina, std::get<0>(tup));
 				}
 				// check if we have a valid duration
-				if (std::get<1>(tup) != -1) {
+				if (std::get<1>(tup) != 0) {
 					acinfo->globalCooldownTimer = comp->GetGlobalCooldown();
 				}
 			}
@@ -704,7 +704,7 @@ namespace Events
 					}
 					LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects);
 					auto tup = ACM::ActorUsePoison(acinfo, effects);
-					if (std::get<1>(tup) != -1)  // check whether an effect was applied
+					if (std::get<1>(tup) != 0)  // check whether an effect was applied
 						acinfo->globalCooldownTimer = comp->GetGlobalCooldown();
 				}
 			}
