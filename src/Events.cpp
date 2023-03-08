@@ -591,7 +591,7 @@ namespace Events
 					LOG2_4("{}[Events] [CheckActors] use stamina pot with duration {} and magnitude {}", acinfo->durStamina, std::get<0>(tup));
 				}
 				// check if we have a valid duration
-				if (std::get<1>(tup) != -1) {
+				if (std::get<0>(tup) != -1) {
 					acinfo->globalCooldownTimer = comp->GetGlobalCooldown();
 				}
 			}
