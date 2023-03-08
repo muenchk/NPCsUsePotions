@@ -188,7 +188,15 @@ public:
 	/// <returns>wether a food was used</returns>
 	static std::pair<int, AlchemyEffectBase> ActorUsePoison(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect);
 
+	/// <summary>
+	/// Applies poison to an actors weapons
+	/// </summary>
+	/// <param name="actor">The actor whichs weapons shall be poisoned</param>
+	/// <param name="poison">The poison to apply</param>
+	static void ApplyPoison(RE::Actor* actor, RE::AlchemyItem* poison);
+
 	static bool AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison); 
+	static void AnimatedPoison_CalcRemainer(RE::Actor* ac, RE::AlchemyItem* poison, RE::TESBoundObject* right);
 
 	#pragma endregion
 };
