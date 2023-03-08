@@ -12,7 +12,22 @@ std::string Utility::PrintForm(ActorInfo* acinfo)
 {
 	if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
 		return "None";
-	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+	return std::string("[") +
+	       typeid(ActorInfo).name() +
+	       "<" +
+	       Utility::GetHex(acinfo->formid) +
+	       "><" +
+	       acinfo->name +
+	       "><" +
+	       acinfo->pluginname +
+	       "><globalCooldown:" + std::to_string(acinfo->globalCooldownTimer) +
+	       "|Health:" + std::to_string(acinfo->durHealth) +
+	       "|Magicka:" + std::to_string(acinfo->durMagicka) +
+	       "|Stamina:" + std::to_string(acinfo->durStamina) +
+	       "|Fortify:" + std::to_string(acinfo->durFortify) +
+	       "|Regen:" + std::to_string(acinfo->durRegeneration) +
+	       "|Combat:" + std::to_string(acinfo->durCombat) +
+	       ">]";
 }
 
 std::string Utility::ToString(ActorStrength acs)

@@ -673,48 +673,51 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 				// save statistics
 				Statistics::Misc_PoisonsUsed++;
 				if (comp->LoadedAnimatedPoisons()) {
+					LOG3_2("{}[ActorManipulation] [ActorUsePoison] LoadedAnimatedPoisons: Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
 					AnimatedPoison_ApplyPoison(acinfo, poison);
-				}
-				LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
-				if (!audiomanager)
-					audiomanager = RE::BSAudioManager::GetSingleton();
-				RE::ExtraDataList* extra = new RE::ExtraDataList();
-				int dosage = data->GetPoisonDosage(poison);
-				extra->Add(new RE::ExtraPoison(poison, dosage));
-				auto ied = acinfo->actor->GetEquippedEntryData(false);
-				if (ied) {
-					ied->AddExtraList(extra);
-					acinfo->actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-					{
-						// play poison sound
-						RE::BSSoundHandle handle;
-						if (poison->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-						else if (Settings::PoisonUse)
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-						handle.SetObjectToFollow(acinfo->actor->Get3D());
-						handle.SetVolume(1.0);
-						handle.Play();
-					}
 					return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 				} else {
-					ied = acinfo->actor->GetEquippedEntryData(true);
+					LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
+					if (!audiomanager)
+						audiomanager = RE::BSAudioManager::GetSingleton();
+					RE::ExtraDataList* extra = new RE::ExtraDataList();
+					int dosage = data->GetPoisonDosage(poison);
+					extra->Add(new RE::ExtraPoison(poison, dosage));
+					auto ied = acinfo->actor->GetEquippedEntryData(false);
 					if (ied) {
-						if (ied->object && ied->object->IsWeapon()) {
-							ied->AddExtraList(extra);
-							acinfo->actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							{
-								// play poison sound
-								RE::BSSoundHandle handle;
-								if (poison->data.consumptionSound)
-									audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-								else
-									audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-								handle.SetObjectToFollow(acinfo->actor->Get3D());
-								handle.SetVolume(1.0);
-								handle.Play();
+						ied->AddExtraList(extra);
+						acinfo->actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+						{
+							// play poison sound
+							RE::BSSoundHandle handle;
+							if (poison->data.consumptionSound)
+								audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+							else if (Settings::PoisonUse)
+								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+							handle.SetObjectToFollow(acinfo->actor->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play();
+						}
+						return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+					} else {
+						ied = acinfo->actor->GetEquippedEntryData(true);
+						if (ied) {
+							if (ied->object && ied->object->IsWeapon()) {
+								ied->AddExtraList(extra);
+								acinfo->actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								{
+									// play poison sound
+									RE::BSSoundHandle handle;
+									if (poison->data.consumptionSound)
+										audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+									else
+										audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+									handle.SetObjectToFollow(acinfo->actor->Get3D());
+									handle.SetVolume(1.0);
+									handle.Play();
+								}
+								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 							}
-							return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 						}
 					}
 				}
@@ -722,6 +725,61 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 		}
 	}
 	return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone) };
+}
+
+void ApplyPoison(RE::Actor* ac, RE::AlchemyItem* poison)
+{
+	if (!audiomanager)
+		audiomanager = RE::BSAudioManager::GetSingleton();
+	RE::ExtraDataList* extra = new RE::ExtraDataList();
+	int dosage = Data::GetSingleton()->GetPoisonDosage(poison);
+	extra->Add(new RE::ExtraPoison(poison, dosage));
+	auto ied = ac->GetEquippedEntryData(false);
+	if (ied) {
+		ied->AddExtraList(extra);
+		ac->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+		{
+			// play poison sound
+			RE::BSSoundHandle handle;
+			if (poison->data.consumptionSound)
+				audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+			else if (Settings::PoisonUse)
+				audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+			handle.SetObjectToFollow(ac->Get3D());
+			handle.SetVolume(1.0);
+			handle.Play();
+		}
+	} else {
+		ied = ac->GetEquippedEntryData(true);
+		if (ied) {
+			if (ied->object && ied->object->IsWeapon()) {
+				ied->AddExtraList(extra);
+				ac->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+				{
+					// play poison sound
+					RE::BSSoundHandle handle;
+					if (poison->data.consumptionSound)
+						audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+					else
+						audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+					handle.SetObjectToFollow(ac->Get3D());
+					handle.SetVolume(1.0);
+					handle.Play();
+				}
+			}
+		}
+	}
+}
+
+void CalcRemainder(RE::Actor* ac, RE::AlchemyItem* poison, RE::TESBoundObject* right)
+{
+	auto task = SKSE::GetTaskInterface();
+	std::this_thread::sleep_for(500ms);
+	task->AddTask([ac, right]() {
+		RE::ActorEquipManager::GetSingleton()->EquipObject(ac, right->As<RE::TESBoundObject>());
+	});
+	std::this_thread::sleep_for(200ms);
+	ApplyPoison(ac, poison);
 }
 
  //CTDs consistently when playing animations from here
@@ -878,7 +936,7 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	auto task = SKSE::GetTaskInterface();
 
 	//acinfo->actor->NotifyAnimationGraph("TKDodgeForward");
-	task->AddTask([&acinfo, &AnimationEventString]() { acinfo->actor->NotifyAnimationGraph(AnimationEventString); });
+	task->AddTask([acinfo, AnimationEventString]() { acinfo->actor->NotifyAnimationGraph(AnimationEventString); });
 
 	std::this_thread::sleep_for(3s);
 	acinfo = data->FindActor(actorid);
@@ -893,9 +951,9 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	LOG1_4("{}[AnimatedPoison_ApplyPoison] leftbound {}", Utility::PrintForm(leftbound));
 	if (lefthand && leftbound && acinfo->actor->GetEquippedObject(true) == nullptr) {
 		if (leftspell)
-			task->AddTask([&ac, &leftspell, &Equip_LeftHand]() { RE::ActorEquipManager::GetSingleton()->EquipSpell(ac, leftspell, Equip_LeftHand); });
+			task->AddTask([ac, leftspell, Equip_LeftHand]() { RE::ActorEquipManager::GetSingleton()->EquipSpell(ac, leftspell, Equip_LeftHand); });
 		else
-			task->AddTask([&ac, &leftbound, &Equip_LeftHand]() { RE::ActorEquipManager::GetSingleton()->EquipObject(ac, leftbound, nullptr, 1, Equip_LeftHand); });
+			task->AddTask([ac, leftbound, Equip_LeftHand]() { RE::ActorEquipManager::GetSingleton()->EquipObject(ac, leftbound, nullptr, 1, Equip_LeftHand); });
 		// skip rest of equipping stuff for now
 	}
 
@@ -916,17 +974,22 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	LOG_4("{}[AnimatedPoison_ApplyPoison] 9");
 
 	RE::TESForm* right = acinfo->actor->GetEquippedObject(false);
-	if (right) {
-		RE::ActorEquipManager::GetSingleton()->UnequipObject(acinfo->actor, right->As<RE::TESBoundObject>());
-		std::this_thread::sleep_for(300ms);
-		RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, right->As<RE::TESBoundObject>());
+	if (right && right->As<RE::TESBoundObject>()) {
+		task->AddTask([ac, poison, right]() {
+			RE::ActorEquipManager::GetSingleton()->UnequipObject(ac, right->As<RE::TESBoundObject>());
+			new std::thread(CalcRemainder, ac, poison, right->As<RE::TESBoundObject>());
+		});
+		acinfo = data->FindActor(actorid);
+		if (acinfo == nullptr)
+			return false;
+		acinfo->Animation_busy = false;
+		return true;
+	} else {
+		acinfo = data->FindActor(actorid);
+		if (acinfo == nullptr)
+			return false;
+		acinfo->Animation_busy = false;
+		return true;
 	}
-	acinfo = data->FindActor(actorid);
-	if (acinfo == nullptr)
-		return false;
-	acinfo->Animation_busy = false;
-	return true;
 }
-
-
 
