@@ -674,7 +674,8 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 				Statistics::Misc_PoisonsUsed++;
 				if (comp->LoadedAnimatedPoisons()) {
 					LOG3_2("{}[ActorManipulation] [ActorUsePoison] LoadedAnimatedPoisons: Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
-					AnimatedPoison_ApplyPoison(acinfo, poison);
+					std::thread tmp(AnimatedPoison_ApplyPoison, acinfo, poison);
+					tmp.detach();
 					return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 				} else {
 					LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
@@ -748,7 +749,7 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	LOG2_4("{}[AnimatedPoison_ApplyPoison] actor {} poison {}", Utility::PrintForm(acinfo), Utility::PrintForm(poison))
 
 	// if parameters are invalid or compatibility disabled return
-	if (!comp->LoadedAnimatedPoisons() || acinfo == nullptr || poison == nullptr || acinfo->Animation_busy || acinfo->actor == nullptr || acinfo->actor->IsPlayerRef()) {
+	if (!comp->LoadedAnimatedPoisons() || acinfo == nullptr || poison == nullptr || acinfo->Animation_busy || acinfo->actor == nullptr) {
 		LOG2_4("{}[AnimatedPoison_ApplyPoison] {} {}", comp->LoadedAnimatedPoisons(), acinfo->Animation_busy);
 		return false;
 	}
@@ -822,8 +823,10 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	bool sloweffect = false;
 	// left hand check
 	RE::TESForm* leftitem = acinfo->actor->GetEquippedObject(true);
+	RE::InventoryEntryData* leftentry = acinfo->actor->GetEquippedEntryData(true);
 	RE::TESBoundObject* leftbound = nullptr;
 	RE::SpellItem* leftspell = nullptr;
+	std::vector<RE::BSExtraData*> leftextras; 
 	if (leftitem) {
 		leftbound = leftitem->As<RE::TESBoundObject>();
 	}
@@ -841,7 +844,103 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 			   itemtype == 8 ||
 			   itemtype == 10 ||
 			   itemtype == 11) {
-		RE::ActorEquipManager::GetSingleton()->UnequipObject(acinfo->actor, leftbound, nullptr, 1, nullptr, true, true);
+		/* if (RE::TESObjectARMO* shield = leftbound->As<RE::TESObjectARMO>(); itemtype == 10 && shield != nullptr) { 
+			if (acinfo->formid != 0x00) {
+				auto map = acinfo->actor->GetInventory();
+				auto ind = map.find(shield);
+				if (ind != map.end()) {
+					leftentry = std::get<1>(ind->second).get();
+					LOG1_4("{}[AnimatedPoison_ApplyPoison] leftentry {}", Utility::PrintForm(leftentry));
+					auto itr = leftentry->extraLists->begin();
+					while (itr != leftentry->extraLists->end()) {
+						RE::ExtraDataList* list = *itr;
+						RE::BSExtraData* extra = list->begin() != list->end() ? &(*(list->begin())) : nullptr;
+						while (extra != nullptr) {
+							LOG1_4("{}[AnimatedPoison_ApplyPoison] extra {}", std::to_string((int)extra->GetType()));
+							switch (extra->GetType()) {
+							case RE::ExtraDataType::kHealth:
+								{
+									auto ex = (RE::ExtraHealth*)extra;
+									if (ex != nullptr)
+										leftextras.push_back(new RE::ExtraHealth(ex->health));
+								}
+								break;
+							case RE::ExtraDataType::kHotkey:
+								{
+									auto ex = (RE::ExtraHotkey*)extra;
+									if (ex != nullptr)
+										leftextras.push_back(new RE::ExtraHotkey(ex->hotkey.get()));
+								}
+								break;
+							case RE::ExtraDataType::kTextDisplayData:
+								{
+									auto ex = (RE::ExtraTextDisplayData*)extra;
+									if (ex != nullptr) {
+										RE::ExtraTextDisplayData* exn = new RE::ExtraTextDisplayData();
+										exn->customNameLength = ex->customNameLength;
+										exn->displayName = ex->displayName;
+										exn->displayNameText = ex->displayNameText;
+										exn->ownerInstance = ex->ownerInstance;
+										exn->ownerQuest = ex->ownerQuest;
+										exn->temperFactor = ex->temperFactor;
+										exn->pad32 = ex->pad32;
+										exn->pad34 = ex->pad34;
+										leftextras.push_back(exn);
+									}
+								}
+								break;
+							case RE::ExtraDataType::kEnchantment:
+								{
+									auto ex = (RE::ExtraEnchantment*)extra;
+									if (ex != nullptr) {
+										RE::ExtraEnchantment* exn = new RE::ExtraEnchantment();
+										exn->charge = ex->charge;
+										exn->enchantment = ex->enchantment;
+										exn->pad1B = ex->pad1B;
+										exn->pad1C = ex->pad1C;
+										exn->removeOnUnequip = ex->removeOnUnequip;
+										leftextras.push_back(exn);
+									}
+								}
+								break;
+							case RE::ExtraDataType::kOwnership:
+								{
+									auto ex = (RE::ExtraOwnership*)extra;
+									if (ex != nullptr)
+										leftextras.push_back(new RE::ExtraOwnership(ex->owner));
+								}
+								break;
+							case RE::ExtraDataType::kCharge:
+								{
+									auto ex = (RE::ExtraCharge*)extra;
+									if (ex != nullptr) {
+										RE::ExtraCharge* exn = new RE::ExtraCharge();
+										exn->charge = ex->charge;
+										exn->pad14 = ex->pad14;
+										leftextras.push_back(exn);
+									}
+								}
+								break;
+							case RE::ExtraDataType::kCannotWear:
+								{
+									leftextras.push_back(new RE::ExtraCannotWear());
+								}
+								break;
+							}
+							extra = extra->next;
+						}
+						static_cast<void>(itr++);
+					}
+				}
+				LOG3_4("{}[AnimatedPoison_ApplyPoison] shieldinfo. armor {}, enchantment {}, charge {}", std::to_string(shield->GetArmorRating()), Utility::PrintForm(shield->formEnchanting), std::to_string(shield->amountofEnchantment));
+				acinfo->actor->RemoveItem(leftbound, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+
+			} else {
+				RE::ActorEquipManager::GetSingleton()->UnequipObject(acinfo->actor, leftbound);
+			}
+		} else {*/
+			RE::ActorEquipManager::GetSingleton()->UnequipObject(acinfo->actor, leftbound);
+		//}
 		lefthand = true;
 	} else if (itemtype == 7) {
 		// sheath weapon
@@ -881,6 +980,8 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	}
 
 	LOG_4("{}[AnimatedPoison_ApplyPoison] 4");
+	if (acinfo->actor->IsDead())
+		return false;
 
 	// slow effect cast
 	if (comp->AnPois_TogglePlayerSlowEffect->value == 1) {
@@ -913,12 +1014,43 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	if (lefthand && leftbound && acinfo->actor->GetEquippedObject(true) == nullptr) {
 		if (leftspell)
 			task->AddTask([ac, leftspell, Equip_LeftHand]() { RE::ActorEquipManager::GetSingleton()->EquipSpell(ac, leftspell, Equip_LeftHand); });
-		else
+		else {
+			/* if (acinfo->formid != 0x00) {  // player doesn't need this
+				if (RE::TESObjectARMO* shield = leftbound->As<RE::TESObjectARMO>(); itemtype == 10 && shield != nullptr) {
+					acinfo->actor->AddObjectToContainer(leftbound, nullptr, 1, nullptr);
+					 auto map = acinfo->actor->GetInventory();
+					auto ind = map.find(shield);
+					if (ind != map.end()) {
+						leftentry = std::get<1>(ind->second).get();
+						for (int i = 0; i < leftextras.size(); i++) {
+							RE::ExtraDataList* extralist = new RE::ExtraDataList();
+							extralist->Add(leftextras[i]);
+							LOG1_4("{}[AnimatedPoison_ApplyPoison] extra {}", std::to_string((int)leftextras[i]->GetType()));
+							leftentry->AddExtraList(extralist);
+						}
+
+						auto itr = leftentry->extraLists->begin();
+						while (itr != leftentry->extraLists->end()) {
+							RE::ExtraDataList* list = *itr;
+							RE::BSExtraData* extra = list->begin() != list->end() ? &(*(list->begin())) : nullptr;
+							while (extra != nullptr) {
+								LOG1_4("{}[AnimatedPoison_ApplyPoison] extra {}", std::to_string((int)extra->GetType()));
+								extra = extra->next;
+							}
+							static_cast<void>(itr++);
+						}
+					}
+				}
+			}*/
 			task->AddTask([ac, leftbound, Equip_LeftHand]() { RE::ActorEquipManager::GetSingleton()->EquipObject(ac, leftbound, nullptr, 1, Equip_LeftHand); });
+		}
 		// skip rest of equipping stuff for now
 	}
 
 	LOG_4("{}[AnimatedPoison_ApplyPoison] 7");
+
+	if (acinfo->actor->IsDead())
+		return false;
 
 	if (sloweffect) {
 		RE::TESObjectMISC* AnPois_SlowEffectItem = comp->AnPois_SlowEffectItem;
@@ -929,7 +1061,8 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	}
 
 	LOG_4("{}[AnimatedPoison_ApplyPoison] 8");
-
+	if (acinfo->actor->IsDead())
+		return false;
 	acinfo->actor->SetGraphVariableBool("bSprintOK", true);
 
 	LOG_4("{}[AnimatedPoison_ApplyPoison] 9");
@@ -938,17 +1071,14 @@ bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
 	if (right && right->As<RE::TESBoundObject>()) {
 		task->AddTask([ac, poison, right]() {
 			RE::ActorEquipManager::GetSingleton()->UnequipObject(ac, right->As<RE::TESBoundObject>());
-			new std::thread(ACM::AnimatedPoison_CalcRemainer, ac, poison, right->As<RE::TESBoundObject>());
+			std::thread tmp(ACM::AnimatedPoison_CalcRemainer, ac, poison, right->As<RE::TESBoundObject>());
+			tmp.detach();
 		});
-		acinfo = data->FindActor(actorid);
-		if (acinfo == nullptr)
-			return false;
+
 		acinfo->Animation_busy = false;
 		return true;
 	} else {
-		acinfo = data->FindActor(actorid);
-		if (acinfo == nullptr)
-			return false;
+
 		acinfo->Animation_busy = false;
 		return true;
 	}

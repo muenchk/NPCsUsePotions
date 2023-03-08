@@ -30,6 +30,19 @@ std::string Utility::PrintForm(ActorInfo* acinfo)
 	       ">]";
 }
 
+std::string Utility::PrintForm(RE::InventoryEntryData* form)
+{
+	if (form == nullptr || form->object == nullptr || form->object->GetFormID() == 0 || Logging::EnableGenericLogging == false)
+		return "None";
+	std::string plugin = "";
+	if ((form->object->GetFormID() & 0xFF000000) != 0xFE000000) {
+		plugin = Settings::pluginnames[(form->object->GetFormID() >> 24)];
+	} else
+		plugin = Settings::pluginnames[256 + (((form->object->GetFormID() & 0x00FFF000)) >> 12)];
+
+	return std::string("[") + typeid(RE::InventoryEntryData).name() + "<" + Utility::GetHex(form->object->GetFormID()) + "><" + form->object->GetName() + "><" + plugin + ">]";
+}
+
 std::string Utility::ToString(ActorStrength acs)
 {
 	switch (acs) {
