@@ -32,9 +32,13 @@ Bug reports and suggestions should be posted in the Bug / Forum section of the n
 git clone https://github.com/muenchk/NPCsUsePotions.git
 cd NPCsUsePotions
 cmake --preset ae 				# for Skyrim Anniversary Edition
+cmake --build buildAE --config Release
+
 cmake --preset ae353			# for Skyrim Anniversary Edition version 1.6.353
+cmake --build buildAE353 --config Release
+
 cmake --preset se				# for Skyrim Special Edition
-cmake --build build --config Release
+cmake --build buildSE --config Release
 ```
 
 ## Building for VR

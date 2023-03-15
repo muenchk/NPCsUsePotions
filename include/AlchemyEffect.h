@@ -66,7 +66,7 @@ enum class AlchemyEffect : AlchemyEffectBase
 	kFortifyHealth = (unsigned __int64)1 << 52,     // 10000000000000
 	kFortifyMagicka = (unsigned __int64)1 << 53,    // 20000000000000
 	kFortifyStamina = (unsigned __int64)1 << 54,    // 40000000000000
-	kUnused1 = (unsigned __int64)1 << 55,           // 80000000000000
+	kShield = (unsigned __int64)1 << 55,            // 80000000000000
 	kUnused2 = (unsigned __int64)1 << 56,           // 100000000000000
 	kUnused3 = (unsigned __int64)1 << 57,           // 200000000000000
 	kUnused4 = (unsigned __int64)1 << 58,           // 300000000000000
@@ -171,7 +171,8 @@ enum class AlchemyEffect : AlchemyEffectBase
 	              static_cast<uint64_t>(kAlchemy) |
 	              static_cast<uint64_t>(kFortifyHealth) |
 	              static_cast<uint64_t>(kFortifyMagicka) |
-	              static_cast<uint64_t>(kFortifyStamina),
+	              static_cast<uint64_t>(kFortifyStamina) |
+	              static_cast<uint64_t>(kShield),
 
 	// 7FE677EFFFFFFF
 	kAnyFood = static_cast<uint64_t>(kAnyPotion) |

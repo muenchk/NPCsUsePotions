@@ -87,8 +87,9 @@ public:
 	/// </summary>
 	/// <param name="actor">actor to search</param>
 	/// <param name="eff">effect to search for</param>
+	/// <param name="fortify">whether to search for a fortify potion</param>
 	/// <returns>list of matching items with magnitudes and durations</returns>
-	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect);
+	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool fortify);
 
 	/// <summary>
 	/// Searches for and returns all potions in the actors inventory
@@ -117,6 +118,7 @@ public:
 	/// </summary>
 	/// <param name="actor">actor to search</param>
 	/// <param name="eff">effect to search for</param>
+	/// <param name="raw">whether to allow raw food</param>
 	/// <returns>list of matching items with magnitude and durations</returns>
 	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingFood(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool raw);
 
@@ -131,8 +133,9 @@ public:
 	/// Returns a random food item from the list of food items in an actors inventory
 	/// </summary>
 	/// <param name="actor"></param>
+	/// <param name="raw">whether raw food should be considered</param>
 	/// <returns></returns>
-	static std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> GetRandomFood(ActorInfo* acinfo);
+	static std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> GetRandomFood(ActorInfo* acinfo, bool raw);
 
 	/// <summary>
 	/// Returns the custom items that an actor posseses
@@ -148,8 +151,10 @@ public:
 	/// </summary>
 	/// <param name="acinfo">actor to apply potion on</param>
 	/// <param name="eff">effect to apply</param>
+	/// <param name="compatibility">whether to use items in compatibility mode</param>
+	/// <param name="fortify">whether to search for fortify potions</param>
 	/// <returns>Wether a potion was consumed</returns>
-	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatiblity = false);
+	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatiblity = false, bool fortify = false);
 
 	/// <summary>
 	/// takes an already computed list and uses the first item in the list
@@ -171,8 +176,9 @@ public:
 	/// tries to use a random food item from an actors inventory
 	/// </summary>
 	/// <param name="acinfo">actor to apply food to</param>
+	/// <param name="raw">whether raw food should be considered</param>
 	/// <returns>wether a food was used</returns>
-	static std::pair<int, AlchemyEffectBase> ActorUseFood(ActorInfo* acinfo);
+	static std::pair<int, AlchemyEffectBase> ActorUseFood(ActorInfo* acinfo, bool raw);
 
 	/// <summary>
 	/// tries to use a poison with the given effect [eff]
@@ -182,23 +188,6 @@ public:
 	/// <returns>wether a food was used</returns>
 	static std::pair<int, AlchemyEffectBase> ActorUsePoison(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect);
 
-	/// <summary>
-	/// tries to use any supported food on the actor
-	/// </summary>
-	/// <param name="acinfo">actor to use on</param>
-	/// <param name="raw">whether the food should be raw</param>
-	/// <returns>wether any food was used</returns>
-	static bool ActorUseAnyFood(ActorInfo* acinfo, bool raw)
-	{
-		if (std::get<0>(ActorUseFood(acinfo, static_cast<uint64_t> (AlchemyEffect::kMagickaRate), raw)) >= 0)
-			return true;
-		else if (std::get<0>(ActorUseFood(acinfo, static_cast<uint64_t> (AlchemyEffect::kStaminaRate), raw)) >= 0)
-			return true;
-		else if (std::get<0>(ActorUseFood(acinfo, static_cast<uint64_t> (AlchemyEffect::kHealRate), raw)) >= 0)
-			return true;
-		return false;
-	}
-	
 	/* static bool AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison); */
 
 	#pragma endregion

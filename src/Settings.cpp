@@ -15,7 +15,9 @@
 #include "Distribution.h"
 #include "AlchemyEffect.h"
 #include "Data.h"
+#include "Compatibility.h"
 
+using Comp = Compatibility;
 using ActorStrength = ActorStrength;
 using ItemStrength = ItemStrength;
 using ItemType = Settings::ItemType;
@@ -29,9 +31,24 @@ static std::uniform_int_distribution<signed> rand100(1, 100);
 
 #pragma region Settings
 
+void Settings::Interfaces::RequestAPIs()
+{
+	loginfo("[SETTINGS] [RequestInterfaces]");
+	// get tmp api
+	if (!tdm_api) {
+		loginfo("[SETTINGS] [RequestInterfaces] Trying to get True Directional Movement API");
+		tdm_api = reinterpret_cast<TDM_API::IVTDM1*>(TDM_API::RequestPluginAPI(TDM_API::InterfaceVersion::V1));
+		if (tdm_api) {
+			loginfo("[SETTINGS] [RequestInterfaces] Acquired True Directional Movement API");
+		} else {
+			loginfo("[SETTINGS] [RequestInterfaces] Failed to get True Directional Movement API");
+		}
+	}
+}
+
 void Settings::InitGameStuff()
 {
-	loginfo("[SETTINGS] [InitGameStuff] init pluginnames");
+	loginfo("[SETTINGS] [InitGameStuff] Load Game Stuff");
 	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 	const RE::TESFile* file = nullptr;
 	uint32_t index = 0;
@@ -70,7 +87,26 @@ void Settings::InitGameStuff()
 	Settings::Equip_Voice = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x25BEE);
 	Settings::Equip_Potion = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x35698);
 
-	loginfo("[SETTINGS] [InitGameStuff] finished");
+	loginfo("[SETTINGS] [InitGameStuff] Finished");
+}
+
+void Settings::ExcludeRacesWithoutPotionSlot()
+{
+	LOG_1("{}[Settings] [ExcludeRacesWithoutPotionSlot]");
+	auto races = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESRace>();
+	LOG1_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] found {} races.", races.size());
+	for (RE::TESRace* race : races) {
+		bool potionenabled = false;
+		for (auto slot : race->equipSlots) {
+			if (slot->GetFormID() == 0x35698)
+				potionenabled = true;
+		}
+		if (potionenabled == false) {
+			Distribution::_excludedAssoc.insert(race->GetFormID());
+			LOG1_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] {} does not have potion slot and has been excluded.", Utility::PrintForm(race));
+		}
+	}
+	LOG_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] end");
 }
 
 void Settings::LoadDistrConfig()
@@ -84,6 +120,10 @@ void Settings::LoadDistrConfig()
 
 	// reset custom items
 	Distribution::ResetCustomItems();
+	// reset loaded rules
+	Distribution::ResetRules();
+
+	ExcludeRacesWithoutPotionSlot();
 
 	std::vector<std::string> files;
 	auto constexpr folder = R"(Data\SKSE\Plugins\)";
@@ -771,7 +811,6 @@ void Settings::LoadDistrConfig()
 										delete citems;
 										continue;
 									}
-									loginfo("[Settings] [LoadDistrRules] rule contains items {} {} {} {} {} {}", citems->items.size(), citems->death.size(), citems->food.size(), citems->fortify.size(), citems->poisons.size(), citems->potions.size());
 
 									int cx = 0;
 									// now parse associations
@@ -842,9 +881,9 @@ void Settings::LoadDistrConfig()
 									if (index != 0x1) {
 										// index is a normal mod
 										Distribution::_excludedPlugins.insert(index);
-										loginfo("[Settings] [LoadDistrRules] Rule 9 excluded plugin {} with index {}", plugin, Utility::GetHex(index));
+										LOGLE2_2("[Settings] [LoadDistrRules] Rule 9 excluded plugin {} with index {}", plugin, Utility::GetHex(index));
 									} else {
-										loginfo("[Settings] [LoadDistrRules] Rule 9 cannot exclude plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 9 cannot exclude plugin {}. It is either not loaded or not present", plugin);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1130,9 +1169,9 @@ void Settings::LoadDistrConfig()
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_excludedPlugins_NPCs.insert(plugindex);
-										loginfo("[Settings] [LoadDistrRules] Rule 17 excluded plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 17 excluded plugin {}. It is either not loaded or not present", plugin);
 									} else {
-										loginfo("[Settings] [LoadDistrRules] Rule 17 cannot exclude plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 17 cannot exclude plugin {}. It is either not loaded or not present", plugin);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1150,9 +1189,92 @@ void Settings::LoadDistrConfig()
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_whitelistNPCsPlugin.insert(plugindex);
-										loginfo("[Settings] [LoadDistrRules] Rule 18 whitelisted plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 18 whitelisted plugin {}. It is either not loaded or not present", plugin);
 									} else {
-										loginfo("[Settings] [LoadDistrRules] Rule 18 cannot whitelist plugin {}. It is either not loaded or not present", plugin);
+										LOGLE1_2("[Settings] [LoadDistrRules] Rule 18 cannot whitelist plugin {}. It is either not loaded or not present", plugin);
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 19:  // mark item as alcoholic
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kItem:
+											Distribution::_alcohol.insert(std::get<1>(items[i]));
+											LOGLE1_2("[Settings] [LoadDistrRules] marked {} as alcoholic", Utility::GetHex(std::get<1>(items[i])));
+											break;
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 20: // define alchemy effect
+								{
+									if (splits->size() != 4) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									std::string effect = splits->at(splitindex);
+									splitindex++;
+									AlchemyEffectBase eff = 0;
+									try {
+										eff = std::stoull(effect, nullptr, 16);
+									} catch (std::exception&) {
+										logwarn("[Settings] [LoadDistrRules] expection in field \"Effect\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									}
+									AlchemyEffect e = static_cast<AlchemyEffect>(eff);
+									if (e != AlchemyEffect::kNone) {
+										bool error = false;
+										int total = 0;
+										auto items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+										for (int i = 0; i < items.size(); i++) {
+											switch (std::get<0>(items[i])) {
+											case Distribution::AssocType::kEffectSetting:
+												Distribution::_magicEffectAlchMap.insert_or_assign(std::get<1>(items[i]), e);
+												LOGLE2_2("[Settings] [LoadDistrRules] fixed {} to effect {}", Utility::GetHex(std::get<1>(items[i])), Utility::ToString(e));
+												break;
+											}
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 21:  // disallow player usage of items
+								{
+									if (splits->size() != 3) {
+										logwarn("[Settings] [LoadDistrRules] rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kEffectSetting:
+										case Distribution::AssocType::kItem:
+											Distribution::_excludedItemsPlayer.insert(std::get<1>(items[i]));
+											LOGLE1_2("[Settings] [LoadDistrRules] excluded {} for the player", Utility::GetHex(std::get<1>(items[i])));
+											break;
+										}
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1600,6 +1722,11 @@ void Settings::LoadDistrConfig()
 			std::string newname = (splits)->at(3);
 			
 			Distribution::Rule* rule = Distribution::FindRule(name);
+			if (rule == nullptr) {
+				logwarn("[Settings] [LoadDistrRules] base rule couldn't be found file: {}, rule:\"{}\", fields: {}", std::get<1>(cpy), std::get<2>(cpy), splits->size());
+				delete splits;
+				continue;
+			}
 			Distribution::Rule* newrule = rule->Clone();
 			newrule->ruleName = newname;
 			int prio = INT_MIN;
@@ -1619,7 +1746,7 @@ void Settings::LoadDistrConfig()
 												  newrule->rulePriority > Distribution::defaultRule->rulePriority))
 				Distribution::defaultRule = newrule;
 			delete splits;
-			LOGLE1_2("[Settings] [LoadDistrRules] rule {} successfully coinialised.", newrule->ruleName);
+			LOGLE1_2("[Settings] [LoadDistrRules] rule {} successfully coinitialised.", newrule->ruleName);
 		}
 	}
 
@@ -2059,27 +2186,27 @@ void Settings::LoadDistrConfig()
 		Settings::ApplySkillBoostPerks();
 
 	if (Logging::EnableLoadLog) {
-		loginfo("[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules()->size());
-		loginfo("[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Associations: {}", Distribution::assocMap()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Associations: {}", Distribution::assocMap()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Bosses: {}", Distribution::bosses()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Bosses: {}", Distribution::bosses()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Excluded NPCs: {}", Distribution::excludedNPCs()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Excluded NPCs: {}", Distribution::excludedNPCs()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Excluded Associations: {}", Distribution::excludedAssoc()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Excluded Associations: {}", Distribution::excludedAssoc()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Excluded Items: {}", Distribution::excludedItems()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
-		loginfo("[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
-		loginfo("[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Rules: {}", Distribution::rules()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of NPCs: {}", Distribution::npcMap()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Associations: {}", Distribution::assocMap()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Associations: {}", Distribution::assocMap()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Bosses: {}", Distribution::bosses()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Bosses: {}", Distribution::bosses()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Excluded NPCs: {}", Distribution::excludedNPCs()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Excluded NPCs: {}", Distribution::excludedNPCs()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Excluded Associations: {}", Distribution::excludedAssoc()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Excluded Associations: {}", Distribution::excludedAssoc()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Excluded Items: {}", Distribution::excludedItems()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
+		LOGL1_2("{}[Settings] [LoadDistrRules] Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
 		/*for (int i = 0; i < Distribution::_rules.size(); i++) {
-			loginfo("rule {} pointer {}", i, Utility::GetHex((uintptr_t)Distribution::_rules[i]));
+			LOGLE1_2("{}rule {} pointer {}", i, Utility::GetHex((uintptr_t)Distribution::_rules[i]));
 		}
 		auto iter = Distribution::_assocMap.begin();
 		while (iter != Distribution::_assocMap.end()) {
-			loginfo("assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
+			LOGLE1_2("{}assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
 			iter++;
 		}*/
 
@@ -2462,6 +2589,7 @@ void Settings::ClassifyItems()
 
 	Data* data = Data::GetSingleton();
 	data->ResetAlchItemEffects();
+	Comp* comp = Comp::GetSingleton();
 
 	std::vector<std::tuple<std::string, std::string>> ingredienteffectmap;
 
@@ -2498,6 +2626,17 @@ void Settings::ClassifyItems()
 				if (Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(item)) == true) {
 					iter++;
 					continue;
+				}
+
+				// there is a little bit of a problem for some items that have wrong flags and no keywords set. Try to detect them by sound and set the flags
+				if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
+					if (item->data.consumptionSound == Settings::FoodEat) {
+						item->data.flags = RE::AlchemyItem::AlchemyFlag::kFoodItem | item->data.flags;
+					} else if (item->data.consumptionSound == Settings::PoisonUse) {
+						item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
+					} else if (item->data.consumptionSound == Settings::PotionUse) {
+						item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+					}
 				}
 
 				auto clas = ClassifyItem(item);
@@ -2546,6 +2685,19 @@ void Settings::ClassifyItems()
 								continue;
 							}
 						}
+					}
+				}
+
+				// check if item has known alcohol keywords and add it to list of alcohol
+				if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol) || comp->LoadedApothecary() && item->HasKeyword(comp->Apot_SH_AlcoholDrinkKeyword)) {
+					Distribution::_alcohol.insert(item->GetFormID());
+				}
+
+				// check for player excluded magiceffects
+				for (int i = 0; i < (int)item->effects.size(); i++) {
+					if (item->effects[i]->baseEffect && Distribution::excludedItemsPlayer()->contains(item->effects[i]->baseEffect->GetFormID())) {
+						LOGLE1_1("[Settings] [ClassifyItems] Excluded {} for player due to effect", Utility::PrintForm(item));
+						Distribution::_excludedItemsPlayer.insert(item->GetFormID());
 					}
 				}
 
@@ -2618,6 +2770,7 @@ void Settings::ClassifyItems()
 					dosage = Distribution::GetPoisonDosage(item, std::get<0>(clas));
 				// add item into effect map
 				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas), dosage);
+				LOGLE4_1("[Settings] [ClassifyItems] Saved effects for {} dur {} mag {} effect {}", Utility::PrintForm(item), std::get<3>(clas), std::get<4>(clas), Utility::GetHex(std::get<0>(clas)));
 			}
 
 			itemi = (*iter).second->As<RE::IngredientItem>();
@@ -2638,6 +2791,15 @@ void Settings::ClassifyItems()
 		iter++;
 	}
 	PROF1_1("{}[ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+
+	// add alcoholic items to player exclusion list
+	if (Settings::Player::_DontDrinkAlcohol) {
+		auto itr = Distribution::_alcohol.begin();
+		while (itr != Distribution::_alcohol.end()) {
+			Distribution::_excludedItemsPlayer.insert(*itr);
+			itr++;
+		}
+	}
 
 	// items initialised
 	_itemsInit = true;
@@ -2806,6 +2968,10 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 			if (sett) {
 				mag[i] = item->effects[i]->effectItem.magnitude;
 				dur[i] = item->effects[i]->effectItem.duration;
+
+				// force area to zero, to avoid CTDs when using the item.
+				item->effects[i]->effectItem.area = 0;
+
 				detrimental |= sett->IsDetrimental();
 				positive |= !sett->IsDetrimental();
 
@@ -2853,19 +3019,13 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	float maxmag = 0;
 	int maxdur = 0;
 	for (int i = 0; i < 4; i++) {
-		if ((av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagicka)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStamina)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealRate)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagickaRate)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStaminaRate)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kHealRateMult)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kMagickaRateMult)) > 0 ||
-			(av[i] & static_cast<AlchemyEffectBase>(AlchemyEffect::kStaminaRateMult)) > 0) {
-			if (mag[i] * dur[i] > maxmag) {
-				maxmag = mag[i] * dur[i];
-				maxdur = dur[i];
-			}
+		if (mag[i] == 0)
+			mag[i] = 1;
+		if (dur[i] == 0)
+			dur[i] = 1;
+		if (mag[i] * dur[i] > maxmag) {
+			maxmag = mag[i] * dur[i];
+			maxdur = dur[i];
 		}
 		alch |= av[i];
 	}
@@ -2898,9 +3058,9 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	}
 
 	ItemType type = ItemType::kPotion;
-	if (item->IsFood())
+	if (item->IsFood() || item->HasKeyword(VendorItemFood) || item->HasKeyword(VendorItemFoodRaw))
 		type = ItemType::kFood;
-	else if (item->IsPoison()) {
+	else if (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison)) {
 		type = ItemType::kPoison;
 		return {
 			alch,

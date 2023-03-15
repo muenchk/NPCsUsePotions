@@ -40,23 +40,23 @@ namespace Storage
 		WriteData(a_intfc);
 
 		// print statistics to logfile
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESHitEvents registered               {}", Statistics::Events_TESHitEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESCombatEvents registered            {}", Statistics::Events_TESCombatEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESDeathEvents registered             {}", Statistics::Events_TESDeathEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] BGSActorCellEvents registered         {}", Statistics::Events_BGSActorCellEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESCellAttachDetachEvents registered  {}", Statistics::Events_TESCellAttachDetachEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESEquipEvents registered             {}", Statistics::Events_TESEquipEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESFormDeleteEvent registereds        {}", Statistics::Events_TESHitEvent);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] TESContainerChangedEvent registereds  {}", Statistics::Events_TESContainerChangedEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESHitEvents registered               {}", Statistics::Events_TESHitEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESCombatEvents registered            {}", Statistics::Events_TESCombatEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESDeathEvents registered             {}", Statistics::Events_TESDeathEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] BGSActorCellEvents registered         {}", Statistics::Events_BGSActorCellEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESCellAttachDetachEvents registered  {}", Statistics::Events_TESCellAttachDetachEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESEquipEvents registered             {}", Statistics::Events_TESEquipEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESFormDeleteEvent registereds        {}", Statistics::Events_TESHitEvent);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESContainerChangedEvent registereds  {}", Statistics::Events_TESContainerChangedEvent);
 
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Bytes Written To Last Savegame        {}", Statistics::Storage_BytesWrittenLast);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Bytes Read From Last Savegame         {}", Statistics::Storage_BytesReadLast);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Actors Saved To Last Savegame         {}", Statistics::Storage_ActorsSavedLast);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] Actors Read From Last Savegame        {}", Statistics::Storage_ActorsReadLast);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Bytes Written To Last Savegame        {}", Statistics::Storage_BytesWrittenLast);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Bytes Read From Last Savegame         {}", Statistics::Storage_BytesReadLast);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Actors Saved To Last Savegame         {}", Statistics::Storage_ActorsSavedLast);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Actors Read From Last Savegame        {}", Statistics::Storage_ActorsReadLast);
 
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] potions administered                  {}", Statistics::Misc_PotionsAdministered);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] poisons used                          {}", Statistics::Misc_PoisonsUsed);
-		loginfo("[DataStorage] [SaveGameCallback] [Statistics] food eaten                            {}", Statistics::Misc_FoodEaten);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] potions administered                  {}", Statistics::Misc_PotionsAdministered);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] poisons used                          {}", Statistics::Misc_PoisonsUsed);
+		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] food eaten                            {}", Statistics::Misc_FoodEaten);
 
 		LOG_1("{}[DataStorage] [SaveGameCallback] end");
 	}
@@ -91,11 +91,11 @@ namespace Storage
 	void Register()
 	{
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000010, LoadGameCallback);
-		loginfo("[DataStorage] [Register] Registered for LoadGameCallback");
+		LOG_1("{}[DataStorage] [Register] Registered for LoadGameCallback");
 		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000020, RevertGameCallback);
-		loginfo("[DataStorage] [Register] Registered for RevertGameCallback");
+		LOG_1("{}[DataStorage] [Register] Registered for RevertGameCallback");
 		Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000030, SaveGameCallback);
-		loginfo("[DataStorage] [Register] Registered for SaveGameCallback");
+		LOG_1("{}[DataStorage] [Register] Registered for SaveGameCallback");
 		data = Data::GetSingleton();
 		if (data == nullptr)
 			logcritical("[DataStorage] [Register] Cannot access data storage");
@@ -112,14 +112,40 @@ namespace Storage
 		// total number of bytes read
 		long size = 0;
 
-		loginfo("[DataStorage] [ReadData] Beginning data load...");
-		
-		size += data->ReadActorInfoMap(a_intfc);
+		LOG_1("{}[DataStorage] [ReadData] Beginning data load...");
 
-		loginfo("[DataStorage] [ReadData] Finished loading data");
+		uint32_t type = 0;
+		uint32_t version = 0;
+		uint32_t length = 0;
+
+		// for actor info map
+		int accounter = 0;
+		int acfcounter = 0;
+		int acdcounter = 0;
+
+		
+		while (a_intfc->GetNextRecordInfo(type, version, length)) {
+			LOG2_1("{}[DataStorage] [ReadData] found record with type {} and length {}", type, length);
+			size += length;
+			switch (type) {
+			case 'ACIF':  // ActorInfo
+				size += data->ReadActorInfoMap(a_intfc, length, accounter, acdcounter, acfcounter);
+				break;
+			case 'DAID':  // Deleted Actor
+				size += data->ReadDeletedActors(a_intfc, length);
+				break; 
+			}
+		}
+
+		Statistics::Storage_ActorsReadLast = accounter;
+		LOG1_1("{}[Data] [ReadActorInfoMap] Read {} ActorInfos", accounter);
+		LOG1_1("{}[Data] [ReadActorInfoMap] Read {} dead, deleted or invalid ActorInfos", acdcounter);
+		LOG1_1("{}[Data] [ReadActorInfoMap] Failed to read {} ActorInfos", acfcounter);
+
+		LOG_1("{}[DataStorage] [ReadData] Finished loading data");
 		if (preproc) {  // if processing was enabled before locking
 			Events::UnlockProcessing();
-			loginfo("[DataStorage] [ReadData] Enable processing");
+			LOG_1("{}[DataStorage] [ReadData] Enable processing");
 		}
 		Statistics::Storage_BytesReadLast = size;
 	}
@@ -135,15 +161,16 @@ namespace Storage
 		// total number of bytes written
 		long size = 0;
 
-		loginfo("[DataStorage] [WriteData] Beginning to write data...");
+		LOG_1("{}[DataStorage] [WriteData] Beginning to write data...");
 		
-		size +=data->SaveActorInfoMap(a_intfc);
+		size += data->SaveActorInfoMap(a_intfc);
+		size += data->SaveDeletedActors(a_intfc);
 
-		loginfo("[DataStorage] [WriteData] Finished writing data");
+		LOG_1("{}[DataStorage] [WriteData] Finished writing data");
 
 		if (preproc) {  // if processing was enabled before locking
 			Events::UnlockProcessing();
-			loginfo("[DataStorage] [WriteData] Enable processing");
+			LOG_1("{}[DataStorage] [WriteData] Enable processing");
 		}
 		Statistics::Storage_BytesWrittenLast = size;
 	}
@@ -155,10 +182,10 @@ namespace Storage
 	{
 		bool preproc = Events::LockProcessing();
 
-		loginfo("[DataStorage] [RevertData] Reverting ActorInfo");
+		LOG_1("{}[DataStorage] [RevertData] Reverting ActorInfo");
 		data->DeleteActorInfoMap();
 
-		loginfo("[DataStorage] [RevertData] Finished reverting");
+		LOG_1("{}[DataStorage] [RevertData] Finished reverting");
 
 		if (preproc) // if processing was enabled before locking
 			Events::UnlockProcessing();

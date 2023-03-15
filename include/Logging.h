@@ -8,7 +8,8 @@
 	}
 
 #define logwarn(...) \
-	static_cast<void>(logger::warn(__VA_ARGS__));
+	if (Logging::EnableLog) \
+		static_cast<void>(logger::warn(__VA_ARGS__));
 
 #define logcritical(...) \
 	static_cast<void>(logger::critical(__VA_ARGS__));
@@ -229,7 +230,7 @@
 
 #define LOG3_2(s, t, u, v)                               \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
-		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v));
 
 #define LOG4_2(s, t, u, v, w)                               \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
@@ -278,6 +279,14 @@
 #define LOG4_4(s, t, u, v, w)                           \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
+
+#define LOG5_4(s, t, u, v, w, x)                                                          \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x));
+
+#define LOG6_4(s, t, u, v, w, x,y)                                                          \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x, y));
 
 #define LOG_5(s)                                      \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \

@@ -1032,7 +1032,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 			acinfo->potionDistr.clear();
 			acinfo->potionDistr.shrink_to_fit();
 			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching potions");
-			auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+			auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions, true);
 			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 			// if the number of found items is less then the number of items to add
 			// then add the difference in numbers
@@ -1068,7 +1068,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(ActorInfo* acinfo)
 			acinfo->fortifyDistf.clear();
 			acinfo->fortifyDistf.shrink_to_fit();
 			LOG_4("{}[SettingsDistribution] [GetDistrItems] matching fortify");
-			auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+			auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 			int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 			// if the number of found items is less then the number of items to add
 			// then add the difference in numbers
@@ -1142,7 +1142,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(ActorInfo* acinfo)
 	auto ritems = rule->GetRandomPotions(acinfo);
 	acinfo->potionDistr.clear();
 	acinfo->potionDistr.shrink_to_fit();
-	auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+	auto items = ACM::GetMatchingPotions(acinfo, rule->validPotions, false);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
 	// return an empty list
@@ -1176,7 +1176,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrFortifyPotions(ActorInfo* ac
 	auto ritems = rule->GetRandomFortifyPotions(acinfo);
 	acinfo->fortifyDistf.clear();
 	acinfo->fortifyDistf.shrink_to_fit();
-	auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+	auto items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 	int64_t diff = (int64_t)(ritems.size()) - (int64_t)(items.size());
 	// if number of items to add is lesser equal the number of already present items
 	// return an empty list
@@ -1208,7 +1208,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(Acto
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::Distr::_DistributePotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions, false);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
@@ -1220,7 +1220,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(Acto
 		}
 	}
 	if (Settings::Distr::_DistributeFortifyPotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
 		}
@@ -1242,7 +1242,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::Distr::_DistributePotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validPotions, false);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| potions {} | found: {}", Utility::GetHex(rule->validPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
@@ -1256,7 +1256,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 		}
 	}
 	if (Settings::Distr::_DistributeFortifyPotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions);
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, rule->validFortifyPotions, true);
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| fortify {} | found: {}", Utility::GetHex(rule->validFortifyPotions), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
@@ -1267,6 +1267,51 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(ActorInfo*
 		//logger::info("[SettingsDistribution] GetMatchingInventoryItems| food {} | found: {}", Utility::GetHex(rule->validFood), items.size());
 		for (auto i : items) {
 			ret.insert(ret.end(), std::get<2>(i));
+		}
+	}
+	if (ret.size() != 0) {
+		if (ret.back() == nullptr)
+			ret.pop_back();
+		auto map = acinfo->actor->GetInventoryCounts();
+		size_t currsize = ret.size();
+		for (int i = 0; i < currsize; i++) {
+			if (auto it = map.find(ret[i]); it != map.end()) {
+				if (it->second > 1)
+					for (int c = 1; c < it->second; c++)
+						ret.push_back(ret[i]);
+			}
+		}
+	}
+	return ret;
+}
+
+std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(ActorInfo* acinfo)
+{
+	//logger::info("[SettingsDistribution] GetMatchingInventoryItems enter");
+	Rule* rule = CalcRule(acinfo);
+	std::vector<RE::AlchemyItem*> ret;
+	if (Settings::Distr::_DistributePotions) {
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, Base(AlchemyEffect::kAnyPotion), false);
+		for (auto i : items) {
+			ret.insert(ret.end(), std::get<2>(i));
+		}
+	}
+	if (Settings::Distr::_DistributePoisons) {
+		std::list<RE::AlchemyItem*> items = ACM::GetAllPotions(acinfo);
+		for (auto i : items) {
+			ret.insert(ret.end(), i);
+		}
+	}
+	if (Settings::Distr::_DistributeFortifyPotions) {
+		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> items = ACM::GetMatchingPotions(acinfo, Base(AlchemyEffect::kAnyFortify), true);
+		for (auto i : items) {
+			ret.insert(ret.end(), std::get<2>(i));
+		}
+	}
+	if (Settings::Distr::_DistributeFood) {
+		std::list<RE::AlchemyItem*> items = ACM::GetAllFood(acinfo);
+		for (auto i : items) {
+			ret.insert(ret.end(), i);
 		}
 	}
 	if (ret.size() != 0) {
@@ -1333,6 +1378,8 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase eff
 
 bool Distribution::ExcludedNPC(ActorInfo* acinfo)
 {
+	if (!acinfo->IsValid())
+		return true;
 	if (Settings::Whitelist::EnabledNPCs) {
 		if (acinfo->whitelistedcalculated) {
 			if (!acinfo->whitelisted)
@@ -2096,8 +2143,14 @@ bool CheckDistributability(ActorInfo* acinfo, Distribution::CustomItemStorage* c
 Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, Misc::NPCTPLTInfo* tpltinfo)
 {
 	auto begin = std::chrono::steady_clock::now();
-	if (acinfo == nullptr)
+	if (acinfo == nullptr || acinfo->IsValid() == false)
 		return emptyRule;
+	// get npc template info
+	Misc::NPCTPLTInfo tplt;
+	if (tpltinfo == nullptr) {
+		tplt = Utility::ExtractTemplateInfo(acinfo->actor);
+		tpltinfo = &tplt;
+	}
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
@@ -2225,6 +2278,35 @@ Distribution::Rule* Distribution::CalcRule(ActorInfo* acinfo, Misc::NPCTPLTInfo*
 	}
 	if (calcwhite && whitelistNPCs()->contains(acinfo->actor->GetActorBase()->GetFormID()))
 		acinfo->whitelisted = true;
+	// perform check on tpltactorbaseinformation
+	if (tpltinfo->base != nullptr && tpltinfo->base != acinfo->actor->GetActorBase()) {
+		if (!ruleoverride) {
+			itnpc = npcMap()->find(tpltinfo->base->GetFormID());
+			if (itnpc != npcMap()->end()) {  // found the right rule!
+				rule = itnpc->second;        // this can be null if the specific npc is excluded
+				//logger::info("assign rule 2");
+				ruleoverride = true;
+				prio = INT_MAX;
+			}
+		}
+		bossoverride |= bosses()->contains(tpltinfo->base->GetFormID());
+		adjustacs(tpltinfo->base->GetFormID());
+		// get custom items
+		if (calccustitems) {
+			auto itc = customItems()->find(tpltinfo->base->GetFormID());
+			if (itc != customItems()->end()) {
+				auto vec = itc->second;
+				for (int b = 0; b < vec.size(); b++) {
+					if (CheckDistributability(acinfo, vec[b]) && citemsset->contains(vec[b]->id) == false) {
+						citems->push_back(vec[b]);
+						citemsset->insert(vec[b]->id);
+					}
+				}
+			}
+		}
+		if (calcwhite && whitelistNPCs()->contains(tpltinfo->base->GetFormID()))
+			acinfo->whitelisted = true;
+	}
 
 	if (tpltinfo && tpltinfo->tpltrace)
 		race = tpltinfo->tpltrace;
@@ -2870,6 +2952,36 @@ void Distribution::ResetCustomItems()
 	}
 	set.clear();
 	LogConsole("Reset custom items");
+}
+
+void Distribution::ResetRules()
+{
+	_magicEffectAlchMap.clear();
+	_alcohol.clear();
+	_whitelistNPCsPlugin.clear();
+	_whitelistNPCs.clear();
+	_excludedPlugins_NPCs.clear();
+	_excludedEffects.clear();
+	_dosageEffectMap.clear();
+	_dosageItemMap.clear();
+	_followerFactions.clear();
+	_actorStrengthMap.clear();
+	_itemStrengthMap.clear();
+	_excludedPlugins.clear();
+	_customItems.clear();
+	_whitelistItems.clear();
+	_baselineExclusions.clear();
+	_excludedItemsPlayer.clear();
+	_excludedItems.clear();
+	_excludedAssoc.clear();
+	_excludedNPCs.clear();
+	_bosses.clear();
+	_assocMap.clear();
+	_npcMap.clear();
+	for (Rule* rule : _rules) {
+		delete rule;
+	}
+	_rules.clear();
 }
 
 #pragma endregion

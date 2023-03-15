@@ -8,6 +8,13 @@ bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffe
 	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
 }
 
+std::string Utility::PrintForm(ActorInfo* acinfo)
+{
+	if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
+		return "None";
+	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+}
+
 std::string Utility::ToString(ActorStrength acs)
 {
 	switch (acs) {
@@ -167,6 +174,8 @@ std::string Utility::ToString(AlchemyEffect ae)
 		return "FortifyStamina";
 	case AlchemyEffect::kCustom:
 		return "Custom";
+	case AlchemyEffect::kShield:
+		return "Shield";
 	default:
 		return "Unknown";
 	}
@@ -289,10 +298,34 @@ std::string Utility::ToString(AlchemyEffectBase ae)
 		ret += "FortifyStamina|";
 	if (ae & Base(AlchemyEffect::kCustom))
 		ret += "Custom|";
+	if (ae & Base(AlchemyEffect::kShield))
+		ret += "Shield|";
 
 	if (ret == "|")
 		return "|Unknown|";
 	return ret;
+}
+
+std::vector<std::string> Utility::SplitString(std::string str, char delimiter, bool removeEmpty)
+{
+	std::vector<std::string> splits;
+	size_t pos = str.find(delimiter);
+	while (pos != std::string::npos) {
+		splits.push_back(str.substr(0, pos));
+		str.erase(0, pos + 1);
+		pos = str.find(delimiter);
+	}
+	if (str.length() != 0)
+		splits.push_back(str);
+	if (removeEmpty) {
+		auto itr = splits.begin();
+		while (itr != splits.end()) {
+			if (*itr == "")
+				splits.erase(itr);
+			itr++;
+		}
+	}
+	return splits;
 }
 
 std::string Utility::ToStringCombatStyle(uint32_t style)
@@ -1292,6 +1325,9 @@ Distribution::AssocType Utility::MatchValidFormType(RE::FormType type, bool& val
 	case RE::FormType::SoulGem:
 		valid = true;
 		return Distribution::AssocType::kItem;
+	case RE::FormType::MagicEffect:
+		valid = true;
+		return Distribution::AssocType::kEffectSetting;
 	default:
 		valid = false;
 		return Distribution::AssocType::kKeyword;
@@ -1504,7 +1540,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 
 bool Utility::VerifyActorInfo(ActorInfo* acinfo)
 {
-	if (acinfo == nullptr || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {
+	if (acinfo == nullptr || acinfo->IsValid() == false || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {
 		LOG_1("{}[Utility] [VerifyActorInfo] actor info damaged");
 		return false;
 	}
@@ -1517,21 +1553,23 @@ bool Utility::VerifyActorInfo(ActorInfo* acinfo)
 
 std::string Utility::Mods::GetPluginName(RE::TESForm* form)
 {
-	auto datahandler = RE::TESDataHandler::GetSingleton();
-	const RE::TESFile* file = nullptr;
-	std::string_view name = std::string_view{ "" };
-	if ((form->GetFormID() >> 24) == 0xFF)
+	return Utility::Mods::GetPluginNameFromID(form->GetFormID());
+}
+
+std::string Utility::Mods::GetPluginNameFromID(RE::FormID formid)
+{
+	if ((formid >> 24) == 0xFF)
 		return "";
-	if ((form->GetFormID() >> 24) != 0xFE) {
-		auto itr = Settings::pluginIndexMap.find(form->GetFormID() & 0xFF000000);
+	if ((formid >> 24) != 0xFE) {
+		auto itr = Settings::pluginIndexMap.find(formid & 0xFF000000);
 		if (itr != Settings::pluginIndexMap.end())
 			return itr->second;
 		return "";
 	}
-	if ((form->GetFormID() >> 24) == 0x00)
+	if ((formid >> 24) == 0x00)
 		return "Skyrim.esm";
 	// light mod
-	auto itr = Settings::pluginIndexMap.find(form->GetFormID() & 0xFFFFF000);
+	auto itr = Settings::pluginIndexMap.find(formid & 0xFFFFF000);
 	if (itr != Settings::pluginIndexMap.end())
 		return itr->second;
 	return "";
@@ -1560,9 +1598,38 @@ uint32_t Utility::Mods::GetPluginIndex(RE::TESForm* form)
 	return GetPluginIndex(GetPluginName(form));
 }
 
+uint32_t Utility::Mods::GetIndexLessFormID(RE::TESForm* form)
+{
+	if (form == nullptr)
+		return 0;
+	if ((form->GetFormID() & 0xFF000000) == 0xFF000000) {
+		// temporary id, save whole id
+		return form->GetFormID();
+	} else if ((form->GetFormID() & 0xFF000000) == 0xFE000000) {
+		// only save index in light plugin
+		return form->GetFormID() & 0x00000FFF;
+	} else {
+		// save index in normal plugin
+		return form->GetFormID() & 0x00FFFFFF;
+	}
+}
+uint32_t Utility::Mods::GetIndexLessFormID(RE::FormID formid)
+{
+	if ((formid & 0xFF000000) == 0xFF000000) {
+		// temporary id, save whole id
+		return formid;
+	} else if ((formid & 0xFF000000) == 0xFE000000) {
+		// only save index in light plugin
+		return formid & 0x00000FFF;
+	} else {
+		// save index in normal plugin
+		return formid & 0x00FFFFFF;
+	}
+}
+
 bool Utility::ValidateActor(RE::Actor* actor)
 {
-	if (actor == nullptr || actor->IsDeleted() || actor->IsMarkedForDeletion() || actor->GetFormID() == 0 || actor->IsDisabled())
+	if (actor == nullptr || (actor->formFlags & RE::TESForm::RecordFlags::kDeleted) || (actor->inGameFormFlags & RE::TESForm::InGameFormFlag::kRefPermanentlyDeleted) || (actor->inGameFormFlags & RE::TESForm::InGameFormFlag::kWantsDelete) || actor->GetFormID() == 0 || (actor->formFlags & RE::TESForm::RecordFlags::kDisabled))
 		return false; 
 
 	return true;
@@ -1580,10 +1647,10 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESLevCharacter* lvl)
 		RE::TESNPC* tplt = entry->As<RE::TESNPC>();
 		RE::TESLevCharacter* lev = entry->As<RE::TESLevCharacter>();
 		if (tplt)
-			return [&tplt, &plugID]() { auto info = ExtractTemplateInfo(tplt); if (plugID != 0x1) {info.pluginID = plugID;}return info; }();
+			return [&tplt, &plugID, &lvl]() { auto info = ExtractTemplateInfo(tplt); if (plugID != 0x1) {info.pluginID = plugID;info.baselvl = lvl;} return info; }();
 
 		else if (lev)
-			return [&lev, &plugID]() { auto info = ExtractTemplateInfo(lev); if (plugID != 0x1) {info.pluginID = plugID;} return info; }();
+			return [&lev, &plugID, &lvl]() { auto info = ExtractTemplateInfo(lev); if (plugID != 0x1) {info.pluginID = plugID;info.baselvl = lvl;} return info; }();
 		else
 			;  //loginfo("template invalid");
 	}
@@ -1632,6 +1699,12 @@ Misc::NPCTPLTInfo Utility::ExtractTemplateInfo(RE::TESNPC* npc)
 	uint32_t plugID = Utility::Mods::GetPluginIndex(npc);
 	if (plugID != 0x1) {
 		info.pluginID = plugID;
+	}
+	info.base = tpltinfo.base;
+	info.baselvl = tpltinfo.baselvl;
+	if ((npc->GetFormID() & 0xFF000000) != 0xFF000000) {
+		// if pluginID not runtime, save the current actor as the base actor
+		info.base = npc;
 	}
 
 	if (npc->actorData.templateUseFlags & RE::ACTOR_BASE_DATA::TEMPLATE_USE_FLAG::kFactions) {

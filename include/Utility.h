@@ -92,6 +92,7 @@ public:
 
 		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
 	}
+	static std::string PrintForm(ActorInfo* form);
 
 	/// <summary>
 	/// Converts all symbols in a string into lower case.
@@ -133,6 +134,14 @@ public:
 	/// <param name="ae"></param>
 	/// <returns></returns>
 	static std::string ToString(AlchemyEffectBase ae);
+
+	/// <summary>
+	/// Splits a string at a delimiter and optionally removes empty results
+	/// </summary>
+	/// <param name="delimiter"></param>
+	/// <param name="removeEmpty"></param>
+	/// <returns></returns>
+	static std::vector<std::string> SplitString(std::string str, char delimiter, bool removeEmpty = false);
 
 	/// <summary>
 	/// The current combat style of an actor
@@ -353,6 +362,11 @@ public:
 		static std::string GetPluginName(RE::TESForm* form);
 
 		/// <summary>
+		/// Returns the pluginname the form is defined in
+		/// </summary>
+		static std::string GetPluginNameFromID(RE::FormID formid);
+
+		/// <summary>
 		/// Returns the pluginname corresponding to the pluginIndex
 		/// </summary>
 		static std::string GetPluginName(uint32_t pluginIndex);
@@ -370,6 +384,16 @@ public:
 		/// <param name="pluginname"></param>
 		/// <returns></returns>
 		static uint32_t GetPluginIndex(RE::TESForm* form);
+
+		/// <summary>
+		/// Returns the formid with the plugin index
+		/// </summary>
+		static uint32_t GetIndexLessFormID(RE::TESForm* form);
+
+		/// <summary>
+		/// Returns the formid with the plugin index
+		/// </summary>
+		static uint32_t GetIndexLessFormID(RE::FormID formid);
 
 		/// <summary>
 		/// Returns a vector with all forms of the given type in the plugin

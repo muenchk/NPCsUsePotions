@@ -66,23 +66,25 @@ extern "C" DLLEXPORT bool SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, S
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
-	if (a_msg->type == SKSE::MessagingInterface::kDataLoaded) {
-		auto begin = std::chrono::steady_clock::now();
+	auto begin = std::chrono::steady_clock::now();
+	switch (a_msg->type) {
+	case SKSE::MessagingInterface::kDataLoaded:
+		// init ActorInfo's statics
+		ActorInfo::Init();
 		// init Data
 		Data::GetSingleton()->Init();
 		// init game objects and load pluginnames
 		Settings::InitGameStuff();
 		// load settings
-		Settings::Load(); // also resaves the file
+		Settings::Load();  // also resaves the file
 		logger::info("Settings loaded");
 		// init ACM data access
 		ACM::Init();
 		// load distribution settings
 		Settings::LoadDistrConfig();
 		logger::info("Distribution configuration loaded");
-		// Debug stuff
-		if (Settings::Debug::_CheckActorsWithoutRules)
-			Settings::CheckActorsForRules();
+		// before classifying items make sure compatibility loads everything it can
+		Compatibility::GetSingleton()->Load();
 		// classify currently loaded game items
 		Settings::ClassifyItems();
 		Settings::CleanAlchemyEffects();
@@ -90,8 +92,6 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// register data storage
 		// datastorage must always register game callbacks before events, to ensure read data is present
 		Storage::Register();
-		// register compatibility
-		Compatibility::Register();
 		// register eventhandlers
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
@@ -101,6 +101,10 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// register compatibility
 		Compatibility::Register();
 		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		break;
+	case SKSE::MessagingInterface::kPostLoad:
+		Settings::Interfaces::RequestAPIs();
+		break;
 	}
 }
 

@@ -38,12 +38,43 @@ enum CustomItemFlag
 	Object = 1 << 30,
 };
 
+enum class CombatState
+{
+	OutOfCombat = 0,
+	InCombat = 1 << 0,
+	Searching = 1 << 1,
+};
 
 /// <summary>
 /// Stores information about an actor.
 /// </summary>
 class ActorInfo
 {
+#pragma region static
+
+private:
+	/// <summary>
+	/// current position of the player character, for faster access
+	/// </summary>
+	static inline RE::NiPoint3 playerPosition;
+	/// <summary>
+	/// PlayerRef
+	/// </summary>
+	static inline RE::Actor* playerRef = RE::PlayerCharacter::GetSingleton();
+
+public:
+	/// <summary>
+	/// Sets the current position of the player character
+	/// </summary>
+	/// <param name="position"></param>
+	static void SetPlayerPosition(RE::NiPoint3 position) { playerPosition = position; }
+	/// <summary>
+	/// Inits static class data
+	/// </summary>
+	static void Init();
+#pragma endregion
+
+#pragma region runtime
 public:
 	std::vector<NPCsUsePotions::NUPActorInfoHandle*> handles;
 
@@ -182,9 +213,43 @@ public:
 	bool whitelistedcalculated = false;
 
 	/// <summary>
+	/// Combat state of the actor
+	/// </summary>
+	CombatState combatstate = CombatState::OutOfCombat;
+
+
+	// temporary targeting variables
+	
+	// own combat data
+	uint32_t combatdata = 0;
+	// target combat data
+	uint32_t tcombatdata = 0;
+	// current target
+	RE::Actor* target = nullptr;
+	// whether to process the actor
+	bool handleactor = true;
+	// distance to player
+	float playerDistance = 0;
+	// hostile to player
+	bool playerHostile = false;
+	// whether the weapons are drawn
+	bool weaponsDrawn = false;
+
+
+
+	/// <summary>
+	/// if [true] the ActorInfo is valid and can be used, if [false] the ActorInfo is a dummy object
+	/// </summary>
+	bool valid = false;
+	/// <summary>
+	/// Whether the actor has been deleted;
+	/// </summary>
+	bool deleted = false;
+
+	/// <summary>
 	/// version of class [used for save and load]
 	/// </summary>
-	static inline const uint32_t version = 0x00000002;
+	static inline const uint32_t version = 0x00000003;
 
 	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
 	ActorInfo();
@@ -227,7 +292,51 @@ public:
 	/// </summary>
 	std::vector<std::tuple<int, AlchemyEffect>> fortifyDistf;
 
+	/// <summary>
+	/// Updates certain actor metrics
+	/// [Should only be called, directly after updating the actor value]
+	/// </summary>
+	void UpdateMetrics();
+
 public:
+
+	/// <summary>
+	/// Returns whether the ActorInfo is valid
+	/// </summary>
+	bool IsValid() { return valid; }
+	/// <summary>
+	/// Sets the ActorInfo to valid
+	/// </summary>
+	void SetValid() { valid = true; }
+	/// <summary>
+	/// Sets the ActorInfo to invalid
+	/// </summary>
+	void SetInvalid() { valid = false; }
+	/// <summary>
+	/// Sets the ActorInfo to deleted
+	/// </summary>
+	void SetDeleted() { deleted = true; }
+	/// <summary>
+	/// Returns whether the actor has been deleted
+	/// </summary>
+	bool GetDeleted() { return deleted; }
+
+	/// <summary>
+	/// Resets the actorinfo to default values
+	/// </summary>
+	/// <param name="actor"></param>
+	void Reset(RE::Actor* _actor);
+
+	/// <summary>
+	/// Whether the NPC is currently in combat
+	/// </summary>
+	bool IsInCombat();
+	/// <summary>
+	/// Whether an NPC has drawn their weapons
+	/// </summary>
+	/// <returns></returns>
+	bool IsWeaponDrawn();
+
 	/// <summary>
 	/// calculates the custom items available
 	/// </summary>
@@ -386,4 +495,11 @@ public:
 	/// <param name="length">maximal length to read</param>
 	/// <returns>Whether the read operation was successful</returns>
 	bool ReadData(unsigned char* buffer, int offset, int length);
+
+	/// <summary>
+	/// Updates the actor and whether the ActorInfo is valid
+	/// </summary>
+	void Update();
+
+#pragma endregion
 };

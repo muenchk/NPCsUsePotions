@@ -24,6 +24,7 @@
 #include <Console.h>
 #include <Logging.h>
 #include <AlchemyEffect.h>
+#include "APIs/TrueDirectionalMovementAPI.h"
 
 class Settings
 {
@@ -146,6 +147,10 @@ public:
 		/// [Settings] Whether to allow potions with detrimental effects
 		/// </summary>
 		static inline bool _AllowDetrimentalEffects = false;  // allows / disallows npcs to use potions with detrimental effects
+		/// <summary>
+		/// [Settings] When weapons are sheathed, potion handling for out of combat is applied
+		/// </summary>
+		static inline bool _HandleWeaponSheathedAsOutOfCombat = true;
 
 		/// <summary>
 		/// [Settings] Health threshold at which NPCs will begin using health potions
@@ -178,6 +183,10 @@ public:
 		/// [Settings] Whether to allow poisons with positive effects
 		/// </summary>
 		static inline bool _AllowPositiveEffects = false;  // allows / disallows npcs to use poisons with positive effects
+		/// <summary>
+		/// [Settings] Disallows the usage of poisons, while the weapons are sheathed
+		/// </summary>
+		static inline bool _DontUseWithWeaponsSheathed = true;
 
 		/// <summary>
 		/// [Settings] Scaling factor for when an NPC is considered powerful enough to warrant the usage of poisons
@@ -211,6 +220,10 @@ public:
 		/// [Settings] Whether the usage of fortify potions is enabled
 		/// </summary>
 		static inline bool _enableFortifyPotions = true;  // enables automatic usage of fortify potions for npcs
+		/// <summary>
+		/// [Settings] Disallows the usage of fortify potions, while the weapons are sheathed
+		/// </summary>
+		static inline bool _DontUseWithWeaponsSheathed = true;
 
 		/// <summary>
 		/// [Settings] Scaling factor for when an NPC is considered powerful enough to warrant the usage of fortify potions
@@ -243,6 +256,14 @@ public:
 		/// [Settings] Whether to restrict food usage to the beginning of combat
 		/// </summary>
 		static inline bool _RestrictFoodToCombatStart = false;  // restricts the usage of food to the beginning of the combat
+		/// <summary>
+		/// [Settings] Disables food usage for followers | used for survival mods
+		/// </summary>
+		static inline bool _DisableFollowers = false;
+		/// <summary>
+		/// [Settings] Disallows the usage of fortify potions, while the weapons are sheathed
+		/// </summary>
+		static inline bool _DontUseWithWeaponsSheathed = false;
 	};
 
 	/// <summary>
@@ -266,6 +287,22 @@ public:
 		/// [Settings] Whether the player will automatically consume food
 		/// </summary>
 		static inline bool _playerFood = false;             // enables automatic usage of food for player
+		/// <summary>
+		/// [Settings] The player will only use items that have been marked as favorite
+		/// </summary>
+		static inline bool _UseFavoritedItemsOnly = false;
+		/// <summary>
+		/// [Settings] The player will not use favorited items
+		/// </summary>
+		static inline bool _DontUseFavoritedItems = false;
+		/// <summary>
+		/// [Settings] The player will not consume food with the Keyword VendorItemFoodRaw
+		/// </summary>
+		static inline bool _DontEatRawFood = false;
+		/// <summary>
+		/// [Settings] The player will not consume anything regarded as alcohol
+		/// </summary>
+		static inline bool _DontDrinkAlcohol = false;
 	};
 
 	/// <summary>
@@ -539,6 +576,14 @@ public:
 		static inline bool _useCureDiseaseEffect = true;
 	};
 
+	class Interfaces
+	{
+	public:
+		static inline TDM_API::IVTDM1* tdm_api = nullptr;
+
+		static void RequestAPIs();
+	};
+
 	// intern
 private:
 	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _dummylist{};
@@ -738,9 +783,9 @@ public:
 	/// </summary>
 	static inline RE::BGSEquipSlot* Equip_Potion;
 
-	[[deprecated]] static inline RE::BGSSoundDescriptorForm* PotionUse;
+	static inline RE::BGSSoundDescriptorForm* PotionUse;
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
-	[[deprecated]] static inline RE::BGSSoundDescriptorForm* FoodEat;
+	static inline RE::BGSSoundDescriptorForm* FoodEat;
 	[[deprecated]] static inline bool FixedPotionUse = true;
 	[[deprecated]] static inline bool FixedPoisonUse = true;
 	[[deprecated]] static inline bool FixedFoodEat = true;
@@ -813,4 +858,6 @@ public:
 	/// Deletes all AlchemyEffects, that are not used by any potions, etc. from all distribution rules
 	/// </summary>
 	static void CleanAlchemyEffects();
+
+	static void ExcludeRacesWithoutPotionSlot();
 };

@@ -32,5 +32,13 @@ namespace Misc
 		/// index of the most top-level non-temporary template
 		/// </summary>
 		uint32_t pluginID = 0x1;
+		/// <summary>
+		/// the first ActorBase from the top, with a non-runtime formid
+		/// </summary>
+		RE::TESNPC* base = nullptr;
+		/// <summary>
+		/// the first LeveledChar with non-runtime formid
+		/// </summary>
+		RE::TESLevCharacter* baselvl = nullptr;
 	};
 }

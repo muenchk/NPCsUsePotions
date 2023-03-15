@@ -22,6 +22,8 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	}
 	//logger::info("console 3");
 	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
+	if (actor->IsPlayerRef())
+		acinfo = Data::GetSingleton()->FindActor(RE::PlayerCharacter::GetSingleton());
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
@@ -36,8 +38,26 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "Race:\t\t\t\t\t" + Utility::PrintForm(actor->GetActorBase()->GetRace()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
 	console->Print(tmp.c_str());
+	tmp = "Valid:\t\t\t\t\t" + std::to_string(acinfo->IsValid());
+	console->Print(tmp.c_str());
 	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(acinfo));
 	console->Print(tmp.c_str());
+	if (acinfo->combatstate == CombatState::OutOfCombat) {
+		tmp = "CombatState:\t\t\t\t" + std::string("Out of Combat");
+		console->Print(tmp.c_str());
+	}
+	else if (acinfo->combatstate == CombatState::InCombat) {
+		tmp = "CombatState:\t\t\t\t" + std::string("In Combat");
+		console->Print(tmp.c_str());
+		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->target);
+		console->Print(tmp.c_str());
+
+	} else if (acinfo->combatstate == CombatState::Searching) {
+		tmp = "CombatState:\t\t\t\t" + std::string("Searching");
+		console->Print(tmp.c_str());
+		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->target);
+		console->Print(tmp.c_str());
+	}
 	tmp = "Whitelisted:\t\t\t\t\t" + std::to_string(acinfo->whitelisted);
 	console->Print(tmp.c_str());
 	tmp = "Whitelist calculated:\t\t\t\t\t" + std::to_string(acinfo->whitelistedcalculated);
@@ -171,12 +191,12 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	console->Print("Resetting information about actors...");
 	bool preproc = Events::LockProcessing();
 	Data::GetSingleton()->ResetActorInfoMap();
-	if (preproc)
-		Events::UnlockProcessing();
 	console->Print("Reloading Settings...");
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");
 	Settings::LoadDistrConfig();
+	if (preproc)
+		Events::UnlockProcessing();
 	if (Settings::Debug::_CheckActorsWithoutRules) {
 		console->Print("Calculating Actors without rules...");
 		Settings::CheckActorsForRules();

@@ -23,6 +23,7 @@ public:
 		kItem = 32,
 		kClass = 64,
 		kCombatStyle = 128,
+		kEffectSetting = 256,
 	};
 
 	class CustomItemStorage;
@@ -522,6 +523,10 @@ private:
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedItems;
 	/// <summary>
+	/// set that contains item IDs that are excluded for the player only
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _excludedItemsPlayer;
+	/// <summary>
 	/// set that contains association objects excluded from baseline distribution
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _baselineExclusions;
@@ -561,10 +566,27 @@ private:
 	/// map that contains from distribution excluded effects
 	/// </summary>
 	static inline std::unordered_set<AlchemyEffect> _excludedEffects;
-
+	/// <summary>
+	/// set of plugin indexes for plugins, which npcs are excluded
+	/// </summary>
 	static inline std::unordered_set<uint32_t> _excludedPlugins_NPCs;
+	/// <summary>
+	/// set of whitelisted npcs
+	/// </summary>
 	static inline std::unordered_set<RE::FormID> _whitelistNPCs;
+	/// <summary>
+	/// set of plugin indexes for plugins, which npcs are whitelisted
+	/// </summary>
 	static inline std::unordered_set<uint32_t> _whitelistNPCsPlugin;
+	/// <summary>
+	/// set that contains the IDs of alcoholic items
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _alcohol;
+	/// <summary>
+	/// map that defines overwrites for AlchemyEffects for MagicEffects
+	/// </summary>
+	static inline std::unordered_map<RE::FormID, AlchemyEffect> _magicEffectAlchMap;
+
 	
 public:
 	static inline std::vector<Rule*> _dummyVecR;
@@ -575,6 +597,7 @@ public:
 	static inline std::unordered_map<RE::FormID, int> _dummyMap4;
 	static inline std::unordered_map<RE::FormID, std::tuple<bool, bool, int>> _dummyMap5;
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dummyMap6;
+	static inline std::unordered_map<RE::FormID, AlchemyEffect> _dummyMap7;
 	static inline std::unordered_set<RE::FormID> _dummySet1;
 	static inline std::unordered_set<uint8_t> _dummySet2;
 	static inline std::unordered_set<uint16_t> _dummySet3;
@@ -617,6 +640,10 @@ public:
 	/// <returns></returns>
 	static const std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
 	/// <summary>
+	/// returns the set that contains item IDs that are excluded for the player only
+	/// </summary>
+	static inline std::unordered_set<RE::FormID>* excludedItemsPlayer() { return initialised ? &_excludedItemsPlayer : &_dummySet1; }
+	/// <summary>
 	/// returns the set of assoc objects excluded from baseline distribution
 	/// </summary>
 	/// <returns></returns>
@@ -658,16 +685,32 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>>* dosageEffectMap() { return initialised ? &_dosageEffectMap : &_dummyMap6; }
-
 	/// <summary>
 	/// return the set of excluded alchemy effects
 	/// </summary>
 	/// <returns></returns>
 	static inline std::unordered_set<AlchemyEffect>* excludedEffects() { return initialised ? &_excludedEffects : &_dummySet4; }
-
+	/// <summary>
+	/// returns the set of plugin indexes for plugins which npcs are excluded
+	/// </summary>
 	static inline std::unordered_set<uint32_t>* excludedPlugins_NPCs() { return initialised ? &_excludedPlugins_NPCs : &_dummySet5; }
+	/// <summary>
+	/// returns the set of whitelisted npcs
+	/// </summary>
+	/// <returns></returns>
 	static inline std::unordered_set<RE::FormID>* whitelistNPCs() { return initialised ? &_whitelistNPCs : &_dummySet1; }
+	/// <summary>
+	/// returns the set of plugin indexes for plugins, which npcs are whitelisted
+	/// </summary>
 	static inline std::unordered_set<uint32_t>* whitelistNPCsPlugin() { return initialised ? &_whitelistNPCsPlugin : &_dummySet5; }
+	/// <summary>
+	/// returns the set that contains the IDs of alcoholic items
+	/// </summary>
+	static inline std::unordered_set<RE::FormID>* alcohol() { return initialised ? &_alcohol : &_dummySet1; }
+	/// <summary>
+	/// return the map that defines overwrites for AlchemyEffects for MagicEffects
+	/// </summary>
+	static inline std::unordered_map<RE::FormID, AlchemyEffect>* magicEffectAlchMap() { return initialised ? &_magicEffectAlchMap : &_dummyMap7; }
 
 
 
@@ -737,6 +780,12 @@ public:
 	/// <returns></returns>
 	static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(ActorInfo* acinfo);
 	/// <summary>
+	/// Returns all inventory items (duplicates as extra vector entries)
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static std::vector<RE::AlchemyItem*> GetAllInventoryItems(ActorInfo* acinfo);
+	/// <summary>
 	/// Returns the dosage of a poison
 	/// </summary>
 	/// <param name="poison"></param>
@@ -786,6 +835,7 @@ public:
 	friend void ActorInfo::CalcCustomItems();
 	friend void Settings::ApplySkillBoostPerks();
 	friend void Settings::ClassifyItems();
+	friend void Settings::ExcludeRacesWithoutPotionSlot();
 
 private:
 	/// <summary>
@@ -825,4 +875,9 @@ private:
 	/// Resets all custom items
 	/// </summary>
 	static void ResetCustomItems();
+
+	/// <summary>
+	/// Resets all distribution rules
+	/// </summary>
+	static void ResetRules();
 };
