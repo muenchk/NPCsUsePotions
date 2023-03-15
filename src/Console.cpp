@@ -191,12 +191,12 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	console->Print("Resetting information about actors...");
 	bool preproc = Events::LockProcessing();
 	Data::GetSingleton()->ResetActorInfoMap();
-	if (preproc)
-		Events::UnlockProcessing();
 	console->Print("Reloading Settings...");
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");
 	Settings::LoadDistrConfig();
+	if (preproc)
+		Events::UnlockProcessing();
 	if (Settings::Debug::_CheckActorsWithoutRules) {
 		console->Print("Calculating Actors without rules...");
 		Settings::CheckActorsForRules();

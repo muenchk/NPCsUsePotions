@@ -86,6 +86,25 @@ void Settings::InitGameStuff()
 	loginfo("[SETTINGS] [InitGameStuff] Finished");
 }
 
+void Settings::ExcludeRacesWithoutPotionSlot()
+{
+	LOG_1("{}[Settings] [ExcludeRacesWithoutPotionSlot]");
+	auto races = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESRace>();
+	LOG1_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] found {} races.", races.size());
+	for (RE::TESRace* race : races) {
+		bool potionenabled = false;
+		for (auto slot : race->equipSlots) {
+			if (slot->GetFormID() == 0x35698)
+				potionenabled = true;
+		}
+		if (potionenabled == false) {
+			Distribution::_excludedAssoc.insert(race->GetFormID());
+			LOG1_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] {} does not have potion slot and has been excluded.", Utility::PrintForm(race));
+		}
+	}
+	LOG_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] end");
+}
+
 void Settings::LoadDistrConfig()
 {
 	// set to false, to avoid other funcions running stuff on our variables
@@ -97,6 +116,10 @@ void Settings::LoadDistrConfig()
 
 	// reset custom items
 	Distribution::ResetCustomItems();
+	// reset loaded rules
+	Distribution::ResetRules();
+
+	ExcludeRacesWithoutPotionSlot();
 
 	std::vector<std::string> files;
 	auto constexpr folder = R"(Data\SKSE\Plugins\)";
