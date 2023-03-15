@@ -858,4 +858,6 @@ public:
 	/// Deletes all AlchemyEffects, that are not used by any potions, etc. from all distribution rules
 	/// </summary>
 	static void CleanAlchemyEffects();
+
+	static void ExcludeRacesWithoutPotionSlot();
 };

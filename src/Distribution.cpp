@@ -2954,4 +2954,34 @@ void Distribution::ResetCustomItems()
 	LogConsole("Reset custom items");
 }
 
+void Distribution::ResetRules()
+{
+	_magicEffectAlchMap.clear();
+	_alcohol.clear();
+	_whitelistNPCsPlugin.clear();
+	_whitelistNPCs.clear();
+	_excludedPlugins_NPCs.clear();
+	_excludedEffects.clear();
+	_dosageEffectMap.clear();
+	_dosageItemMap.clear();
+	_followerFactions.clear();
+	_actorStrengthMap.clear();
+	_itemStrengthMap.clear();
+	_excludedPlugins.clear();
+	_customItems.clear();
+	_whitelistItems.clear();
+	_baselineExclusions.clear();
+	_excludedItemsPlayer.clear();
+	_excludedItems.clear();
+	_excludedAssoc.clear();
+	_excludedNPCs.clear();
+	_bosses.clear();
+	_assocMap.clear();
+	_npcMap.clear();
+	for (Rule* rule : _rules) {
+		delete rule;
+	}
+	_rules.clear();
+}
+
 #pragma endregion

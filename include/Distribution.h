@@ -835,6 +835,7 @@ public:
 	friend void ActorInfo::CalcCustomItems();
 	friend void Settings::ApplySkillBoostPerks();
 	friend void Settings::ClassifyItems();
+	friend void Settings::ExcludeRacesWithoutPotionSlot();
 
 private:
 	/// <summary>
@@ -874,4 +875,9 @@ private:
 	/// Resets all custom items
 	/// </summary>
 	static void ResetCustomItems();
+
+	/// <summary>
+	/// Resets all distribution rules
+	/// </summary>
+	static void ResetRules();
 };
