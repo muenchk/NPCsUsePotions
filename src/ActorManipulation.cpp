@@ -27,6 +27,7 @@ std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::
 	if (Distribution::excludedItems()->contains(item->GetFormID()))
 		return { false, -1.0f, -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), false };
 	auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+	LOG6_4("{}[ActorManipulation] [HasAlchemyEffect] Item: {}, Effect: {}, Dur: {}, Mag: {}, Detr:{}, Dosage: {}", Utility::PrintForm(item), Utility::GetHex(eff), dur, mag, detr, dosage);
 	if (mapf) {
 		if ((eff & alchemyEffect) != 0) {
 			LOG_4("{}[ActorManipulation] [HasAlchemyEffect] fast success");

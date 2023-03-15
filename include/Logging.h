@@ -280,6 +280,14 @@
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
+#define LOG5_4(s, t, u, v, w, x)                                                          \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x));
+
+#define LOG6_4(s, t, u, v, w, x,y)                                                          \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x, y));
+
 #define LOG_5(s)                                      \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));

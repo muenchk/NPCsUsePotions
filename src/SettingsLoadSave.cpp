@@ -621,7 +621,7 @@ void Settings::Save()
 	
 
 	// usage
-	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered, in mid-air, flying, unconcious, bleeding-out, ragdolling or in a kill-move aren't able to use any potions and poisons.");
 	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs, "// NPCs that are not currently followers of the player won't use potions, etc.");
 	ini.SetBoolValue("Usage", "DisableOutOfCombatUsage", Usage::_DisableOutOfCombatProcessing, "// NPCs are only handled when they are fighting -> Old handling method \n"
 																								"// until version 3.\n"

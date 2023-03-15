@@ -174,6 +174,8 @@ std::string Utility::ToString(AlchemyEffect ae)
 		return "FortifyStamina";
 	case AlchemyEffect::kCustom:
 		return "Custom";
+	case AlchemyEffect::kShield:
+		return "Shield";
 	default:
 		return "Unknown";
 	}
@@ -296,6 +298,8 @@ std::string Utility::ToString(AlchemyEffectBase ae)
 		ret += "FortifyStamina|";
 	if (ae & Base(AlchemyEffect::kCustom))
 		ret += "Custom|";
+	if (ae & Base(AlchemyEffect::kShield))
+		ret += "Shield|";
 
 	if (ret == "|")
 		return "|Unknown|";
