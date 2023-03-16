@@ -927,7 +927,9 @@ namespace Events
 						Settings::Player::_playerPoisons ||
 						Settings::Player::_playerFood)) {
 					// inject player into the list and remove him later
+					sem.acquire();
 					acset.insert(playerinfo);
+					sem.release();
 					LOG_3("{}[Events] [CheckActors] Adding player to the list");
 					player = true;
 				}
@@ -949,10 +951,11 @@ namespace Events
 					sem.acquire();
 					auto itr = acset.begin();
 					while (itr != acset.end()) {
-						if ((*itr) == nullptr) {
+						ActorInfo* curr = *itr;
+						if (curr == nullptr) {
 							LOG_1("{}[Events] [CheckActors] Removed nullptr");
 							acset.erase(itr);
-						} else if ((*itr)->Update(); (*itr)->IsValid() == false) {
+						} else if (curr->Update(); curr->IsValid() == false) {
 							LOG_1("{}[Events] [CheckActors] Removed invalid actor");
 							acset.erase(itr);
 						}
