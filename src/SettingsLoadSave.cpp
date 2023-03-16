@@ -52,8 +52,7 @@ void Settings::FixConsumables()
 			RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
 			Copy_SOMMono01400_verb = factory->Create();
 			Copy_SOMMono01400_verb->data.reverbSendPct = 100;
-			Copy_SOMMono01400_verb->attenuation = (RE::BGSSoundOutput::DynamicAttenuationCharacteristics*)malloc(sizeof(RE::BGSSoundOutput::DynamicAttenuationCharacteristics));
-			memcpy(SOMMono01400_verb->attenuation, Copy_SOMMono01400_verb->attenuation, sizeof(RE::BGSSoundOutput::DynamicAttenuationCharacteristics));
+			Copy_SOMMono01400_verb->attenuation = RE::malloc<RE::BGSSoundOutput::DynamicAttenuationCharacteristics>();
 			Copy_SOMMono01400_verb->attenuation->data.minDistance = 150;
 			Copy_SOMMono01400_verb->attenuation->data.maxDistance = 1400;
 			Copy_SOMMono01400_verb->attenuation->data.curve[0] = 100;
@@ -68,7 +67,7 @@ void Settings::FixConsumables()
 			Copy_SOMMono01400_verb->data.reverbSendPct = SOMMono01400_verb->data.reverbSendPct;
 
 			if (SOMMono01400_verb->speakerOutputs != nullptr) {
-				Copy_SOMMono01400_verb->speakerOutputs = (RE::BGSSoundOutput::SpeakerArrays*)malloc(sizeof(RE::BGSSoundOutput::SpeakerArrays));
+				Copy_SOMMono01400_verb->speakerOutputs = RE::malloc<RE::BGSSoundOutput::SpeakerArrays>();
 				Copy_SOMMono01400_verb->speakerOutputs->channels[0] = SOMMono01400_verb->speakerOutputs->channels[0];
 				Copy_SOMMono01400_verb->speakerOutputs->channels[1] = SOMMono01400_verb->speakerOutputs->channels[1];
 				Copy_SOMMono01400_verb->speakerOutputs->channels[2] = SOMMono01400_verb->speakerOutputs->channels[2];
@@ -106,8 +105,6 @@ void Settings::FixConsumables()
 							// copy the unknown sound
 							//RE::TESForm* copy = //alch->data.consumptionSound->CreateDuplicateForm(false, nullptr);
 							RE::BGSSoundDescriptorForm* snd = factorydescform->Create();  //copy->As<RE::BGSSoundDescriptorForm>();
-							LOGL1_4("{}[Settings] [FixConsumables] snd init {}", snd->IsInitialized());
-							snd->InitItemImpl();
 							LOGL1_4("{}[Settings] [FixConsumables] snddesc {}", Utility::GetHex((uint64_t)(intptr_t)snd->soundDescriptor));
 							soundmap.insert_or_assign(alch->data.consumptionSound->GetFormID(), snd);
 							LOGL1_4("{}[Settings] [FixConsumables] orig {} ", Utility::GetHex((uint64_t)(intptr_t)alch->data.consumptionSound));
@@ -115,10 +112,25 @@ void Settings::FixConsumables()
 							// get sound descriptor
 							soundOM = (RE::BGSStandardSoundDef*)alch->data.consumptionSound->soundDescriptor;
 							// allocate new sound descriptor
-							soundOMCopy = (RE::BGSStandardSoundDef*)malloc(sizeof(RE::BGSStandardSoundDef));
-							// UNSAFE copy of sound descriptor
-							memcpy(soundOM, soundOMCopy, sizeof(RE::BGSStandardSoundDef));
-							const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::BGSSoundDescriptor>();
+							soundOMCopy = RE::malloc<RE::BGSStandardSoundDef>();
+							soundOMCopy->category = soundOM->category;
+							soundOMCopy->alternateSoundFormID = soundOM->alternateSoundFormID;
+							soundOMCopy->pad14 = soundOM->pad14;
+							soundOMCopy->soundFiles.resize(soundOM->soundFiles.size());
+							for (int i = 0; i < (int)soundOM->soundFiles.size(); i++)
+								soundOMCopy->soundFiles[i] = soundOM->soundFiles[i];
+							soundOMCopy->soundCharacteristics.frequencyShift = soundOMCopy->soundCharacteristics.frequencyShift;
+							soundOMCopy->soundCharacteristics.frequencyVariance = soundOMCopy->soundCharacteristics.frequencyVariance;
+							soundOMCopy->soundCharacteristics.priority = soundOMCopy->soundCharacteristics.priority;
+							soundOMCopy->soundCharacteristics.dbVariance = soundOMCopy->soundCharacteristics.dbVariance;
+							soundOMCopy->soundCharacteristics.staticAttenuation = soundOMCopy->soundCharacteristics.staticAttenuation;
+							soundOMCopy->soundCharacteristics.pad0E = soundOMCopy->soundCharacteristics.pad0E;
+							soundOMCopy->conditions = soundOM->conditions;
+							soundOMCopy->lengthCharacteristics.looping = soundOM->lengthCharacteristics.looping;
+							soundOMCopy->lengthCharacteristics.rumbleSendValue = soundOM->lengthCharacteristics.rumbleSendValue;
+							soundOMCopy->lengthCharacteristics.unk0 = soundOM->lengthCharacteristics.unk0;
+							soundOMCopy->lengthCharacteristics.unk2 = soundOM->lengthCharacteristics.unk2;
+							soundOMCopy->unk54 = soundOM->unk54;
 
 							LOGL1_4("{}[Settings] [FixConsumables] soundOM {} ", Utility::GetHex((uint64_t)(intptr_t)soundOM));
 							LOGL1_4("{}[Settings] [FixConsumables] soundOMCopy {} ", Utility::GetHex((uint64_t)(intptr_t)soundOMCopy));
@@ -128,7 +140,6 @@ void Settings::FixConsumables()
 							LOGL2_4("{}[Settings] [FixConsumables] forcefully set output model for sound {} used by item {}", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
 
 							alch->data.consumptionSound = snd;
-							soundmap.insert_or_assign(alch->data.consumptionSound->GetFormID(), snd);
 						}
 					}
 				}

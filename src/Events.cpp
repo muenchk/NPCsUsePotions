@@ -1939,7 +1939,6 @@ CheckActorsSkipIteration:
 	{
 		LOG_1("{}[Events] [LoadGameCallback]");
 		LoadGameSub();
-		Settings::FixConsumables();
 	}
 
 	/// <summary>

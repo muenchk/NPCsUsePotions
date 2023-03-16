@@ -135,6 +135,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Console::RegisterConsoleCommands();
 		logger::info("Registered Console Commands");
 		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		Settings::FixConsumables();
 		break;
 	case SKSE::MessagingInterface::kPostLoad:
 		Settings::Interfaces::RequestAPIs();
