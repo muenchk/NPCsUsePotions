@@ -2371,8 +2371,8 @@ void Settings::CheckActorsForRules()
 
 						// we didn't consider the current actors base so far
 						visited.insert(act->GetFormID());
-
-						ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
+						
+						std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(act);
 						// get rule
 						Distribution::Rule* rl = Distribution::CalcRule(acinfo);
 						// check wether there is a rule that applies
@@ -2381,7 +2381,6 @@ void Settings::CheckActorsForRules()
 							//coun++;
 							continue;  // the npc is covered by an exclusion
 						}
-						delete acinfo;
 						//logwarn("[CheckActorsForRules] got rule");
 						if (rl && rl->ruleName == DefaultRuleName) {
 							// lookup plugin of the actor red
@@ -2469,14 +2468,13 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							bool excluded = false;
 							// check wether there is a rule that applies
 							if (Logging::EnableLog) {
-								ActorInfo* acinfo = new ActorInfo(act, 0, 0, 0, 0, 0);
+								std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(act);
 								// get rule
 								Distribution::Rule* rl = Distribution::CalcRule(acinfo);
 								if (Distribution::ExcludedNPC(acinfo)) {
 									excluded = true;
 									LOG_1("{}[CheckCellForActors] excluded");
 								}
-								delete acinfo;
 
 								out << cell->GetFormEditorID() << ";";
 								if (excluded)

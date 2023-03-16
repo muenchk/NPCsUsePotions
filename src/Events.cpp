@@ -99,7 +99,7 @@ namespace Events
 	/// <summary>
 	/// holds all active actors
 	/// </summary>
-	static std::unordered_set<ActorInfo*> acset{};
+	static std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>> acset{};
 	/// <summary>
 	/// semaphore used to sync access to actor handling, to prevent list changes while operations are done
 	/// </summary>
@@ -113,7 +113,7 @@ namespace Events
 	/// <summary>
 	/// list of npcs that are currently in combat
 	/// </summary>
-	std::forward_list<ActorInfo*> combatants;
+	std::forward_list<std::shared_ptr<ActorInfo>> combatants;
 
 	/// <summary>
 	/// signals whether the player has died
@@ -179,7 +179,7 @@ namespace Events
 	/// <summary>
 	/// Calculates the cooldowns of an actor for a specific effect
 	/// </summary>
-	void CalcActorCooldowns(ActorInfo* acinfo, AlchemyEffectBase effect, int dur)
+	void CalcActorCooldowns(std::shared_ptr<ActorInfo> acinfo, AlchemyEffectBase effect, int dur)
 	{
 		EvalProcessing();
 		if (effect & static_cast<uint64_t>(AlchemyEffect::kHealth)) {
@@ -334,7 +334,7 @@ namespace Events
 	/// <param name="combatdata">combatdata of [acinfo]</param>
 	/// <param name="tcombatdata">combatdata of target</param>
 	/// <returns></returns>
-	uint64_t CalcFortifyEffects(ActorInfo* acinfo, uint32_t combatdata, uint32_t tcombatdata = 0)
+	uint64_t CalcFortifyEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata, uint32_t tcombatdata = 0)
 	{
 		LOG_4("{}[Events] [CalcFortifyEffects]");
 		uint64_t effects = 0;
@@ -511,11 +511,11 @@ namespace Events
 	/// <param name="acinfo"></param>
 	/// <param name="combatdata"></param>
 	/// <returns></returns>
-	uint64_t CalcRegenEffects(ActorInfo* /*acinfo*/, uint32_t combatdata) {
+	uint64_t CalcRegenEffects(std::shared_ptr<ActorInfo> /*acinfo*/, uint32_t combatdata) {
 		return CalcRegenEffects(combatdata);
 	} 
 
-	void DecreaseActorCooldown(ActorInfo* acinfo)
+	void DecreaseActorCooldown(std::shared_ptr<ActorInfo> acinfo)
 	{
 		if (!acinfo->IsValid())
 			return;
@@ -537,7 +537,7 @@ namespace Events
 	int actorsincombat = 0;
 	int hostileactors = 0;
 
-	void HandleActorPotions(ActorInfo* acinfo)
+	void HandleActorPotions(std::shared_ptr<ActorInfo> acinfo)
 	{
 		if (!acinfo->IsValid())
 			return;
@@ -598,7 +598,7 @@ namespace Events
 		}
 	}
 
-	void HandleActorFortifyPotions(ActorInfo* acinfo)
+	void HandleActorFortifyPotions(std::shared_ptr<ActorInfo> acinfo)
 	{
 		if (!acinfo->IsValid())
 			return;
@@ -649,7 +649,7 @@ namespace Events
 		}
 	}
 
-	void HandleActorPoisons(ActorInfo* acinfo)
+	void HandleActorPoisons(std::shared_ptr<ActorInfo>acinfo)
 	{
 		if (!acinfo->IsValid())
 			return;
@@ -714,7 +714,7 @@ namespace Events
 		}
 	}
 
-	void HandleActorFood(ActorInfo* acinfo)
+	void HandleActorFood(std::shared_ptr<ActorInfo> acinfo)
 	{
 		if (!acinfo->IsValid())
 			return;
@@ -747,7 +747,7 @@ namespace Events
 		}
 	}
 
-	void HandleActorOOCPotions(ActorInfo* acinfo)
+	void HandleActorOOCPotions(std::shared_ptr<ActorInfo> acinfo)
 	{
 		if (!acinfo->IsValid())
 			return;
@@ -774,7 +774,7 @@ namespace Events
 	/// Refreshes important runtime data of an ActorInfo, including combatdata and status
 	/// </summary>
 	/// <param name="acinfo"></param>
-	void HandleActorRuntimeData(ActorInfo* acinfo)
+	void HandleActorRuntimeData(std::shared_ptr<ActorInfo> acinfo)
 	{
 		if (!acinfo->IsValid())
 			return;
@@ -784,11 +784,13 @@ namespace Events
 			return;
 		}
 		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo));
-		if (acinfo->citems == nullptr)
-			acinfo->citems = new ActorInfo::CustomItems();
+		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo->actor));
+		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", acinfo->IsValid());
+		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", acinfo->GetDeleted());
 		// check for staggered option
 		// check for paralyzed
-		if (comp->DisableItemUsageWhileParalyzed() &&
+		if (comp->DisableItemUsageWhileParalyzed()) {
+			if 
 			(acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kParalyzed ||
 				acinfo->actor->IsFlying() ||
 				acinfo->actor->IsInKillMove() ||
@@ -796,10 +798,12 @@ namespace Events
 				acinfo->actor->IsInRagdollState() ||
 				acinfo->actor->IsUnconscious() ||
 				acinfo->actor->actorState2.staggered ||
-				acinfo->actor->IsBleedingOut())) {
-			LOG_1("{}[Events] [CheckActors] [Actor] Actor is unable to use items");
-			acinfo->handleactor = false;
-			return;
+				acinfo->actor->IsBleedingOut())
+				{
+					LOG_1("{}[Events] [CheckActors] [Actor] Actor is unable to use items");
+					acinfo->handleactor = false;
+					return;
+				}
 		}
 		// check for non-follower option
 		if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->actor->IsPlayerRef() == false) {
@@ -844,7 +848,7 @@ namespace Events
 					// try to infer the target from the npcs that are in combat
 					// get the combatant with the shortest range to player, which is hostile to the player
 					auto GetClosestEnemy = []() {
-						ActorInfo* current = nullptr;
+						std::shared_ptr<ActorInfo> current = nullptr;
 						for (auto aci : combatants) {
 							if (current == nullptr || (aci != nullptr && aci->playerHostile && aci->playerDistance < current->playerDistance))
 								current = aci;
@@ -893,13 +897,12 @@ namespace Events
 		// on cycle time
 		tolerance = Settings::System::_cycletime / 5;
 
-		ActorInfo* playerinfo = data->FindActor(RE::PlayerCharacter::GetSingleton());
+		std::weak_ptr<ActorInfo> playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
 
 		/// temp section
 		AlchemyEffectBase alch = 0;
 		AlchemyEffectBase alch2 = 0;
 		AlchemyEffectBase alch3 = 0;
-		bool player = false;  // wether player was inserted into list
 
 		auto datahandler = RE::TESDataHandler::GetSingleton();
 		const RE::TESFile* file = nullptr;
@@ -916,129 +919,108 @@ namespace Events
 			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
 			// do not compute, since nobody can actually take potions.
 			if (!ui->GameIsPaused() && initialized && !playerdied) {
-				// reset player var.
-				player = false;
 				// get starttime of iteration
 				begin = std::chrono::steady_clock::now();
-
-				// checking if player should be handled
-				if ((Settings::Player::_playerPotions ||
-						Settings::Player::_playerFortifyPotions ||
-						Settings::Player::_playerPoisons ||
-						Settings::Player::_playerFood)) {
-					// inject player into the list and remove him later
-					sem.acquire();
-					acset.insert(playerinfo);
-					sem.release();
-					LOG_3("{}[Events] [CheckActors] Adding player to the list");
-					player = true;
-				}
 
 				LOG1_1("{}[Events] [CheckActors] Handling {} registered Actors", std::to_string(acset.size()));
 
 				if (!GetProcessing())
 					goto CheckActorsSkipIteration;
 
-				
-
-				try {
+				if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
 					// store position of player character
 					ActorInfo::SetPlayerPosition(playerinfo->actor->GetPosition());
 					// reset player combat state, we don't want to include them in our checks
 					playerinfo->combatstate = CombatState::OutOfCombat;
+				}
 
-					// validate actorsets
-					sem.acquire();
-					auto itr = acset.begin();
-					while (itr != acset.end()) {
-						ActorInfo* curr = *itr;
-						if (curr == nullptr) {
-							LOG_1("{}[Events] [CheckActors] Removed nullptr");
-							acset.erase(itr);
-						} else if (curr->Update(); curr->IsValid() == false) {
+				LOG1_1("{}[Events] [CheckActors] Validate Actors {}", acset.size());
+
+				// validate actorsets
+				sem.acquire();
+				std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>> actors;
+				auto itr = acset.begin();
+				while (itr != acset.end()) {
+					if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
+						if (!data->UpdateActorInfo(acinfo)) {
 							LOG_1("{}[Events] [CheckActors] Removed invalid actor");
 							acset.erase(itr);
+						} else {
+							actors.insert(*itr);
 						}
-						itr++;
+					} else {
+						LOG_1("{}[Events] [CheckActors] Removed expired actor");
+						acset.erase(itr);
 					}
-					sem.release();
+					itr++;
+				}
+				sem.release();
 
-					LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(acset.size()));
 
-					if (!GetProcessing())
-						goto CheckActorsSkipIteration;
-					CheckDeadCheckHandlerLoop;
+				LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(actors.size()));
+
+				if (!GetProcessing())
+					goto CheckActorsSkipIteration;
+				CheckDeadCheckHandlerLoop;
+
+				try {
 
 					// first decrease all cooldowns for all registered actors
-					sem.acquire();
-					std::for_each(acset.begin(), acset.end(), DecreaseActorCooldown);
-					// end decreasing durations
-
-					// calc actors in combat
-					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
 					actorsincombat = 0;
 					hostileactors = 0;
-					std::for_each(acset.begin(), acset.end(), [](ActorInfo* acinfo) {
-						if (acinfo->IsInCombat()) {
-							actorsincombat++;
-							combatants.push_front(acinfo);
-							if (acinfo->playerHostile)
-								hostileactors++;
+					// decreasing durations
+					// 
+					// calc actors in combat
+					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
+					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+							DecreaseActorCooldown(acinfo);
+							if (acinfo->IsInCombat()) {
+								actorsincombat++;
+								combatants.push_front(acinfo);
+								if (acinfo->playerHostile)
+									hostileactors++;
+							}
 						}
 					});
-					sem.release();
-					
-					// the player should always be valid. If they don't the game doesn't work either anyway
-					if (playerinfo->actor->IsInCombat())
-						playerinfo->combatstate = CombatState::InCombat;
-					else
-						playerinfo->combatstate = CombatState::OutOfCombat;
+
+					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+						// the player should always be valid. If they don't the game doesn't work either anyway
+						if (playerinfo->actor->IsInCombat())
+							playerinfo->combatstate = CombatState::InCombat;
+						else
+							playerinfo->combatstate = CombatState::OutOfCombat;
+					}
 
 					if (!GetProcessing())
 						goto CheckActorsSkipIteration;
 					CheckDeadCheckHandlerLoop;
 
 					// collect actor runtime data
-					sem.acquire();
-					std::for_each(acset.begin(), acset.end(), HandleActorRuntimeData);
-					sem.release();
-
-					// handle potions
-					sem.acquire();
-					if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
-						std::for_each(acset.begin(), acset.end(), HandleActorOOCPotions);
-					}
-					std::for_each(acset.begin(), acset.end(), HandleActorPotions);
-					sem.release();
-
-					// handle fortify potions
-					sem.acquire();
-					std::for_each(acset.begin(), acset.end(), HandleActorFortifyPotions);
-					sem.release();
-
-					// handle poisons
-					sem.acquire();
-					std::for_each(acset.begin(), acset.end(), HandleActorPoisons);
-					sem.release();
-
-					// handle food
-					sem.acquire();
-					std::for_each(acset.begin(), acset.end(), HandleActorFood);
-					sem.release();
+					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+							// retrieve runtime data
+							HandleActorRuntimeData(acinfo);
+							// handle potions out-of-combat
+							if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
+								HandleActorOOCPotions(acinfo);
+							}
+							// handle potions
+							HandleActorPotions(acinfo);
+							// handle fortify potions
+							HandleActorFortifyPotions(acinfo);
+							// handle poisons
+							HandleActorPoisons(acinfo);
+							// handle food
+							HandleActorFood(acinfo);
+						}
+					});
 				} catch (std::bad_alloc& e) {
 					logcritical("[Events] [CheckActors] Failed to execute due to memory allocation issues: {}", std::string(e.what()));
-					sem.release();
-				}
-
-				// if we inserted the player, remove them and get their applied values
-				if (player) {
-					LOG_3("{}[Events] [CheckActors] Removing Player from the list.");
-					acset.erase(playerinfo);
-					// we do not need to retrieve values, since wthey are written to the reference directly
 				}
 				// write execution time of iteration
-				PROF2_1("{}[Events] [CheckActors] execution time for {} actors: {} µs", acset.size(), std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
-				LOG1_1("{}[Events] [CheckActors] checked {} actors", std::to_string(acset.size()));
+				PROF2_1("{}[Events] [CheckActors] execution time for {} actors: {} µs", actors.size(), std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+				LOG1_1("{}[Events] [CheckActors] checked {} actors", std::to_string(actors.size()));
 				// release lock.
 			} else {
 				LOG_1("{}[Events] [CheckActors] Skip round.");
@@ -1061,7 +1043,7 @@ CheckActorsSkipIteration:
 	/// Processes the item distribution for an actor
 	/// </summary>
 	/// <param name="acinfo"></param>
-	void ProcessDistribution(ActorInfo* acinfo)
+	void ProcessDistribution(std::shared_ptr<ActorInfo> acinfo)
 	{
 		// check wether this charackter maybe a follower
 		if (acinfo->lastDistrTime == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->lastDistrTime > 1) {
@@ -1326,7 +1308,7 @@ CheckActorsSkipIteration:
 				if ((*iter).second) {
 					actor = ((*iter).second)->As<RE::Actor>();
 					if (Utility::ValidateActor(actor)) {
-						ActorInfo* acinfo = data->FindActor(actor);
+						std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 						auto items = ACM::GetAllPotions(acinfo);
 						auto it = items.begin();
 						while (it != items.end()) {
@@ -1381,15 +1363,15 @@ CheckActorsSkipIteration:
 		if (Utility::ValidateActor(actor) == false)
 			return;
 		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
-		ActorInfo* acinfo = data->FindActor(actor);
+		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
+		LOG1_1("{}[Events] [RegisterNPC] Found: {}", Utility::PrintForm(acinfo));
 		// if actor was deleted, exit
 		if (acinfo->GetDeleted()) {
 			LOG_1("{}[Events] [RegisterNPC] Actor already deleted");
 			return;
 		}
-		// if actor was invalidated but not deleted, reset them
-		if (acinfo->IsValid() == false)
-			acinfo->Reset(actor);
+		// reset object to account for changes to underlying objects
+		acinfo->Reset(actor);
 		if (acinfo->IsValid() == false) {
 			LOG_1("{}[Events] [RegisterNPC] Actor reset failed");
 			return;
@@ -1424,7 +1406,7 @@ CheckActorsSkipIteration:
 		if (Utility::ValidateActor(actor) == false)
 			return;
 		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", Utility::PrintForm(actor));
-		ActorInfo* acinfo = data->FindActor(actor);
+		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 		sem.acquire();
 		acset.erase(acinfo);
 		acinfo->durHealth = 0;
@@ -1440,7 +1422,7 @@ CheckActorsSkipIteration:
 	/// Unregisters an NPC from handling
 	/// </summary>
 	/// <param name="acinfo"></param>
-	void UnregisterNPC(ActorInfo* acinfo)
+	void UnregisterNPC(std::shared_ptr<ActorInfo> acinfo)
 	{
 		EvalProcessing();
 		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", acinfo->name);
@@ -1461,10 +1443,16 @@ CheckActorsSkipIteration:
 		sem.acquire();
 		auto itr = acset.begin();
 		while (itr != acset.end()) {
-			if ((*itr)->formid == formid) {
+			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
+				if (acinfo->formid == formid) {
+					acset.erase(itr);
+					break;
+				}
+			} else {
+				// weak pointer is expired, so remove it while we are on it
 				acset.erase(itr);
-				break;
 			}
+			itr++;
 		}
 		sem.release();
 	}
@@ -1479,6 +1467,19 @@ CheckActorsSkipIteration:
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
 		initialized = false;
+
+		// checking if player should be handled
+		if ((Settings::Player::_playerPotions ||
+				Settings::Player::_playerFortifyPotions ||
+				Settings::Player::_playerPoisons ||
+				Settings::Player::_playerFood)) {
+			// inject player into the list and remove him later
+			sem.acquire();
+			acset.insert(data->FindActor(RE::PlayerCharacter::GetSingleton()));
+			sem.release();
+			LOG_3("{}[Events] [CheckActors] Adding player to the list");
+		}
+
 		if (actorhandlerrunning == false) {
 			if (actorhandler != nullptr) {
 				// if the thread is there, then destroy and delete it
@@ -1590,7 +1591,7 @@ CheckActorsSkipIteration:
 				if (deads.contains(actor->GetFormID()) == false) {
 					EvalProcessingEvent();
 					// invalidate actor
-					ActorInfo* acinfo = data->FindActor(actor);
+					std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 					bool excluded = Distribution::ExcludedNPC(acinfo);
 					acinfo->SetInvalid();
 					// all npcs must be unregistered, even if distribution oes not apply to them
@@ -1629,7 +1630,7 @@ CheckActorsSkipIteration:
 						LOG1_4("{}[Events] [TESDeathEvent] actor {} is excluded or already dead", Utility::PrintForm(actor));
 					}
 					// distribute death items, independently of whether the npc is excluded
-					auto ditems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems->death);
+					auto ditems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems.death);
 					// item, chance, num, cond1, cond2
 					for (int i = 0; i < ditems.size(); i++) {
 						// calc chances
@@ -1718,7 +1719,7 @@ CheckActorsSkipIteration:
 			}
 
 			// save combat state of npc
-			ActorInfo* acinfo = data->FindActor(actor);
+			std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat)
 				acinfo->combatstate = CombatState::InCombat;
 			else if (a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching)
@@ -1825,27 +1826,24 @@ CheckActorsSkipIteration:
 		RE::Actor* actor = container->As<RE::Actor>();
 		if (actor) {
 			// handle event for an actor
-			ActorInfo* acinfo = data->FindActor(actor);
-			if (acinfo) {
-				/* if (comp->LoadedAnimatedPoisons()) {
-					// handle removed poison
-					RE::AlchemyItem* alch = baseObj->As<RE::AlchemyItem>();
-					if (alch && alch->IsPoison()) {
-						LOG_1("{}[Events] [OnItemRemovedEvent] AnimatedPoison animation");
+			//std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
+			/* if (comp->LoadedAnimatedPoisons()) {
+				// handle removed poison
+				RE::AlchemyItem* alch = baseObj->As<RE::AlchemyItem>();
+				if (alch && alch->IsPoison()) {
+					LOG_1("{}[Events] [OnItemRemovedEvent] AnimatedPoison animation");
 
-						//ACM::AnimatedPoison_ApplyPoison(acinfo, alch);
+					//ACM::AnimatedPoison_ApplyPoison(acinfo, alch);
 
-						//std::string AnimationEventString = "poisondamagehealth02";
-						//acinfo->actor->NotifyAnimationGraph(AnimationEventString);
+					//std::string AnimationEventString = "poisondamagehealth02";
+					//acinfo->actor->NotifyAnimationGraph(AnimationEventString);
 						
-						//RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> point(nullptr);
-						//a_vm->DispatchStaticCall("Debug", "SendAnimationEvent", SKSE::Impl::VMArg(actor, RE::BSFixedString("poisondamagehealth02")), point);
-						//RE::MakeFunctionArguments(actor, RE::BSFixedString("poisondamagehealth02"));
-					}
+					//RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> point(nullptr);
+					//a_vm->DispatchStaticCall("Debug", "SendAnimationEvent", SKSE::Impl::VMArg(actor, RE::BSFixedString("poisondamagehealth02")), point);
+					//RE::MakeFunctionArguments(actor, RE::BSFixedString("poisondamagehealth02"));
 				}
-				*/
-
 			}
+			*/
 		}
 		
 		// handle event for generic reference
@@ -1867,14 +1865,8 @@ CheckActorsSkipIteration:
 		RE::Actor* actor = container->As<RE::Actor>();
 		if (actor) {
 			// handle event for an actor
-			ActorInfo* acinfo = data->FindActor(actor);
-			if (acinfo) {
-
-
-
-
-
-			}
+			//std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
+			
 		}
 		
 		// handle event for generic objects

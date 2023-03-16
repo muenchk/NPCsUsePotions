@@ -89,14 +89,14 @@ public:
 	/// <param name="eff">effect to search for</param>
 	/// <param name="fortify">whether to search for a fortify potion</param>
 	/// <returns>list of matching items with magnitudes and durations</returns>
-	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool fortify);
+	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPotions(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool fortify);
 
 	/// <summary>
 	/// Searches for and returns all potions in the actors inventory
 	/// </summary>
 	/// <param name="acinfo"></param>
 	/// <returns></returns>
-	static std::list<RE::AlchemyItem*> GetAllPotions(ActorInfo* acinfo);
+	static std::list<RE::AlchemyItem*> GetAllPotions(std::shared_ptr<ActorInfo> const& acinfo);
 
 	/// <summary>
 	/// Searches for poisons with the effect [eff] in the inventory of the actor [actor]
@@ -104,14 +104,14 @@ public:
 	/// <param name="actor">actor to search</param>
 	/// <param name="eff">effect to search for</param>
 	/// <returns>list of matching items with magnitudes and durations</returns>
-	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPoisons(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect);
+	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingPoisons(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect);
 
 	/// <summary>
 	/// Searches for and returns all poisons in the actors inventory
 	/// </summary>
 	/// <param name="acinfo"></param>
 	/// <returns></returns>
-	static std::list<RE::AlchemyItem*> GetAllPoisons(ActorInfo* acinfo);
+	static std::list<RE::AlchemyItem*> GetAllPoisons(std::shared_ptr<ActorInfo> const& acinfo);
 
 	/// <summary>
 	/// Searches for food with the effect [eff] in the inventory of the actor [actor]
@@ -120,14 +120,14 @@ public:
 	/// <param name="eff">effect to search for</param>
 	/// <param name="raw">whether to allow raw food</param>
 	/// <returns>list of matching items with magnitude and durations</returns>
-	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingFood(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool raw);
+	static std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> GetMatchingFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool raw);
 
 	/// <summary>
 	/// Searched for and returns all food in the actors inventory
 	/// </summary>
 	/// <param name="acinfo"></param>
 	/// <returns></returns>
-	static std::list<RE::AlchemyItem*> GetAllFood(ActorInfo* acinfo);
+	static std::list<RE::AlchemyItem*> GetAllFood(std::shared_ptr<ActorInfo> const& acinfo);
 
 	/// <summary>
 	/// Returns a random food item from the list of food items in an actors inventory
@@ -135,16 +135,16 @@ public:
 	/// <param name="actor"></param>
 	/// <param name="raw">whether raw food should be considered</param>
 	/// <returns></returns>
-	static std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> GetRandomFood(ActorInfo* acinfo, bool raw);
+	static std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> GetRandomFood(std::shared_ptr<ActorInfo> const& acinfo, bool raw);
 
 	/// <summary>
 	/// Returns the custom items that an actor posseses
 	/// </summary>
-	static std::unordered_map<uint32_t, int> GetCustomItems(ActorInfo* acinfo);
+	static std::unordered_map<uint32_t, int> GetCustomItems(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns a vector of [5] maps that contain [all], [potion], [poison], [fortify], [food] CustomAlchItems in the inventory
 	/// </summary>
-	static std::vector<std::unordered_map<uint32_t, int>> GetCustomAlchItems(ActorInfo* acinfo);
+	static std::vector<std::unordered_map<uint32_t, int>> GetCustomAlchItems(std::shared_ptr<ActorInfo> const& acinfo);
 
 	/// <summary>
 	/// tries to use a potion with the given effect [eff]
@@ -154,7 +154,7 @@ public:
 	/// <param name="compatibility">whether to use items in compatibility mode</param>
 	/// <param name="fortify">whether to search for fortify potions</param>
 	/// <returns>Wether a potion was consumed</returns>
-	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatiblity = false, bool fortify = false);
+	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool compatiblity = false, bool fortify = false);
 
 	/// <summary>
 	/// takes an already computed list and uses the first item in the list
@@ -162,7 +162,7 @@ public:
 	/// <param name="acinfo"></param>
 	/// <param name="ls"></param>
 	/// <returns></returns>
-	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(ActorInfo* acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>& ls, bool compatibility = false);
+	static std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>& ls, bool compatibility = false);
 	
 	/// <summary>
 	/// tries to use a food with the given effect [eff]
@@ -170,7 +170,7 @@ public:
 	/// <param name="acinfo">actor to apply food to</param>
 	/// <param name="eff">effect to apply</param>
 	/// <returns>wether a food was used</returns>
-	static std::pair<int, AlchemyEffectBase> ActorUseFood(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool raw);
+	static std::pair<int, AlchemyEffectBase> ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool raw);
 
 	/// <summary>
 	/// tries to use a random food item from an actors inventory
@@ -178,7 +178,7 @@ public:
 	/// <param name="acinfo">actor to apply food to</param>
 	/// <param name="raw">whether raw food should be considered</param>
 	/// <returns>wether a food was used</returns>
-	static std::pair<int, AlchemyEffectBase> ActorUseFood(ActorInfo* acinfo, bool raw);
+	static std::pair<int, AlchemyEffectBase> ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, bool raw);
 
 	/// <summary>
 	/// tries to use a poison with the given effect [eff]
@@ -186,9 +186,9 @@ public:
 	/// <param name="acinfo">actor which applies the poison</param>
 	/// <param name="eff">effect to apply</param>
 	/// <returns>wether a food was used</returns>
-	static std::pair<int, AlchemyEffectBase> ActorUsePoison(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect);
+	static std::pair<int, AlchemyEffectBase> ActorUsePoison(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect);
 
-	/* static bool AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison); */
+	/* static bool AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, RE::AlchemyItem* poison); */
 
 	#pragma endregion
 };
