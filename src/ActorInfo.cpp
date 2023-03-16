@@ -917,6 +917,7 @@ void ActorInfo::Update()
 	if (!valid)
 		return;
 	actor = RE::TESForm::LookupByID<RE::Actor>(formid);
+	LOG2_1("{}[ActorInfo] [Update] formid: {}, object: {}", Utility::GetHex(formid), Utility::PrintForm(actor));
 	if (actor == nullptr)
 		valid = false;
 	else {

@@ -864,7 +864,9 @@ namespace Events
 		}
 
 		// if actor is valid and not dead
-		if (acinfo->actor && !(acinfo->actor->IsDead()) && acinfo->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
+		if (acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead)
+			acinfo->handleactor = false;
+		else if (acinfo->actor && acinfo->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
 			acinfo->handleactor = true;
 		} else
 			acinfo->handleactor = false;
@@ -879,6 +881,8 @@ namespace Events
 
 		// get whether weapons are drawn
 		acinfo->weaponsDrawn = acinfo->actor->IsWeaponDrawn();
+
+		LOG2_1("{}[Events] [CheckActors] [Actor] handle actor {} {}", Utility::PrintForm(acinfo), acinfo->handleactor);
 	}
 
 	/// <summary>
@@ -900,7 +904,7 @@ namespace Events
 		// on cycle time
 		tolerance = Settings::System::_cycletime / 5;
 
-		ActorInfo* playerinfo = data->FindActor(RE::PlayerCharacter::GetSingleton());
+		ActorInfo* playerinfo = data->FindActor(RE::PlayerCharacter::GetSingleton()); 
 
 		/// temp section
 		AlchemyEffectBase alch = 0;
@@ -935,6 +939,8 @@ namespace Events
 						Settings::Player::_playerFood)) {
 					// inject player into the list and remove him later
 					acset.insert(playerinfo);
+					// reset player combat state, we don't want to include them in our checks
+					playerinfo->combatstate = CombatState::OutOfCombat;
 					LOG_3("{}[Events] [CheckActors] Adding player to the list");
 					player = true;
 				}
@@ -948,9 +954,12 @@ namespace Events
 
 				try {
 					// store position of player character
-					ActorInfo::SetPlayerPosition(playerinfo->actor->GetPosition());
-					// reset player combat state, we don't want to include them in our checks
-					playerinfo->combatstate = CombatState::OutOfCombat;
+					if (player) {
+						SKSE::GetTaskInterface()->AddTask([]() {
+							ActorInfo::SetPlayerPosition(RE::PlayerCharacter::GetSingleton()->GetPosition());
+							return;
+						});
+					}
 
 					// validate actorsets
 					sem.acquire();
@@ -992,16 +1001,36 @@ namespace Events
 					});
 					sem.release();
 					
-					// the player should always be valid. If they don't the game doesn't work either anyway
-					if (playerinfo->actor->IsInCombat())
-						playerinfo->combatstate = CombatState::InCombat;
-					else
-						playerinfo->combatstate = CombatState::OutOfCombat;
+					if (player) {
+						SKSE::GetTaskInterface()->AddTask([&playerinfo]() {
+							// the player should always be valid. If they don't the game doesn't work either anyway
+							if (playerinfo->actor->IsInCombat())
+								playerinfo->combatstate = CombatState::InCombat;
+							else
+								playerinfo->combatstate = CombatState::OutOfCombat;
+						});
+					}
 
 					if (!GetProcessing())
 						goto CheckActorsSkipIteration;
 					CheckDeadCheckHandlerLoop;
 
+					sem.acquire();
+					std::for_each(acset.begin(), acset.end(), [](ActorInfo* acinfo) {
+						SKSE::GetTaskInterface()->AddTask([acinfo]() {
+							HandleActorRuntimeData(acinfo);
+							if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
+								HandleActorOOCPotions(acinfo);
+							}
+							HandleActorPotions(acinfo);
+							HandleActorFortifyPotions(acinfo);
+							HandleActorPoisons(acinfo);
+							HandleActorFood(acinfo);
+						});
+					});
+					sem.release();
+
+					/*
 					// collect actor runtime data
 					sem.acquire();
 					std::for_each(acset.begin(), acset.end(), HandleActorRuntimeData);
@@ -1029,6 +1058,7 @@ namespace Events
 					sem.acquire();
 					std::for_each(acset.begin(), acset.end(), HandleActorFood);
 					sem.release();
+					*/
 				} catch (std::bad_alloc& e) {
 					logcritical("[Events] [CheckActors] Failed to execute due to memory allocation issues: {}", std::string(e.what()));
 					sem.release();
@@ -1067,9 +1097,12 @@ CheckActorsSkipIteration:
 	/// <param name="acinfo"></param>
 	void ProcessDistribution(ActorInfo* acinfo)
 	{
+		LOG_1("{}[Events] [ProcessDistribution]");
 		// check wether this charackter maybe a follower
 		if (acinfo->lastDistrTime == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->lastDistrTime > 1) {
+			LOG_1("{}[Events] [ProcessDistribution] begin");
 			if (!Distribution::ExcludedNPC(acinfo)) {
+				LOG_1("{}[Events] [ProcessDistribution] not excluded");
 				// begin with compatibility mode removing items before distributing new ones
 				if (Settings::Debug::_CompatibilityRemoveItemsBeforeDist) {
 					auto items = ACM::GetAllPotions(acinfo);
@@ -1099,9 +1132,11 @@ CheckActorsSkipIteration:
 				// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 				auto items = Distribution::GetDistrItems(acinfo);
 				if ((acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead)) {
+					LOG_1("{}[Events] [ProcessDistribution] dead");
 					return;
 				}
 				if (items.size() > 0) {
+					LOG_1("{}[Events] [ProcessDistribution] give items");
 					for (int i = 0; i < items.size(); i++) {
 						if (items[i] == nullptr) {
 							continue;
@@ -1113,6 +1148,7 @@ CheckActorsSkipIteration:
 				}
 			}
 		}
+		LOG_1("{}[Events] [ProcessDistribution] exit");
 	}
 
 	/// <summary>
@@ -1713,7 +1749,7 @@ CheckActorsSkipIteration:
 		//	return EventResult::kContinue;
 		auto begin = std::chrono::steady_clock::now();
 		auto actor = a_event->actor->As<RE::Actor>();
-		if (Utility::ValidateActor(actor) && !actor->IsDead() && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+		if (Utility::ValidateActor(actor) && !(actor->boolBits & RE::Actor::BOOL_BITS::kDead) && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
 			// register / unregister
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				// register for tracking

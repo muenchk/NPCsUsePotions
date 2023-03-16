@@ -1378,8 +1378,10 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase eff
 
 bool Distribution::ExcludedNPC(ActorInfo* acinfo)
 {
+	LOG_1("{}[Events] [ExcludedNPC]");
 	if (!acinfo->IsValid())
 		return true;
+	LOG_1("{}[Events] [ExcludedNPC] 1");
 	if (Settings::Whitelist::EnabledNPCs) {
 		if (acinfo->whitelistedcalculated) {
 			if (!acinfo->whitelisted)
@@ -1390,18 +1392,28 @@ bool Distribution::ExcludedNPC(ActorInfo* acinfo)
 				return true;
 		}
 	}
+	LOG_1("{}[Events] [ExcludedNPC] 2");
 
+	LOG1_1("{}[Events] [ExcludedNPC] excludedNPCs : {}", Distribution::excludedNPCs()->contains(acinfo->formid));
+	LOG1_1("{}[Events] [ExcludedNPC] excludedPLUGINSs : {}", Distribution::excludedPlugins_NPCs()->contains(acinfo->pluginID));
+	LOG1_1("{}[Events] [ExcludedNPC] follower : {}", acinfo->actor->IsInFaction(Settings::CurrentFollowerFaction));
+	LOG1_1("{}[Events] [ExcludedNPC] hireling : {}", acinfo->actor->IsInFaction(Settings::CurrentHirelingFaction));
+	LOG1_1("{}[Events] [ExcludedNPC] actorBase : {}", (Distribution::excludedNPCs()->contains(acinfo->actor->GetActorBase()->GetFormID())));
+	LOG1_1("{}[Events] [ExcludedNPC] ghost : {}", acinfo->actor->IsGhost());
+	LOG1_1("{}[Events] [ExcludedNPC] summonable : {}", acinfo->actor->GetActorBase()->IsSummonable());
 	bool ret = Distribution::excludedNPCs()->contains(acinfo->formid) ||
 	           Distribution::excludedPlugins_NPCs()->contains(acinfo->pluginID) || 
-	           acinfo->actor->IsInFaction(Settings::CurrentFollowerFaction) ||
-	           acinfo->actor->IsInFaction(Settings::CurrentHirelingFaction) ||
+	           //acinfo->actor->IsInFaction(Settings::CurrentFollowerFaction) ||
+	           //acinfo->actor->IsInFaction(Settings::CurrentHirelingFaction) ||
 	           (Distribution::excludedNPCs()->contains(acinfo->actor->GetActorBase()->GetFormID())) ||
 	           acinfo->actor->IsGhost() ||
 	           acinfo->actor->GetActorBase()->IsSummonable();
+	LOG1_1("{}[Events] [ExcludedNPC] 3 {}", ret);
 	if (acinfo->actor->GetActorBase()->Bleeds() == false && Utility::ToLower(std::string(acinfo->actor->GetActorBase()->GetFormEditorID())).find("ghost") != std::string::npos) {
 		Distribution::ForceExcludeNPC(acinfo->formid);
 		return true;
 	}
+	LOG1_1("{}[Events] [ExcludedNPC] 4 {}", ret);
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 	if (!Distribution::npcMap()->contains(acinfo->formid) && !Distribution::npcMap()->contains(acinfo->actor->GetActorBase()->GetFormID()) && ret == false) {
 		auto base = acinfo->actor->GetActorBase();
@@ -1409,10 +1421,12 @@ bool Distribution::ExcludedNPC(ActorInfo* acinfo)
 			if (base->keywords[i])
 				ret |= Distribution::excludedAssoc()->contains(base->keywords[i]->GetFormID());
 		}
+		LOG1_1("{}[Events] [ExcludedNPC] 5 {}", ret);
 		for (uint32_t i = 0; i < base->factions.size(); i++) {
 			if (base->factions[i].faction)
 				ret |= Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID());
 		}
+		LOG1_1("{}[Events] [ExcludedNPC] 6 {}", ret);
 		auto race = acinfo->actor->GetRace();
 		if (race) {
 			ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
@@ -1421,6 +1435,7 @@ bool Distribution::ExcludedNPC(ActorInfo* acinfo)
 			}
 		}
 	}
+	LOG1_1("{}[Events] [ExcludedNPC] 7 {}", ret);
 	return ret;
 }
 

@@ -238,7 +238,7 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: actor invalidated");
 								} else if (acvec[i]->actor->GetFormID() == 0) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: formid invalid");
-								} else if (acvec[i]->actor->IsDead() == true) {
+								} else if (acvec[i]->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: actor died");
 								} else {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: unknown reason");

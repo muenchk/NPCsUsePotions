@@ -7,6 +7,7 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/ActorInfo.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
 	"${SOURCE_DIR}/AlchemyEffect.cpp"
+	"${SOURCE_DIR}/BufferOperations.cpp"
 	"${SOURCE_DIR}/Compatibility.cpp" 
 	"${SOURCE_DIR}/Console.cpp"
 	"${SOURCE_DIR}/Data.cpp" 
