@@ -1,11 +1,305 @@
 #pragma once
-//#ifndef KPMEvents
-//#define KPMEvents
 
-#include<ActorInfo.h>
+#include <semaphore>
+#include <set>
+
+#include "Compatibility.h"
+#include "Data.h"
 
 namespace Events
 {
+	class Main
+	{
+	public:
+		static inline Data* data = nullptr;
+		static inline Compatibility* comp = nullptr;
+
+	private:
+		/// <summary>
+		/// determines whether events and functions are run
+		/// </summary>
+		static inline bool initialized = false;
+
+		//--------------------Lists---------------------------
+
+		/// <summary>
+		/// holds all active actors
+		/// </summary>
+		static inline std::set<std::weak_ptr<ActorInfo>, std::owner_less<std::weak_ptr<ActorInfo>>> acset{};
+		/// <summary>
+		/// semaphore used to sync access to actor handling, to prevent list changes while operations are done
+		/// </summary>
+		static inline std::binary_semaphore sem{1};
+		/// <summary>
+		/// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
+		/// </summary>
+		static inline std::unordered_set<RE::FormID> deads;
+		/// <summary>
+		/// list of npcs that are currently in combat
+		/// </summary>
+		static inline std::forward_list<std::shared_ptr<ActorInfo>> combatants;
+
+		//-------------------Handler-------------------------
+
+		/// <summary>
+		/// if set to true stops the CheckActors thread on its next iteration
+		/// </summary>
+		static inline bool stopactorhandler = false;
+		static inline bool skipactorhandler = false;
+		/// <summary>
+		/// [true] if the actorhandler is running, [false] if the thread died
+		/// </summary>
+		static inline bool actorhandlerrunning = false;
+		/// <summary>
+		/// [true] if the actorhandler is in an active iteration, [false] if it is sleeping
+		/// </summary>
+		static inline bool actorhandlerworking = false;
+		/// <summary>
+		/// thread running the CheckActors function
+		/// </summary>
+		static inline std::thread* actorhandler = nullptr;
+
+		//--------------------Main---------------------------
+		
+		/// <summary>
+		/// Tolerance for current cooldowns, due to variability in cycle length, due to processing time
+		/// </summary>
+		static inline int tolerance = 0;
+		/// <summary>
+		/// Number of actors currently in combat
+		/// </summary>
+		static inline int actorsincombat = 0;
+		/// <summary>
+		/// Number of actors hostile to player
+		/// </summary>
+		static inline int hostileactors = 0;
+
+		//-------------------Processing----------------------
+
+		/// <summary>
+		/// signals whether the player has died
+		/// </summary>
+		static inline bool playerdied = false;
+		/// <summary>
+		/// enables all active functions
+		/// </summary>
+		static inline bool enableProcessing = false;
+
+		//-------------------Support-------------------------
+
+		/// <summary>
+		/// Calculates the cooldowns of an actor for a specific effect
+		/// </summary>
+		static void CalcActorCooldowns(std::shared_ptr<ActorInfo> acinfo, AlchemyEffectBase effect, int dur);
+
+		/// <summary>
+		/// Calculates poison effects based on [combatdata], [target], and [tcombatdata]
+		/// </summary>
+		/// <param name="combatdata">combatdata of the actor using poison</param>
+		/// <param name="target">target</param>
+		/// <param name="tcombatdata">combatdata of the target</param>
+		/// <returns>valid poison effects</returns>
+		static uint64_t CalcPoisonEffects(uint32_t combatdata, RE::Actor* target, uint32_t tcombatdata);
+
+		/// <summary>
+		/// Calculates all fortify effects that an actor is equitable for, based on their and their targets combat data
+		/// </summary>
+		/// <param name="acinfo">actoringo object</param>
+		/// <param name="combatdata">combatdata of [acinfo]</param>
+		/// <param name="tcombatdata">combatdata of target</param>
+		/// <returns></returns>
+		static uint64_t CalcFortifyEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata, uint32_t tcombatdata = 0);
+
+		/// <summary>
+		/// Calculates all regeneration effects that an actor is equitable for, based on their combat data
+		/// </summary>
+		/// <param name="combatdata">combatdata of the actor</param>
+		/// <returns>valid regeneration effects</returns>
+		static uint64_t CalcRegenEffects(uint32_t combatdata);
+		/// <summary>
+		/// Calculates all regeneration effects that an actor is equitable for, based on their combat data
+		/// </summary>
+		/// <param name="acinfo"></param>
+		/// <param name="combatdata"></param>
+		/// <returns></returns>
+		static uint64_t CalcRegenEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata);
+
+		/// <summary>
+		/// Processes the item distribution for an actor
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void ProcessDistribution(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Removes all distributable alchemy items from all actors in the game on loading a game
+		/// </summary>
+		static void RemoveItemsOnStartup();
+
+		//----------------------Main-----------------------
+
+		/// <summary>
+		/// Decreases all of the actors active cooldowns
+		/// </summary>
+		static void DecreaseActorCooldown(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Handles actor potion usage
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void HandleActorPotions(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Handles actor fortify potion usage
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void HandleActorFortifyPotions(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Handles actor poison usage
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void HandleActorPoisons(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Handles actor food usage
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void HandleActorFood(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Handles actor out-of-combat potion usage
+		/// </summary>
+		static void HandleActorOOCPotions(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Refreshes important runtime data of an ActorInfo, including combatdata and status
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void HandleActorRuntimeData(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Main routine that periodically checks the actors status, and applies items
+		/// </summary>
+		static void CheckActors();
+
+		//---------------------Friends---------------------
+
+	public:
+
+		//-------------------------Registering----------------------
+
+		/// <summary>
+		/// Registers an NPC for handling
+		/// </summary>
+		/// <param name="actor"></param>
+		static void RegisterNPC(RE::Actor* actor);
+
+		/// <summary>
+		/// Unregisters an NPC form handling
+		/// </summary>
+		/// <param name="actor"></param>
+		static void UnregisterNPC(RE::Actor* actor);
+
+		/// <summary>
+		/// Unregisters an NPC from handling
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void UnregisterNPC(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Unregisters an NPC from handling
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void UnregisterNPC(RE::FormID formid);
+
+		//----------------------Processing--------------------------
+
+		/// <summary>
+		/// Returns whether processing of actors is allowed
+		/// </summary>
+		/// <returns></returns>
+		static bool CanProcess() { return enableProcessing; }
+
+		/// <summary>
+		/// Temporarily locks processing for all functions
+			static  /// </summary>
+		bool LockProcessing()
+		{
+			bool val = Main::enableProcessing;
+			Main::enableProcessing = false;
+			return val;
+		}
+
+		/// <summary>
+		/// Unlocks processing for all functions
+		/// </summary>
+		static void UnlockProcessing()
+		{
+			enableProcessing = true;
+		}
+
+		//----------------------Support----------------------------
+
+		/// <summary>
+		/// Returns whether the actor is dead, or the TESDeathEvent has already been fired for the npc
+		/// </summary>
+		/// <param name="actor"></param>
+		/// <returns></returns>
+		static bool IsDead(RE::Actor* actor);
+
+		/// <summary>
+		/// Returns whether the TESDeathEvent has already been fired for the npc
+		/// </summary>
+		/// <param name="actor"></param>
+		/// <returns></returns>
+		static bool IsDeadEventFired(RE::Actor* actor);
+
+		/// <summary>
+		/// Sets that the TESDeathEvent has been fired for the npc
+		/// </summary>
+		/// <param name="actor"></param>
+		/// <returns></returns>
+		static void SetDead(RE::Actor* actor);
+
+		/// <summary>
+		/// initializes important variables, which need to be initialized every time a game is loaded
+		/// </summary>
+		static void InitializeCompatibilityObjects();
+
+		/// <summary>
+		/// Returns whether the player character has died
+		/// </summary>
+		/// <returns></returns>
+		static bool IsPlayerDead() { return playerdied; }
+		/// <summary>
+		/// Sets the live status of the player character
+		/// </summary>
+		/// <param name="died"></param>
+		static void PlayerDied(bool died) { playerdied = died; }
+
+		//-------------------GameCallbacks-------------------------
+
+		/// <summary>
+		/// Callback on loading a save game, initializes actor processing
+		/// </summary>
+		/// <param name=""></param>
+		static void LoadGameCallback(SKSE::SerializationInterface* a_intfc);
+
+		/// <summary>
+		/// Callback on reverting the game. Disables processing and stops all handlers
+		/// </summary>
+		/// <param name=""></param>
+		static void RevertGameCallback(SKSE::SerializationInterface* a_intfc);
+		/// <summary>
+		/// Callback on saving the game
+		/// </summary>
+		/// <param name=""></param>
+		static void SaveGameCallback(SKSE::SerializationInterface* a_intfc);
+	};
+
+
+
+
     using EventResult = RE::BSEventNotifyControl;
 
     class EventHandler :
@@ -90,6 +384,27 @@ namespace Events
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::TESContainerChangedEvent* a_event, RE::BSTEventSource<RE::TESContainerChangedEvent>* a_eventSource) override;
 
+
+		/// <summary>
+		/// Handles an item being removed from a container
+		/// </summary>
+		/// <param name="container">The container the item was removed from</param>
+		/// <param name="baseObj">The base object that has been removed</param>
+		/// <param name="count">The number of items that have been removed</param>
+		/// <param name="destinationContainer">The container the items have been moved to</param>
+		/// <param name="a_event">The event information</param>
+		void OnItemRemoved(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int count, RE::TESObjectREFR* destinationContainer, const RE::TESContainerChangedEvent* a_event);
+
+		/// <summary>
+		/// Handles an item being added to a container
+		/// </summary>
+		/// <param name="container">The container the item is added to</param>
+		/// <param name="baseObj">The base object that has been added</param>
+		/// <param name="count">The number of items added</param>
+		/// <param name="sourceContainer">The container the item was in before</param>
+		/// <param name="a_event">The event information</param>
+		void OnItemAdded(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int count, RE::TESObjectREFR* sourceContainer, const RE::TESContainerChangedEvent* a_event);
+
 	private:
 		EventHandler() = default;
 		EventHandler(const EventHandler&) = delete;
@@ -104,48 +419,4 @@ namespace Events
 	/// Registers all EventHandlers, if we would have multiple
 	/// </summary>
 	void RegisterAllEventHandlers();
-	/// <summary>
-	/// sets the main threads to stop on the next iteration
-	/// </summary>
-	void DisableThreads();
-
-	/// <summary>
-	/// Resets information about actors
-	/// </summary>
-	void ResetActorInfoMap();
-
-	/// <summary>
-	/// temporarily disables processing
-	/// </summary>
-	bool LockProcessing();
-
-	/// <summary>
-	/// unlocks temporary lock on processing
-	/// </summary>
-	void UnlockProcessing();
-
-	/// <summary>
-	/// The type of event
-	/// </summary>
-	enum EventType
-	{
-		None = 0,
-		TESDeathEvent = 1 << 0,
-		TESCombatEnterEvent = 1 << 1,
-		TESCombatLeaveEvent = 1 << 2
-	};
-	/// <summary>
-	/// stores data about an event to process
-	/// </summary>
-	class EventData
-	{
-	public:
-		RE::Actor* actor;
-		EventType evn;
-	};
 }
-
-
-
-
-//#endif

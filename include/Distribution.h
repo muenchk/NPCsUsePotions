@@ -4,6 +4,7 @@
 #include "CustomItem.h"
 #include "Misc.h"
 #include "Data.h"
+#include "Settings.h"
 
 	/// <summary>
 /// Class handling all functions related to item distribution

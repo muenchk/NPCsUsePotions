@@ -7,6 +7,8 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/main.cpp"
 	"${SOURCE_DIR}/Hooks.cpp"
 	"${SOURCE_DIR}/Events.cpp"
+	"${SOURCE_DIR}/Events_Main.cpp"
+	"${SOURCE_DIR}/Events_Main_Support.cpp"
 	"${SOURCE_DIR}/Settings.cpp"
 	"${SOURCE_DIR}/SettingsLoadSave.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
@@ -24,7 +26,8 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Papyrus.cpp" 
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp" 
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp"
-	"${SOURCE_DIR}/BufferOperations.cpp" )
+	"${SOURCE_DIR}/BufferOperations.cpp"
+	"${SOURCE_DIR}/Tests.cpp" )
 
 source_group(TREE "${ROOT_DIR}" FILES ${SOURCE_FILES})
 

@@ -189,14 +189,14 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	LOG_3("{}[Console] [ReloadDist] [Process]");
 	auto console = RE::ConsoleLog::GetSingleton();
 	console->Print("Resetting information about actors...");
-	bool preproc = Events::LockProcessing();
+	bool preproc = Events::Main::LockProcessing();
 	Data::GetSingleton()->ResetActorInfoMap();
 	console->Print("Reloading Settings...");
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");
 	Settings::LoadDistrConfig();
 	if (preproc)
-		Events::UnlockProcessing();
+		Events::Main::UnlockProcessing();
 	if (Settings::Debug::_CheckActorsWithoutRules) {
 		console->Print("Calculating Actors without rules...");
 		Settings::CheckActorsForRules();
