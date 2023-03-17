@@ -859,5 +859,5 @@ public:
 	/// </summary>
 	static void CleanAlchemyEffects();
 
-	static void ExcludeRacesWithoutPotionSlot();
+	static std::set<RE::FormID> CalcRacesWithoutPotionSlot();
 };

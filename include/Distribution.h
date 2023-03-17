@@ -836,7 +836,6 @@ public:
 	friend void Settings::LoadDistrConfig();
 	friend void Settings::ApplySkillBoostPerks();
 	friend void Settings::ClassifyItems();
-	friend void Settings::ExcludeRacesWithoutPotionSlot();
 
 private:
 	/// <summary>
