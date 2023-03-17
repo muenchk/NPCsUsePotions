@@ -86,9 +86,10 @@ void Settings::InitGameStuff()
 	loginfo("[SETTINGS] [InitGameStuff] Finished");
 }
 
-void Settings::ExcludeRacesWithoutPotionSlot()
+std::set<RE::FormID> Settings::CalcRacesWithoutPotionSlot()
 {
 	LOG_1("{}[Settings] [ExcludeRacesWithoutPotionSlot]");
+	std::set<RE::FormID> ret;
 	auto races = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESRace>();
 	LOG1_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] found {} races.", races.size());
 	for (RE::TESRace* race : races) {
@@ -98,7 +99,7 @@ void Settings::ExcludeRacesWithoutPotionSlot()
 				potionenabled = true;
 		}
 		if (potionenabled == false) {
-			Distribution::_excludedAssoc.insert(race->GetFormID());
+			ret.insert(race->GetFormID());
 			LOG1_1("{}[Settings] [ExcludeRacesWithoutPotionSlot] {} does not have potion slot and has been excluded.", Utility::PrintForm(race));
 		}
 	}
@@ -118,8 +119,6 @@ void Settings::LoadDistrConfig()
 	Distribution::ResetCustomItems();
 	// reset loaded rules
 	Distribution::ResetRules();
-
-	ExcludeRacesWithoutPotionSlot();
 
 	std::vector<std::string> files;
 	auto constexpr folder = R"(Data\SKSE\Plugins\)";
@@ -2533,10 +2532,12 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 
 void Settings::ApplySkillBoostPerks()
 {
+	auto races = CalcRacesWithoutPotionSlot();
 	auto datahandler = RE::TESDataHandler::GetSingleton();
 	auto npcs = datahandler->GetFormArray<RE::TESNPC>();
 	for(auto& npc : npcs) {
-		if (npc && npc->GetFormID() != 0x7 && !Distribution::ExcludedNPC(npc) ){
+		// make sure it isn't the player, isn't excluded, and the race isn't excluded from the perks
+		if (npc && npc->GetFormID() != 0x7 && !Distribution::ExcludedNPC(npc) && races.contains(npc->GetRace()->GetFormID()) == false){
 			// some creatures have cause CTDs or other problems, if they get the perks, so try to filter some of them out
 			// if they are a creature and do not have any explicit rule, they will not get any perks
 			// at the same time, their id will be blacklisted for the rest of the plugin, to avoid any handling and distribution problems
