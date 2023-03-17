@@ -107,7 +107,7 @@ namespace Storage
 	/// <param name="a_intfc"></param>
 	void ReadData(SKSE::SerializationInterface* a_intfc)
 	{
-		bool preproc = Events::LockProcessing();
+		bool preproc = Events::Main::LockProcessing();
 
 		// total number of bytes read
 		long size = 0;
@@ -144,7 +144,7 @@ namespace Storage
 
 		LOG_1("{}[DataStorage] [ReadData] Finished loading data");
 		if (preproc) {  // if processing was enabled before locking
-			Events::UnlockProcessing();
+			Events::Main::UnlockProcessing();
 			LOG_1("{}[DataStorage] [ReadData] Enable processing");
 		}
 		Statistics::Storage_BytesReadLast = size;
@@ -156,7 +156,7 @@ namespace Storage
 	/// <param name="a_intfc"></param>
 	void WriteData(SKSE::SerializationInterface* a_intfc)
 	{
-		bool preproc = Events::LockProcessing();
+		bool preproc = Events::Main::LockProcessing();
 
 		// total number of bytes written
 		long size = 0;
@@ -169,7 +169,7 @@ namespace Storage
 		LOG_1("{}[DataStorage] [WriteData] Finished writing data");
 
 		if (preproc) {  // if processing was enabled before locking
-			Events::UnlockProcessing();
+			Events::Main::UnlockProcessing();
 			LOG_1("{}[DataStorage] [WriteData] Enable processing");
 		}
 		Statistics::Storage_BytesWrittenLast = size;
@@ -180,7 +180,7 @@ namespace Storage
 	/// </summary>
 	void RevertData()
 	{
-		bool preproc = Events::LockProcessing();
+		bool preproc = Events::Main::LockProcessing();
 
 		LOG_1("{}[DataStorage] [RevertData] Reverting ActorInfo");
 		data->DeleteActorInfoMap();
@@ -188,6 +188,6 @@ namespace Storage
 		LOG_1("{}[DataStorage] [RevertData] Finished reverting");
 
 		if (preproc) // if processing was enabled before locking
-			Events::UnlockProcessing();
+			Events::Main::UnlockProcessing();
 	}
 }

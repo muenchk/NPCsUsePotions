@@ -78,7 +78,7 @@ public:
 public:
 	std::vector<NPCsUsePotions::NUPActorInfoHandle*> handles;
 
-	class CustomItems
+	struct CustomItems
 	{
 	public:
 		/// <summary>
@@ -122,27 +122,27 @@ public:
 	/// <summary>
 	/// custom items that may be distributed to an actor
 	/// </summary>
-	CustomItems* citems;
+	CustomItems citems;
 	/// <summary>
 	/// The actor
 	/// </summary>
-	RE::Actor* actor;
+	RE::Actor* actor = nullptr;
 	/// <summary>
 	/// form id of the actor
 	/// </summary>
-	RE::FormID formid;
+	RE::FormID formid = 0;
 	/// <summary>
 	/// pluginname the actor is defined in
 	/// </summary>
-	std::string pluginname;
+	std::string pluginname = "";
 	/// <summary>
 	/// ID of the plugin in the current loadorder [runtime]
 	/// </summary>
-	uint32_t pluginID;
+	uint32_t pluginID = 0;
 	/// <summary>
 	/// name of the actor
 	/// </summary>
-	std::string name;
+	std::string name = "";
 	/// <summary>
 	/// Current remaining cooldown on health potions
 	/// </summary>
@@ -238,20 +238,11 @@ public:
 
 
 	/// <summary>
-	/// if [true] the ActorInfo is valid and can be used, if [false] the ActorInfo is a dummy object
-	/// </summary>
-	bool valid = false;
-	/// <summary>
-	/// Whether the actor has been deleted;
-	/// </summary>
-	bool deleted = false;
-
-	/// <summary>
 	/// version of class [used for save and load]
 	/// </summary>
 	static inline const uint32_t version = 0x00000003;
 
-	ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration);
+	ActorInfo(RE::Actor* _actor);
 	ActorInfo();
 
 	/// <summary>
@@ -263,10 +254,6 @@ public:
 
 	~ActorInfo()
 	{
-		try {
-			delete citems;
-		} catch (std::exception&) {}
-
 		for (int i = 0; i < handles.size(); i++) {
 			try {
 				if (handles[i] != nullptr)
@@ -297,6 +284,16 @@ public:
 	/// [Should only be called, directly after updating the actor value]
 	/// </summary>
 	void UpdateMetrics();
+
+private:
+	/// <summary>
+	/// if [true] the ActorInfo is valid and can be used, if [false] the ActorInfo is a dummy object
+	/// </summary>
+	bool valid = false;
+	/// <summary>
+	/// Whether the actor has been deleted;
+	/// </summary>
+	bool deleted = false;
 
 public:
 
@@ -336,11 +333,6 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsWeaponDrawn();
-
-	/// <summary>
-	/// calculates the custom items available
-	/// </summary>
-	void CalcCustomItems();
 	/// <summary>
 	/// Returns whether the actor is a boss
 	/// </summary>

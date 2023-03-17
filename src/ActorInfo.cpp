@@ -13,16 +13,10 @@ void ActorInfo::Init()
 	playerRef = RE::PlayerCharacter::GetSingleton();
 }
 
-ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _durStamina, int _durFortify, int _durRegeneration)
+ActorInfo::ActorInfo(RE::Actor* _actor)
 {
 	LOG_3("{}[ActorInfo] [ActorInfo]");
 	actor = _actor;
-	durHealth = _durHealth;
-	durMagicka = _durMagicka;
-	durStamina = _durStamina;
-	durFortify = _durFortify;
-	durRegeneration = _durRegeneration;
-	citems = new CustomItems();
 	if (_actor) {
 		formid = _actor->GetFormID();
 		name = std::string(_actor->GetName());
@@ -34,7 +28,6 @@ ActorInfo::ActorInfo(RE::Actor* _actor, int _durHealth, int _durMagicka, int _du
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
-		CalcCustomItems();
 		// Run since [actor] is valid
 		UpdateMetrics();
 		// set to valid
@@ -52,9 +45,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	durFortify = 0;
 	durRegeneration = 0;
 	globalCooldownTimer = 0;
-	if (citems != nullptr)
-		delete citems;
-	citems = new CustomItems();
+	citems.Reset();
 	formid = 0;
 	pluginname = "";
 	pluginID = 1;
@@ -84,7 +75,6 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
-		CalcCustomItems();
 		// Run since [actor] is valid
 		UpdateMetrics();
 		// set to valid
@@ -94,10 +84,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 
 ActorInfo::ActorInfo()
 {
-	actor = nullptr;
-	formid = 0;
-	pluginID = 0;
-	citems = new CustomItems();
+
 }
 
 std::string ActorInfo::ToString()
@@ -105,12 +92,6 @@ std::string ActorInfo::ToString()
 	if (!valid)
 		return "Invalid Actor Info";
 	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor)) + "\tactor:" + Utility::PrintForm(actor);
-}
-
-void ActorInfo::CalcCustomItems()
-{
-	LOG_3("{}[ActorInfo] [CalcCustomItems]");
-	Distribution::CalcRule(this);
 }
 
 void ActorInfo::UpdateMetrics()
@@ -209,85 +190,85 @@ bool ActorInfo::CanUsePot(RE::FormID item)
 bool ActorInfo::CanUsePotion(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUsePotion]");
-	auto itr = citems->potionsset.find(item);
-	if (itr == citems->potionsset.end() || itr->second < 0 || itr->second > citems->potions.size())
+	auto itr = citems.potionsset.find(item);
+	if (itr == citems.potionsset.end() || itr->second < 0 || itr->second > citems.potions.size())
 		return false;
-	return CalcUsageConditions(citems->potions[itr->second]);
+	return CalcUsageConditions(citems.potions[itr->second]);
 }
 bool ActorInfo::CanUsePoison(RE::FormID item) 
 {
 	LOG_3("{}[ActorInfo] [CanUsePoison]");
-	auto itr = citems->poisonsset.find(item);
-	if (itr == citems->poisonsset.end() || itr->second < 0 || itr->second > citems->poisons.size())
+	auto itr = citems.poisonsset.find(item);
+	if (itr == citems.poisonsset.end() || itr->second < 0 || itr->second > citems.poisons.size())
 		return false;
-	return CalcUsageConditions(citems->poisons[itr->second]);
+	return CalcUsageConditions(citems.poisons[itr->second]);
 }
 bool ActorInfo::CanUseFortify(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFortify]");
-	auto itr = citems->fortifyset.find(item);
-	if (itr == citems->fortifyset.end() || itr->second < 0 || itr->second > citems->fortify.size())
+	auto itr = citems.fortifyset.find(item);
+	if (itr == citems.fortifyset.end() || itr->second < 0 || itr->second > citems.fortify.size())
 		return false;
-	return CalcUsageConditions(citems->fortify[itr->second]);
+	return CalcUsageConditions(citems.fortify[itr->second]);
 }
 bool ActorInfo::CanUseFood(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFood]");
-	auto itr = citems->foodset.find(item);
-	if (itr == citems->foodset.end() || itr->second < 0 || itr->second > citems->food.size())
+	auto itr = citems.foodset.find(item);
+	if (itr == citems.foodset.end() || itr->second < 0 || itr->second > citems.food.size())
 		return false;
-	return CalcUsageConditions(citems->food[itr->second]);
+	return CalcUsageConditions(citems.food[itr->second]);
 }
 
 bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
 {
 	LOG_3("{}[ActorInfo] [IsCustomAlchItem]");
-	auto itr = citems->potionsset.find(item->GetFormID());
-	if (itr != citems->potionsset.end())
+	auto itr = citems.potionsset.find(item->GetFormID());
+	if (itr != citems.potionsset.end())
 		return true;
-	itr = citems->poisonsset.find(item->GetFormID());
-	if (itr != citems->poisonsset.end())
+	itr = citems.poisonsset.find(item->GetFormID());
+	if (itr != citems.poisonsset.end())
 		return true;
-	itr = citems->fortifyset.find(item->GetFormID());
-	if (itr != citems->fortifyset.end())
+	itr = citems.fortifyset.find(item->GetFormID());
+	if (itr != citems.fortifyset.end())
 		return true;
-	itr = citems->foodset.find(item->GetFormID());
-	if (itr != citems->foodset.end())
+	itr = citems.foodset.find(item->GetFormID());
+	if (itr != citems.foodset.end())
 		return true;
 	return false;
 }
 bool ActorInfo::IsCustomPotion(RE::AlchemyItem* item)
 {
 	LOG_3("{}[ActorInfo] [IsCustomPotion]");
-	auto itr = citems->potionsset.find(item->GetFormID());
-	if (itr != citems->potionsset.end())
+	auto itr = citems.potionsset.find(item->GetFormID());
+	if (itr != citems.potionsset.end())
 		return true;
-	itr = citems->fortifyset.find(item->GetFormID());
-	if (itr != citems->fortifyset.end())
+	itr = citems.fortifyset.find(item->GetFormID());
+	if (itr != citems.fortifyset.end())
 		return true;
 	return false;
 }
 bool ActorInfo::IsCustomPoison(RE::AlchemyItem* item)
 {
 	LOG_3("{}[ActorInfo] [IsCustomPoison]");
-	auto itr = citems->poisonsset.find(item->GetFormID());
-	if (itr != citems->poisonsset.end())
+	auto itr = citems.poisonsset.find(item->GetFormID());
+	if (itr != citems.poisonsset.end())
 		return true;
 	return false;
 }
 bool ActorInfo::IsCustomFood(RE::AlchemyItem* item)
 {
 	LOG_3("{}[ActorInfo] [IsCustomFood]");
-	auto itr = citems->foodset.find(item->GetFormID());
-	if (itr != citems->foodset.end())
+	auto itr = citems.foodset.find(item->GetFormID());
+	if (itr != citems.foodset.end())
 		return true;
 	return false;
 }
 bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 {
 	LOG_3("{}[ActorInfo] [IsCustomItem]");
-	auto itr = citems->itemsset.find(item->GetFormID());
-	if (itr != citems->itemsset.end())
+	auto itr = citems.itemsset.find(item->GetFormID());
+	if (itr != citems.itemsset.end())
 		return true;
 	return false;
 }

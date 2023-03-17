@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <memory>
 
 #include "ActorInfo.h"
 #include "AlchemyEffect.h"
@@ -12,11 +13,12 @@ private:
 	/// <summary>
 	/// map that contains information about any npc that has entered combat during runtime
 	/// </summary>
-	std::unordered_map<uint32_t, ActorInfo*> actorinfoMap;
+	std::unordered_map<uint32_t, std::shared_ptr<ActorInfo>> actorinfoMap;
 	/// <summary>
 	/// set that contains the ids of all deleted actors, so we do not accidentally create new actor infos for invalid actors
 	/// </summary>
-	std::unordered_set<uint32_t> deletedActors;
+	std::unordered_set<RE::FormID> deletedActors;
+	std::unordered_set<RE::FormID> validActors;
 
 	/// <summary>
 	/// map that maps potionids to potion properties (effect, duration, magnitude, detrimental, dosage)
@@ -33,6 +35,31 @@ private:
 	/// </summary>
 	RE::TESDataHandler* datahandler = nullptr;
 
+	/// <summary>
+	/// Creates a new shared pointer to an ActorInfo and inserts it into the map and valid actors
+	/// </summary>
+	std::shared_ptr<ActorInfo> CreateActorInfo(RE::Actor* actor);
+	/// <summary>
+	/// Creates a new shared pointer to an ActorInfo, without initializing it
+	/// </summary>
+	std::shared_ptr<ActorInfo> CreateActorInfoNew();
+	/// <summary>
+	/// Returns a shared pointer to an invalid ActorInfo
+	/// </summary>
+	std::shared_ptr<ActorInfo> CreateActorInfoEmpty();
+	/// <summary>
+	/// Inserts a shared pointer to an ActorInfo into the map and valid actors
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	void RegisterActorInfo(std::shared_ptr<ActorInfo> acinfo);
+	/// <summary>
+	/// Deletes an ActorInfo from the map and valid actors
+	/// </summary>
+	/// <param name="actorid"></param>
+	/// <returns></returns>
+	void DeleteActorInfo(RE::FormID formid);
+
 public:
 	/// <summary>
 	/// Initializes data.
@@ -48,13 +75,17 @@ public:
 	/// </summary>
 	/// <param name="actor">the actor to find</param>
 	/// <returns></returns>
-	ActorInfo* FindActor(RE::Actor* actor);
+	std::shared_ptr<ActorInfo> FindActor(RE::Actor* actor);
 	/// <summary>
 	/// Returns and actorinfo object with information about [actorid]. THIS MAY RETURN NULLPTR.
 	/// </summary>
 	/// <param name="actorid"></param>
 	/// <returns></returns>
-	ActorInfo* FindActor(RE::FormID actorid);
+	std::shared_ptr<ActorInfo> FindActor(RE::FormID actorid);
+	/// <summary>
+	/// Updates an actorinfo object and returns whether it is still valid or not
+	/// </summary>
+	bool UpdateActorInfo(std::shared_ptr<ActorInfo> acinfo);
 	/// <summary>
 	/// Removes an actor from the data
 	/// </summary>
