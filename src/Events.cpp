@@ -182,7 +182,7 @@ namespace Events
 	{
 		Statistics::Events_TESHitEvent++;
 		LOG_1("{}[Events] [TESHitEvent]");
-		InitializeCompatibilityObjects();
+		Main::InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		
 		if (a_event && a_event->target.get()) {
@@ -223,7 +223,7 @@ namespace Events
 	{
 		Statistics::Events_TESCombatEvent++;
 		LOG_1("{}[Events] [TESCombatEvent]");
-		InitializeCompatibilityObjects();
+		Main::InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		//if (!Settings::_featDisableOutOfCombatProcessing)
 		//	return EventResult::kContinue;
@@ -269,6 +269,7 @@ namespace Events
 		// return if feature disabled
 		if (Settings::Usage::_DisableOutOfCombatProcessing)
 			return EventResult::kContinue;
+
 		Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
 		//auto begin = std::chrono::steady_clock::now();
 

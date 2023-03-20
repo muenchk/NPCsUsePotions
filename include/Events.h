@@ -19,6 +19,10 @@ namespace Events
 		/// determines whether events and functions are run
 		/// </summary>
 		static inline bool initialized = false;
+		/// <summary>
+		/// determines whether the game has been loaded
+		/// </summary>
+		static inline bool loaded = false;
 
 		//--------------------Lists---------------------------
 

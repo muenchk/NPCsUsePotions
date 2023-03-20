@@ -283,7 +283,7 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: actor invalidated");
 								} else if (acinfo->actor->GetFormID() == 0) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: formid invalid");
-								} else if (acvec[i]->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
+								} else if (acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: actor died");
 								} else {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: unknown reason");
@@ -324,7 +324,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	} else if (acinfo->IsValid() == false) {
 		acdcounter++;
 		logwarn("[Data] [ReadActorInfoMap] actor invalid {}", acinfo->name);
-	} else if ((acinfo->actor->formFlags & RE::TESForm::RecordFlags::kDeleted) || acinfo->actor->IsDead()) {
+	} else if ((acinfo->actor->formFlags & RE::TESForm::RecordFlags::kDeleted) || acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
 		acdcounter++;
 		logwarn("[Data] [ReadActorInfoMap] actor dead or deleted {}", acinfo->name);
 	} else {

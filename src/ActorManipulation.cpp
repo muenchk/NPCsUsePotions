@@ -542,8 +542,8 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 					// save statistics
 					Statistics::Misc_PotionsAdministered++;
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
-					acinfo->actor->DrinkPotion(std::get<2>(val), nullptr);
-					//RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
+					//acinfo->actor->DrinkPotion(std::get<2>(val), nullptr);
+					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), nullptr, 1, nullptr, true, false, false);
 				}
 				ls.pop_front();
 				return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };

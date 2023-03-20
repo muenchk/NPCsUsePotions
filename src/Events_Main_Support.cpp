@@ -14,6 +14,8 @@ namespace Events
 	/// </summary>
 	void Main::InitializeCompatibilityObjects()
 	{
+		if (!loaded)
+			LoadGameCallback(nullptr);
 		EvalProcessing();
 		// now that the game was loaded we can try to initialize all our variables we conuldn't before
 		if (!initialized) {
@@ -401,7 +403,7 @@ namespace Events
 				// if we have characters that should not get items, the function
 				// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 				auto items = Distribution::GetDistrItems(acinfo);
-				if (acinfo->actor->IsDead()) {
+				if (acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
 					return;
 				}
 				if (items.size() > 0) {
@@ -455,7 +457,7 @@ namespace Events
 
 		ProcessDistribution(acinfo);
 		EvalProcessing();
-		if (actor->IsDead())
+		if (actor->boolBits & RE::Actor::BOOL_BITS::kDead)
 			return;
 
 		LOG_1("{}[Events] [RegisterNPC] finished registering NPC");

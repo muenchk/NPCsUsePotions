@@ -4,13 +4,7 @@ include_directories("${ROOT_DIR}/include")
 
 set(SOURCE_DIR "${ROOT_DIR}/src")
 set(SOURCE_FILES
-	"${SOURCE_DIR}/main.cpp"
-	"${SOURCE_DIR}/Hooks.cpp"
-	"${SOURCE_DIR}/Events.cpp"
-	"${SOURCE_DIR}/Events_Main.cpp"
-	"${SOURCE_DIR}/Events_Main_Support.cpp"
-	"${SOURCE_DIR}/Settings.cpp"
-	"${SOURCE_DIR}/SettingsLoadSave.cpp"
+	"${SOURCE_DIR}/ActorInfo.cpp"
 	"${SOURCE_DIR}/ActorManipulation.cpp"
 	"${SOURCE_DIR}/AlchemyEffect.cpp"
 	"${SOURCE_DIR}/BufferOperations.cpp"
@@ -20,6 +14,8 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/DataStorage.cpp"
 	"${SOURCE_DIR}/Distribution.cpp"
 	"${SOURCE_DIR}/Events.cpp"
+	"${SOURCE_DIR}/Events_Main.cpp"
+	"${SOURCE_DIR}/Events_Main_Support.cpp"
 	"${SOURCE_DIR}/Game.cpp"
 	"${SOURCE_DIR}/Hooks.cpp"
 	"${SOURCE_DIR}/main.cpp"
@@ -27,8 +23,10 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Papyrus.cpp" 
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp" 
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp"
-	"${SOURCE_DIR}/BufferOperations.cpp"
-	"${SOURCE_DIR}/Tests.cpp" )
+	"${SOURCE_DIR}/Settings.cpp"
+	"${SOURCE_DIR}/SettingsLoadSave.cpp"
+	"${SOURCE_DIR}/Tests.cpp"
+	"${SOURCE_DIR}/Utility.cpp" )
 
 source_group(TREE "${ROOT_DIR}" FILES ${SOURCE_FILES})
 
