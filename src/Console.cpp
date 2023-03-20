@@ -21,7 +21,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 		return false;
 	}
 	//logger::info("console 3");
-	ActorInfo* acinfo = Data::GetSingleton()->FindActor(actor);
+	std::shared_ptr<ActorInfo> acinfo = Data::GetSingleton()->FindActor(actor);
 	if (actor->IsPlayerRef())
 		acinfo = Data::GetSingleton()->FindActor(RE::PlayerCharacter::GetSingleton());
 	ActorStrength acs = ActorStrength::Weak;
@@ -143,38 +143,38 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 
 	console->Print("CustomItems");
 	console->Print("\titems");
-	for (int i = 0; i < acinfo->citems->items.size(); i++) {
-		auto cit = acinfo->citems->items[i];
+	for (int i = 0; i < acinfo->citems.items.size(); i++) {
+		auto cit = acinfo->citems.items[i];
 		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tdeath items");
-	for (int i = 0; i < acinfo->citems->death.size(); i++) {
-		auto cit = acinfo->citems->death[i];
+	for (int i = 0; i < acinfo->citems.death.size(); i++) {
+		auto cit = acinfo->citems.death[i];
 		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tpoisons");
-	for (int i = 0; i < acinfo->citems->poisons.size(); i++) {
-		auto cit = acinfo->citems->poisons[i];
+	for (int i = 0; i < acinfo->citems.poisons.size(); i++) {
+		auto cit = acinfo->citems.poisons[i];
 		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tpotions");
-	for (int i = 0; i < acinfo->citems->potions.size(); i++) {
-		auto cit = acinfo->citems->potions[i];
+	for (int i = 0; i < acinfo->citems.potions.size(); i++) {
+		auto cit = acinfo->citems.potions[i];
 		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tfortify");
-	for (int i = 0; i < acinfo->citems->fortify.size(); i++) {
-		auto cit = acinfo->citems->fortify[i];
+	for (int i = 0; i < acinfo->citems.fortify.size(); i++) {
+		auto cit = acinfo->citems.fortify[i];
 		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
 	console->Print("\tfood");
-	for (int i = 0; i < acinfo->citems->food.size(); i++) {
-		auto cit = acinfo->citems->food[i];
+	for (int i = 0; i < acinfo->citems.food.size(); i++) {
+		auto cit = acinfo->citems.food[i];
 		tmp = "\t\t" + std::string(cit->object->GetName()) + "\tchance: " + std::to_string(cit->chance) + "\t\tdistribution possible:\t" + std::to_string(acinfo->CalcDistrConditions(cit));
 		console->Print(tmp.c_str());
 	}
@@ -189,14 +189,14 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	LOG_3("{}[Console] [ReloadDist] [Process]");
 	auto console = RE::ConsoleLog::GetSingleton();
 	console->Print("Resetting information about actors...");
-	bool preproc = Events::LockProcessing();
+	bool preproc = Events::Main::LockProcessing();
 	Data::GetSingleton()->ResetActorInfoMap();
 	console->Print("Reloading Settings...");
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");
 	Settings::LoadDistrConfig();
 	if (preproc)
-		Events::UnlockProcessing();
+		Events::Main::UnlockProcessing();
 	if (Settings::Debug::_CheckActorsWithoutRules) {
 		console->Print("Calculating Actors without rules...");
 		Settings::CheckActorsForRules();

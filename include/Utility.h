@@ -11,12 +11,36 @@
 
 #define Base(x) static_cast<uint64_t>(x)
 
+using ActorInfoPtr = std::weak_ptr<ActorInfo>;
+
 /// <summary>
 /// Provides generic functions
 /// </summary>
 class Utility
 {
 public:
+
+	#pragma region Comparison
+	struct EqualsWeakPtrActorInfo
+	{
+		bool operator()(const ActorInfoPtr& lhs, const ActorInfoPtr& rhs)
+		{
+			return !lhs.owner_before(rhs) && !rhs.owner_before(lhs);
+		}
+	};
+
+	template<typename T, typename U> 
+	bool EqualsSharedPtr(const std::weak_ptr<T>& t, const std::weak_ptr<U>& u)
+	{
+		return !t.owner_before(u) && !u.owner_before(t);
+	}
+
+	/* template <typename T, typename U>
+	inline bool EqualsSharedPtr(const std::weak_ptr<T>& t, const std::shared_ptr<U>& u)
+	{
+		return !t.owner_before(u) && !u.owner_before(t);
+	}*/
+	#pragma endregion
 
 	#pragma region SortingFunctions
 	// comparator used to sort magnitude - duration - AlchemyItem* lists for maximum magnitude descending
@@ -92,7 +116,9 @@ public:
 
 		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
 	}
-	static std::string PrintForm(ActorInfo* form);
+	//static std::string PrintForm(ActorInfo* form);
+	static std::string PrintForm(std::shared_ptr<ActorInfo> const& acinfo);
+	static std::string PrintForm(std::weak_ptr<ActorInfo> acweak);
 
 	/// <summary>
 	/// Converts all symbols in a string into lower case.
@@ -308,7 +334,7 @@ public:
 	/// Verifies that acinfo is a valid object
 	/// <param name="acinfo">ActorInfo to verify</param>
 	/// </summary>
-	static bool VerifyActorInfo(ActorInfo* acinfo);
+	static bool VerifyActorInfo(std::shared_ptr<ActorInfo> const& acinfo);
 
 	/// <summary>
 	/// Returns whether an actor is valid and safe to work with

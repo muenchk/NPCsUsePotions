@@ -120,7 +120,7 @@ std::tuple<bool, float, int, AlchemyEffectBase, bool> ACM::HasAlchemyEffect(RE::
 	}
 }
 
-std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingPotions(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool fortify)
+std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingPotions(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool fortify)
 {
 	LOG_3("{}[ActorManipulation] [GetMatchingPotions]");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ret{};
@@ -160,7 +160,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 	return ret;
 }
 
-std::list<RE::AlchemyItem*> ACM::GetAllPotions(ActorInfo* acinfo)
+std::list<RE::AlchemyItem*> ACM::GetAllPotions(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	LOG_3("{}[ActorManipulation] [GetAllPotions]");
 	std::list<RE::AlchemyItem*> ret{};
@@ -181,7 +181,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllPotions(ActorInfo* acinfo)
 	return ret;
 }
 
-std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingPoisons(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect)
+std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingPoisons(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect)
 {
 	LOG_3("{}[ActorManipulation] [GetMatchingPoisons]");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ret{};
@@ -220,7 +220,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 	return ret;
 }
 
-std::list<RE::AlchemyItem*> ACM::GetAllPoisons(ActorInfo* acinfo)
+std::list<RE::AlchemyItem*> ACM::GetAllPoisons(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	LOG_3("{}[ActorManipulation] [GetAllPoisons]");
 	std::list<RE::AlchemyItem*> ret{};
@@ -241,7 +241,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllPoisons(ActorInfo* acinfo)
 	return ret;
 }
 
-std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingFood(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool raw)
+std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetMatchingFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool raw)
 {
 	LOG_3("{}[ActorManipulation] [GetMatchingFood]");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ret{};
@@ -285,7 +285,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 	return ret;
 }
 
-std::list<RE::AlchemyItem*> ACM::GetAllFood(ActorInfo* acinfo)
+std::list<RE::AlchemyItem*> ACM::GetAllFood(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	LOG_3("{}[ActorManipulation] [GetAllFood]");
 	std::list<RE::AlchemyItem*> ret{};
@@ -306,7 +306,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllFood(ActorInfo* acinfo)
 	return ret;
 }
 
-std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(ActorInfo* acinfo, bool raw)
+std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(std::shared_ptr<ActorInfo> const& acinfo, bool raw)
 {
 	LOG_3("{}[ActorManipulation] [GetRandomFood]");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ret{};
@@ -391,7 +391,7 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(A
 	return { 0.0f, 0, nullptr, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone) };
 }
 
-std::unordered_map<uint32_t, int> ACM::GetCustomItems(ActorInfo* acinfo)
+std::unordered_map<uint32_t, int> ACM::GetCustomItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	LOG_3("{}[ActorManipulation] [GetCustomItems]");
 	std::unordered_map<uint32_t, int> ret{};
@@ -411,7 +411,7 @@ std::unordered_map<uint32_t, int> ACM::GetCustomItems(ActorInfo* acinfo)
 }
 
 
-std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(ActorInfo* acinfo)
+std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	LOG_3("{}[ActorManipulation] [GetCustomAlchItems]");
 	std::vector<std::unordered_map<uint32_t, int>> ret;
@@ -429,7 +429,7 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(ActorInfo
 			(alch = iter->first->As<RE::AlchemyItem>()) != nullptr &&
 			acinfo->IsCustomAlchItem(alch)) {
 			// check whether it a medicine and in the custom potion list
-			if (alch->IsMedicine() && acinfo->citems->potionsset.contains(alch->GetFormID())) {
+			if (alch->IsMedicine() && acinfo->citems.potionsset.contains(alch->GetFormID())) {
 				fortify.insert_or_assign(alch->GetFormID(), std::get<0>(iter->second));
 				LOG1_4("{}[ActorManipulation] [GetCustomAlchItems] found custom potion {}", Utility::PrintForm(alch));
 			} else if (alch->IsMedicine()) {
@@ -455,7 +455,7 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(ActorInfo
 	return ret;
 }
 
-std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ACM::ActorUsePotion(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool compatibility, bool fortify)
+std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool compatibility, bool fortify)
 {
 	LOG_2("{}[ActorManipulation] [ActorUsePotion]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -480,7 +480,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 	return { 0, 0, 0.0f, lstemp };
 }
 
-std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ACM::ActorUsePotion(ActorInfo* acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>& ls, bool compatibility)
+std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>>& ls, bool compatibility)
 {
 	static auto CompPotAnimFx = [&acinfo]() {
 		if (comp->LoadedAnimatedPotionFx()) {
@@ -553,7 +553,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 	return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone), 0.0f, ls };
 }
 
-std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect, bool raw)
+std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect, bool raw)
 {
 	LOG_2("{}[ActorManipulation] [ActorUseFood]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -603,7 +603,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, AlchemyEf
 	return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone) };
 }
 
-std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, bool raw)
+std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, bool raw)
 {
 	LOG_2("{}[ActorManipulation] [ActorUseFood-Random]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -649,7 +649,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(ActorInfo* acinfo, bool raw)
 /// </summary>
 static RE::BSAudioManager* audiomanager;
 
-std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, AlchemyEffectBase alchemyEffect)
+std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> const& acinfo, AlchemyEffectBase alchemyEffect)
 {
 	LOG_2("{}[ActorManipulation] [ActorUsePoison]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -735,7 +735,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(ActorInfo* acinfo, Alchemy
 	return { -1, static_cast<AlchemyEffectBase>(AlchemyEffect::kNone) };
 }
 /* CTDs consistently when playing animations from here
-bool ACM::AnimatedPoison_ApplyPoison(ActorInfo* acinfo, RE::AlchemyItem* poison)
+bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, RE::AlchemyItem* poison)
 {
 	LOG2_4("{}[AnimatedPoison_ApplyPoison] actor {} poison {}", Utility::PrintForm(acinfo), Utility::PrintForm(poison))
 

@@ -7,12 +7,30 @@ bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffe
 {
 	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
 }
-
+/*
 std::string Utility::PrintForm(ActorInfo* acinfo)
 {
 	if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
 		return "None";
 	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+}*/
+
+std::string Utility::PrintForm(std::shared_ptr<ActorInfo> const& acinfo)
+{
+	if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
+		return "None";
+	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+}
+
+std::string Utility::PrintForm(std::weak_ptr<ActorInfo> acweak)
+{
+	if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+		if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
+			return "None";
+		return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+	} else {
+		return "None";
+	}
 }
 
 std::string Utility::ToString(ActorStrength acs)
@@ -1538,15 +1556,11 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 	return false;
 }
 
-bool Utility::VerifyActorInfo(ActorInfo* acinfo)
+bool Utility::VerifyActorInfo(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	if (acinfo == nullptr || acinfo->IsValid() == false || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {
+	if (acinfo->IsValid() == false || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {
 		LOG_1("{}[Utility] [VerifyActorInfo] actor info damaged");
 		return false;
-	}
-	if (acinfo->citems == nullptr) {
-		acinfo->citems = new ActorInfo::CustomItems();
-		acinfo->CalcCustomItems();
 	}
 	return true;
 }

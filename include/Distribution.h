@@ -3,6 +3,8 @@
 #include "AlchemyEffect.h"
 #include "CustomItem.h"
 #include "Misc.h"
+#include "Data.h"
+#include "Settings.h"
 
 	/// <summary>
 /// Class handling all functions related to item distribution
@@ -127,29 +129,29 @@ public:
 		/// <param name="
 		/// ">information about the actor the item is for</param>
 		/// <returns>A randomly chosen potion according to the rule</returns>
-		std::vector<RE::AlchemyItem*> GetRandomPotions(ActorInfo* acinfo);
+		std::vector<RE::AlchemyItem*> GetRandomPotions(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// returns a random popoisontion according to [strength] and [acsstrength]
 		/// </summary>v
 		/// <returns>A randomly chosen poison according to the rule</returns>
-		std::vector<RE::AlchemyItem*> GetRandomPoisons(ActorInfo* acinfo);
+		std::vector<RE::AlchemyItem*> GetRandomPoisons(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// returns a random fortify potion according to [strength] and [acsstrength]
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns>A randomly chosen fortify potion according to the rule</returns>
-		std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(ActorInfo* acinfo);
+		std::vector<RE::AlchemyItem*> GetRandomFortifyPotions(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// returns a random food according to [strength] and [acsstrength]
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns>A randomly chosen food according to the rule</returns>
-		std::vector<RE::AlchemyItem*> GetRandomFood(ActorInfo* acinfo);
+		std::vector<RE::AlchemyItem*> GetRandomFood(std::shared_ptr<ActorInfo> const& acinfo);
 
 		/// <summary>
 		/// Returns a distribution scaled according to the number of custom items of an actor and their combat style
 		/// </summary>
-		std::vector<std::tuple<int, AlchemyEffect>> GetScaledDistribution(Settings::ItemType type, ActorInfo* acinfo);
+		std::vector<std::tuple<int, AlchemyEffect>> GetScaledDistribution(Settings::ItemType type, std::shared_ptr<ActorInfo> const& acinfo);
 
 #define COPY(vec1, vec2)       \
 	vec2.reserve(vec1.size()); \
@@ -298,115 +300,115 @@ public:
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion1(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPotion1(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the second random potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion2(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPotion2(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the third random potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion3(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPotion3(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the fourth random potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion4(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPotion4(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns an additional random potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotionAdditional(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPotionAdditional(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Returns an according to potion properties randomly chosen potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion(int str, ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPotion(int str, std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the first random poison
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison1(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPoison1(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the second random poison
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison2(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPoison2(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the third random poison
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison3(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPoison3(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the fourth random poison
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison4(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPoison4(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns addtional random poison
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoisonAdditional(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPoisonAdditional(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Returns an according to poison properties randomly chosen poison
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison(int str, ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomPoison(int str, std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the first random fortify potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion1(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomFortifyPotion1(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the second random fortify potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion2(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomFortifyPotion2(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the third random fortify potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion3(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomFortifyPotion3(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns the fourth random fortify potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion4(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomFortifyPotion4(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns additional random fortify potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotionAdditional(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomFortifyPotionAdditional(std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Returns an according to fortify properties randomly chosen fortify potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion(int str, ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomFortifyPotion(int str, std::shared_ptr<ActorInfo> const& acinfo);
 		/// <summary>
 		/// Calculates and returns a random food item
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFood_intern(ActorInfo* acinfo);
+		RE::AlchemyItem* GetRandomFood_intern(std::shared_ptr<ActorInfo> const& acinfo);
 
 		/// <summary>
 		/// Returns a random effect accoring to the rules item effect properties
@@ -741,50 +743,50 @@ public:
 	/// </summary>
 	/// <param name="actor">actor to calculate items for</param>
 	/// <returns></returns>
-	static std::vector<RE::TESBoundObject*> GetDistrItems(ActorInfo* acinfo);
+	static std::vector<RE::TESBoundObject*> GetDistrItems(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns potions that shall be distributed to [actor]
 	/// </summary>
 	/// <param name="actor">actor to calculate items for</param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetDistrPotions(ActorInfo* acinfo);
+	static std::vector<RE::AlchemyItem*> GetDistrPotions(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns poisons that shall be distributed to [actor]
 	/// </summary>
 	/// <param name="actor">actor to calculate items for</param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetDistrPoisons(ActorInfo* acinfo);
+	static std::vector<RE::AlchemyItem*> GetDistrPoisons(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns fortify potions that shall be distributed to [actor]
 	/// </summary>
 	/// <param name="actor">actor to calculate items for</param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetDistrFortifyPotions(ActorInfo* acinfo);
+	static std::vector<RE::AlchemyItem*> GetDistrFortifyPotions(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns food that shall be distributed to [actor]
 	/// </summary>
 	/// <param name="actor">actor to calculate items for</param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetDistrFood(ActorInfo* acinfo);
+	static std::vector<RE::AlchemyItem*> GetDistrFood(std::shared_ptr<ActorInfo> const& acinfo);
 
 	/// <summary>
 	/// Returns all unique inventory items matching the distribution rule
 	/// </summary>
 	/// <param name="actor"></param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(ActorInfo* acinfo);
+	static std::vector<RE::AlchemyItem*> GetMatchingInventoryItemsUnique(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns all inventory items (duplicates as extra vector entries) matching the distribution rule
 	/// </summary>
 	/// <param name="actor"></param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(ActorInfo* acinfo);
+	static std::vector<RE::AlchemyItem*> GetMatchingInventoryItems(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns all inventory items (duplicates as extra vector entries)
 	/// </summary>
 	/// <param name="actor"></param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetAllInventoryItems(ActorInfo* acinfo);
+	static std::vector<RE::AlchemyItem*> GetAllInventoryItems(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
 	/// Returns the dosage of a poison
 	/// </summary>
@@ -810,7 +812,7 @@ public:
 	/// </summary>
 	/// <param name="acinfo"></param>
 	/// <returns></returns>
-	static bool ExcludedNPC(ActorInfo* acinfo);
+	static bool ExcludedNPC(std::shared_ptr<ActorInfo> const&acinfo);
 	/// <summary>
 	/// Returns whether an actor has been excluded from handling
 	/// </summary>
@@ -832,10 +834,8 @@ public:
 	friend void Settings::CheckCellForActors(RE::FormID cellid);
 	friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
 	friend void Settings::LoadDistrConfig();
-	friend void ActorInfo::CalcCustomItems();
 	friend void Settings::ApplySkillBoostPerks();
 	friend void Settings::ClassifyItems();
-	friend void Settings::ExcludeRacesWithoutPotionSlot();
 
 private:
 	/// <summary>
@@ -848,15 +848,18 @@ private:
 	/// <param name="custItems">[overwrite] custom items of the NPC</param>
 	/// <returns></returns>
 	static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, Misc::NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
+
+public:
 	/// <summary>
 	/// Calculates the rule, actor strength, item strength, and the custom items for an NPC
 	/// </summary>
 	/// <param name="acinfo">the ActorInfo of the actor to calculate for [infomation us updated]</param>
 	/// <param name="tpltinfo">template information of the actor, if available</param>
 	/// <returns></returns>
-	static Rule* CalcRule(ActorInfo* acinfo, Misc::NPCTPLTInfo* tpltinfo = nullptr);
+	static Rule* CalcRule(std::shared_ptr<ActorInfo> const&acinfo, Misc::NPCTPLTInfo* tpltinfo = nullptr);
 	static std::vector<std::tuple<int, Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
+private:
 	/// <summary>
 	/// Finds the Rule with [name]
 	/// </summary>

@@ -21,72 +21,118 @@ Data* Data::GetSingleton()
 }
 
 std::binary_semaphore lockdata{ 1 };
-// stores temp actor info until tey are deleted on reset
-std::vector<ActorInfo*> emptyActorInfos;
 
-ActorInfo* Data::FindActor(RE::Actor* actor)
+std::shared_ptr<ActorInfo> Data::CreateActorInfo(RE::Actor* actor)
+{
+	std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(actor);
+	if (acinfo->IsValid()) {
+		validActors.insert(acinfo->formid);
+		actorinfoMap.insert_or_assign(acinfo->formid, acinfo);
+		Distribution::CalcRule(acinfo);
+	}
+	LOG1_4("{}[Data] [CreateActorInfo] {}", Utility::PrintForm(acinfo));
+	return acinfo;
+}
+
+std::shared_ptr<ActorInfo> Data::CreateActorInfoNew()
+{
+	LOG_4("{}[Data] [CreateActorInfoNew]");
+	return std::make_shared<ActorInfo>();
+}
+
+std::shared_ptr<ActorInfo> Data::CreateActorInfoEmpty()
+{
+	std::shared_ptr<ActorInfo> empty = std::make_shared<ActorInfo>();
+	empty->SetInvalid();
+	empty->SetDeleted();
+	LOG_4("{}[Data] [CreateActorInfoEmpty]");
+	return empty;
+}
+
+void Data::RegisterActorInfo(std::shared_ptr<ActorInfo> acinfo)
+{
+	if (acinfo->IsValid()) {
+		validActors.insert(acinfo->formid);
+		actorinfoMap.insert_or_assign(acinfo->formid, acinfo);
+		Distribution::CalcRule(acinfo);
+	}
+}
+
+void Data::DeleteActorInfo(RE::FormID formid)
+{
+	validActors.erase(formid);
+	actorinfoMap.erase(formid);
+}
+
+std::shared_ptr<ActorInfo> Data::FindActor(RE::Actor* actor)
 {
 	if (Utility::ValidateActor(actor) == false)
-		return nullptr; // worst case, should not be necessary here
-	ActorInfo* acinfo = nullptr;
+		return CreateActorInfoEmpty();  // worst case, should not be necessary here
 	lockdata.acquire();
 	// check whether the actor was deleted before
 	if (deletedActors.contains(actor->GetFormID())) {
 		// create dummy ActorInfo
-		acinfo = new ActorInfo();
-		emptyActorInfos.push_back(acinfo);
+		std::shared_ptr<ActorInfo> acinfo = CreateActorInfoEmpty();
 		lockdata.release();
 		return acinfo;
 	}
-	auto itr = actorinfoMap.find(actor->GetFormID());
-	if (itr == actorinfoMap.end()) {
-		acinfo = new ActorInfo(actor, 0, 0, 0, 0, 0);
-		actorinfoMap.insert_or_assign(actor->GetFormID(), acinfo);
-	} else if (itr->second == nullptr || itr->second->IsValid() && (itr->second->actor == nullptr || itr->second->actor->GetFormID() == 0 || itr->second->actor->GetFormID() != actor->GetFormID())) {
-		// either delete acinfo, deleted actor, actor fid 0 or acinfo belongs to wrong actor
-		actorinfoMap.erase(actor->GetFormID());
-		acinfo = new ActorInfo(actor, 0, 0, 0, 0, 0);
-		actorinfoMap.insert_or_assign(actor->GetFormID(), acinfo);
-	} else if (itr->second->IsValid() == false) {
-		acinfo = itr->second;
-	} else {
-		acinfo = itr->second;
-		if (acinfo->citems == nullptr)
-			acinfo->citems = new ActorInfo::CustomItems();
+	// if there already is an valid object for the actor return it
+	if (validActors.contains(actor->GetFormID())) {
+		// find the object
+		auto itr = actorinfoMap.find(actor->GetFormID());
+		if (itr != actorinfoMap.end()) {
+			// found it, check it for validity and deleted status
+			if (itr->second->IsValid() && !itr->second->GetDeleted()) {
+				lockdata.release();
+				return itr->second;
+			}
+			// else go to next point
+		}
 	}
+	// not found or not valid
+	// create new object. This will override existing objects for a formid as long as they are invalid or deleted
+	// as checked above
+	std::shared_ptr<ActorInfo> acinfo = CreateActorInfo(actor);
 	lockdata.release();
 	return acinfo;
 }
 
-ActorInfo* Data::FindActor(RE::FormID actorid)
+std::shared_ptr<ActorInfo> Data::FindActor(RE::FormID actorid)
 {
 	RE::Actor* actor = RE::TESForm::LookupByID<RE::Actor>(actorid);
 	if (actor)
 		return FindActor(actor);
 	else {
 		// create dummy ActorInfo
-		ActorInfo* acinfo = new ActorInfo();
-		emptyActorInfos.push_back(acinfo);
+		std::shared_ptr<ActorInfo> acinfo = CreateActorInfoEmpty();
 		return acinfo;
 	}
+}
+
+bool Data::UpdateActorInfo(std::shared_ptr<ActorInfo> acinfo)
+{
+	acinfo->Update();
+	if (!acinfo->IsValid() || acinfo->GetDeleted()) {
+		validActors.erase(acinfo->formid);
+		DeleteActorInfo(acinfo->formid);
+		return false;
+	}
+	return true;
 }
 
 void Data::DeleteActor(RE::FormID actorid)
 {
 	// if we delete the object itself, we may have problems when someone tries to access the deleted object
 	// so just flag it as invalid and move it to the list of empty actor refs
-	ActorInfo* acinfo = nullptr;
 	lockdata.acquire();
 	auto itr = actorinfoMap.find(actorid);
 	if (itr != actorinfoMap.end()) {
-		acinfo = itr->second;
-		actorinfoMap.erase(actorid);
+		std::shared_ptr<ActorInfo> acinfo = itr->second;
 		acinfo->SetInvalid();
 		acinfo->SetDeleted();
-		emptyActorInfos.push_back(acinfo);
-		acinfo = nullptr;
 		// save deleted actors, so we do not create new actorinfos for these
 		deletedActors.insert(actorid);
+		DeleteActorInfo(actorid);
 	}
 	lockdata.release();
 }
@@ -98,7 +144,7 @@ void Data::ResetActorInfoMap()
 	while (itr != actorinfoMap.end()) {
 		if (itr->second)
 			itr->second->_boss = false;
-		itr->second->citems->Reset();
+		itr->second->citems.Reset();
 		itr++;
 	}
 	lockdata.release();
@@ -177,7 +223,7 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 	long successfulwritten = 0;
 
 	// transform second values of map into a vector and operate on the vector instead
-	std::vector<ActorInfo*> acvec;
+	std::vector<std::weak_ptr<ActorInfo>> acvec;
 	// write map data to vector
 	std::transform(
 		actorinfoMap.begin(),
@@ -187,25 +233,24 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 	// iterate over the vector entries
 	for (int i = 0; i < acvec.size(); i++) {
 		LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if begin", i);
-		if (acvec[i] != nullptr) {// && acvec[i]->actor != nullptr && acvec[i]->actor->IsDeleted() == false && acvec[i]->actor->GetFormID() != 0 && acvec[i]->actor->IsDead() == false) {
-			if (acvec[i]->IsValid()) {
+		if (std::shared_ptr<ActorInfo> acinfo = acvec[i].lock()) {
+			if (acinfo->IsValid()) {
 				LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if valid", i);
-				LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if not nullptr", i);
-				if (acvec[i]->actor != nullptr) {
+				if (acinfo->actor != nullptr) {
 					LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not null", i);
-					if ((acvec[i]->actor->formFlags & RE::TESForm::RecordFlags::kDeleted) == 0) {
+					if ((acinfo->actor->formFlags & RE::TESForm::RecordFlags::kDeleted) == 0) {
 						LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not deleted", i);
-						if (acvec[i]->actor->GetFormID() != 0) {
+						if (acinfo->actor->GetFormID() != 0) {
 							LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if id not 0", i);
-							if (acvec[i]->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
+							if (acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
 								LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor dead", i);
 							} else {
 								LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not dead", i);
-								LOG2_3("{}[Data] [SaveActorInfoMap] Writing {}, number {}", acvec[i]->name, i);
+								LOG2_3("{}[Data] [SaveActorInfoMap] Writing {}, number {}", acinfo->name, i);
 								if (a_intfc->OpenRecord('ACIF', ActorInfo::GetVersion())) {
 									LOG_3("{}[Data] [SaveActorInfoMap] \tget data size");
 									// get entry length
-									int length = acvec[i]->GetDataSize();
+									int length = acinfo->GetDataSize();
 									if (length == 0) {
 										logwarn("[Data] [WriteData] failed to write ActorInfo record: record length 0");
 										continue;
@@ -221,7 +266,7 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 									}
 									LOG_3("{}[Data] [SaveActorInfoMap] \twrite data to buffer");
 									// fill buffer
-									if (acvec[i]->WriteData(buffer, 0) == false) {
+									if (acinfo->WriteData(buffer, 0) == false) {
 										logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: Writing of ActorInfo failed");
 										delete[] buffer;
 										continue;
@@ -232,11 +277,11 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 									LOG_3("{}[Data] [SaveActorInfoMap] \tDelete buffer");
 									delete[] buffer;
 									successfulwritten++;
-								} else if (acvec[i] == nullptr) {
+								} else if (acinfo == nullptr) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: ActorInfo invalidated");
-								} else if (acvec[i]->actor == nullptr) {
+								} else if (acinfo->actor == nullptr) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: actor invalidated");
-								} else if (acvec[i]->actor->GetFormID() == 0) {
+								} else if (acinfo->actor->GetFormID() == 0) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: formid invalid");
 								} else if (acvec[i]->actor->boolBits & RE::Actor::BOOL_BITS::kDead) {
 									logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: actor died");
@@ -272,7 +317,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	LOG_1("{}[Data] [ReadActorInfoMap] Reading ActorInfo...");
 	unsigned char* buffer = new unsigned char[length];
 	a_intfc->ReadRecordData(buffer, length);
-	ActorInfo* acinfo = new ActorInfo();
+	std::shared_ptr<ActorInfo> acinfo = CreateActorInfoNew();
 	if (acinfo->ReadData(buffer, 0, length) == false) {
 		acfcounter++;
 		logwarn("[Data] [ReadActorInfoMap] Couldn't read ActorInfo");
@@ -284,7 +329,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 		logwarn("[Data] [ReadActorInfoMap] actor dead or deleted {}", acinfo->name);
 	} else {
 		accounter++;
-		actorinfoMap.insert_or_assign(acinfo->actor->GetFormID(), acinfo);
+		RegisterActorInfo(acinfo);
 		LOG1_3("{}[Data] [ReadActorInfoMap] read ActorInfo. actor: {}", Utility::PrintForm(acinfo));
 	}
 	delete[] buffer;
@@ -297,20 +342,8 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 void Data::DeleteActorInfoMap()
 {
 	lockdata.acquire();
-	auto itr = actorinfoMap.begin();
-	while (itr != actorinfoMap.end()) {
-		if (itr->second)
-			try {
-				delete itr->second;
-			} catch (std::exception&) {}
-		itr++;
-	}
+	validActors.clear();
 	actorinfoMap.clear();
-	// delete temporary ActorInfos
-	for (int i = (int)emptyActorInfos.size() - 1; i >= 0; i--) {
-		delete emptyActorInfos[i];
-	}
-	emptyActorInfos.clear();
 	deletedActors.clear();
 	lockdata.release();
 }
@@ -380,7 +413,6 @@ RE::BGSPerk* Data::FindPerk(uint32_t formid, std::string pluginname)
 
 void Data::DeleteFormCustom(RE::FormID formid)
 {
-	ActorInfo* acinfo = nullptr;
 	lockdata.acquire();
 	auto itr = customItemFormMap.find(formid);
 	if (itr != customItemFormMap.end()) {
