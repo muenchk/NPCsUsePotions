@@ -255,8 +255,10 @@ namespace Events
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}
-			if (effect != 0)
+			if (effect != 0) {
+				dur = dur > 180 ? dur : 180; // make sure we ahve a minimum duration on food #NoSpam
 				acinfo->nextFoodTime = RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24;
+			}
 			LOG2_1("{}[Events] [CheckActors] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->nextFoodTime));
 		}
 	}
@@ -373,7 +375,7 @@ namespace Events
 		}
 
 		// if actor is valid and not dead
-		if (acinfo->actor && !(acinfo->actor->IsDead()) && acinfo->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
+		if (acinfo->actor && !(acinfo->actor->boolBits & RE::Actor::BOOL_BITS::kDead) && acinfo->actor->GetActorValue(RE::ActorValue::kHealth) > 0) {
 			acinfo->handleactor = true;
 		} else
 			acinfo->handleactor = false;
@@ -409,7 +411,11 @@ namespace Events
 		// on cycle time
 		tolerance = Settings::System::_cycletime / 5;
 
-		std::weak_ptr<ActorInfo> playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
+		std::weak_ptr<ActorInfo> playerweak;
+
+		SKSE::GetTaskInterface()->AddTask([&playerweak]() {
+			playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
+		});
 
 		/// temp section
 		AlchemyEffectBase alch = 0;
@@ -427,11 +433,13 @@ namespace Events
 			// update active actors
 			actorhandlerworking = true;
 
-			PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
-			
+			SKSE::GetTaskInterface()->AddTask([]() {
+				PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+			});
+
 			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
 			// do not compute, since nobody can actually take potions.
-			if (!ui->GameIsPaused() && initialized && !playerdied) {
+			if (!ui->GameIsPaused() && initialized && !IsPlayerDead()) {
 				// get starttime of iteration
 				begin = std::chrono::steady_clock::now();
 
@@ -440,12 +448,14 @@ namespace Events
 				if (!CanProcess())
 					goto CheckActorsSkipIteration;
 
-				if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-					// store position of player character
-					ActorInfo::SetPlayerPosition(playerinfo->actor->GetPosition());
-					// reset player combat state, we don't want to include them in our checks
-					playerinfo->combatstate = CombatState::OutOfCombat;
-				}
+				SKSE::GetTaskInterface()->AddTask([&playerweak]() {
+					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+						// store position of player character
+						ActorInfo::SetPlayerPosition(playerinfo->actor->GetPosition());
+						// reset player combat state, we don't want to include them in our checks
+						playerinfo->combatstate = CombatState::OutOfCombat;
+					}
+				});
 
 				LOG1_1("{}[Events] [CheckActors] Validate Actors {}", acset.size());
 
@@ -496,37 +506,40 @@ namespace Events
 						}
 					});
 
+					
 					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
 						// the player should always be valid. If they don't the game doesn't work either anyway
-						if (playerinfo->actor->IsInCombat())
+						if (hostileactors > 0)
 							playerinfo->combatstate = CombatState::InCombat;
 						else
 							playerinfo->combatstate = CombatState::OutOfCombat;
-					}
+					} 
 
 					if (!CanProcess())
 						goto CheckActorsSkipIteration;
 					if (IsPlayerDead())
 						break;
 
-					// collect actor runtime data
-					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
-						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-							// retrieve runtime data
-							HandleActorRuntimeData(acinfo);
-							// handle potions out-of-combat
-							if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
-								HandleActorOOCPotions(acinfo);
+					SKSE::GetTaskInterface()->AddTask([actors]() {
+						// collect actor runtime data
+						std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+							if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+								// retrieve runtime data
+								HandleActorRuntimeData(acinfo);
+								// handle potions out-of-combat
+								if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
+									HandleActorOOCPotions(acinfo);
+								}
+								// handle potions
+								HandleActorPotions(acinfo);
+								// handle fortify potions
+								HandleActorFortifyPotions(acinfo);
+								// handle poisons
+								HandleActorPoisons(acinfo);
+								// handle food
+								HandleActorFood(acinfo);
 							}
-							// handle potions
-							HandleActorPotions(acinfo);
-							// handle fortify potions
-							HandleActorFortifyPotions(acinfo);
-							// handle poisons
-							HandleActorPoisons(acinfo);
-							// handle food
-							HandleActorFood(acinfo);
-						}
+						});
 					});
 				} catch (std::bad_alloc& e) {
 					logcritical("[Events] [CheckActors] Failed to execute due to memory allocation issues: {}", std::string(e.what()));
@@ -574,18 +587,21 @@ CheckActorsSkipIteration:
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
 		initialized = false;
+		loaded = true;
 
-		// checking if player should be handled
-		if ((Settings::Player::_playerPotions ||
-				Settings::Player::_playerFortifyPotions ||
-				Settings::Player::_playerPoisons ||
-				Settings::Player::_playerFood)) {
-			// inject player into the list and remove him later
-			sem.acquire();
-			acset.insert(data->FindActor(RE::PlayerCharacter::GetSingleton()));
-			sem.release();
-			LOG_3("{}[Events] [CheckActors] Adding player to the list");
-		}
+		SKSE::GetTaskInterface()->AddTask([]() {
+			// checking if player should be handled
+			if ((Settings::Player::_playerPotions ||
+					Settings::Player::_playerFortifyPotions ||
+					Settings::Player::_playerPoisons ||
+					Settings::Player::_playerFood)) {
+				// inject player into the list and remove him later
+				sem.acquire();
+				acset.insert(data->FindActor(RE::PlayerCharacter::GetSingleton()));
+				sem.release();
+				LOG_3("{}[Events] [LoadGameCallback] Adding player to the list");
+			}
+		});
 
 		if (actorhandlerrunning == false) {
 			if (actorhandler != nullptr) {
@@ -605,7 +621,10 @@ CheckActorsSkipIteration:
 		// reset list of actors in combat
 		combatants.clear();
 		// set player to alive
-		PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+
+		SKSE::GetTaskInterface()->AddTask([]() {
+			PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+		});
 
 		enableProcessing = true;
 
@@ -631,40 +650,42 @@ CheckActorsSkipIteration:
 			}
 		}
 
-		// when loading the game, the attach detach events for actors aren't fired until cells have been changed
-		// thus we need to get all currently loaded npcs manually
-		RE::TESObjectCELL* cell = nullptr;
-		std::vector<RE::TESObjectCELL*> gamecells;
-		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
-		{
-			const RE::BSReadLockGuard locker{ lock };
-			auto iter = hashtable->begin();
-			while (iter != hashtable->end()) {
-				if ((*iter).second) {
-					cell = ((*iter).second)->As<RE::TESObjectCELL>();
-					if (cell) {
-						gamecells.push_back(cell);
-					}
-				}
-				iter++;
-			}
-		}
-		LOG1_1("{}[Events] [LoadGameSub] found {} cells", std::to_string(gamecells.size()));
-		for (int i = 0; i < (int)gamecells.size(); i++) {
-			if (gamecells[i]->IsAttached()) {
-				auto itr = gamecells[i]->references.begin();
-				while (itr != gamecells[i]->references.end()) {
-					if (itr->get()) {
-						RE::Actor* actor = itr->get()->As<RE::Actor>();
-						if (Utility::ValidateActor(actor) && deads.find(actor->GetFormID()) == deads.end() && !actor->IsDead() && !actor->IsPlayerRef()) {
-							if (Distribution::ExcludedNPCFromHandling(actor) == false)
-								RegisterNPC(actor);
+		SKSE::GetTaskInterface()->AddTask([]() {
+			// when loading the game, the attach detach events for actors aren't fired until cells have been changed
+			// thus we need to get all currently loaded npcs manually
+			RE::TESObjectCELL* cell = nullptr;
+			std::vector<RE::TESObjectCELL*> gamecells;
+			const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+			{
+				const RE::BSReadLockGuard locker{ lock };
+				auto iter = hashtable->begin();
+				while (iter != hashtable->end()) {
+					if ((*iter).second) {
+						cell = ((*iter).second)->As<RE::TESObjectCELL>();
+						if (cell) {
+							gamecells.push_back(cell);
 						}
 					}
-					itr++;
+					iter++;
 				}
 			}
-		}
+			LOG1_1("{}[Events] [LoadGameSub] found {} cells", std::to_string(gamecells.size()));
+			for (int i = 0; i < (int)gamecells.size(); i++) {
+				if (gamecells[i]->IsAttached()) {
+					auto itr = gamecells[i]->references.begin();
+					while (itr != gamecells[i]->references.end()) {
+						if (itr->get()) {
+							RE::Actor* actor = itr->get()->As<RE::Actor>();
+							if (Utility::ValidateActor(actor) && Main::IsDead(actor) && !actor->IsPlayerRef()) {
+								if (Distribution::ExcludedNPCFromHandling(actor) == false)
+									RegisterNPC(actor);
+							}
+						}
+						itr++;
+					}
+				}
+			}
+		});
 
 		InitializeCompatibilityObjects();
 
@@ -679,6 +700,7 @@ CheckActorsSkipIteration:
 	void Main::RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[Events] [RevertGameCallback]");
+		loaded = false;
 		enableProcessing = false;
 		stopactorhandler = true;
 		std::this_thread::sleep_for(10ms);

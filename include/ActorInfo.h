@@ -60,7 +60,7 @@ private:
 	/// <summary>
 	/// PlayerRef
 	/// </summary>
-	static inline RE::Actor* playerRef = RE::PlayerCharacter::GetSingleton();
+	static inline RE::Actor* playerRef;
 
 public:
 	/// <summary>

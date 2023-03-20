@@ -55,22 +55,7 @@ namespace Events
 #define EvalProcessingEvent() \
 	if (!Main::CanProcess())    \
 		return EventResult::kContinue;
-
-#define CheckDeadEvent                       \
-	LOG1_1("{}[PlayerDead] {}", playerdied); \
-	if (playerdied == true) {                \
-		return EventResult::kContinue;       \
-	}
-
-#define ReEvalPlayerDeath  ;                                      \
-	if (!(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead) == false) { \
-		playerdied = false;                                       \
-	}
-
-#define CheckDeadCheckHandlerLoop \
-	if (playerdied) {             \
-		break;                    \
-	}                                              
+                            
 
 
 #pragma endregion
@@ -182,7 +167,7 @@ namespace Events
 	{
 		Statistics::Events_TESHitEvent++;
 		LOG_1("{}[Events] [TESHitEvent]");
-		InitializeCompatibilityObjects();
+		Main::InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		
 		if (a_event && a_event->target.get()) {
@@ -223,7 +208,7 @@ namespace Events
 	{
 		Statistics::Events_TESCombatEvent++;
 		LOG_1("{}[Events] [TESCombatEvent]");
-		InitializeCompatibilityObjects();
+		Main::InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		//if (!Settings::_featDisableOutOfCombatProcessing)
 		//	return EventResult::kContinue;
@@ -231,7 +216,7 @@ namespace Events
 		LOG_1("{}[Events] [TESCombatEvent]");
 		Main::InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
-		if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+		if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && actor->IsPlayerRef() == false && actor->IsChild() == false) {
 			// register / unregister
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				// register for tracking
@@ -269,7 +254,10 @@ namespace Events
 		// return if feature disabled
 		if (Settings::Usage::_DisableOutOfCombatProcessing)
 			return EventResult::kContinue;
-		Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+
+		SKSE::GetTaskInterface()->AddTask([]() {
+			Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+		});
 		//auto begin = std::chrono::steady_clock::now();
 
 		if (a_event && a_event->reference) {
@@ -465,10 +453,6 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESEquipEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
-		if (Settings::Debug::_CalculateCellRules) {
-			RE::PlayerCharacter::GetSingleton()->GetEventSource<RE::BGSActorCellEvent>()->AddEventSink(EventHandler::GetSingleton());
-			LOG1_1("{}Registered {}", typeid(RE::BGSActorCellEvent).name());
-		}
 		scriptEventSourceHolder->GetEventSource<RE::TESCellAttachDetachEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESCellAttachDetachEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESFormDeleteEvent>()->AddEventSink(EventHandler::GetSingleton());

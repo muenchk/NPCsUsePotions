@@ -1515,11 +1515,11 @@ bool Distribution::ForceExcludeNPC(uint32_t actorid)
 	return true;
 }
 
-Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, Misc::NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
+Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& /*is*/, Misc::NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
-		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
+		/*// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
 			acs = ActorStrength::Weak;
@@ -1533,7 +1533,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		} else {  // diff == 5
 			acs = ActorStrength::Insane;
 			is = ItemStrength::kInsane;
-		}
+		}*/
 	} else {
 		// level not available for BaseActors
 
@@ -2167,7 +2167,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 	}
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
-		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
+		/*// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
 			acinfo->actorStrength = ActorStrength::Weak;
@@ -2181,7 +2181,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		} else {  // diff == 5
 			acinfo->actorStrength = ActorStrength::Insane;
 			acinfo->itemStrength = ItemStrength::kInsane;
-		}
+		}*/
 	} else {
 		// get level dependencies
 		short lvl = acinfo->actor->GetLevel();
@@ -2715,7 +2715,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
+		/* auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
 			acs = ActorStrength::Weak;
 			is = ItemStrength::kWeak;
@@ -2728,7 +2728,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 		} else {  // diff == 5
 			acs = ActorStrength::Insane;
 			is = ItemStrength::kInsane;
-		}
+		}*/
 	} else {
 		// get level dependencies
 		short lvl = actor->GetLevel();

@@ -23,12 +23,14 @@ namespace Game
 			Save = 2,
 			Revert = 3,
 		};
+
 	private:
 		/// <summary>
 		/// map of registered callback by registration id
 		/// </summary>
 		std::unordered_map<uint32_t, std::pair<EventCallback*, CallbackType>> callbacks;
 
+	public:
 		/// <summary>
 		/// Processes the Load Game Callback and executes registered callbacks
 		/// </summary>

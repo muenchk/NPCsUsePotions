@@ -10,7 +10,9 @@
 
 void ActorInfo::Init()
 {
-	playerRef = RE::PlayerCharacter::GetSingleton();
+	SKSE::GetTaskInterface()->AddTask([]() {
+		playerRef = RE::PlayerCharacter::GetSingleton();
+	});
 }
 
 ActorInfo::ActorInfo(RE::Actor* _actor)
@@ -903,6 +905,8 @@ void ActorInfo::Update()
 		valid = false;
 	else {
 		// update the metrics, since we are sure our object is valid
-		UpdateMetrics();
+		SKSE::GetTaskInterface()->AddTask([this]() {
+			this->UpdateMetrics();
+		});
 	}
 }
