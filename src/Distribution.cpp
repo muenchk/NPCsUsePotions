@@ -1297,7 +1297,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 		}
 	}
 	if (Settings::Distr::_DistributePoisons) {
-		std::list<RE::AlchemyItem*> items = ACM::GetAllPotions(acinfo);
+		std::list<RE::AlchemyItem*> items = ACM::GetAllPoisons(acinfo);
 		for (auto i : items) {
 			ret.insert(ret.end(), i);
 		}
