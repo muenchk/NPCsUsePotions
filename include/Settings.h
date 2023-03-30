@@ -741,6 +741,7 @@ public:
 	static inline RE::BGSKeyword* ActorTypeDwarven;
 	static inline RE::BGSKeyword* ActorTypeCreature;
 	static inline RE::BGSKeyword* ActorTypeAnimal;
+	static inline RE::BGSKeyword* Vampire;
 
 	static inline RE::TESFaction* CurrentFollowerFaction;
 	static inline RE::TESFaction* CurrentHirelingFaction;

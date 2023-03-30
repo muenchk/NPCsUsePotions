@@ -132,7 +132,7 @@ namespace Events
 								}
 								//loginfo("[Events] [TESDeathEvent] 3");
 								// remove the rest of the items per chance
-								if (Settings::Removal::_ChanceToRemoveItem < 100) {
+								if (Settings::Removal::_ChanceToRemoveItem > 0) {
 									for (int i = (int)items.size() - 1; i >= 0; i--) {
 										if (rand100(rand) <= Settings::Removal::_ChanceToRemoveItem) {
 											actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);

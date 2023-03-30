@@ -162,6 +162,20 @@ public:
 	static std::string ToString(AlchemyEffectBase ae);
 
 	/// <summary>
+	/// Returns a string representation of a distribution
+	/// </summary>
+	/// <param name="distribution"></param>
+	/// <returns></returns>
+	static std::string PrintDistribution(std::vector<std::tuple<int, AlchemyEffect>> distribution);
+
+	/// <summary>
+	/// Returns a string representation of an effect map
+	/// </summary>
+	/// <param name="distribution"></param>
+	/// <returns></returns>
+	static std::string PrintEffectMap(std::map<AlchemyEffect, float> effectMap);
+
+	/// <summary>
 	/// Splits a string at a delimiter and optionally removes empty results
 	/// </summary>
 	/// <param name="delimiter"></param>

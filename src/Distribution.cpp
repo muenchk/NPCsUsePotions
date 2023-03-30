@@ -1026,8 +1026,11 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 	}
 	{
 		if (Settings::Distr::_DistributePotions) {
-			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
 				acinfo->potionDistr = rule->GetScaledDistribution(Settings::ItemType::kPotion, acinfo);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] [PotionDistr] {}", Utility::PrintDistribution(acinfo->potionDistr));
+			}
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] [PotionEffMap] {}", Utility::PrintEffectMap(rule->potionEffectMap));
 			auto ritems = rule->GetRandomPotions(acinfo);
 			acinfo->potionDistr.clear();
 			acinfo->potionDistr.shrink_to_fit();
@@ -1044,8 +1047,11 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 			//logger::info("potions to give:\t{}", ritems.size());
 		}
 		if (Settings::Distr::_DistributePoisons) {
-			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
 				acinfo->poisonDistr = rule->GetScaledDistribution(Settings::ItemType::kPoison, acinfo);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] [PoisonDistr] {}", Utility::PrintDistribution(acinfo->poisonDistr));
+			}
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] [PoisonEffMap] {}", Utility::PrintEffectMap(rule->poisonEffectMap));
 			auto ritems = rule->GetRandomPoisons(acinfo);
 			acinfo->poisonDistr.clear();
 			acinfo->poisonDistr.shrink_to_fit();
@@ -1062,8 +1068,11 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 			//logger::info("poisons to give:\t{}", ritems.size());
 		}
 		if (Settings::Distr::_DistributeFortifyPotions) {
-			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
 				acinfo->fortifyDistf = rule->GetScaledDistribution(Settings::ItemType::kFortifyPotion, acinfo);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] [FortifyDistr] {}", Utility::PrintDistribution(acinfo->fortifyDistf));
+			}
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] [FortifyEffMap] {}", Utility::PrintEffectMap(rule->fortifyEffectMap));
 			auto ritems = rule->GetRandomFortifyPotions(acinfo);
 			acinfo->fortifyDistf.clear();
 			acinfo->fortifyDistf.shrink_to_fit();
@@ -1080,8 +1089,11 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 			//logger::info("fortify potions to give:\t{}", ritems.size());
 		}
 		if (Settings::Distr::_DistributeFood) {
-			if (Settings::Usage::_DisableOutOfCombatProcessing == false)
+			if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
 				acinfo->foodDistr = rule->GetScaledDistribution(Settings::ItemType::kFood, acinfo);
+				LOG1_4("{}[SettingsDistribution] [GetDistrItems] [FoodDistr] {}", Utility::PrintDistribution(acinfo->foodDistr));
+			}
+			LOG1_4("{}[SettingsDistribution] [GetDistrItems] [FoodEffMap] {}", Utility::PrintEffectMap(rule->foodEffectMap));
 			auto ritems = rule->GetRandomFood(acinfo);
 			acinfo->foodDistr.clear();
 			acinfo->foodDistr.shrink_to_fit();
@@ -1297,7 +1309,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 		}
 	}
 	if (Settings::Distr::_DistributePoisons) {
-		std::list<RE::AlchemyItem*> items = ACM::GetAllPotions(acinfo);
+		std::list<RE::AlchemyItem*> items = ACM::GetAllPoisons(acinfo);
 		for (auto i : items) {
 			ret.insert(ret.end(), i);
 		}

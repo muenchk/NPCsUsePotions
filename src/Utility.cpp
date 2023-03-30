@@ -324,6 +324,25 @@ std::string Utility::ToString(AlchemyEffectBase ae)
 	return ret;
 }
 
+std::string Utility::PrintDistribution(std::vector<std::tuple<int, AlchemyEffect>> distribution)
+{
+	std::string ret = "|";
+	for (int i = 0; i < distribution.size(); i++) {
+		ret += ToString(std::get<1>(distribution[i])) + ":" + std::to_string(std::get<0>(distribution[i])) + "|";
+	}
+	return ret;
+}
+
+std::string Utility::PrintEffectMap(std::map<AlchemyEffect, float> effectMap)
+{
+	std::string ret = "|";
+	for (auto& [key, value] : effectMap) {
+		ret += ToString(key) + ":" + std::to_string(value) + "|";
+	}
+	return ret;
+}
+
+
 std::vector<std::string> Utility::SplitString(std::string str, char delimiter, bool removeEmpty)
 {
 	std::vector<std::string> splits;

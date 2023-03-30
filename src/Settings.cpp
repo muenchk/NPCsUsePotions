@@ -1590,26 +1590,34 @@ void Settings::LoadDistrConfig()
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
 									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] PotionDistr:\t{}", Utility::PrintDistribution(rule->potionDistr));
 									rule->potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
 									rule->potionEffectMap = Utility::UnifyEffectMap(potioneffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] PotionEffMap:\t{}", Utility::PrintEffectMap(rule->potionEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
 									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr, true);
 									std::vector<std::tuple<uint64_t, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
 									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] PoisonDistr:\t{}", Utility::PrintDistribution(rule->poisonDistr));
 									rule->poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
 									rule->poisonEffectMap = Utility::UnifyEffectMap(poisoneffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] PoisonEffMap:\t{}", Utility::PrintEffectMap(rule->poisonEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
 									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr, true);
 									std::vector<std::tuple<uint64_t, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
 									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] FortifyDistr:\t{}", Utility::PrintDistribution(rule->fortifyDistr));
 									rule->fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
 									rule->fortifyEffectMap = Utility::UnifyEffectMap(fortifyeffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] FortifyEffMap:\t{}", Utility::PrintEffectMap(rule->fortifyEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
 									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr, true);
 									std::vector<std::tuple<uint64_t, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
 									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] FoodDistr:\t{}", Utility::PrintDistribution(rule->foodDistr));
 									rule->foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
 									rule->foodEffectMap = Utility::UnifyEffectMap(foodeffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] FoodEffMap:\t{}", Utility::PrintEffectMap(rule->foodEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
 									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr, true);
 
@@ -1915,6 +1923,10 @@ void Settings::LoadDistrConfig()
 	Settings::ActorTypeAnimal = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13798);
 	if (Settings::ActorTypeAnimal == nullptr) {
 		loginfo("[Settings] [INIT] Couldn't find ActorTypeAnimal Keyword in game.");
+	}
+	Settings::Vampire = RE::TESForm::LookupByID<RE::BGSKeyword>(0xA82BB);
+	if (Settings::Vampire == nullptr) {
+		loginfo("[Settings] [INIT] Couldn't find Vampire Keyword in game.");
 	}
 
 	// hard exclude everyone that may become a follower

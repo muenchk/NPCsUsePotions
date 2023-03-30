@@ -192,6 +192,10 @@ public:
 	/// if the actor is a automaton
 	/// </summary>
 	bool _automaton = false;
+	/// <summary>
+	/// if the actor is a vampire
+	/// </summary>
+	bool _vampire = false;
 
 	/// <summary>
 	/// while the actor is busy with one animation, no other animation should be prepared / played
@@ -338,6 +342,16 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsBoss() { return _boss; }
+	/// <summary>
+	/// Returns whether the actor is a vampire
+	/// </summary>
+	/// <returns></returns>
+	bool IsVampire() { return _vampire; }
+	/// <summary>
+	/// Returns whether the actor is an automaton
+	/// </summary>
+	/// <returns></returns>
+	bool IsAutomaton() { return _automaton; }
 
 	/// <summary>
 	/// Filters a list of custom items and returns only those that can be distributed

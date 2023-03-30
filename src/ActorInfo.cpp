@@ -28,6 +28,8 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
+		if (_actor->HasKeyword(Settings::Vampire) || _actor->GetRace()->HasKeyword(Settings::Vampire))
+			_vampire = true;
 		// Run since [actor] is valid
 		UpdateMetrics();
 		// set to valid
@@ -901,6 +903,10 @@ void ActorInfo::Update()
 	if (actor == nullptr)
 		valid = false;
 	else {
+		// update vampire status
+		_vampire = false;
+		if (actor->HasKeyword(Settings::Vampire) || actor->GetRace()->HasKeyword(Settings::Vampire))
+			_vampire = true;
 		// update the metrics, since we are sure our object is valid
 		UpdateMetrics();
 	}

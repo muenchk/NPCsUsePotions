@@ -79,29 +79,25 @@ namespace Events
 			else
 				alch3 = 0;
 			// construct combined effect
+			if (alch && acinfo->IsVampire())
+				alch |= static_cast<AlchemyEffectBase>(AlchemyEffect::kBlood);
 			alch |= alch2 | alch3;
 			LOG4_4("{}[Events] [CheckActors] check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch, acinfo->durHealth, acinfo->durMagicka, acinfo->durStamina);
 			// use potions
 			// do the first round
 			if (alch != 0 && (Settings::Potions::_UsePotionChance == 100 || rand100(rand) < Settings::Potions::_UsePotionChance)) {
-				auto avmag = acinfo->actor->GetActorValue(RE::ActorValue::kMagicka);
-				auto avhealth = acinfo->actor->GetActorValue(RE::ActorValue::kHealth);
-				auto avstam = acinfo->actor->GetActorValue(RE::ActorValue::kStamina);
 				auto tup = ACM::ActorUsePotion(acinfo, alch, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
 				LOG1_2("{}[Events] [CheckActors] found potion has Alchemy Effect {}", static_cast<uint64_t>(std::get<1>(tup)));
 				if (static_cast<AlchemyEffectBase>(AlchemyEffect::kHealth) & std::get<1>(tup)) {
 					acinfo->durHealth = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;  // convert to milliseconds
-					avhealth += std::get<0>(tup) * std::get<2>(tup);
 					LOG2_4("{}[Events] [CheckActors] use health pot with duration {} and magnitude {}", acinfo->durHealth, std::get<0>(tup));
 				}
 				if (static_cast<AlchemyEffectBase>(AlchemyEffect::kMagicka) & std::get<1>(tup)) {
 					acinfo->durMagicka = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
-					avmag += std::get<0>(tup) * std::get<2>(tup);
 					LOG2_4("{}[Events] [CheckActors] use magicka pot with duration {} and magnitude {}", acinfo->durMagicka, std::get<0>(tup));
 				}
 				if (static_cast<AlchemyEffectBase>(AlchemyEffect::kStamina) & std::get<1>(tup)) {
 					acinfo->durStamina = std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000;
-					avstam += std::get<0>(tup) * std::get<2>(tup);
 					LOG2_4("{}[Events] [CheckActors] use stamina pot with duration {} and magnitude {}", acinfo->durStamina, std::get<0>(tup));
 				}
 				// check if we have a valid duration
@@ -257,7 +253,7 @@ namespace Events
 			}
 			if (effect != 0)
 				acinfo->nextFoodTime = RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24;
-			LOG2_1("{}[Events] [CheckActors] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->nextFoodTime));
+			LOG2_2("{}[Events] [CheckActors] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->nextFoodTime));
 		}
 	}
 
@@ -298,9 +294,7 @@ namespace Events
 			return;
 		}
 		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo));
-		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo->actor));
-		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", acinfo->IsValid());
-		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", acinfo->GetDeleted());
+		LOG5_2("{}[Events] [CheckActors] [HandleActorRuntimeData] cooldowns: durHealth:{}\tdurMagicka:{}\tdurStamina:{}\tdurFortify:{}\tdurRegen:{}", acinfo->durHealth, acinfo->durMagicka, acinfo->durStamina, acinfo->durFortify, acinfo->durRegeneration);
 		// check for staggered option
 		// check for paralyzed
 		if (comp->DisableItemUsageWhileParalyzed()) {
@@ -319,7 +313,7 @@ namespace Events
 		}
 		// check for non-follower option
 		if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->actor->IsPlayerRef() == false) {
-			LOG_1("{}[Events] [CheckActors] [Actor] Actor is not a follower, and non-follower processing has been disabled");
+			LOG_2("{}[Events] [CheckActors] [Actor] Actor is not a follower, and non-follower processing has been disabled");
 			acinfo->handleactor = false;
 			return;
 		}
@@ -477,9 +471,22 @@ namespace Events
 					break;
 
 				try {
-					// first decrease all cooldowns for all registered actors
 					actorsincombat = 0;
 					hostileactors = 0;
+
+					// update combat status of player
+					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+						// the player should always be valid. If they don't the game doesn't work either anyway
+						if (playerinfo->actor->IsInCombat()) {
+							playerinfo->combatstate = CombatState::InCombat;
+							// if player is in combat, decrease actorsincombat by 1 to ensure that the player won't affect
+							// the statistics
+							actorsincombat--;
+						} else
+							playerinfo->combatstate = CombatState::OutOfCombat;
+					}
+
+					// first decrease all cooldowns for all registered actors
 					// decreasing durations
 					//
 					// calc actors in combat
@@ -487,6 +494,8 @@ namespace Events
 					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
 							DecreaseActorCooldown(acinfo);
+							// retrieve runtime data
+							HandleActorRuntimeData(acinfo);
 							if (acinfo->IsInCombat()) {
 								actorsincombat++;
 								combatants.push_front(acinfo);
@@ -496,14 +505,6 @@ namespace Events
 						}
 					});
 
-					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-						// the player should always be valid. If they don't the game doesn't work either anyway
-						if (playerinfo->actor->IsInCombat())
-							playerinfo->combatstate = CombatState::InCombat;
-						else
-							playerinfo->combatstate = CombatState::OutOfCombat;
-					}
-
 					if (!CanProcess())
 						goto CheckActorsSkipIteration;
 					if (IsPlayerDead())
@@ -512,8 +513,6 @@ namespace Events
 					// collect actor runtime data
 					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-							// retrieve runtime data
-							HandleActorRuntimeData(acinfo);
 							// handle potions out-of-combat
 							if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
 								HandleActorOOCPotions(acinfo);

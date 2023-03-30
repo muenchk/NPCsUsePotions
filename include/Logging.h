@@ -236,6 +236,10 @@
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w));
 
+#define LOG5_2(s, t, u, v, w, x)                                                          \
+	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
+		static_cast<void>(logger::info(s, Logging::TimePassed() + " | ", t, u, v, w, x));
+
 #define LOG_3(s)                                        \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 2) \
 		static_cast<void>(logger::info(s, Logging::TimePassed() + " | "));
