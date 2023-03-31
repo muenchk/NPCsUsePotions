@@ -2636,6 +2636,8 @@ void Settings::ClassifyItems()
 					continue;
 				}
 
+				auto clas = ClassifyItem(item);
+
 				// there is a little bit of a problem for some items that have wrong flags and no keywords set. Try to detect them by sound and set the flags
 				if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
 					if (item->data.consumptionSound == Settings::FoodEat) {
@@ -2646,8 +2648,6 @@ void Settings::ClassifyItems()
 						item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 					}
 				}
-
-				auto clas = ClassifyItem(item);
 				// set medicine flag for those who need it
 				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
 					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
@@ -3063,6 +3063,10 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	if (std::string(item->GetName()).find(std::string("Blood")) != std::string::npos &&
 		std::string(item->GetName()).find(std::string("Potion")) != std::string::npos) {
 		alch = static_cast<uint64_t>(AlchemyEffect::kBlood);
+		// if we have a blood potion, make sure that it has the medicine flag
+		if (item->IsMedicine() == false)
+			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+
 	}
 
 	ItemType type = ItemType::kPotion;
