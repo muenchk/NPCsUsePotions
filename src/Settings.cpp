@@ -3055,6 +3055,9 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	if (std::string(item->GetName()).find(std::string("Blood")) != std::string::npos &&
 		std::string(item->GetName()).find(std::string("Potion")) != std::string::npos) {
 		alch = static_cast<uint64_t>(AlchemyEffect::kBlood);
+		// if we have a blood potion, make sure that it has the medicine flag
+		if (item->IsMedicine() == false)
+			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 	}
 
 	ItemType type = ItemType::kPotion;
