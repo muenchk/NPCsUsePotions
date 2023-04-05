@@ -19,7 +19,7 @@ std::string Utility::PrintForm(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
 		return "None";
-	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->GetFormID()) + "><" + acinfo->GetName() + "><" + acinfo->GetPluginname() + ">]";
 }
 
 std::string Utility::PrintForm(std::weak_ptr<ActorInfo> acweak)
@@ -27,7 +27,7 @@ std::string Utility::PrintForm(std::weak_ptr<ActorInfo> acweak)
 	if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
 		if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
 			return "None";
-		return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
+		return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->GetFormID()) + "><" + acinfo->GetName() + "><" + acinfo->GetPluginname() + ">]";
 	} else {
 		return "None";
 	}
@@ -411,6 +411,8 @@ std::string Utility::ToStringCombatStyle(uint32_t style)
 
 uint32_t Utility::GetCombatData(RE::Actor* actor)
 {
+	if (actor == nullptr)
+		return 0;
 	LOG_3("{}[Utility] [GetCombatData]");
 	uint32_t combatdata = 0;
 
@@ -875,6 +877,8 @@ int Utility::GetItemType(RE::TESForm* form)
 
 uint32_t Utility::GetArmorData(RE::Actor* actor)
 {
+	if (actor == nullptr)
+		return 0;
 	LOG_3("{}[Utility] [GetArmorData]");
 	static std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> armorSlots{
 		RE::BGSBipedObjectForm::BipedObjectSlot::kHead,
@@ -1512,7 +1516,7 @@ uint64_t Utility::SumAlchemyEffects(std::vector<std::tuple<int, AlchemyEffect>> 
 	return ret;
 }
 
-bool Utility::CanApplyPoison(RE::Actor* actor)
+bool Utility::CanApplyPoison(std::shared_ptr<ActorInfo> const& actor)
 {
 	LOG_3("{}[Utility] [CanApplyPoison]");
 	auto ied = actor->GetEquippedEntryData(false);
@@ -1577,7 +1581,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 
 bool Utility::VerifyActorInfo(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	if (acinfo->IsValid() == false || acinfo->actor == nullptr || acinfo->actor->GetFormID() == 0) {
+	if (acinfo->IsValid() == false || acinfo->GetActor() == nullptr || acinfo->GetActor()->GetFormID() == 0) {
 		LOG_1("{}[Utility] [VerifyActorInfo] actor info damaged");
 		return false;
 	}

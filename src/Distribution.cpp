@@ -29,7 +29,7 @@ static std::uniform_int_distribution<signed> rand100(1, 100);
 
 std::vector<std::tuple<int, AlchemyEffect>> Distribution::Rule::GetScaledDistribution(Settings::ItemType type, std::shared_ptr<ActorInfo> const& acinfo)
 {
-	RE::TESCombatStyle* style = acinfo->actor->GetActorBase()->combatStyle;
+	RE::TESCombatStyle* style = acinfo->GetCombatStyle();
 	int customnum = 0;
 	std::map<AlchemyEffect, float> effectMap;
 	switch (type) {
@@ -59,7 +59,7 @@ std::vector<std::tuple<int, AlchemyEffect>> Distribution::Rule::GetScaledDistrib
 
 	float scale = 0.0f;
 
-	if (styleScaling) {
+	if (styleScaling && style) {
 		// get primary combat score
 		// and then scale the appropiate alchemic effects up by the scaling value
 		int prefscore = 0;
@@ -391,8 +391,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion1(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= potion1Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -405,8 +405,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion2(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= potion2Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -419,8 +419,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion3(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= potion3Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -433,8 +433,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion4(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= potion4Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -447,8 +447,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotionAdditional(std::shared_ptr<A
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= potionAdditionalChance[astr]) {
 		// we rolled successfully
 	} else {
@@ -518,8 +518,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison1(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= poison1Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -532,8 +532,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison2(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= poison2Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -546,8 +546,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison3(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= poison3Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -560,8 +560,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison4(std::shared_ptr<ActorInfo>
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= poison4Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -574,8 +574,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoisonAdditional(std::shared_ptr<A
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= poisonAdditionalChance[astr]) {
 		// we rolled successfully
 	} else {
@@ -646,8 +646,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion1(std::shared_ptr<Act
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= fortify1Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -660,8 +660,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion2(std::shared_ptr<Act
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= fortify2Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -674,8 +674,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion3(std::shared_ptr<Act
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= fortify3Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -688,8 +688,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion4(std::shared_ptr<Act
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= fortify4Chance[astr]) {
 		// we rolled successfully
 	} else {
@@ -702,8 +702,8 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotionAdditional(std::share
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
-	int str = static_cast<int>(acinfo->itemStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
+	int str = static_cast<int>(acinfo->GetItemStrength());
 	if (rand100(randi) <= fortifyAdditionalChance[astr]) {
 		// we rolled successfully
 	} else {
@@ -766,7 +766,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFood_intern(std::shared_ptr<ActorI
 	// if the rule is invalid (empty) return
 	if (valid == false)
 		return nullptr;
-	int astr = static_cast<int>(acinfo->actorStrength);
+	int astr = static_cast<int>(acinfo->GetActorStrength());
 	if (rand100(randi) <= foodChance[astr]) {
 		// we rolled successfully
 	} else
@@ -1118,7 +1118,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 		auto ritems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems.items);
 		for (int i = 0; i < ritems.size(); i++) {
 			auto item = ritems[i];
-			if (item->giveonce == true && acinfo->_distributedCustomItems)  // if item is only given once and we already gave items: skip
+			if (item->giveonce == true && acinfo->DistributedItems())  // if item is only given once and we already gave items: skip
 				continue;
 			if (acinfo->CalcDistrConditions(item) == false)
 				continue;
@@ -1138,7 +1138,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 				}
 			}
 		}
-		acinfo->_distributedCustomItems = true;
+		acinfo->DistributedItems(true);
 	}
 	if (ret.size() > 0 && ret.back() == nullptr) {
 		LOG_4("{}[SettingsDistribution] [GetDistrItems] remove last item");
@@ -1284,7 +1284,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(std::share
 	if (ret.size() != 0) {
 		if (ret.back() == nullptr)
 			ret.pop_back();
-		auto map = acinfo->actor->GetInventoryCounts();
+		auto map = acinfo->GetInventoryCounts();
 		size_t currsize = ret.size();
 		for (int i = 0; i < currsize; i++) {
 			if (auto it = map.find(ret[i]); it != map.end()) {
@@ -1329,7 +1329,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 	if (ret.size() != 0) {
 		if (ret.back() == nullptr)
 			ret.pop_back();
-		auto map = acinfo->actor->GetInventoryCounts();
+		auto map = acinfo->GetInventoryCounts();
 		size_t currsize = ret.size();
 		for (int i = 0; i < currsize; i++) {
 			if (auto it = map.find(ret[i]); it != map.end()) {
@@ -1390,32 +1390,31 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase eff
 
 bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	if (!acinfo->IsValid() || acinfo->actor == nullptr)
+	if (!acinfo->IsValid() || acinfo->GetActor() == nullptr)
 		return true;
 	if (Settings::Whitelist::EnabledNPCs) {
-		if (acinfo->whitelistedcalculated) {
-			if (!acinfo->whitelisted)
+		if (acinfo->IsWhitelistCalculated()) {
+			if (!acinfo->IsWhitelisted())
 				return true;
 		} else {
 			CalcRule(acinfo);
-			if (!acinfo->whitelisted)
+			if (!acinfo->IsWhitelisted())
 				return true;
 		}
 	}
-	bool ret = Distribution::excludedNPCs()->contains(acinfo->formid) ||
-	           Distribution::excludedPlugins_NPCs()->contains(acinfo->pluginID) || 
-	           acinfo->actor->IsInFaction(Settings::CurrentFollowerFaction) ||
-	           acinfo->actor->IsInFaction(Settings::CurrentHirelingFaction) ||
-	           (Distribution::excludedNPCs()->contains(acinfo->actor->GetActorBase()->GetFormID())) ||
-	           acinfo->actor->IsGhost() ||
-	           acinfo->actor->GetActorBase()->IsSummonable();
-	if (acinfo->actor->GetActorBase()->Bleeds() == false && Utility::ToLower(std::string(acinfo->actor->GetActorBase()->GetFormEditorID())).find("ghost") != std::string::npos) {
-		Distribution::ForceExcludeNPC(acinfo->formid);
+	bool ret = Distribution::excludedNPCs()->contains(acinfo->GetFormID());
+	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetPluginID());
+	ret |= acinfo->IsFollower();
+	ret |= (Distribution::excludedNPCs()->contains(acinfo->GetActorBaseFormID()));
+	ret |= acinfo->IsGhost();
+	ret |= acinfo->IsSummonable();
+	if (acinfo->Bleeds() == false && Utility::ToLower(acinfo->GetActorBaseFormEditorID()).find("ghost") != std::string::npos) {
+		Distribution::ForceExcludeNPC(acinfo->GetFormID());
 		return true;
 	}
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-	if (!Distribution::npcMap()->contains(acinfo->formid) && !Distribution::npcMap()->contains(acinfo->actor->GetActorBase()->GetFormID()) && ret == false) {
-		auto base = acinfo->actor->GetActorBase();
+	if (!Distribution::npcMap()->contains(acinfo->GetFormID()) && !Distribution::npcMap()->contains(acinfo->GetActorBaseFormID()) && ret == false) {
+		auto base = acinfo->GetActorBase();
 		for (uint32_t i = 0; i < base->numKeywords; i++) {
 			if (base->keywords[i])
 				ret |= Distribution::excludedAssoc()->contains(base->keywords[i]->GetFormID());
@@ -1424,7 +1423,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 			if (base->factions[i].faction)
 				ret |= Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID());
 		}
-		auto race = acinfo->actor->GetRace();
+		auto race = acinfo->GetRace();
 		if (race) {
 			ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
@@ -1446,12 +1445,12 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 		return true;
 	if (Settings::Usage::_DisableItemUsageForExcludedNPCs) {
 		// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
-		bool ret = Distribution::excludedNPCs()->contains(actor->GetFormID()) ||
-		           Distribution::excludedPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(actor)) ||
-		           (Utility::Mods::GetPluginIndex(actor) == 0x1 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID)) ||
-		           Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID()) ||
-		           actor->IsGhost() ||
-		           actor->GetActorBase()->IsSummonable();
+		bool ret = Distribution::excludedNPCs()->contains(actor->GetFormID());
+		ret |= Distribution::excludedPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(actor));
+		ret |= (Utility::Mods::GetPluginIndex(actor) == 0x1 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID));
+		ret |= actor->GetActorBase() && Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID());
+		ret |= actor->IsGhost();
+		ret |= actor->GetActorBase() && actor->GetActorBase()->IsSummonable();
 		if (ret == false && !Distribution::npcMap()->contains(actor->GetFormID()) && !Distribution::npcMap()->contains(actor->GetActorBase()->GetFormID())) {
 			auto race = actor->GetRace();
 			if (race) {
@@ -1476,11 +1475,11 @@ bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 	// skip fucking deleted references
 	if (npc->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
-	bool ret = (Distribution::excludedNPCs()->contains(npc->GetFormID())) ||
-	           npc->IsInFaction(Settings::CurrentFollowerFaction) ||
-	           npc->IsInFaction(Settings::CurrentHirelingFaction) ||
-	           npc->IsGhost() ||
-	           npc->IsSummonable();
+	bool ret = (Distribution::excludedNPCs()->contains(npc->GetFormID()));
+	ret |= npc->IsInFaction(Settings::CurrentFollowerFaction);
+	ret |= npc->IsInFaction(Settings::CurrentHirelingFaction);
+	ret |= npc->IsGhost();
+	ret |= npc->IsSummonable();
 	if (npc->Bleeds() == false && Utility::ToLower(std::string(npc->GetFormEditorID())).find("ghost") != std::string::npos) {
 		Distribution::ForceExcludeNPC(npc->GetFormID());
 		return true;
@@ -2159,7 +2158,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 	// get npc template info
 	Misc::NPCTPLTInfo tplt;
 	if (tpltinfo == nullptr) {
-		tplt = Utility::ExtractTemplateInfo(acinfo->actor);
+		tplt = Utility::ExtractTemplateInfo(acinfo->GetActor());
 		tpltinfo = &tplt;
 	}
 	// calc strength section
@@ -2167,40 +2166,40 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
 		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
 		if (diff == 0 || diff == 1) {
-			acinfo->actorStrength = ActorStrength::Weak;
-			acinfo->itemStrength = ItemStrength::kWeak;
+			acinfo->SetActorStrength(ActorStrength::Weak);
+			acinfo->SetItemStrength(ItemStrength::kWeak);
 		} else if (diff == 2 || diff == 3) {
-			acinfo->actorStrength = ActorStrength::Normal;
-			acinfo->itemStrength = ItemStrength::kStandard;
+			acinfo->SetActorStrength(ActorStrength::Normal);
+			acinfo->SetItemStrength(ItemStrength::kStandard);
 		} else if (diff == 4) {
-			acinfo->actorStrength = ActorStrength::Powerful;
-			acinfo->itemStrength = ItemStrength::kPotent;
+			acinfo->SetActorStrength(ActorStrength::Powerful);
+			acinfo->SetItemStrength(ItemStrength::kPotent);
 		} else {  // diff == 5
-			acinfo->actorStrength = ActorStrength::Insane;
-			acinfo->itemStrength = ItemStrength::kInsane;
+			acinfo->SetActorStrength(ActorStrength::Insane);
+			acinfo->SetItemStrength(ItemStrength::kInsane);
 		}
 	} else {
 		// get level dependencies
-		short lvl = acinfo->actor->GetLevel();
+		short lvl = acinfo->GetLevel();
 		if (lvl <= Settings::Distr::_LevelEasy) {
-			acinfo->actorStrength = ActorStrength::Weak;
-			acinfo->itemStrength = ItemStrength::kWeak;
+			acinfo->SetActorStrength(ActorStrength::Weak);
+			acinfo->SetItemStrength(ItemStrength::kWeak);
 			// weak actor
 		} else if (lvl <= Settings::Distr::_LevelNormal) {
-			acinfo->actorStrength = ActorStrength::Normal;
-			acinfo->itemStrength = ItemStrength::kStandard;
+			acinfo->SetActorStrength(ActorStrength::Normal);
+			acinfo->SetItemStrength(ItemStrength::kStandard);
 			// normal actor
 		} else if (lvl <= Settings::Distr::_LevelDifficult) {
-			acinfo->actorStrength = ActorStrength::Powerful;
-			acinfo->itemStrength = ItemStrength::kPotent;
+			acinfo->SetActorStrength(ActorStrength::Powerful);
+			acinfo->SetItemStrength(ItemStrength::kPotent);
 			// difficult actor
 		} else if (lvl <= Settings::Distr::_LevelInsane) {
-			acinfo->actorStrength = ActorStrength::Insane;
-			acinfo->itemStrength = ItemStrength::kInsane;
+			acinfo->SetActorStrength(ActorStrength::Insane);
+			acinfo->SetItemStrength(ItemStrength::kInsane);
 			// insane actor
 		} else {
-			acinfo->actorStrength = ActorStrength::Boss;
-			acinfo->itemStrength = ItemStrength::kInsane;
+			acinfo->SetActorStrength(ActorStrength::Boss);
+			acinfo->SetItemStrength(ItemStrength::kInsane);
 			// boss actor
 		}
 	}
@@ -2221,7 +2220,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 	int prio = INT_MIN;
 
 	bool calccustitems = !acinfo->citems.calculated;
-	bool calcwhite = !acinfo->whitelistedcalculated;
+	bool calcwhite = !acinfo->IsWhitelistCalculated();
 
 	std::vector<CustomItemStorage*>* citems = nullptr;
 	std::unordered_set<std::string>* citemsset = nullptr;
@@ -2230,25 +2229,25 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		citemsset = new std::unordered_set<std::string>{};
 	}
 
-	auto base = acinfo->actor->GetActorBase();
+	auto base = acinfo->GetActorBase();
 
 	Rule* rule = nullptr;
 	// define general stuff
-	auto race = acinfo->actor->GetRace();
+	auto race = acinfo->GetRace();
 
 	// find rule in npc map
 	// npc rules always have the highest priority
-	auto itnpc = npcMap()->find(acinfo->actor->GetFormID());
+	auto itnpc = npcMap()->find(acinfo->GetFormID());
 	if (itnpc != npcMap()->end()) {  // found the right rule!
 		rule = itnpc->second;        // this can be null if the specific npc is excluded
 		ruleoverride = true;
 		prio = INT_MAX;
 	}
-	bossoverride |= bosses()->contains(acinfo->actor->GetFormID());
-	adjustacs(acinfo->actor->GetFormID());
+	bossoverride |= bosses()->contains(acinfo->GetFormID());
+	adjustacs(acinfo->GetFormID());
 	// get custom items
 	if (calccustitems) {
-		auto itc = customItems()->find(acinfo->actor->GetFormID());
+		auto itc = customItems()->find(acinfo->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
 			for (int b = 0; b < vec.size(); b++) {
@@ -2259,12 +2258,12 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			}
 		}
 	}
-	if (calcwhite && (whitelistNPCs()->contains(acinfo->actor->GetFormID()) || whitelistNPCsPlugin()->contains(acinfo->pluginID)))
-		acinfo->whitelisted = true;
+	if (calcwhite && (whitelistNPCs()->contains(acinfo->GetFormID()) || whitelistNPCsPlugin()->contains(acinfo->GetPluginID())))
+		acinfo->SetWhitelisted();
 
 	// now also perform a check on the actor base
 	if (!ruleoverride) {
-		itnpc = npcMap()->find(acinfo->actor->GetActorBase()->GetFormID());
+		itnpc = npcMap()->find(acinfo->GetActorBaseFormID());
 		if (itnpc != npcMap()->end()) {  // found the right rule!
 			rule = itnpc->second;        // this can be null if the specific npc is excluded
 			//logger::info("assign rule 2");
@@ -2272,11 +2271,11 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			prio = INT_MAX;
 		}
 	}
-	bossoverride |= bosses()->contains(acinfo->actor->GetActorBase()->GetFormID());
-	adjustacs(acinfo->actor->GetActorBase()->GetFormID());
+	bossoverride |= bosses()->contains(acinfo->GetActorBaseFormID());
+	adjustacs(acinfo->GetActorBaseFormID());
 	// get custom items
 	if (calccustitems) {
-		auto itc = customItems()->find(acinfo->actor->GetActorBase()->GetFormID());
+		auto itc = customItems()->find(acinfo->GetActorBaseFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
 			for (int b = 0; b < vec.size(); b++) {
@@ -2287,10 +2286,10 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			}
 		}
 	}
-	if (calcwhite && whitelistNPCs()->contains(acinfo->actor->GetActorBase()->GetFormID()))
-		acinfo->whitelisted = true;
+	if (calcwhite && whitelistNPCs()->contains(acinfo->GetActorBaseFormID()))
+		acinfo->SetWhitelisted();
 	// perform check on tpltactorbaseinformation
-	if (tpltinfo->base != nullptr && tpltinfo->base != acinfo->actor->GetActorBase()) {
+	if (tpltinfo->base != nullptr && tpltinfo->base != acinfo->GetActorBase()) {
 		if (!ruleoverride) {
 			itnpc = npcMap()->find(tpltinfo->base->GetFormID());
 			if (itnpc != npcMap()->end()) {  // found the right rule!
@@ -2316,7 +2315,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			}
 		}
 		if (calcwhite && whitelistNPCs()->contains(tpltinfo->base->GetFormID()))
-			acinfo->whitelisted = true;
+			acinfo->SetWhitelisted();
 	}
 
 	if (tpltinfo && tpltinfo->tpltrace)
@@ -2383,11 +2382,11 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		}
 	}
 	if (calcwhite) { 
-		if (whitelistNPCs()->contains(acinfo->actor->GetRace()->GetFormID()))
-		acinfo->whitelisted = true;
+		if (whitelistNPCs()->contains(acinfo->GetRaceFormID()))
+			acinfo->SetWhitelisted();
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
 			if (whitelistNPCs()->contains(race->keywords[i]->GetFormID()))
-				acinfo->whitelisted = true;
+				acinfo->SetWhitelisted();
 		}
 	}
 
@@ -2426,7 +2425,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			}
 			if (calcwhite) {
 				if (whitelistNPCs()->contains(key->GetFormID()))
-					acinfo->whitelisted = true;
+					acinfo->SetWhitelisted();
 			}
 		}
 	}
@@ -2465,7 +2464,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 				}
 				if (calcwhite) {
 					if (whitelistNPCs()->contains(tpltinfo->tpltkeywords[i]->GetFormID()))
-						acinfo->whitelisted = true;
+						acinfo->SetWhitelisted();
 				}
 			}
 		}
@@ -2504,7 +2503,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		}
 		if (calcwhite) {
 			if (whitelistNPCs()->contains(base->factions[i].faction->GetFormID()))
-				acinfo->whitelisted = true;
+				acinfo->SetWhitelisted();
 		}
 	}
 	if (tpltinfo) {
@@ -2541,7 +2540,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 				}
 				if (calcwhite) {
 					if (whitelistNPCs()->contains(tpltinfo->tpltfactions[i]->GetFormID()))
-						acinfo->whitelisted = true;
+						acinfo->SetWhitelisted();
 				}
 			}
 		}
@@ -2580,7 +2579,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		}
 		if (calcwhite) {
 			if (whitelistNPCs()->contains(base->npcClass->GetFormID()))
-				acinfo->whitelisted = true;
+				acinfo->SetWhitelisted();
 		}
 	}
 	// handle combat styles
@@ -2615,21 +2614,21 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		}
 		if (calcwhite) {
 			if (whitelistNPCs()->contains(base->combatStyle->GetFormID()))
-				acinfo->whitelisted = true;
+				acinfo->SetWhitelisted();
 		}
 	}
 
 	if (acsadj != 0) {
-		int str = static_cast<int>(acinfo->actorStrength);
+		int str = static_cast<int>(acinfo->GetActorStrength());
 		str += acsadj;
 		if (str < 0)
 			str = 0;
 		if (str > static_cast<int>(ActorStrength::Boss))
 			str = static_cast<int>(ActorStrength::Boss);
-		acinfo->actorStrength = static_cast<ActorStrength>(str);
+		acinfo->SetActorStrength(static_cast<ActorStrength>(str));
 	}
 	if (bossoverride)
-		acinfo->actorStrength = ActorStrength::Boss;
+		acinfo->SetActorStrength(ActorStrength::Boss);
 
 	if (calccustitems) {
 		auto itc = customItems()->find(0x0);
@@ -2667,10 +2666,10 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		acinfo->citems.calculated = true;
 		acinfo->citems.CreateMaps();
 	}
-	acinfo->_boss = bossoverride;
+	acinfo->SetBoss(bossoverride);
 
 	if (calcwhite) {
-		acinfo->whitelistedcalculated = true;
+		acinfo->SetWhitelistCalculated();
 	}
 
 	PROF1_1("{}[Distribution] [CalcRule] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));

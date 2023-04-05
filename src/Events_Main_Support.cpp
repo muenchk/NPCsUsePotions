@@ -29,19 +29,19 @@ namespace Events
 	{
 		EvalProcessing();
 		if (effect & static_cast<uint64_t>(AlchemyEffect::kHealth)) {
-			acinfo->durHealth = dur;
+			acinfo->SetDurHealth(dur);
 		}
 		if (effect & static_cast<uint64_t>(AlchemyEffect::kMagicka)) {
-			acinfo->durMagicka = dur;
+			acinfo->SetDurMagicka(dur);
 		}
 		if (effect & static_cast<uint64_t>(AlchemyEffect::kStamina)) {
-			acinfo->durStamina = dur;
+			acinfo->SetDurStamina(dur);
 		}
 		if (effect & static_cast<uint64_t>(AlchemyEffect::kAnyRegen)) {
-			acinfo->durRegeneration = dur;
+			acinfo->SetDurRegeneration(dur);
 		}
 		if (effect & static_cast<uint64_t>(AlchemyEffect::kAnyFortify)) {
-			acinfo->durFortify = dur;
+			acinfo->SetDurFortify(dur);
 		}
 	}
 
@@ -303,7 +303,7 @@ namespace Events
 			}
 		}
 		// light and heavy armor
-		uint32_t armordata = Utility::GetArmorData(acinfo->actor);
+		uint32_t armordata = Utility::GetArmorData(acinfo->GetActor());
 		if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::LightArmor))
 			effects |= static_cast<uint64_t>(AlchemyEffect::kLightArmor);
 		if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
@@ -371,28 +371,28 @@ namespace Events
 	void Main::ProcessDistribution(std::shared_ptr<ActorInfo> acinfo)
 	{
 		// check wether this charackter maybe a follower
-		if (acinfo->lastDistrTime == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->lastDistrTime > 1) {
+		if (acinfo->GetLastDistrTime() == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->GetLastDistrTime() > 1) {
 			if (!Distribution::ExcludedNPC(acinfo)) {
 				// begin with compatibility mode removing items before distributing new ones
 				if (Settings::Debug::_CompatibilityRemoveItemsBeforeDist) {
 					auto items = ACM::GetAllPotions(acinfo);
 					auto it = items.begin();
 					while (it != items.end()) {
-						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+						acinfo->RemoveItem(*it, 1);
 						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllPoisons(acinfo);
 					it = items.begin();
 					while (it != items.end()) {
-						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+						acinfo->RemoveItem(*it, 1);
 						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllFood(acinfo);
 					it = items.begin();
 					while (it != items.end()) {
-						acinfo->actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+						acinfo->RemoveItem(*it, 1);
 						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
@@ -401,7 +401,7 @@ namespace Events
 				// if we have characters that should not get items, the function
 				// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 				auto items = Distribution::GetDistrItems(acinfo);
-				if (acinfo->actor->IsDead()) {
+				if (acinfo->IsDead()) {
 					return;
 				}
 				if (items.size() > 0) {
@@ -409,10 +409,10 @@ namespace Events
 						if (items[i] == nullptr) {
 							continue;
 						}
-						acinfo->actor->AddObjectToContainer(items[i], nullptr, 1, nullptr);
+						acinfo->AddItem(items[i], 1);
 						LOG2_4("{}[Events] [ProcessDistribution] added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo));
 					}
-					acinfo->lastDistrTime = RE::Calendar::GetSingleton()->GetDaysPassed();
+					acinfo->SetLastDistrTime(RE::Calendar::GetSingleton()->GetDaysPassed());
 				}
 			}
 		}
@@ -475,11 +475,11 @@ namespace Events
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 		sem.acquire();
 		acset.erase(acinfo);
-		acinfo->durHealth = 0;
-		acinfo->durMagicka = 0;
-		acinfo->durStamina = 0;
-		acinfo->durFortify = 0;
-		acinfo->durRegeneration = 0;
+		acinfo->SetDurHealth(0);
+		acinfo->SetDurMagicka(0);
+		acinfo->SetDurStamina(0);
+		acinfo->SetDurFortify(0);
+		acinfo->SetDurRegeneration(0);
 		sem.release();
 		LOG_1("{}[Events] [UnregisterNPC] Unregistered NPC");
 	}
@@ -491,14 +491,14 @@ namespace Events
 	void Main::UnregisterNPC(std::shared_ptr<ActorInfo> acinfo)
 	{
 		EvalProcessing();
-		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", acinfo->name);
+		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", acinfo->GetName());
 		sem.acquire();
 		acset.erase(acinfo);
-		acinfo->durHealth = 0;
-		acinfo->durMagicka = 0;
-		acinfo->durStamina = 0;
-		acinfo->durFortify = 0;
-		acinfo->durRegeneration = 0;
+		acinfo->SetDurHealth(0);
+		acinfo->SetDurMagicka(0);
+		acinfo->SetDurStamina(0);
+		acinfo->SetDurFortify(0);
+		acinfo->SetDurRegeneration(0);
 		sem.release();
 	}
 
@@ -514,7 +514,7 @@ namespace Events
 		auto itr = acset.begin();
 		while (itr != acset.end()) {
 			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
-				if (acinfo->formid == formid) {
+				if (acinfo->GetFormIDBlank() == formid) {
 					acset.erase(itr);
 					break;
 				}

@@ -240,11 +240,11 @@ namespace Events
 			// save combat state of npc
 			std::shared_ptr<ActorInfo> acinfo = Main::data->FindActor(actor);
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat)
-				acinfo->combatstate = CombatState::InCombat;
+				acinfo->SetCombatState(CombatState::InCombat);
 			else if (a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching)
-				acinfo->combatstate = CombatState::Searching;
+				acinfo->SetCombatState(CombatState::Searching);
 			else if (a_event->newState == RE::ACTOR_COMBAT_STATE::kNone)
-				acinfo->combatstate = CombatState::OutOfCombat;
+				acinfo->SetCombatState(CombatState::OutOfCombat);
 
 		}
 		PROF1_2("{}[Events] [TESCombatEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));

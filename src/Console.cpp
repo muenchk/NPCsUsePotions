@@ -42,25 +42,23 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "Excluded:\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(acinfo));
 	console->Print(tmp.c_str());
-	if (acinfo->combatstate == CombatState::OutOfCombat) {
+	if (acinfo->GetCombatState() == CombatState::OutOfCombat) {
 		tmp = "CombatState:\t\t\t\t" + std::string("Out of Combat");
 		console->Print(tmp.c_str());
-	}
-	else if (acinfo->combatstate == CombatState::InCombat) {
+	} else if (acinfo->GetCombatState() == CombatState::InCombat) {
 		tmp = "CombatState:\t\t\t\t" + std::string("In Combat");
 		console->Print(tmp.c_str());
-		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->target);
+		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->GetTarget());
 		console->Print(tmp.c_str());
-
-	} else if (acinfo->combatstate == CombatState::Searching) {
+	} else if (acinfo->GetCombatState() == CombatState::Searching) {
 		tmp = "CombatState:\t\t\t\t" + std::string("Searching");
 		console->Print(tmp.c_str());
-		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->target);
+		tmp = "CombatTarget:\t\t\t\t" + Utility::PrintForm(acinfo->GetTarget());
 		console->Print(tmp.c_str());
 	}
-	tmp = "Whitelisted:\t\t\t\t\t" + std::to_string(acinfo->whitelisted);
+	tmp = "Whitelisted:\t\t\t\t\t" + std::to_string(acinfo->IsWhitelisted());
 	console->Print(tmp.c_str());
-	tmp = "Whitelist calculated:\t\t\t\t\t" + std::to_string(acinfo->whitelistedcalculated);
+	tmp = "Whitelist calculated:\t\t\t\t\t" + std::to_string(acinfo->IsWhitelistCalculated());
 	console->Print(tmp.c_str());
 	tmp = "Combat data:\t\t\t\t" + Utility::ToStringCombatStyle(Utility::GetCombatData(actor));
 	console->Print(tmp.c_str());
@@ -97,48 +95,48 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print("Current Actor Info");
 	Distribution::CalcRule(acinfo);
 	// durHealth
-	tmp = "Duration Health:\t\t\t\t" + std::to_string(acinfo->durHealth);
+	tmp = "Duration Health:\t\t\t\t" + std::to_string(acinfo->GetDurHealth());
 	console->Print(tmp.c_str());
 	// durMagicka
-	tmp = "Duration Magicka:\t\t\t" + std::to_string(acinfo->durMagicka);
+	tmp = "Duration Magicka:\t\t\t" + std::to_string(acinfo->GetDurMagicka());
 	console->Print(tmp.c_str());
 	// durStamina
-	tmp = "Duration Stamina:\t\t\t" + std::to_string(acinfo->durStamina);
+	tmp = "Duration Stamina:\t\t\t" + std::to_string(acinfo->GetDurStamina());
 	console->Print(tmp.c_str());
 	// durFortify
-	tmp = "Duration Fortify:\t\t\t\t" + std::to_string(acinfo->durFortify);
+	tmp = "Duration Fortify:\t\t\t\t" + std::to_string(acinfo->GetDurFortify());
 	console->Print(tmp.c_str());
 	// durRegeneration
-	tmp = "Duration Regen:\t\t\t\t" + std::to_string(acinfo->durRegeneration);
+	tmp = "Duration Regen:\t\t\t\t" + std::to_string(acinfo->GetDurRegeneration());
 	console->Print(tmp.c_str());
 	// globalCooldownTimer
-	tmp = "Global Cooldown:\t\t\t\t" + std::to_string(acinfo->globalCooldownTimer);
+	tmp = "Global Cooldown:\t\t\t\t" + std::to_string(acinfo->GetGlobalCooldownTimer());
 	console->Print(tmp.c_str());
 	// nextFoodTime
-	tmp = "Next Food Time:\t\t\t\t" + std::to_string(acinfo->nextFoodTime);
+	tmp = "Next Food Time:\t\t\t\t" + std::to_string(acinfo->GetNextFoodTime());
 	console->Print(tmp.c_str());
 	// lastDistrTime
-	tmp = "Last Distribution Time:\t\t\t" + std::to_string(acinfo->lastDistrTime);
+	tmp = "Last Distribution Time:\t\t\t" + std::to_string(acinfo->GetLastDistrTime());
 	console->Print(tmp.c_str());
 	// distributedCustomItems
-	tmp = "Distributed Custom Items:\t\t" + std::to_string(acinfo->_distributedCustomItems);
+	tmp = "Distributed Custom Items:\t\t" + std::to_string(acinfo->DistributedItems());
 	console->Print(tmp.c_str());
 	// actorStrength
-	tmp = "Actor Strength:\t\t\t\t" + Utility::ToString(acinfo->actorStrength);
+	tmp = "Actor Strength:\t\t\t\t" + Utility::ToString(acinfo->GetActorStrength());
 	console->Print(tmp.c_str());
 	// itemStrength
-	tmp = "Item Strength:\t\t\t\t" + Utility::ToString(acinfo->itemStrength);
+	tmp = "Item Strength:\t\t\t\t" + Utility::ToString(acinfo->GetItemStrength());
 	console->Print(tmp.c_str());
 	// boss
-	tmp = "Boss:\t\t\t\t\t" + std::to_string(acinfo->_boss);
+	tmp = "Boss:\t\t\t\t\t" + std::to_string(acinfo->IsBoss());
 	console->Print(tmp.c_str());
 	// IsFollower
 	tmp = "IsFollower:\t\t\t\t" + std::to_string(acinfo->IsFollower());
 	console->Print(tmp.c_str());
 	// AnimationBusy
-	tmp = "Animation Busy:\t\t\t\t" + std::to_string(acinfo->Animation_busy);
+	tmp = "Animation Busy:\t\t\t\t" + std::to_string(acinfo->IsAnimationBusy());
 	console->Print(tmp.c_str());
-	tmp = "pluginID:\t\t\t\t\t" + Utility::GetHex(acinfo->pluginID);
+	tmp = "pluginID:\t\t\t\t\t" + Utility::GetHex(acinfo->GetPluginID());
 	console->Print(tmp.c_str());
 
 	console->Print("CustomItems");

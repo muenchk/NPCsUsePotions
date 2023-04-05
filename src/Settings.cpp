@@ -2550,7 +2550,7 @@ void Settings::ApplySkillBoostPerks()
 	auto npcs = datahandler->GetFormArray<RE::TESNPC>();
 	for(auto& npc : npcs) {
 		// make sure it isn't the player, isn't excluded, and the race isn't excluded from the perks
-		if (npc && npc->GetFormID() != 0x7 && !Distribution::ExcludedNPC(npc) && races.contains(npc->GetRace()->GetFormID()) == false){
+		if (npc && npc->GetFormID() != 0x7 && npc->GetRace() && !Distribution::ExcludedNPC(npc) && races.contains(npc->GetRace()->GetFormID()) == false) {
 			// some creatures have cause CTDs or other problems, if they get the perks, so try to filter some of them out
 			// if they are a creature and do not have any explicit rule, they will not get any perks
 			// at the same time, their id will be blacklisted for the rest of the plugin, to avoid any handling and distribution problems

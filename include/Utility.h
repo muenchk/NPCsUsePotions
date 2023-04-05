@@ -334,7 +334,7 @@ public:
 	/// </summary>
 	/// <param name="actor">Actor to check</param>
 	/// <returns>Whether poison can be applied to the actors weapons</returns>
-	static bool CanApplyPoison(RE::Actor* actor);
+	static bool CanApplyPoison(std::shared_ptr<ActorInfo> const& actor);
 
 	/// <summary>
 	/// Returns whether an NPC has poison applied to their weapons, and the poison applied
