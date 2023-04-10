@@ -1594,26 +1594,34 @@ void Settings::LoadDistrConfig()
 									// parse the item properties
 									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
 									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] PotionDistr:\t{}", Utility::PrintDistribution(rule->potionDistr));
 									rule->potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
 									rule->potionEffectMap = Utility::UnifyEffectMap(potioneffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] PotionEffMap:\t{}", Utility::PrintEffectMap(rule->potionEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
 									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr, true);
 									std::vector<std::tuple<uint64_t, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
 									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] PoisonDistr:\t{}", Utility::PrintDistribution(rule->poisonDistr));
 									rule->poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
 									rule->poisonEffectMap = Utility::UnifyEffectMap(poisoneffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] PoisonEffMap:\t{}", Utility::PrintEffectMap(rule->poisonEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
 									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr, true);
 									std::vector<std::tuple<uint64_t, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
 									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] FortifyDistr:\t{}", Utility::PrintDistribution(rule->fortifyDistr));
 									rule->fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
 									rule->fortifyEffectMap = Utility::UnifyEffectMap(fortifyeffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] FortifyEffMap:\t{}", Utility::PrintEffectMap(rule->fortifyEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
 									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr, true);
 									std::vector<std::tuple<uint64_t, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
 									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
+									LOG1_4("{}[Settings] [LoadDistrRules] FoodDistr:\t{}", Utility::PrintDistribution(rule->foodDistr));
 									rule->foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
 									rule->foodEffectMap = Utility::UnifyEffectMap(foodeffects);
+									LOG1_4("{}[Settings] [LoadDistrRules] FoodEffMap:\t{}", Utility::PrintEffectMap(rule->foodEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
 									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr, true);
 
@@ -1919,6 +1927,10 @@ void Settings::LoadDistrConfig()
 	Settings::ActorTypeAnimal = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13798);
 	if (Settings::ActorTypeAnimal == nullptr) {
 		loginfo("[Settings] [INIT] Couldn't find ActorTypeAnimal Keyword in game.");
+	}
+	Settings::Vampire = RE::TESForm::LookupByID<RE::BGSKeyword>(0xA82BB);
+	if (Settings::Vampire == nullptr) {
+		loginfo("[Settings] [INIT] Couldn't find Vampire Keyword in game.");
 	}
 
 	// hard exclude everyone that may become a follower
@@ -2542,7 +2554,7 @@ void Settings::ApplySkillBoostPerks()
 	auto npcs = datahandler->GetFormArray<RE::TESNPC>();
 	for(auto& npc : npcs) {
 		// make sure it isn't the player, isn't excluded, and the race isn't excluded from the perks
-		if (npc && npc->GetFormID() != 0x7 && !Distribution::ExcludedNPC(npc) && races.contains(npc->GetRace()->GetFormID()) == false){
+		if (npc && npc->GetFormID() != 0x7 && npc->GetRace() && !Distribution::ExcludedNPC(npc) && races.contains(npc->GetRace()->GetFormID()) == false) {
 			// some creatures have cause CTDs or other problems, if they get the perks, so try to filter some of them out
 			// if they are a creature and do not have any explicit rule, they will not get any perks
 			// at the same time, their id will be blacklisted for the rest of the plugin, to avoid any handling and distribution problems
@@ -2628,6 +2640,8 @@ void Settings::ClassifyItems()
 					continue;
 				}
 
+				auto clas = ClassifyItem(item);
+
 				// there is a little bit of a problem for some items that have wrong flags and no keywords set. Try to detect them by sound and set the flags
 				if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
 					if (item->data.consumptionSound == Settings::FoodEat) {
@@ -2638,8 +2652,6 @@ void Settings::ClassifyItems()
 						item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 					}
 				}
-
-				auto clas = ClassifyItem(item);
 				// set medicine flag for those who need it
 				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
 					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
@@ -3058,6 +3070,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 		// if we have a blood potion, make sure that it has the medicine flag
 		if (item->IsMedicine() == false)
 			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+
 	}
 
 	ItemType type = ItemType::kPotion;

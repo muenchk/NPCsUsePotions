@@ -30,6 +30,8 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
+		if (_actor->HasKeyword(Settings::Vampire) || _actor->GetRace()->HasKeyword(Settings::Vampire))
+			_vampire = true;
 		// Run since [actor] is valid
 		UpdateMetrics();
 		// set to valid
@@ -40,6 +42,7 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 void ActorInfo::Reset(RE::Actor* _actor)
 {
 	LOG_1("{}[ActorInfo] [Reset]");
+	aclock;
 	actor = _actor;
 	durHealth = 0;
 	durMagicka = 0;
@@ -64,7 +67,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	combatstate = CombatState::OutOfCombat;
 	combatdata = 0;
 	tcombatdata = 0;
-	target = nullptr;
+	target = std::weak_ptr<ActorInfo>{};
 	handleactor = false;
 	if (_actor) {
 		formid = _actor->GetFormID();
@@ -89,8 +92,84 @@ ActorInfo::ActorInfo()
 
 }
 
+bool ActorInfo::IsValid()
+{
+	aclock;
+	return valid;
+}
+
+void ActorInfo::SetValid()
+{
+	aclock;
+	valid = true;
+}
+
+void ActorInfo::SetInvalid()
+{
+	aclock;
+	valid = false;
+}
+
+void ActorInfo::SetDeleted()
+{
+	aclock;
+	deleted = true;
+}
+
+bool ActorInfo::GetDeleted()
+{
+	aclock;
+	return deleted;
+}
+
+RE::Actor* ActorInfo::GetActor()
+{
+	aclock;
+	if (!valid || deleted)
+		return nullptr;
+	return actor;
+}
+
+RE::FormID ActorInfo::GetFormID()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0;
+	return formid;
+}
+
+RE::FormID ActorInfo::GetFormIDBlank()
+{
+	return formid;
+}
+
+std::string ActorInfo::GetPluginname()
+{
+	aclock;
+	if (!valid || deleted)
+		return "";
+	return pluginname;
+}
+
+uint32_t ActorInfo::GetPluginID()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0x1;
+	return pluginID;
+}
+
+std::string ActorInfo::GetName()
+{
+	aclock;
+	if (!valid || deleted)
+		return "";
+	return name;
+}
+
 std::string ActorInfo::ToString()
 {
+	aclock;
 	if (!valid)
 		return "Invalid Actor Info";
 	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor)) + "\tactor:" + Utility::PrintForm(actor);
@@ -107,11 +186,14 @@ void ActorInfo::UpdateMetrics()
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
+	aclock;
 	std::vector<CustomItemAlch*> dist;
+	if (!valid || deleted)
+		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0)
 			continue;
-		bool val = CalcDistrConditions(itms[i]);
+		bool val = CalcDistrConditionsIntern(itms[i]);
 		if (val == true)
 			dist.push_back(itms[i]);
 	}
@@ -121,11 +203,14 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<
 bool ActorInfo::CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistr]");
+	aclock;
+	if (!valid || deleted)
+		return false;
 	bool distributable = false;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0)
 			continue;
-		bool val = CalcDistrConditions(itms[i]);
+		bool val = CalcDistrConditionsIntern(itms[i]);
 		if (val == true)
 			distributable |= val;
 	}
@@ -135,13 +220,16 @@ bool ActorInfo::CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
+	aclock;
 	std::vector<CustomItemAlch*> dist;
+	if (!valid || deleted)
+		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
 			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr] error");
 			continue;
 		}
-		bool val = CalcUsageConditions(itms[i]);
+		bool val = CalcUsageConditionsIntern(itms[i]);
 		if (val == true)
 			dist.push_back(itms[i]);
 	}
@@ -151,13 +239,16 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<
 std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems]");
+	aclock;
 	std::vector<CustomItem*> dist;
+	if (!valid || deleted)
+		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
 			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems] error");
 			continue;
 		}
-		bool val = CalcDistrConditions(itms[i]);
+		bool val = CalcDistrConditionsIntern(itms[i]);
 		if (val == true)
 			dist.push_back(itms[i]);
 	}
@@ -167,12 +258,15 @@ std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector
 bool ActorInfo::CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 {
 	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistrItems]");
+	aclock;
+	if (!valid || deleted)
+		return false;
 	bool distributable = false;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
 			continue;
 		}
-		bool val = CalcDistrConditions(itms[i]);
+		bool val = CalcDistrConditionsIntern(itms[i]);
 		if (val == true)
 			distributable |= val;
 	}
@@ -192,34 +286,46 @@ bool ActorInfo::CanUsePot(RE::FormID item)
 bool ActorInfo::CanUsePotion(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUsePotion]");
+	aclock;
+	if (!valid || deleted)
+		return false;
 	auto itr = citems.potionsset.find(item);
 	if (itr == citems.potionsset.end() || itr->second < 0 || itr->second > citems.potions.size())
 		return false;
-	return CalcUsageConditions(citems.potions[itr->second]);
+	return CalcUsageConditionsIntern(citems.potions[itr->second]);
 }
 bool ActorInfo::CanUsePoison(RE::FormID item) 
 {
 	LOG_3("{}[ActorInfo] [CanUsePoison]");
+	aclock;
+	if (!valid || deleted)
+		return false;
 	auto itr = citems.poisonsset.find(item);
 	if (itr == citems.poisonsset.end() || itr->second < 0 || itr->second > citems.poisons.size())
 		return false;
-	return CalcUsageConditions(citems.poisons[itr->second]);
+	return CalcUsageConditionsIntern(citems.poisons[itr->second]);
 }
 bool ActorInfo::CanUseFortify(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFortify]");
+	aclock;
+	if (!valid || deleted)
+		return false;
 	auto itr = citems.fortifyset.find(item);
 	if (itr == citems.fortifyset.end() || itr->second < 0 || itr->second > citems.fortify.size())
 		return false;
-	return CalcUsageConditions(citems.fortify[itr->second]);
+	return CalcUsageConditionsIntern(citems.fortify[itr->second]);
 }
 bool ActorInfo::CanUseFood(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFood]");
+	aclock;
+	if (!valid || deleted)
+		return false;
 	auto itr = citems.foodset.find(item);
 	if (itr == citems.foodset.end() || itr->second < 0 || itr->second > citems.food.size())
 		return false;
-	return CalcUsageConditions(citems.food[itr->second]);
+	return CalcUsageConditionsIntern(citems.food[itr->second]);
 }
 
 bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
@@ -276,6 +382,14 @@ bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 }
 
 bool ActorInfo::CalcUsageConditions(CustomItem* item)
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return CalcUsageConditionsIntern(item);
+}
+
+bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 {
 	LOG_3("{}[ActorInfo] [CalcUsageConditions]");
 	// obligatory conditions (all must be fulfilled)
@@ -390,6 +504,14 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 }
 
 bool ActorInfo::CalcDistrConditions(CustomItem* item)
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return CalcDistrConditionsIntern(item);
+}
+
+bool ActorInfo::CalcDistrConditionsIntern(CustomItem* item)
 {
 	LOG_3("{}[ActorInfo] [CalcDistrConditions]");
 	// only check these if there are conditions
@@ -538,7 +660,8 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 
 bool ActorInfo::IsInCombat()
 {
-	if (!valid)
+	aclock;
+	if (!valid || deleted)
 		return false;
 	else if (combatstate == CombatState::InCombat || combatstate == CombatState::Searching)
 		return true;
@@ -546,27 +669,28 @@ bool ActorInfo::IsInCombat()
 		return false;
 }
 
-bool ActorInfo::IsWeaponDrawn()
+CombatState ActorInfo::GetCombatState()
 {
-	if (!valid)
-		return false;
-	return weaponsDrawn;
+	aclock;
+	if (!valid || deleted)
+		return CombatState::OutOfCombat;
+	return combatstate;
 }
 
-bool ActorInfo::IsFollower()
+void ActorInfo::SetCombatState(CombatState state)
 {
-	if (!valid)
+	aclock;
+	if (!valid || deleted)
+		combatstate = CombatState::OutOfCombat;
+	combatstate = state;
+}
+
+bool ActorInfo::IsWeaponDrawn()
+{
+	aclock;
+	if (!valid || deleted)
 		return false;
-	bool follower = actor->IsInFaction(Settings::CurrentFollowerFaction) || actor->IsInFaction(Settings::CurrentHirelingFaction);
-	if (follower)
-		return true;
-	auto itr = actor->GetActorBase()->factions.begin();
-	while (itr != actor->GetActorBase()->factions.end()) {
-		if (Distribution::followerFactions()->contains(itr->faction->GetFormID()) && itr->rank >= 0)
-			return true;
-		itr++;
-	}
-	return false;
+	return weaponsDrawn;
 }
 
 void ActorInfo::CustomItems::CreateMaps()
@@ -682,6 +806,7 @@ int32_t ActorInfo::GetMinDataSize(int32_t vers)
 
 bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 {
+	aclock;
 	int addoff = 0;
 	// version
 	Buffer::Write(version, buffer, offset);
@@ -735,6 +860,7 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 
 bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 {
+	aclock;
 	int ver = Buffer::ReadUInt32(buffer, offset);
 	try {
 		switch (ver) {
@@ -897,6 +1023,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 
 void ActorInfo::Update()
 {
+	aclock;
 	if (!valid)
 		return;
 	actor = RE::TESForm::LookupByID<RE::Actor>(formid);
@@ -904,9 +1031,429 @@ void ActorInfo::Update()
 	if (actor == nullptr)
 		valid = false;
 	else {
+		// update vampire status
+		_vampire = false;
+		if (actor->HasKeyword(Settings::Vampire) || actor->GetRace()->HasKeyword(Settings::Vampire))
+			_vampire = true;
 		// update the metrics, since we are sure our object is valid
 		SKSE::GetTaskInterface()->AddTask([this]() {
 			this->UpdateMetrics();
 		});
 	}
 }
+
+std::weak_ptr<ActorInfo> ActorInfo::GetTarget()
+{
+	aclock;
+	if (!valid)
+		return std::weak_ptr<ActorInfo>{};
+	return target;
+}
+
+void ActorInfo::ResetTarget()
+{
+	aclock;
+	target = std::weak_ptr<ActorInfo>{};
+}
+
+void ActorInfo::SetTarget(std::weak_ptr<ActorInfo> tar)
+{
+	aclock;
+	if (!valid || deleted)
+		target = std::weak_ptr<ActorInfo>{};
+	else
+		target = tar;
+}
+
+short ActorInfo::GetTargetLevel()
+{
+	aclock;
+	if (!valid || deleted)
+		return 1;
+	if (std::shared_ptr<ActorInfo> tar = target.lock()) {
+		return tar->GetLevel();
+	}
+	return 1;
+}
+
+uint32_t ActorInfo::GetCombatData()
+{
+	aclock;
+	if (!valid)
+		return 0;
+	return combatdata;
+}
+
+void ActorInfo::SetCombatData(uint32_t data)
+{
+	aclock;
+	if (!valid)
+		combatdata = 0;
+	else
+		combatdata = data;
+}
+
+uint32_t ActorInfo::GetCombatDataTarget()
+{
+	aclock;
+	if (!valid)
+		return 0;
+	return tcombatdata;
+}
+
+void ActorInfo::SetCombatDataTarget(uint32_t data)
+{
+	aclock;
+	if (!valid)
+		tcombatdata = 0;
+	else
+		tcombatdata = data;
+}
+
+bool ActorInfo::GetHandleActor()
+{
+	aclock;
+	if (!valid)
+		return false;
+	return handleactor;
+}
+
+void ActorInfo::SetHandleActor(bool handle)
+{
+	aclock;
+	if (!valid)
+		handleactor = false;
+	else
+		handleactor = handle;
+}
+
+float ActorInfo::GetPlayerDistance()
+{
+	aclock;
+	if (!valid)
+		return FLT_MAX;
+	return playerDistance;
+}
+
+void ActorInfo::SetPlayerDistance(float distance)
+{
+	aclock;
+	if (!valid)
+		playerDistance = FLT_MAX;
+	else
+		playerDistance = distance;
+}
+
+bool ActorInfo::GetPlayerHostile()
+{
+	aclock;
+	if (!valid)
+		return false;
+	return playerHostile;
+}
+
+void ActorInfo::SetPlayerHostile(bool hostile)
+{
+	aclock;
+	if (!valid)
+		playerHostile = false;
+	playerHostile = hostile;
+}
+
+bool ActorInfo::GetWeaponsDrawn()
+{
+	aclock;
+	if (!valid)
+		return false;
+	return weaponsDrawn;
+}
+
+void ActorInfo::SetWeaponsDrawn(bool drawn)
+{
+	aclock;
+	if (!valid)
+		weaponsDrawn = false;
+	else
+		weaponsDrawn = drawn;
+}
+
+void ActorInfo::UpdateWeaponsDrawn()
+{
+	aclock;
+	if (!valid)
+		weaponsDrawn = false;
+	else
+		weaponsDrawn = actor->IsWeaponDrawn();
+}
+
+#pragma region ActorSpecificFunctions
+
+bool ActorInfo::IsFollower()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	bool follower = actor->IsInFaction(Settings::CurrentFollowerFaction) || actor->IsInFaction(Settings::CurrentHirelingFaction);
+	if (follower)
+		return true;
+	if (actor->GetActorBase()) {
+		auto itr = actor->GetActorBase()->factions.begin();
+		while (itr != actor->GetActorBase()->factions.end()) {
+			if (Distribution::followerFactions()->contains(itr->faction->GetFormID()) && itr->rank >= 0)
+				return true;
+			itr++;
+		}
+	}
+	return false;
+}
+
+bool ActorInfo::IsPlayer()
+{
+	return formid & 0x14;
+}
+
+RE::TESObjectREFR::InventoryItemMap ActorInfo::GetInventory()
+{
+	aclock;
+	if (!valid || deleted)
+		return RE::TESObjectREFR::InventoryItemMap{};
+	return actor->GetInventory();
+}
+
+RE::TESObjectREFR::InventoryCountMap ActorInfo::GetInventoryCounts()
+{
+	aclock;
+	if (!valid || deleted)
+		return RE::TESObjectREFR::InventoryCountMap{};
+	return actor->GetInventoryCounts();
+}
+
+bool ActorInfo::HasMagicEffect(RE::EffectSetting* effect)
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->HasMagicEffect(effect);
+}
+
+bool ActorInfo::DrinkPotion(RE::AlchemyItem* potion, RE::ExtraDataList* extralist)
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->DrinkPotion(potion, extralist);
+}
+
+RE::InventoryEntryData* ActorInfo::GetEquippedEntryData(bool leftHand)
+{
+	aclock;
+	if (!valid || deleted)
+		return nullptr;
+	return actor->GetEquippedEntryData(leftHand);
+}
+
+void ActorInfo::RemoveItem(RE::TESBoundObject* item, int32_t count)
+{
+	aclock;
+	if (!valid || deleted)
+		return;
+	actor->RemoveItem(item, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+}
+
+void ActorInfo::AddItem(RE::TESBoundObject* item, int32_t count)
+{
+	aclock;
+	if (!valid || deleted)
+		return;
+	actor->AddObjectToContainer(item, nullptr, count, nullptr);
+}
+
+uint32_t ActorInfo::GetFormFlags()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0;
+	return actor->formFlags;
+}
+
+bool ActorInfo::IsDead()
+{
+	aclock;
+	if (!valid || deleted)
+		return true;
+	if (actor->boolBits & RE::Actor::BOOL_BITS::kDead)
+		return true;
+	else
+		return false;
+}
+
+RE::TESNPC* ActorInfo::GetActorBase()
+{
+	aclock;
+	if (!valid || deleted)
+		return nullptr;
+	return actor->GetActorBase();
+}
+
+RE::FormID ActorInfo::GetActorBaseFormID()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0;
+	if (actor->GetActorBase())
+		return actor->GetActorBase()->GetFormID();
+	return 0;
+}
+
+std::string ActorInfo::GetActorBaseFormEditorID()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0;
+	if (actor->GetActorBase())
+		return actor->GetActorBase()->GetFormEditorID();
+	return 0;
+}
+
+RE::TESCombatStyle* ActorInfo::GetCombatStyle()
+{
+	aclock;
+	if (!valid || deleted)
+		return nullptr;
+	if (actor->GetActorBase())
+		return actor->GetActorBase()->GetCombatStyle();
+	return nullptr;
+}
+
+RE::TESRace* ActorInfo::GetRace()
+{
+	aclock;
+	if (!valid || deleted)
+		return nullptr;
+	if (actor->GetActorBase())
+		return actor->GetActorBase()->GetRace();
+	return nullptr;
+}
+
+RE::FormID ActorInfo::GetRaceFormID()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0;
+	if (actor->GetActorBase() && actor->GetActorBase()->GetRace())
+		return actor->GetActorBase()->GetRace()->GetFormID();
+	return 0;
+}
+
+bool ActorInfo::IsGhost()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->IsGhost();
+}
+
+bool ActorInfo::IsSummonable()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	if (actor->GetActorBase())
+		return actor->GetActorBase()->IsSummonable();
+	return false;
+}
+
+bool ActorInfo::Bleeds()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	if (actor->GetActorBase())
+		return actor->GetActorBase()->Bleeds();
+	return false;
+}
+
+short ActorInfo::GetLevel()
+{
+	aclock;
+	if (!valid || deleted)
+		return 1;
+	return actor->GetLevel();
+}
+
+SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> ActorInfo::GetBoolBits()
+{
+	aclock;
+	if (!valid || deleted)
+		return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
+	return actor->boolBits;
+}
+
+bool ActorInfo::IsFlying()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->IsFlying();
+}
+
+bool ActorInfo::IsInKillMove()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->IsInKillMove();
+}
+
+bool ActorInfo::IsInMidair()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->IsInMidair();
+}
+
+bool ActorInfo::IsInRagdollState()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->IsInRagdollState();
+}
+
+bool ActorInfo::IsUnconscious()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->IsUnconscious();
+}
+
+bool ActorInfo::IsParalyzed()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	if (actor->boolBits & RE::Actor::BOOL_BITS::kParalyzed)
+		return true;
+	else
+		return false;
+}
+
+bool ActorInfo::IsStaggered()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->actorState2.staggered;
+}
+
+bool ActorInfo::IsBleedingOut()
+{
+	aclock;
+	if (!valid || deleted)
+		return false;
+	return actor->IsBleedingOut();
+}
+
+#pragma endregion

@@ -75,7 +75,7 @@ namespace NPCsUsePotions
 	bool NUPActorInfoHandle::IsBoss()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->_boss;
+			return ((ActorInfo*)acinfo)->IsBoss();
 		else
 			return false;
 	}
@@ -83,7 +83,7 @@ namespace NPCsUsePotions
 	bool NUPActorInfoHandle::IsAutomaton()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->_automaton;
+			return ((ActorInfo*)acinfo)->IsAutomaton();
 		else
 			return false;
 	}
@@ -96,7 +96,7 @@ namespace NPCsUsePotions
 	int NUPActorInfoHandle::GetGlobalCooldownTimer()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->globalCooldownTimer;
+			return ((ActorInfo*)acinfo)->GetGlobalCooldownTimer();
 		else
 			return INT_MAX;
 	}
@@ -104,7 +104,7 @@ namespace NPCsUsePotions
 	NUPActorInfoHandle::ActorStrength NUPActorInfoHandle::GetActorStrength()
 	{
 		if (valid)
-			return static_cast<NUPActorInfoHandle::ActorStrength>(static_cast<uint32_t>(((ActorInfo*)acinfo)->actorStrength));
+			return static_cast<NUPActorInfoHandle::ActorStrength>(static_cast<uint32_t>(((ActorInfo*)acinfo)->GetActorStrength()));
 		else
 			return NUPActorInfoHandle::ActorStrength::Weak;
 	}
@@ -112,7 +112,7 @@ namespace NPCsUsePotions
 	NUPActorInfoHandle::ItemStrength NUPActorInfoHandle::GetItemStrength()
 	{
 		if (valid)
-			return static_cast<NUPActorInfoHandle::ItemStrength>(static_cast<uint32_t>(((ActorInfo*)acinfo)->itemStrength));
+			return static_cast<NUPActorInfoHandle::ItemStrength>(static_cast<uint32_t>(((ActorInfo*)acinfo)->GetItemStrength()));
 		else
 			return NUPActorInfoHandle::ItemStrength::kWeak;
 	}
@@ -120,7 +120,7 @@ namespace NPCsUsePotions
 	bool NUPActorInfoHandle::DistributedCustomItems()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->_distributedCustomItems;
+			return ((ActorInfo*)acinfo)->DistributedItems();
 		else
 			return true;
 	}
@@ -128,7 +128,7 @@ namespace NPCsUsePotions
 	float NUPActorInfoHandle::GetLastDistrTime()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->lastDistrTime;
+			return ((ActorInfo*)acinfo)->GetLastDistrTime();
 		else
 			return FLT_MAX;
 	}
@@ -136,7 +136,7 @@ namespace NPCsUsePotions
 	float NUPActorInfoHandle::GetNextFoodTime()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->nextFoodTime;
+			return ((ActorInfo*)acinfo)->GetNextFoodTime();
 		else
 			return FLT_MAX;
 	}
@@ -144,7 +144,7 @@ namespace NPCsUsePotions
 	int NUPActorInfoHandle::GetDurRegeneration()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->durRegeneration;
+			return ((ActorInfo*)acinfo)->GetDurRegeneration();
 		else
 			return INT_MAX;
 	}
@@ -152,7 +152,7 @@ namespace NPCsUsePotions
 	int NUPActorInfoHandle::GetDurFortify()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->durFortify;
+			return ((ActorInfo*)acinfo)->GetDurFortify();
 		else
 			return INT_MAX;
 	}
@@ -160,7 +160,7 @@ namespace NPCsUsePotions
 	int NUPActorInfoHandle::GetDurStamina()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->durStamina;
+			return ((ActorInfo*)acinfo)->GetDurStamina();
 		else
 			return INT_MAX;
 	}
@@ -168,7 +168,7 @@ namespace NPCsUsePotions
 	int NUPActorInfoHandle::GetDurMagicka()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->durMagicka;
+			return ((ActorInfo*)acinfo)->GetDurMagicka();
 		else
 			return INT_MAX;
 	}
@@ -176,7 +176,7 @@ namespace NPCsUsePotions
 	int NUPActorInfoHandle::GetDurHealth()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->durHealth;
+			return ((ActorInfo*)acinfo)->GetDurHealth();
 		else
 			return INT_MAX;
 	}
@@ -184,7 +184,7 @@ namespace NPCsUsePotions
 	std::string NUPActorInfoHandle::GetName()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->name;
+			return ((ActorInfo*)acinfo)->GetName();
 		else
 			return "";
 	}
@@ -192,7 +192,7 @@ namespace NPCsUsePotions
 	std::string NUPActorInfoHandle::GetPluginname()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->pluginname;
+			return ((ActorInfo*)acinfo)->GetPluginname();
 		else
 			return "";
 	}
@@ -200,7 +200,7 @@ namespace NPCsUsePotions
 	RE::FormID NUPActorInfoHandle::GetFormID()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->formid;
+			return ((ActorInfo*)acinfo)->GetFormID();
 		else
 			return 0;
 	}
@@ -208,7 +208,7 @@ namespace NPCsUsePotions
 	RE::Actor* NUPActorInfoHandle::GetActor()
 	{
 		if (valid)
-			return ((ActorInfo*)acinfo)->actor;
+			return ((ActorInfo*)acinfo)->GetActor();
 		else
 			return nullptr;
 	}

@@ -2,6 +2,11 @@
 #include "CustomItem.h"
 #include "AlchemyEffect.h"
 
+#include <mutex>
+#include <memory>
+
+#define aclock std::lock_guard<std::mutex> guard(mutex);
+
 #pragma once
 /// <summary>
 /// Determines the strength of an Item
@@ -123,6 +128,13 @@ public:
 	/// custom items that may be distributed to an actor
 	/// </summary>
 	CustomItems citems;
+
+private:
+	/// <summary>
+	/// central lock coordinating all function accesses
+	/// </summary>
+	std::mutex mutex;
+
 	/// <summary>
 	/// The actor
 	/// </summary>
@@ -192,6 +204,10 @@ public:
 	/// if the actor is a automaton
 	/// </summary>
 	bool _automaton = false;
+	/// <summary>
+	/// if the actor is a vampire
+	/// </summary>
+	bool _vampire = false;
 
 	/// <summary>
 	/// while the actor is busy with one animation, no other animation should be prepared / played
@@ -225,7 +241,7 @@ public:
 	// target combat data
 	uint32_t tcombatdata = 0;
 	// current target
-	RE::Actor* target = nullptr;
+	std::weak_ptr<ActorInfo> target;
 	// whether to process the actor
 	bool handleactor = true;
 	// distance to player
@@ -236,7 +252,7 @@ public:
 	bool weaponsDrawn = false;
 
 
-
+public:
 	/// <summary>
 	/// version of class [used for save and load]
 	/// </summary>
@@ -279,12 +295,6 @@ public:
 	/// </summary>
 	std::vector<std::tuple<int, AlchemyEffect>> fortifyDistf;
 
-	/// <summary>
-	/// Updates certain actor metrics
-	/// [Should only be called, directly after updating the actor value]
-	/// </summary>
-	void UpdateMetrics();
-
 private:
 	/// <summary>
 	/// if [true] the ActorInfo is valid and can be used, if [false] the ActorInfo is a dummy object
@@ -295,28 +305,47 @@ private:
 	/// </summary>
 	bool deleted = false;
 
+	/// <summary>
+	/// Updates certain actor metrics
+	/// [Should only be called, directly after updating the actor value]
+	/// </summary>
+	void UpdateMetrics();
+
+	/// <summary>
+	/// Returns whether the given custom item can be used by the actor
+	/// </summary>
+	/// <param name="">item to check</param>
+	/// <returns>[true] if usage is possible, [false] otherwise</returns>
+	bool CalcUsageConditionsIntern(CustomItem* item);
+	/// <summary>
+	/// Returns whether the given custom item may be distributed to the actor
+	/// </summary>
+	/// <param name="item">item to check</param>
+	/// <returns>[true] if distribution is allowed, [false] otherwise</returns>
+	bool CalcDistrConditionsIntern(CustomItem* item);
+
 public:
 
 	/// <summary>
 	/// Returns whether the ActorInfo is valid
 	/// </summary>
-	bool IsValid() { return valid; }
+	bool IsValid();
 	/// <summary>
 	/// Sets the ActorInfo to valid
 	/// </summary>
-	void SetValid() { valid = true; }
+	void SetValid();
 	/// <summary>
 	/// Sets the ActorInfo to invalid
 	/// </summary>
-	void SetInvalid() { valid = false; }
+	void SetInvalid();
 	/// <summary>
 	/// Sets the ActorInfo to deleted
 	/// </summary>
-	void SetDeleted() { deleted = true; }
+	void SetDeleted();
 	/// <summary>
 	/// Returns whether the actor has been deleted
 	/// </summary>
-	bool GetDeleted() { return deleted; }
+	bool GetDeleted();
 
 	/// <summary>
 	/// Resets the actorinfo to default values
@@ -325,9 +354,101 @@ public:
 	void Reset(RE::Actor* _actor);
 
 	/// <summary>
+	/// Returns the underlying actor object
+	/// </summary>
+	/// <returns></returns>
+	RE::Actor* GetActor();
+	/// <summary>
+	/// Returns the formid
+	/// </summary>
+	/// <returns></returns>
+	RE::FormID GetFormID();
+	/// <summary>
+	/// Returns the formid without checking for validity
+	/// </summary>
+	/// <returns></returns>
+	RE::FormID GetFormIDBlank();
+	/// <summary>
+	/// Returns the name of the plugin the actor is defined in
+	/// </summary>
+	/// <returns></returns>
+	std::string GetPluginname();
+	/// <summary>
+	/// Returns the ID of the plugin in the current loadorder [runtime]
+	/// </summary>
+	/// <returns></returns>
+	uint32_t GetPluginID();
+	/// <summary>
+	/// Returns the name of the actor
+	/// </summary>
+	/// <returns></returns>
+	std::string GetName();
+
+	int GetDurHealth() { return durHealth; }
+	void SetDurHealth(int value) { durHealth = value; }
+	void DecDurHealth(int value) { durHealth -= value; }
+	int GetDurMagicka() { return durMagicka; }
+	void SetDurMagicka(int value) { durMagicka = value; }
+	void DecDurMagicka(int value) { durMagicka -= value; }
+	int GetDurStamina() { return durStamina; }
+	void SetDurStamina(int value) { durStamina = value; }
+	void DecDurStamina(int value) { durStamina -= value; }
+	int GetDurFortify() { return durFortify; }
+	void SetDurFortify(int value) { durFortify = value; }
+	void DecDurFortify(int value) { durFortify -= value; }
+	int GetDurRegeneration() { return durRegeneration; }
+	void SetDurRegeneration(int value) { durRegeneration = value; }
+	void DecDurRegeneration(int value) { durRegeneration -= value; }
+	float GetNextFoodTime() { return nextFoodTime; }
+	void SetNextFoodTime(float value) { nextFoodTime = value; }
+	float GetLastDistrTime() { return lastDistrTime; }
+	void SetLastDistrTime(float value) { lastDistrTime = value; }
+	int GetDurCombat() { return durCombat; }
+	void SetDurCombat(int value) { durCombat = value; }
+	void IncDurCombat(int value) { durCombat += value; }
+
+	bool DistributedItems() { return _distributedCustomItems; }
+	void DistributedItems(bool distributed) { _distributedCustomItems = distributed; }
+
+	ActorStrength GetActorStrength() { return actorStrength; }
+	void SetActorStrength(ActorStrength acs) { actorStrength = acs; }
+	ItemStrength GetItemStrength() { return itemStrength; }
+	void SetItemStrength(ItemStrength ics) { itemStrength = ics; }
+
+	/// <summary>
+	/// Returns whether the actor is currently in an animation
+	/// </summary>
+	/// <returns></returns>
+	bool IsAnimationBusy() { return Animation_busy; }
+	/// <summary>
+	/// Sets whether the actor is currently in an animation
+	/// </summary>
+	/// <param name="value"></param>
+	void SetAnimationBusy(bool value) { Animation_busy = value; }
+
+	int GetGlobalCooldownTimer() { return globalCooldownTimer; }
+	void SetGlobalCooldownTimer(int value) { globalCooldownTimer = value; }
+	void DecGlobalCooldownTimer(int value) { globalCooldownTimer -= value; }
+
+	bool IsWhitelisted() { return whitelisted; }
+	void SetWhitelisted() { whitelisted = true; }
+	bool IsWhitelistCalculated() { return whitelistedcalculated; }
+	void SetWhitelistCalculated() { whitelistedcalculated = true; }
+
+	/// <summary>
 	/// Whether the NPC is currently in combat
 	/// </summary>
 	bool IsInCombat();
+	/// <summary>
+	/// Returns the combat state of the actor
+	/// </summary>
+	/// <returns></returns>
+	CombatState GetCombatState();
+	/// <summary>
+	/// Sets the combatstate of the npc
+	/// </summary>
+	/// <returns></returns>
+	void SetCombatState(CombatState state);
 	/// <summary>
 	/// Whether an NPC has drawn their weapons
 	/// </summary>
@@ -338,6 +459,42 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsBoss() { return _boss; }
+	/// <summary>
+	/// Sets the actor as boss
+	/// </summary>
+	void SetBoss(bool boss) { _boss = boss; }
+	/// <summary>
+	/// Returns whether the actor is a vampire
+	/// </summary>
+	/// <returns></returns>
+	bool IsVampire() { return _vampire; }
+	/// <summary>
+	/// Returns whether the actor is an automaton
+	/// </summary>
+	/// <returns></returns>
+	bool IsAutomaton() { return _automaton; }
+
+	/// <summary>
+	/// Returns the actors current target
+	/// </summary>
+	/// <returns></returns>
+	std::weak_ptr<ActorInfo> GetTarget();
+	void ResetTarget();
+	void SetTarget(std::weak_ptr<ActorInfo> tar);
+	short GetTargetLevel();
+	uint32_t GetCombatData();
+	void SetCombatData(uint32_t data);
+	uint32_t GetCombatDataTarget();
+	void SetCombatDataTarget(uint32_t data);
+	bool GetHandleActor();
+	void SetHandleActor(bool handle);
+	float GetPlayerDistance();
+	void SetPlayerDistance(float distance);
+	bool GetPlayerHostile();
+	void SetPlayerHostile(bool hostile);
+	bool GetWeaponsDrawn();
+	void SetWeaponsDrawn(bool drawn);
+	void UpdateWeaponsDrawn();
 
 	/// <summary>
 	/// Filters a list of custom items and returns only those that can be distributed
@@ -450,12 +607,6 @@ public:
 	bool CalcDistrConditions(CustomItem* item);
 
 	/// <summary>
-	/// Returns whether the actor is follower
-	/// </summary>
-	/// <returns></returns>
-	bool IsFollower();
-
-	/// <summary>
 	/// Returns the version of the class
 	/// </summary>
 	/// <returns></returns>
@@ -492,6 +643,135 @@ public:
 	/// Updates the actor and whether the ActorInfo is valid
 	/// </summary>
 	void Update();
+
+#pragma endregion
+
+#pragma region ActorSpecificFunctions
+
+	/// <summary>
+	/// Returns whether the actor is follower
+	/// </summary>
+	/// <returns></returns>
+	bool IsFollower();
+
+	/// <summary>
+	/// Returns whether the actor is the player character
+	/// </summary>
+	/// <returns></returns>
+	bool IsPlayer();
+
+	/// <summary>
+	/// Returns the inventory of the actor
+	/// </summary>
+	/// <returns></returns>
+	RE::TESObjectREFR::InventoryItemMap GetInventory();
+
+	/// <summary>
+	/// Returns the inventory counts of the actor
+	/// </summary>
+	/// <returns></returns>
+	RE::TESObjectREFR::InventoryCountMap GetInventoryCounts();
+
+	/// <summary>
+	/// Returns whether the magic effect is applied to the actor
+	/// </summary>
+	/// <param name="effect"></param>
+	/// <returns></returns>
+	bool HasMagicEffect(RE::EffectSetting* effect);
+
+	/// <summary>
+	/// Makes the actor drink the potion
+	/// </summary>
+	/// <param name="a_potion"></param>
+	/// <param name="a_extralist"></param>
+	/// <returns></returns>
+	bool DrinkPotion(RE::AlchemyItem* potion, RE::ExtraDataList* extralist);
+
+	/// <summary>
+	/// Returns the inventory entry data for the specified hand
+	/// </summary>
+	/// <param name="leftHand"></param>
+	/// <returns></returns>
+	RE::InventoryEntryData* GetEquippedEntryData(bool leftHand);
+
+	/// <summary>
+	/// Removes an item from the actors inventory
+	/// </summary>
+	/// <param name="item"></param>
+	/// <param name="count"></param>
+	void RemoveItem(RE::TESBoundObject* item, int32_t count);
+
+	/// <summary>
+	/// Adds an item to the actors inventory
+	/// </summary>
+	/// <returns></returns>
+	void AddItem(RE::TESBoundObject* item, int32_t count);
+
+	/// <summary>
+	/// Returns the formflags
+	/// </summary>
+	/// <returns></returns>
+	uint32_t GetFormFlags();
+
+	/// <summary>
+	/// Returns whether the actor is dead
+	/// </summary>
+	/// <returns></returns>
+	bool IsDead();
+
+	/// <summary>
+	/// Returns the actors base
+	/// </summary>
+	/// <returns></returns>
+	RE::TESNPC* GetActorBase();
+
+	/// <summary>
+	/// Returns the FormID of the actorbase
+	/// </summary>
+	/// <returns></returns>
+	RE::FormID GetActorBaseFormID();
+
+	/// <summary>
+	/// Returns the EditorID of the actorbase
+	/// </summary>
+	/// <returns></returns>
+	std::string GetActorBaseFormEditorID();
+
+	/// <summary>
+	/// Returns the actors combat style
+	/// </summary>
+	/// <returns></returns>
+	RE::TESCombatStyle* GetCombatStyle();
+
+	RE::TESRace* GetRace();
+
+	RE::FormID GetRaceFormID();
+
+	bool IsGhost();
+
+	bool IsSummonable();
+
+	bool Bleeds();
+
+	short GetLevel();
+
+	SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> GetBoolBits();
+
+	bool IsFlying();
+
+	bool IsInKillMove();
+
+	bool IsInMidair();
+
+	bool IsInRagdollState();
+
+	bool IsUnconscious();
+
+	bool IsParalyzed();
+
+	bool IsStaggered();
+
+	bool IsBleedingOut();
 
 #pragma endregion
 };

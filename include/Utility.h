@@ -162,6 +162,20 @@ public:
 	static std::string ToString(AlchemyEffectBase ae);
 
 	/// <summary>
+	/// Returns a string representation of a distribution
+	/// </summary>
+	/// <param name="distribution"></param>
+	/// <returns></returns>
+	static std::string PrintDistribution(std::vector<std::tuple<int, AlchemyEffect>> distribution);
+
+	/// <summary>
+	/// Returns a string representation of an effect map
+	/// </summary>
+	/// <param name="distribution"></param>
+	/// <returns></returns>
+	static std::string PrintEffectMap(std::map<AlchemyEffect, float> effectMap);
+
+	/// <summary>
 	/// Splits a string at a delimiter and optionally removes empty results
 	/// </summary>
 	/// <param name="delimiter"></param>
@@ -320,7 +334,7 @@ public:
 	/// </summary>
 	/// <param name="actor">Actor to check</param>
 	/// <returns>Whether poison can be applied to the actors weapons</returns>
-	static bool CanApplyPoison(RE::Actor* actor);
+	static bool CanApplyPoison(std::shared_ptr<ActorInfo> const& actor);
 
 	/// <summary>
 	/// Returns whether an NPC has poison applied to their weapons, and the poison applied
