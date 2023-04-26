@@ -1238,7 +1238,7 @@ bool ActorInfo::IsFollower()
 
 bool ActorInfo::IsPlayer()
 {
-	return formid & 0x14;
+	return formid == 0x14;
 }
 
 RE::TESObjectREFR::InventoryItemMap ActorInfo::GetInventory()

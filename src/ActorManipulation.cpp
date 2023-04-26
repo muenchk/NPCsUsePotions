@@ -140,17 +140,19 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
-			LOG_5("{}[ActorManipulation] [GetMatchingPotions] checking item");
-			if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
-				LOG1_4("{}[ActorManipulation] [GetMatchingPotions] found medicine {}", Utility::PrintForm(item));
-				if (fortify && acinfo->CanUseFortify(item->GetFormID()) || !fortify && acinfo->CanUsePotion(item->GetFormID())) {
-					auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
-					ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
-				} else if (res = HasAlchemyEffect(item, alchemyEffect);
-						   std::get<0>(res) &&
-						   (Settings::Potions::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
-					ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
-					//logger::info("[ActorManipulation] [GetMatchingPotions] dur {} mag {} effect {}", std::get<2>(res), std::get<1>(res), static_cast<uint64_t>(std::get<3>(res)));
+			if (item) {
+				LOG1_5("{}[ActorManipulation] [GetMatchingPotions] checking item {}", Utility::PrintForm(item));
+				if (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion)) {
+					LOG_4("{}[ActorManipulation] [GetMatchingPotions] found medicine");
+					if (fortify && acinfo->CanUseFortify(item->GetFormID()) || !fortify && acinfo->CanUsePotion(item->GetFormID())) {
+						auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+						ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					} else if (res = HasAlchemyEffect(item, alchemyEffect);
+							   std::get<0>(res) &&
+							   (Settings::Potions::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
+						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+						//logger::info("[ActorManipulation] [GetMatchingPotions] dur {} mag {} effect {}", std::get<2>(res), std::get<1>(res), static_cast<uint64_t>(std::get<3>(res)));
+					}
 				}
 			}
 		}
@@ -201,16 +203,18 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
-			LOG_5("{}[ActorManipulation] [GetMatchingPoisons] checking item");
-			if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
-				LOG1_4("{}[ActorManipulation] [GetMatchingPoisons] found poison {}", Utility::PrintForm(item));
-				if (acinfo->CanUsePoison(item->GetFormID())) {
-					auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
-					ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
-				} else if (res = HasAlchemyEffect(item, alchemyEffect);
-						   std::get<0>(res) &&
-						   (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
-					ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+			if (item) {
+				LOG1_5("{}[ActorManipulation] [GetMatchingPoisons] checking item {}", Utility::PrintForm(item));
+				if (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison)) {
+					LOG_4("{}[ActorManipulation] [GetMatchingPoisons] found poison");
+					if (acinfo->CanUsePoison(item->GetFormID())) {
+						auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+						ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					} else if (res = HasAlchemyEffect(item, alchemyEffect);
+							   std::get<0>(res) &&
+							   (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
+						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+					}
 				}
 			}
 		}
@@ -339,12 +343,14 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(s
 					(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
 				(raw == true || !item->HasKeyword(Settings::VendorItemFoodRaw))) {
 				if (acinfo->CanUseFood(item->GetFormID())) {
-					auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
-					ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+					auto [mapf, eff, dur2, mag2, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+					ret.insert(ret.begin(), { mag2, dur2, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
 				} else if (Distribution::excludedItems()->contains(item->GetFormID()) == false) {
 					mag = 0;
 					dur = 0;
 					out = 0;
+					int durtmp = 0;
+					float magtmp = 0;
 					if (item->effects.size() > 0) {
 						for (uint32_t i = 0; i < item->effects.size(); i++) {
 							sett = item->effects[i]->baseEffect;
@@ -355,11 +361,25 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(s
 									out = 0;
 									break;
 								}
+								magtmp = item->effects[i]->effectItem.magnitude;
+								if (magtmp == 0)
+									magtmp = 1;
+								durtmp = item->effects[i]->effectItem.duration;
+								if (durtmp == 0)
+									durtmp = 1;
 								if ((tmp = ConvertToAlchemyEffectPrimary(sett)) != AlchemyEffect::kNone) {
-									out = static_cast<AlchemyEffectBase>(tmp);
-									mag = item->effects[i]->effectItem.magnitude;
-									dur = item->effects[i]->effectItem.duration;
-									break;
+									out |= static_cast<AlchemyEffectBase>(tmp);
+									if (mag * dur < magtmp * durtmp) {
+										mag = magtmp;
+										dur = durtmp;
+									}
+								}
+								if (sett->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (tmp = ConvertToAlchemyEffectSecondary(sett)) != AlchemyEffect::kNone) {
+									out |= static_cast<AlchemyEffectBase>(tmp);
+									if (mag * dur < magtmp * durtmp) {
+										mag = magtmp;
+										dur = durtmp;
+									}
 								}
 							}
 						}
