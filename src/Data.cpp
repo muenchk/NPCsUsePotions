@@ -42,7 +42,7 @@ std::shared_ptr<ActorInfo> Data::CreateActorInfoNew()
 
 std::shared_ptr<ActorInfo> Data::CreateActorInfoEmpty()
 {
-	std::shared_ptr<ActorInfo> empty = std::make_shared<ActorInfo>();
+	std::shared_ptr<ActorInfo> empty = std::make_shared<ActorInfo>(true); // blocks resetting this instance
 	empty->SetInvalid();
 	empty->SetDeleted();
 	LOG_4("{}[Data] [CreateActorInfoEmpty]");

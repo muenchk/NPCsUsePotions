@@ -16,32 +16,41 @@ void ActorInfo::Init()
 ActorInfo::ActorInfo(RE::Actor* _actor)
 {
 	LOG_3("{}[ActorInfo] [ActorInfo]");
-	actor = _actor;
+	actor = _actor->GetHandle();
 	if (_actor) {
 		formid = _actor->GetFormID();
 		name = std::string(_actor->GetName());
-		pluginname = Utility::Mods::GetPluginName(actor);
+		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
 		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
 		if (pluginID == 0x1) {
-			pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+			pluginID = Utility::ExtractTemplateInfo(_actor->GetActorBase()).pluginID;
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
 		if (_actor->HasKeyword(Settings::Vampire) || _actor->GetRace()->HasKeyword(Settings::Vampire))
 			_vampire = true;
+		for (auto slot : _actor->GetRace()->equipSlots) {
+			if (slot->GetFormID() == 0x13F43) // LeftHand
+				_haslefthand = true;
+		}
 		// Run since [actor] is valid
-		UpdateMetrics();
+		UpdateMetrics(_actor);
 		// set to valid
 		valid = true;
+		deleted = false;
 	}
 }
 
 void ActorInfo::Reset(RE::Actor* _actor)
 {
 	LOG_1("{}[ActorInfo] [Reset]");
+	if (blockReset) {
+		LOG_1("{}[ActorInfo] [Reset] Reset has been blocked.");
+		return;
+	}
 	aclock;
-	actor = _actor;
+	actor = _actor->GetHandle();
 	durHealth = 0;
 	durMagicka = 0;
 	durStamina = 0;
@@ -70,19 +79,29 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	if (_actor) {
 		formid = _actor->GetFormID();
 		name = std::string(_actor->GetName());
-		pluginname = Utility::Mods::GetPluginName(actor);
+		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
 		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
 		if (pluginID == 0x1) {
-			pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+			pluginID = Utility::ExtractTemplateInfo(_actor->GetActorBase()).pluginID;
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
+		for (auto slot : _actor->GetRace()->equipSlots) {
+			if (slot->GetFormID() == 0x13F43)  // LeftHand
+				_haslefthand = true;
+		}
 		// Run since [actor] is valid
-		UpdateMetrics();
+		UpdateMetrics(_actor);
 		// set to valid
 		valid = true;
+		deleted = false;
 	}
+}
+
+ActorInfo::ActorInfo(bool blockedReset)
+{
+	blockReset = blockedReset;
 }
 
 ActorInfo::ActorInfo()
@@ -125,7 +144,10 @@ RE::Actor* ActorInfo::GetActor()
 	aclock;
 	if (!valid || deleted)
 		return nullptr;
-	return actor;
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get();
+	return nullptr;
 }
 
 RE::FormID ActorInfo::GetFormID()
@@ -168,15 +190,15 @@ std::string ActorInfo::GetName()
 std::string ActorInfo::ToString()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted || !actor.get() || !actor.get().get())
 		return "Invalid Actor Info";
-	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor)) + "\tactor:" + Utility::PrintForm(actor);
+	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor.get().get())) + "\tactor:" + Utility::PrintForm(actor.get().get());
 }
 
-void ActorInfo::UpdateMetrics()
+void ActorInfo::UpdateMetrics(RE::Actor* reac)
 {
-	playerDistance = actor->GetPosition().GetSquaredDistance(playerPosition);
-	playerHostile = actor->IsHostileToActor(playerRef);
+	playerDistance = reac->GetPosition().GetSquaredDistance(playerPosition);
+	playerHostile = reac->IsHostileToActor(playerRef);
 }
 
 #define CV(x) static_cast<uint64_t>(x)
@@ -390,112 +412,111 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 {
 	LOG_3("{}[ActorInfo] [CalcUsageConditions]");
-	// obligatory conditions (all must be fulfilled)
-	// only if there are conditions
-	for (int i = 0; i < item->conditionsall.size(); i++)
-	{
-		switch (std::get<0>(item->conditionsall[i]))
-		{
-		case CustomItemConditionsAll::kIsBoss:
-			if (!_boss)
-				return false;
-			break;
-		case CustomItemConditionsAll::kActorTypeDwarven:
-			if (!_automaton)
-				return false;
-			break;
-		case CustomItemConditionsAll::kHealthThreshold:
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) > Settings::Potions::_healthThreshold)  // over plugin health threshold
-				return false;
-			break;
-		case CustomItemConditionsAll::kMagickaThreshold:
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) > Settings::Potions::_magickaThreshold)  // over plugin magicka threshold
-				return false;
-			break;
-		case CustomItemConditionsAll::kStaminaThreshold:
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) > Settings::Potions::_staminaThreshold)  // over plugin stamina threshold
-				return false;
-			break;
-		case CustomItemConditionsAll::kHasMagicEffect:
-			{
-				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp == nullptr || actor->HasMagicEffect(tmp) == false)
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* reac = actor.get().get();
+		// obligatory conditions (all must be fulfilled)
+		// only if there are conditions
+		for (int i = 0; i < item->conditionsall.size(); i++) {
+			switch (std::get<0>(item->conditionsall[i])) {
+			case CustomItemConditionsAll::kIsBoss:
+				if (!_boss)
 					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kHasPerk:
-			{
-				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp == nullptr || actor->HasPerk(tmp) == false)
+				break;
+			case CustomItemConditionsAll::kActorTypeDwarven:
+				if (!_automaton)
 					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kHasKeyword:
-			{
-				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp == nullptr)
+				break;
+			case CustomItemConditionsAll::kHealthThreshold:
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kHealth) > Settings::Potions::_healthThreshold)  // over plugin health threshold
 					return false;
-				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
-				if (kwd == nullptr || (actor->HasKeyword(kwd) == false && actor->GetRace()->HasKeyword(kwd) == false))
-					return false;	
-			}
-			break;
-		case CustomItemConditionsAll::kNoCustomObjectUsage:
-			return false;
-		}
-	}
-
-	if (item->conditionsany.size() == 0)
-		return true;
-
-	for (int i = 0; i < item->conditionsany.size(); i++)
-	{
-		switch (std::get<0>(item->conditionsany[i]))
-		{
-		case CustomItemConditionsAny::kIsBoss:
-			if (_boss)
-				return true;
-			break;
-		case CustomItemConditionsAny::kActorTypeDwarven:
-			if (_automaton)
-				return true;
-			break;
-		case CustomItemConditionsAny::kHealthThreshold:
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kHealth) <= Settings::Potions::_healthThreshold)  // under health threshold
-				return true;
-			break;
-		case CustomItemConditionsAny::kMagickaThreshold:
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kMagicka) <= Settings::Potions::_magickaThreshold)  // under magicka threshold
-				return true;
-			break;
-		case CustomItemConditionsAny::kStaminaThreshold:
-			if (ACM::GetAVPercentage(actor, RE::ActorValue::kStamina) <= Settings::Potions::_staminaThreshold)  // under stamina threshold
-				return true;
-			break;
-		case CustomItemConditionsAny::kHasMagicEffect:
-			{
-				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp != nullptr && actor->HasMagicEffect(tmp) == true)
-					return true;
-			}
-			break;
-		case CustomItemConditionsAny::kHasPerk:
-			{
-				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp != nullptr && actor->HasPerk(tmp) == true)
-					return true;
-			}
-			break;
-		case CustomItemConditionsAny::kHasKeyword:
-			{
-				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp != nullptr) {
+				break;
+			case CustomItemConditionsAll::kMagickaThreshold:
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kMagicka) > Settings::Potions::_magickaThreshold)  // over plugin magicka threshold
+					return false;
+				break;
+			case CustomItemConditionsAll::kStaminaThreshold:
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kStamina) > Settings::Potions::_staminaThreshold)  // over plugin stamina threshold
+					return false;
+				break;
+			case CustomItemConditionsAll::kHasMagicEffect:
+				{
+					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp == nullptr || reac->HasMagicEffect(tmp) == false)
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kHasPerk:
+				{
+					auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp == nullptr || reac->HasPerk(tmp) == false)
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kHasKeyword:
+				{
+					auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp == nullptr)
+						return false;
 					RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
-					if (kwd != nullptr && (actor->HasKeyword(kwd) || actor->GetRace()->HasKeyword(kwd)))
+					if (kwd == nullptr || (reac->HasKeyword(kwd) == false && reac->GetRace()->HasKeyword(kwd) == false))
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kNoCustomObjectUsage:
+				return false;
+			}
+		}
+
+		if (item->conditionsany.size() == 0)
+			return true;
+
+		for (int i = 0; i < item->conditionsany.size(); i++) {
+			switch (std::get<0>(item->conditionsany[i])) {
+			case CustomItemConditionsAny::kIsBoss:
+				if (_boss)
+					return true;
+				break;
+			case CustomItemConditionsAny::kActorTypeDwarven:
+				if (_automaton)
+					return true;
+				break;
+			case CustomItemConditionsAny::kHealthThreshold:
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kHealth) <= Settings::Potions::_healthThreshold)  // under health threshold
+					return true;
+				break;
+			case CustomItemConditionsAny::kMagickaThreshold:
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kMagicka) <= Settings::Potions::_magickaThreshold)  // under magicka threshold
+					return true;
+				break;
+			case CustomItemConditionsAny::kStaminaThreshold:
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kStamina) <= Settings::Potions::_staminaThreshold)  // under stamina threshold
+					return true;
+				break;
+			case CustomItemConditionsAny::kHasMagicEffect:
+				{
+					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp != nullptr && reac->HasMagicEffect(tmp) == true)
 						return true;
 				}
+				break;
+			case CustomItemConditionsAny::kHasPerk:
+				{
+					auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp != nullptr && reac->HasPerk(tmp) == true)
+						return true;
+				}
+				break;
+			case CustomItemConditionsAny::kHasKeyword:
+				{
+					auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp != nullptr) {
+						RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+						if (kwd != nullptr && (reac->HasKeyword(kwd) || reac->GetRace()->HasKeyword(kwd)))
+							return true;
+					}
+				}
+				break;
 			}
-			break;
 		}
 	}
 	return false;
@@ -512,145 +533,149 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 bool ActorInfo::CalcDistrConditionsIntern(CustomItem* item)
 {
 	LOG_3("{}[ActorInfo] [CalcDistrConditions]");
-	// only check these if there are conditions
-	for (int i = 0; i < item->conditionsall.size(); i++) {
-		switch (std::get<0>(item->conditionsall[i])) {
-		case CustomItemConditionsAll::kActorTypeDwarven:
-			if (!_automaton)
-				return false;
-			break;
-		case CustomItemConditionsAll::kIsBoss:
-			if (!_boss)
-				return false;
-			break;
-		case CustomItemConditionsAll::kHasMagicEffect:
-			{
-				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp == nullptr || actor->HasMagicEffect(tmp) == false)
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* reac = actor.get().get();
+		// only check these if there are conditions
+		for (int i = 0; i < item->conditionsall.size(); i++)
+		{
+			switch (std::get<0>(item->conditionsall[i])) {
+			case CustomItemConditionsAll::kActorTypeDwarven:
+				if (!_automaton)
 					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kHasPerk:
-			{
-				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp == nullptr || actor->HasPerk(tmp) == false)
+				break;
+			case CustomItemConditionsAll::kIsBoss:
+				if (!_boss)
 					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kHasKeyword:
-			{
-				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp == nullptr)
-					return false;
-				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
-				if (kwd == nullptr || (actor->HasKeyword(kwd) == false && actor->GetRace()->HasKeyword(kwd) == false))
-					return false;	
-			}
-			break;
-		case CustomItemConditionsAll::kIsGhost:
-			{
-				if (actor->IsGhost() == false)
-					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kActorStrengthEq:
-			{
-				if (static_cast<uint32_t>(this->actorStrength) != std::get<1>(item->conditionsall[i]))
-					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kActorStrengthLesserEq:
-			{
-				if (static_cast<uint32_t>(this->actorStrength) > std::get<1>(item->conditionsall[i]))
-					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kActorStrengthGreaterEq:
-			{
-				if (static_cast<uint32_t>(this->actorStrength) < std::get<1>(item->conditionsall[i]))
-					return false;
-			}
-			break;
-		case CustomItemConditionsAll::kIsInFaction:
-			{
-				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp == nullptr)
-					return false;
-				RE::TESFaction* fac = tmp->As<RE::TESFaction>();
-				if (fac == nullptr || actor->IsInFaction(fac) == false)
-					return false;
-			}
-			break;
-		}
-	}
-
-	// no conditions at all
-	if (item->conditionsany.size() == 0)
-		return true;
-
-	for (int i = 0; i < item->conditionsany.size(); i++) {
-		switch (std::get<0>(item->conditionsany[i])) {
-		case CustomItemConditionsAny::kActorTypeDwarven:
-			if (_automaton)
-				return true;
-			break;
-		case CustomItemConditionsAny::kIsBoss:
-			if (_boss)
-				return true;
-			break;
-		case CustomItemConditionsAny::kHasMagicEffect:
-			{
-				auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp != nullptr && actor->HasMagicEffect(tmp) == true)
-					return true;
-			}
-			break;
-		case CustomItemConditionsAny::kHasPerk:
-			{
-				auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp != nullptr && actor->HasPerk(tmp) == true)
-					return true;
-			}
-			break;
-		case CustomItemConditionsAny::kHasKeyword:
-			{
-				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
-				if (kwd != nullptr && (actor->HasKeyword(kwd) || actor->GetRace()->HasKeyword(kwd)))
-					return true;	
-			}
-			break;
-		case CustomItemConditionsAny::kIsGhost:
-			{
-				if (actor->IsGhost())
-					return true;
-			}
-		case CustomItemConditionsAny::kActorStrengthEq:
-			{
-				if (static_cast<uint32_t>(this->actorStrength) == std::get<1>(item->conditionsall[i]))
-					return true;
-			}
-		case CustomItemConditionsAny::kActorStrengthLesserEq:
-			{
-				if (static_cast<uint32_t>(this->actorStrength) <= std::get<1>(item->conditionsall[i]))
-					return true;
-			}
-		case CustomItemConditionsAny::kActorStrengthGreaterEq:
-			{
-				if (static_cast<uint32_t>(this->actorStrength) >= std::get<1>(item->conditionsall[i]))
-					return true;
-			}
-			break;
-		case CustomItemConditionsAll::kIsInFaction:
-			{
-				auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-				if (tmp != nullptr) {
+				break;
+			case CustomItemConditionsAll::kHasMagicEffect:
+				{
+					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp == nullptr || reac->HasMagicEffect(tmp) == false)
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kHasPerk:
+				{
+					auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp == nullptr || reac->HasPerk(tmp) == false)
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kHasKeyword:
+				{
+					auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp == nullptr)
+						return false;
+					RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+					if (kwd == nullptr || (reac->HasKeyword(kwd) == false && reac->GetRace()->HasKeyword(kwd) == false))
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kIsGhost:
+				{
+					if (reac->IsGhost() == false)
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kActorStrengthEq:
+				{
+					if (static_cast<uint32_t>(this->actorStrength) != std::get<1>(item->conditionsall[i]))
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kActorStrengthLesserEq:
+				{
+					if (static_cast<uint32_t>(this->actorStrength) > std::get<1>(item->conditionsall[i]))
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kActorStrengthGreaterEq:
+				{
+					if (static_cast<uint32_t>(this->actorStrength) < std::get<1>(item->conditionsall[i]))
+						return false;
+				}
+				break;
+			case CustomItemConditionsAll::kIsInFaction:
+				{
+					auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp == nullptr)
+						return false;
 					RE::TESFaction* fac = tmp->As<RE::TESFaction>();
-					if (fac == nullptr || actor->IsInFaction(fac))
+					if (fac == nullptr || reac->IsInFaction(fac) == false)
+						return false;
+				}
+				break;
+			}
+		}
+
+		// no conditions at all
+		if (item->conditionsany.size() == 0)
+			return true;
+
+		for (int i = 0; i < item->conditionsany.size(); i++) {
+			switch (std::get<0>(item->conditionsany[i])) {
+			case CustomItemConditionsAny::kActorTypeDwarven:
+				if (_automaton)
+					return true;
+				break;
+			case CustomItemConditionsAny::kIsBoss:
+				if (_boss)
+					return true;
+				break;
+			case CustomItemConditionsAny::kHasMagicEffect:
+				{
+					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp != nullptr && reac->HasMagicEffect(tmp) == true)
 						return true;
 				}
+				break;
+			case CustomItemConditionsAny::kHasPerk:
+				{
+					auto tmp = Data::GetSingleton()->FindPerk(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp != nullptr && reac->HasPerk(tmp) == true)
+						return true;
+				}
+				break;
+			case CustomItemConditionsAny::kHasKeyword:
+				{
+					auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					RE::BGSKeyword* kwd = tmp->As<RE::BGSKeyword>();
+					if (kwd != nullptr && (reac->HasKeyword(kwd) || reac->GetRace()->HasKeyword(kwd)))
+						return true;
+				}
+				break;
+			case CustomItemConditionsAny::kIsGhost:
+				{
+					if (reac->IsGhost())
+						return true;
+				}
+			case CustomItemConditionsAny::kActorStrengthEq:
+				{
+					if (static_cast<uint32_t>(this->actorStrength) == std::get<1>(item->conditionsall[i]))
+						return true;
+				}
+			case CustomItemConditionsAny::kActorStrengthLesserEq:
+				{
+					if (static_cast<uint32_t>(this->actorStrength) <= std::get<1>(item->conditionsall[i]))
+						return true;
+				}
+			case CustomItemConditionsAny::kActorStrengthGreaterEq:
+				{
+					if (static_cast<uint32_t>(this->actorStrength) >= std::get<1>(item->conditionsall[i]))
+						return true;
+				}
+				break;
+			case CustomItemConditionsAll::kIsInFaction:
+				{
+					auto tmp = Data::GetSingleton()->FindForm(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
+					if (tmp != nullptr) {
+						RE::TESFaction* fac = tmp->As<RE::TESFaction>();
+						if (fac == nullptr || reac->IsInFaction(fac))
+							return true;
+					}
+				}
+				break;
 			}
-			break;
 		}
 	}
 	return false;
@@ -876,14 +901,15 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (!form) {
 					return false;
 				}
-				actor = form->As<RE::Actor>();
-				if (!actor) {
+				RE::Actor* reac = form->As<RE::Actor>();
+				if (reac == nullptr) {
 					return false;
 				}
+				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = actor->GetFormID();
+				formid = reac->GetFormID();
 
-				name = actor->GetName();
+				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);
 				durStamina = Buffer::ReadInt32(buffer, offset);
@@ -905,7 +931,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
 				if (pluginID == 0x1) {
-					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 			}
 			return true;
@@ -926,14 +952,15 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 						return false;
 					}
 				}
-				actor = form->As<RE::Actor>();
-				if (!actor) {
+				RE::Actor* reac = form->As<RE::Actor>();
+				if (reac == nullptr) {
 					return false;
 				}
+				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = actor->GetFormID();
+				formid = reac->GetFormID();
 
-				name = actor->GetName();
+				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);
 				durStamina = Buffer::ReadInt32(buffer, offset);
@@ -956,7 +983,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
 				if (pluginID == 0x1) {
-					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 			}
 			return true;
@@ -980,14 +1007,15 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 						return false;
 					}
 				}
-				actor = form->As<RE::Actor>();
-				if (actor == nullptr) {
+				RE::Actor* reac = form->As<RE::Actor>();
+				if (reac == nullptr) {
 					return false;
 				}
+				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = actor->GetFormID();
+				formid = reac->GetFormID();
 
-				name = actor->GetName();
+				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
 				durMagicka = Buffer::ReadInt32(buffer, offset);
 				durStamina = Buffer::ReadInt32(buffer, offset);
@@ -1007,7 +1035,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
 				if (pluginID == 0x1) {
-					pluginID = Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID;
+					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 			}
 			return true;
@@ -1024,16 +1052,17 @@ void ActorInfo::Update()
 	aclock;
 	if (!valid)
 		return;
-	actor = RE::TESForm::LookupByID<RE::Actor>(formid);
-	if (actor == nullptr)
+	RE::Actor* reac = RE::TESForm::LookupByID<RE::Actor>(formid);
+	if (reac == nullptr)
 		valid = false;
 	else {
+		actor = reac->GetHandle();
 		// update vampire status
 		_vampire = false;
-		if (actor->HasKeyword(Settings::Vampire) || actor->GetRace()->HasKeyword(Settings::Vampire))
+		if (reac->HasKeyword(Settings::Vampire) || reac->GetRace()->HasKeyword(Settings::Vampire))
 			_vampire = true;
 		// update the metrics, since we are sure our object is valid
-		UpdateMetrics();
+		UpdateMetrics(reac);
 	}
 }
 
@@ -1074,7 +1103,7 @@ short ActorInfo::GetTargetLevel()
 uint32_t ActorInfo::GetCombatData()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		return 0;
 	return combatdata;
 }
@@ -1082,7 +1111,7 @@ uint32_t ActorInfo::GetCombatData()
 void ActorInfo::SetCombatData(uint32_t data)
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		combatdata = 0;
 	else
 		combatdata = data;
@@ -1091,7 +1120,7 @@ void ActorInfo::SetCombatData(uint32_t data)
 uint32_t ActorInfo::GetCombatDataTarget()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		return 0;
 	return tcombatdata;
 }
@@ -1099,7 +1128,7 @@ uint32_t ActorInfo::GetCombatDataTarget()
 void ActorInfo::SetCombatDataTarget(uint32_t data)
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		tcombatdata = 0;
 	else
 		tcombatdata = data;
@@ -1108,7 +1137,7 @@ void ActorInfo::SetCombatDataTarget(uint32_t data)
 bool ActorInfo::GetHandleActor()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		return false;
 	return handleactor;
 }
@@ -1116,7 +1145,7 @@ bool ActorInfo::GetHandleActor()
 void ActorInfo::SetHandleActor(bool handle)
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		handleactor = false;
 	else
 		handleactor = handle;
@@ -1125,7 +1154,7 @@ void ActorInfo::SetHandleActor(bool handle)
 float ActorInfo::GetPlayerDistance()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		return FLT_MAX;
 	return playerDistance;
 }
@@ -1133,7 +1162,7 @@ float ActorInfo::GetPlayerDistance()
 void ActorInfo::SetPlayerDistance(float distance)
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		playerDistance = FLT_MAX;
 	else
 		playerDistance = distance;
@@ -1142,7 +1171,7 @@ void ActorInfo::SetPlayerDistance(float distance)
 bool ActorInfo::GetPlayerHostile()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		return false;
 	return playerHostile;
 }
@@ -1150,7 +1179,7 @@ bool ActorInfo::GetPlayerHostile()
 void ActorInfo::SetPlayerHostile(bool hostile)
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		playerHostile = false;
 	playerHostile = hostile;
 }
@@ -1158,7 +1187,7 @@ void ActorInfo::SetPlayerHostile(bool hostile)
 bool ActorInfo::GetWeaponsDrawn()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		return false;
 	return weaponsDrawn;
 }
@@ -1166,7 +1195,7 @@ bool ActorInfo::GetWeaponsDrawn()
 void ActorInfo::SetWeaponsDrawn(bool drawn)
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		weaponsDrawn = false;
 	else
 		weaponsDrawn = drawn;
@@ -1175,10 +1204,11 @@ void ActorInfo::SetWeaponsDrawn(bool drawn)
 void ActorInfo::UpdateWeaponsDrawn()
 {
 	aclock;
-	if (!valid)
+	if (!valid || deleted)
 		weaponsDrawn = false;
-	else
-		weaponsDrawn = actor->IsWeaponDrawn();
+
+	if (actor.get() && actor.get().get())
+		weaponsDrawn = actor.get().get()->IsWeaponDrawn();
 }
 
 #pragma region ActorSpecificFunctions
@@ -1188,15 +1218,19 @@ bool ActorInfo::IsFollower()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	bool follower = actor->IsInFaction(Settings::CurrentFollowerFaction) || actor->IsInFaction(Settings::CurrentHirelingFaction);
-	if (follower)
-		return true;
-	if (actor->GetActorBase()) {
-		auto itr = actor->GetActorBase()->factions.begin();
-		while (itr != actor->GetActorBase()->factions.end()) {
-			if (Distribution::followerFactions()->contains(itr->faction->GetFormID()) && itr->rank >= 0)
-				return true;
-			itr++;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* reac = actor.get().get();
+		bool follower = reac->IsInFaction(Settings::CurrentFollowerFaction) || reac->IsInFaction(Settings::CurrentHirelingFaction);
+		if (follower)
+			return true;
+		if (reac->GetActorBase()) {
+			auto itr = reac->GetActorBase()->factions.begin();
+			while (itr != reac->GetActorBase()->factions.end()) {
+				if (Distribution::followerFactions()->contains(itr->faction->GetFormID()) && itr->rank >= 0)
+					return true;
+				itr++;
+			}
 		}
 	}
 	return false;
@@ -1212,7 +1246,10 @@ RE::TESObjectREFR::InventoryItemMap ActorInfo::GetInventory()
 	aclock;
 	if (!valid || deleted)
 		return RE::TESObjectREFR::InventoryItemMap{};
-	return actor->GetInventory();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->GetInventory();
+	return RE::TESObjectREFR::InventoryItemMap{};
 }
 
 RE::TESObjectREFR::InventoryCountMap ActorInfo::GetInventoryCounts()
@@ -1220,7 +1257,10 @@ RE::TESObjectREFR::InventoryCountMap ActorInfo::GetInventoryCounts()
 	aclock;
 	if (!valid || deleted)
 		return RE::TESObjectREFR::InventoryCountMap{};
-	return actor->GetInventoryCounts();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->GetInventoryCounts();
+	return RE::TESObjectREFR::InventoryCountMap{};
 }
 
 bool ActorInfo::HasMagicEffect(RE::EffectSetting* effect)
@@ -1228,7 +1268,10 @@ bool ActorInfo::HasMagicEffect(RE::EffectSetting* effect)
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->HasMagicEffect(effect);
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->HasMagicEffect(effect);
+	return false;
 }
 
 bool ActorInfo::DrinkPotion(RE::AlchemyItem* potion, RE::ExtraDataList* extralist)
@@ -1236,7 +1279,10 @@ bool ActorInfo::DrinkPotion(RE::AlchemyItem* potion, RE::ExtraDataList* extralis
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->DrinkPotion(potion, extralist);
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->DrinkPotion(potion, extralist);
+	return false;
 }
 
 RE::InventoryEntryData* ActorInfo::GetEquippedEntryData(bool leftHand)
@@ -1244,7 +1290,11 @@ RE::InventoryEntryData* ActorInfo::GetEquippedEntryData(bool leftHand)
 	aclock;
 	if (!valid || deleted)
 		return nullptr;
-	return actor->GetEquippedEntryData(leftHand);
+
+	if (!leftHand || _haslefthand)
+		if (actor.get() && actor.get().get())
+			return actor.get().get()->GetEquippedEntryData(leftHand);
+	return nullptr;
 }
 
 void ActorInfo::RemoveItem(RE::TESBoundObject* item, int32_t count)
@@ -1252,7 +1302,9 @@ void ActorInfo::RemoveItem(RE::TESBoundObject* item, int32_t count)
 	aclock;
 	if (!valid || deleted)
 		return;
-	actor->RemoveItem(item, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+
+	if (actor.get() && actor.get().get())
+		actor.get().get()->RemoveItem(item, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 }
 
 void ActorInfo::AddItem(RE::TESBoundObject* item, int32_t count)
@@ -1260,7 +1312,9 @@ void ActorInfo::AddItem(RE::TESBoundObject* item, int32_t count)
 	aclock;
 	if (!valid || deleted)
 		return;
-	actor->AddObjectToContainer(item, nullptr, count, nullptr);
+
+	if (actor.get() && actor.get().get())
+		actor.get().get()->AddObjectToContainer(item, nullptr, count, nullptr);
 }
 
 uint32_t ActorInfo::GetFormFlags()
@@ -1268,7 +1322,10 @@ uint32_t ActorInfo::GetFormFlags()
 	aclock;
 	if (!valid || deleted)
 		return 0;
-	return actor->formFlags;
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->formFlags;
+	return 0;
 }
 
 bool ActorInfo::IsDead()
@@ -1276,10 +1333,11 @@ bool ActorInfo::IsDead()
 	aclock;
 	if (!valid || deleted)
 		return true;
-	if (actor->boolBits & RE::Actor::BOOL_BITS::kDead)
-		return true;
-	else
-		return false;
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->boolBits & RE::Actor::BOOL_BITS::kDead)
+			return true;
+	return false;
 }
 
 RE::TESNPC* ActorInfo::GetActorBase()
@@ -1287,7 +1345,10 @@ RE::TESNPC* ActorInfo::GetActorBase()
 	aclock;
 	if (!valid || deleted)
 		return nullptr;
-	return actor->GetActorBase();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->GetActorBase();
+	return nullptr;
 }
 
 RE::FormID ActorInfo::GetActorBaseFormID()
@@ -1295,8 +1356,10 @@ RE::FormID ActorInfo::GetActorBaseFormID()
 	aclock;
 	if (!valid || deleted)
 		return 0;
-	if (actor->GetActorBase())
-		return actor->GetActorBase()->GetFormID();
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->GetActorBase())
+			return actor.get().get()->GetActorBase()->GetFormID();
 	return 0;
 }
 
@@ -1305,8 +1368,10 @@ std::string ActorInfo::GetActorBaseFormEditorID()
 	aclock;
 	if (!valid || deleted)
 		return 0;
-	if (actor->GetActorBase())
-		return actor->GetActorBase()->GetFormEditorID();
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->GetActorBase())
+			return actor.get().get()->GetActorBase()->GetFormEditorID();
 	return 0;
 }
 
@@ -1315,8 +1380,10 @@ RE::TESCombatStyle* ActorInfo::GetCombatStyle()
 	aclock;
 	if (!valid || deleted)
 		return nullptr;
-	if (actor->GetActorBase())
-		return actor->GetActorBase()->GetCombatStyle();
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->GetActorBase())
+			return actor.get().get()->GetActorBase()->GetCombatStyle();
 	return nullptr;
 }
 
@@ -1325,8 +1392,10 @@ RE::TESRace* ActorInfo::GetRace()
 	aclock;
 	if (!valid || deleted)
 		return nullptr;
-	if (actor->GetActorBase())
-		return actor->GetActorBase()->GetRace();
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->GetActorBase())
+			return actor.get().get()->GetActorBase()->GetRace();
 	return nullptr;
 }
 
@@ -1335,8 +1404,10 @@ RE::FormID ActorInfo::GetRaceFormID()
 	aclock;
 	if (!valid || deleted)
 		return 0;
-	if (actor->GetActorBase() && actor->GetActorBase()->GetRace())
-		return actor->GetActorBase()->GetRace()->GetFormID();
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->GetActorBase() && actor.get().get()->GetActorBase()->GetRace())
+			return actor.get().get()->GetActorBase()->GetRace()->GetFormID();
 	return 0;
 }
 
@@ -1345,7 +1416,10 @@ bool ActorInfo::IsGhost()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->IsGhost();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->IsGhost();
+	return false;
 }
 
 bool ActorInfo::IsSummonable()
@@ -1353,8 +1427,10 @@ bool ActorInfo::IsSummonable()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	if (actor->GetActorBase())
-		return actor->GetActorBase()->IsSummonable();
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->GetActorBase())
+			return actor.get().get()->GetActorBase()->IsSummonable();
 	return false;
 }
 
@@ -1363,8 +1439,10 @@ bool ActorInfo::Bleeds()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	if (actor->GetActorBase())
-		return actor->GetActorBase()->Bleeds();
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->GetActorBase())
+			return actor.get().get()->GetActorBase()->Bleeds();
 	return false;
 }
 
@@ -1373,7 +1451,9 @@ short ActorInfo::GetLevel()
 	aclock;
 	if (!valid || deleted)
 		return 1;
-	return actor->GetLevel();
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->GetLevel();
+	return 1;
 }
 
 SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> ActorInfo::GetBoolBits()
@@ -1381,7 +1461,10 @@ SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> ActorInfo::GetBoolBits()
 	aclock;
 	if (!valid || deleted)
 		return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
-	return actor->boolBits;
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->boolBits;
+	return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
 }
 
 bool ActorInfo::IsFlying()
@@ -1389,7 +1472,10 @@ bool ActorInfo::IsFlying()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->IsFlying();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->IsFlying();
+	return false;
 }
 
 bool ActorInfo::IsInKillMove()
@@ -1397,7 +1483,10 @@ bool ActorInfo::IsInKillMove()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->IsInKillMove();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->IsInKillMove();
+	return false;
 }
 
 bool ActorInfo::IsInMidair()
@@ -1405,7 +1494,10 @@ bool ActorInfo::IsInMidair()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->IsInMidair();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->IsInMidair();
+	return false;
 }
 
 bool ActorInfo::IsInRagdollState()
@@ -1413,7 +1505,10 @@ bool ActorInfo::IsInRagdollState()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->IsInRagdollState();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->IsInRagdollState();
+	return false;
 }
 
 bool ActorInfo::IsUnconscious()
@@ -1421,7 +1516,10 @@ bool ActorInfo::IsUnconscious()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->IsUnconscious();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->IsUnconscious();
+	return false;
 }
 
 bool ActorInfo::IsParalyzed()
@@ -1429,10 +1527,11 @@ bool ActorInfo::IsParalyzed()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	if (actor->boolBits & RE::Actor::BOOL_BITS::kParalyzed)
-		return true;
-	else
-		return false;
+
+	if (actor.get() && actor.get().get())
+		if (actor.get().get()->boolBits & RE::Actor::BOOL_BITS::kParalyzed)
+			return true;
+	return false;
 }
 
 bool ActorInfo::IsStaggered()
@@ -1440,7 +1539,10 @@ bool ActorInfo::IsStaggered()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->actorState2.staggered;
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->actorState2.staggered;
+	return false;
 }
 
 bool ActorInfo::IsBleedingOut()
@@ -1448,7 +1550,10 @@ bool ActorInfo::IsBleedingOut()
 	aclock;
 	if (!valid || deleted)
 		return false;
-	return actor->IsBleedingOut();
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->IsBleedingOut();
+	return false;
 }
 
 #pragma endregion
