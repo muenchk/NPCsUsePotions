@@ -319,6 +319,7 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(s
 	AlchemyEffect tmp = AlchemyEffect::kNone;
 	AlchemyEffectBase out = 0;
 	int count = 0;
+	std::tuple<bool, float, int, AlchemyEffectBase, bool> res;
 	while (iter != itemmap.end() && count < 1000) {
 		if (Utility::ValidateForm(iter->first) &&
 			std::get<1>(iter->second).get() &&
@@ -337,30 +338,40 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(s
 					item->HasKeyword(Settings::VendorItemFood) ||
 					(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
 				(raw == true || !item->HasKeyword(Settings::VendorItemFoodRaw))) {
-				mag = 0;
-				dur = 0;
-				out = 0;
-				if (item->effects.size() > 0) {
-					for (uint32_t i = 0; i < item->effects.size(); i++) {
-						sett = item->effects[i]->baseEffect;
-						if (sett) {
-							// skip food with detrimental effects
-							if (sett->IsDetrimental()) {
-								iter++;
-								i++;
-								continue;
-							}
-							if ((tmp = ConvertToAlchemyEffectPrimary(sett)) != AlchemyEffect::kNone) {
-								out = static_cast<AlchemyEffectBase>(tmp);
-								mag = item->effects[i]->effectItem.magnitude;
-								dur = item->effects[i]->effectItem.duration;
-								break;
+				if (acinfo->CanUseFood(item->GetFormID())) {
+					auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+					ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
+				} else if (Distribution::excludedItems()->contains(item->GetFormID()) == false) {
+					mag = 0;
+					dur = 0;
+					out = 0;
+					if (item->effects.size() > 0) {
+						for (uint32_t i = 0; i < item->effects.size(); i++) {
+							sett = item->effects[i]->baseEffect;
+							if (sett) {
+								// skip food with detrimental effects
+								if (sett->IsDetrimental()) {
+									// break out of inner loop and set out to zero, which will result in skipping this item
+									out = 0;
+									break;
+								}
+								if ((tmp = ConvertToAlchemyEffectPrimary(sett)) != AlchemyEffect::kNone) {
+									out = static_cast<AlchemyEffectBase>(tmp);
+									mag = item->effects[i]->effectItem.magnitude;
+									dur = item->effects[i]->effectItem.duration;
+									break;
+								}
 							}
 						}
 					}
+					if (out == 0) {
+						iter++;
+						count++;
+						continue;
+					}
+					LOG1_4("{}[ActorManipulation] [GetRandomFood] found food {}", Utility::PrintForm(item));
+					ret.insert(ret.begin(), { mag, dur, item, out });
 				}
-				LOG1_4("{}[ActorManipulation] [GetRandomFood] found food {}", Utility::PrintForm(item));
-				ret.insert(ret.begin(), { mag, dur, item, out });
 			}
 		}
 		iter++;
