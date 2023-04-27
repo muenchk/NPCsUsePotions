@@ -2716,66 +2716,70 @@ void Settings::ClassifyItems()
 				// since the item is not to be excluded, save which alchemic effects are present
 				_alchemyEffectsFound |= std::get<0>(clas);
 
-				// determine the type of item
-				if (std::get<2>(clas) == ItemType::kFood &&
-					(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
-					_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
-					_foodEffectsFound |= std::get<0>(clas);
-				} else if (std::get<2>(clas) == ItemType::kPoison &&
-						   (Settings::Poisons::_AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
-					switch (std::get<1>(clas)) {
-					case ItemStrength::kWeak:
-						_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
-						break;
-					case ItemStrength::kStandard:
-						_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
-						break;
-					case ItemStrength::kPotent:
-						_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
-						break;
-					case ItemStrength::kInsane:
-						_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
-						break;
-					}
-					_poisonEffectsFound |= std::get<0>(clas);
-				} else if (std::get<2>(clas) == ItemType::kPotion &&
-						   (Settings::Potions::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
-					if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
-						_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
-					else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-							 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-							 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
+				// if the value of the item is less than zero, we should not insert them into the distribution lists, since they are likely to be broken
+				// or test/dummy items
+				if (item->GetGoldValue() <= 0) {
+					// determine the type of item
+					if (std::get<2>(clas) == ItemType::kFood &&
+						(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
+						_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
+						_foodEffectsFound |= std::get<0>(clas);
+					} else if (std::get<2>(clas) == ItemType::kPoison &&
+							   (Settings::Poisons::_AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
 						switch (std::get<1>(clas)) {
 						case ItemStrength::kWeak:
-							_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
+							_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
 							break;
 						case ItemStrength::kStandard:
-							_potionsStandard_main.insert(_potionsStandard_main.end(), { std::get<0>(clas), item });
+							_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
 							break;
 						case ItemStrength::kPotent:
-							_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+							_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
 							break;
 						case ItemStrength::kInsane:
-							_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+							_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
 							break;
 						}
-					} else if (std::get<0>(clas) != static_cast<uint64_t>(AlchemyEffect::kNone)) {
-						switch (std::get<1>(clas)) {
-						case ItemStrength::kWeak:
-							_potionsWeak_rest.insert(_potionsWeak_rest.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kStandard:
-							_potionsStandard_rest.insert(_potionsStandard_rest.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kPotent:
-							_potionsPotent_rest.insert(_potionsPotent_rest.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kInsane:
-							_potionsInsane_rest.insert(_potionsInsane_rest.end(), { std::get<0>(clas), item });
-							break;
+						_poisonEffectsFound |= std::get<0>(clas);
+					} else if (std::get<2>(clas) == ItemType::kPotion &&
+							   (Settings::Potions::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
+						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
+							_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
+						else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
+								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
+								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
+							switch (std::get<1>(clas)) {
+							case ItemStrength::kWeak:
+								_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
+								break;
+							case ItemStrength::kStandard:
+								_potionsStandard_main.insert(_potionsStandard_main.end(), { std::get<0>(clas), item });
+								break;
+							case ItemStrength::kPotent:
+								_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+								break;
+							case ItemStrength::kInsane:
+								_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+								break;
+							}
+						} else if (std::get<0>(clas) != static_cast<uint64_t>(AlchemyEffect::kNone)) {
+							switch (std::get<1>(clas)) {
+							case ItemStrength::kWeak:
+								_potionsWeak_rest.insert(_potionsWeak_rest.end(), { std::get<0>(clas), item });
+								break;
+							case ItemStrength::kStandard:
+								_potionsStandard_rest.insert(_potionsStandard_rest.end(), { std::get<0>(clas), item });
+								break;
+							case ItemStrength::kPotent:
+								_potionsPotent_rest.insert(_potionsPotent_rest.end(), { std::get<0>(clas), item });
+								break;
+							case ItemStrength::kInsane:
+								_potionsInsane_rest.insert(_potionsInsane_rest.end(), { std::get<0>(clas), item });
+								break;
+							}
 						}
+						_potionEffectsFound |= std::get<0>(clas);
 					}
-					_potionEffectsFound |= std::get<0>(clas);
 				}
 				int dosage = 0;
 				if (item->IsPoison())

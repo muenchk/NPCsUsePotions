@@ -44,6 +44,7 @@ namespace Papyrus
 			Statistics::Misc_PoisonsUsed++;
 
 			LOG1_2("{}[Papyrus] [Poison] [AnimatedPoisons_Callback] Use Poison {}", Utility::PrintForm(poison));
+			logusage("Actor:\t{}\tItem:\t{}", Utility::PrintForm(actor), Utility::PrintForm(poison));
 			RE::ExtraDataList* extra = new RE::ExtraDataList();
 			extra->Add(new RE::ExtraPoison(poison, dosage));
 			auto ied = actor->GetEquippedEntryData(false);

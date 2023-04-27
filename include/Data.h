@@ -77,6 +77,13 @@ public:
 	/// <returns></returns>
 	std::shared_ptr<ActorInfo> FindActor(RE::Actor* actor);
 	/// <summary>
+	/// Returns an actorinfo object with information about [actor]
+	/// Does not create new information objects
+	/// </summary>
+	/// <param name="actor">the actor to find</param>
+	/// <returns></returns>
+	std::shared_ptr<ActorInfo> FindActorExisting(RE::Actor* actor);
+	/// <summary>
 	/// Returns and actorinfo object with information about [actorid]. THIS MAY RETURN NULLPTR.
 	/// </summary>
 	/// <param name="actorid"></param>

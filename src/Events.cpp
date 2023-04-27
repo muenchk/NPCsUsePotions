@@ -96,7 +96,7 @@ namespace Events
 				if (Main::IsDeadEventFired(actor) == false) {
 					EvalProcessingEvent();
 					// invalidate actor
-					std::shared_ptr<ActorInfo> acinfo = Main::data->FindActor(actor);
+					std::shared_ptr<ActorInfo> acinfo = Main::data->FindActorExisting(actor);
 					bool excluded = Distribution::ExcludedNPC(acinfo);
 					acinfo->SetInvalid();
 					// all npcs must be unregistered, even if distribution oes not apply to them

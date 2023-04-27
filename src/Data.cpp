@@ -42,7 +42,7 @@ std::shared_ptr<ActorInfo> Data::CreateActorInfoNew()
 
 std::shared_ptr<ActorInfo> Data::CreateActorInfoEmpty()
 {
-	std::shared_ptr<ActorInfo> empty = std::make_shared<ActorInfo>();
+	std::shared_ptr<ActorInfo> empty = std::make_shared<ActorInfo>(true); // blocks resetting this instance
 	empty->SetInvalid();
 	empty->SetDeleted();
 	LOG_4("{}[Data] [CreateActorInfoEmpty]");
@@ -93,6 +93,37 @@ std::shared_ptr<ActorInfo> Data::FindActor(RE::Actor* actor)
 	// create new object. This will override existing objects for a formid as long as they are invalid or deleted
 	// as checked above
 	std::shared_ptr<ActorInfo> acinfo = CreateActorInfo(actor);
+	lockdata.release();
+	return acinfo;
+}
+
+std::shared_ptr<ActorInfo> Data::FindActorExisting(RE::Actor* actor)
+{
+	if (Utility::ValidateActor(actor) == false)
+		return CreateActorInfoEmpty();  // worst case, should not be necessary here
+	lockdata.acquire();
+	// check whether the actor was deleted before
+	if (deletedActors.contains(actor->GetFormID())) {
+		// create dummy ActorInfo
+		std::shared_ptr<ActorInfo> acinfo = CreateActorInfoEmpty();
+		lockdata.release();
+		return acinfo;
+	}
+	// if there already is an valid object for the actor return it
+	if (validActors.contains(actor->GetFormID())) {
+		// find the object
+		auto itr = actorinfoMap.find(actor->GetFormID());
+		if (itr != actorinfoMap.end()) {
+			// found it, check it for validity and deleted status
+			if (itr->second->IsValid() && !itr->second->GetDeleted()) {
+				lockdata.release();
+				return itr->second;
+			}
+			// else go to next point
+		}
+	}
+	// if there is no valid actorinfo object present, return an empty one and do not create a new one
+	std::shared_ptr<ActorInfo> acinfo = CreateActorInfoEmpty();
 	lockdata.release();
 	return acinfo;
 }

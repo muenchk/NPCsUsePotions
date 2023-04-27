@@ -5,7 +5,7 @@
 #include <mutex>
 #include <memory>
 
-#define aclock std::lock_guard<std::mutex> guard(mutex);
+#define aclock ((void)0);  //std::lock_guard<std::mutex> guard(mutex);
 
 #pragma once
 /// <summary>
@@ -138,7 +138,7 @@ private:
 	/// <summary>
 	/// The actor
 	/// </summary>
-	RE::Actor* actor = nullptr;
+	RE::ActorHandle actor;
 	/// <summary>
 	/// form id of the actor
 	/// </summary>
@@ -233,6 +233,10 @@ private:
 	/// </summary>
 	CombatState combatstate = CombatState::OutOfCombat;
 
+	/// <summary>
+	/// whether the actor has a lefthand slot
+	/// </summary>
+	bool _haslefthand = false;
 
 	// temporary targeting variables
 	
@@ -251,6 +255,8 @@ private:
 	// whether the weapons are drawn
 	bool weaponsDrawn = false;
 
+	std::string _formstring;
+
 
 public:
 	/// <summary>
@@ -259,6 +265,7 @@ public:
 	static inline const uint32_t version = 0x00000003;
 
 	ActorInfo(RE::Actor* _actor);
+	ActorInfo(bool blockedReset);
 	ActorInfo();
 
 	/// <summary>
@@ -304,12 +311,16 @@ private:
 	/// Whether the actor has been deleted;
 	/// </summary>
 	bool deleted = false;
+	/// <summary>
+	/// Blocks resetting this info
+	/// </summary>
+	bool blockReset = false;
 
 	/// <summary>
 	/// Updates certain actor metrics
 	/// [Should only be called, directly after updating the actor value]
 	/// </summary>
-	void UpdateMetrics();
+	void UpdateMetrics(RE::Actor* reac);
 
 	/// <summary>
 	/// Returns whether the given custom item can be used by the actor
@@ -325,6 +336,8 @@ private:
 	bool CalcDistrConditionsIntern(CustomItem* item);
 
 public:
+
+	std::string GetFormString() { return _formstring; }
 
 	/// <summary>
 	/// Returns whether the ActorInfo is valid

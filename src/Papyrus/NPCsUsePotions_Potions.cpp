@@ -34,6 +34,8 @@ namespace Papyrus
 				return;
 			}
 
+			logusage("Actor:\t{}\tItem:\t{}", Utility::PrintForm(actor), Utility::PrintForm(potion));
+
 			comp->AnPoti_RemoveActorPotion(actor->GetFormID());
 			RE::ExtraPoison* poison = nullptr;
 			bool poisonf = Utility::GetAppliedPoison(actor, poison);

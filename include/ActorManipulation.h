@@ -40,6 +40,8 @@ public:
 	/// <returns></returns>
 	static float GetAVMax(RE::Actor* _actor, RE::ActorValue av)
 	{
+		if (_actor == nullptr)
+			return 1;
 		// add base value, permanent modifiers and temporary modifiers (magic effects for instance)
 		return _actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av);
 	}
@@ -51,6 +53,8 @@ public:
 	/// <returns></returns>
 	static float GetAVPercentage(RE::Actor* _actor, RE::ActorValue av)
 	{
+		if (_actor == nullptr)
+			return 1;
 		return _actor->GetActorValue(av) / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 		/*float tmp = _actor->GetActorValue(av) / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 		logger::info("[GetAVPercentage] {}", tmp);
@@ -66,6 +70,8 @@ public:
 	/// <returns></returns>
 	static float GetAVPercentageFromValue(RE::Actor* _actor, RE::ActorValue av, float curr)
 	{
+		if (_actor == nullptr)
+			return 1;
 		return curr / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 		/*float tmp = curr / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 		logger::info("[GetAVPercentageFromValue] {}", tmp);
