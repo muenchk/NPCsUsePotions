@@ -34,6 +34,7 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 			if (slot->GetFormID() == 0x13F43) // LeftHand
 				_haslefthand = true;
 		}
+		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
 		// set to valid
@@ -91,6 +92,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 			if (slot->GetFormID() == 0x13F43)  // LeftHand
 				_haslefthand = true;
 		}
+		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
 		// set to valid
@@ -933,6 +935,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (pluginID == 0x1) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
+				_formstring = Utility::PrintForm(this);
 			}
 			return true;
 		case 0x00000002:
@@ -985,6 +988,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (pluginID == 0x1) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
+				_formstring = Utility::PrintForm(this);
 			}
 			return true;
 		case 0x00000003:
@@ -1037,6 +1041,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (pluginID == 0x1) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
+				_formstring = Utility::PrintForm(this);
 			}
 			return true;
 		default:

@@ -116,7 +116,7 @@ public:
 
 		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
 	}
-	//static std::string PrintForm(ActorInfo* form);
+	static std::string PrintForm(ActorInfo* acinfo);
 	static std::string PrintForm(std::shared_ptr<ActorInfo> const& acinfo);
 	static std::string PrintForm(std::weak_ptr<ActorInfo> acweak);
 

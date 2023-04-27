@@ -7,13 +7,13 @@ bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffe
 {
 	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
 }
-/*
+
 std::string Utility::PrintForm(ActorInfo* acinfo)
 {
-	if (acinfo == nullptr || acinfo->IsValid() == false || Logging::EnableGenericLogging == false)
+	if (acinfo == nullptr)
 		return "None";
-	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->formid) + "><" + acinfo->name + "><" + acinfo->pluginname + ">]";
-}*/
+	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->GetFormID()) + "><" + acinfo->GetName() + "><" + acinfo->GetPluginname() + ">]";
+}
 
 std::string Utility::PrintForm(std::shared_ptr<ActorInfo> const& acinfo)
 {

@@ -464,3 +464,72 @@ public:
 	/// </summary>
 	static inline int ProfileLevel = 0;
 };
+
+
+class LogUsage
+{
+	static inline std::ofstream* _stream = nullptr;
+	static inline std::binary_semaphore lock{ 1 };
+
+public:
+	/// <summary>
+	/// Inits item usage log
+	/// </summary>
+	/// <param name="pluginname"></param>
+	static void Init(std::string pluginname)
+	{
+		lock.acquire();
+		auto path = SKSE::log::log_directory();
+		if (path.has_value()) {
+			_stream = new std::ofstream(path.value() / (pluginname + "_usage.log"), std::ios_base::out | std::ios_base::trunc);
+		}
+		lock.release();
+	}
+
+	/// <summary>
+	/// Closes item usage log
+	/// </summary>
+	static void Close()
+	{
+		lock.acquire();
+		if (_stream != nullptr) {
+			_stream->flush();
+			_stream->close();
+			delete _stream;
+			_stream = nullptr;
+		}
+		lock.release();
+	}
+
+	/// <summary>
+	/// writes to the item usage log
+	/// </summary>
+	/// <typeparam name="...Args"></typeparam>
+	/// <param name="message"></param>
+	template <class... Args>
+	static void write(std::string message)
+	{
+		lock.acquire();
+		if (_stream) {
+			_stream->write(message.c_str(), message.size());
+			_stream->flush();
+		}
+		lock.release();
+	}
+};
+template <class... Args>
+struct [[maybe_unused]] logusage
+{
+	logusage() = delete;
+
+	explicit logusage(
+		fmt::format_string<Args...> a_fmt,
+		Args&&... a_args)
+	{
+		std::string mes = std::string("[usage] ") + Logging::TimePassed() + " | " + fmt::format(a_fmt, std::forward<Args>(a_args)...) + "\n";
+		LogUsage::write(mes);
+	}
+};
+
+template <class... Args>
+logusage(fmt::format_string<Args...>, Args&&...) -> logusage<Args...>;

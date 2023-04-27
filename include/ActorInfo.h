@@ -255,6 +255,8 @@ private:
 	// whether the weapons are drawn
 	bool weaponsDrawn = false;
 
+	std::string _formstring;
+
 
 public:
 	/// <summary>
@@ -334,6 +336,8 @@ private:
 	bool CalcDistrConditionsIntern(CustomItem* item);
 
 public:
+
+	std::string GetFormString() { return _formstring; }
 
 	/// <summary>
 	/// Returns whether the ActorInfo is valid
