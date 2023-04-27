@@ -454,7 +454,7 @@ namespace Events
 						// store position of player character
 						ActorInfo::SetPlayerPosition(playerinfo->GetActor()->GetPosition());
 						// reset player combat state, we don't want to include them in our checks
-						playerinfo->combatstate = CombatState::OutOfCombat;
+						playerinfo->SetCombatState(CombatState::OutOfCombat);
 					}
 				});
 
@@ -491,46 +491,37 @@ namespace Events
 					actorsincombat = 0;
 					hostileactors = 0;
 
-					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-						// the player should always be valid. If they don't the game doesn't work either anyway
-						if (hostileactors > 0)
-							playerinfo->SetCombatState(CombatState::InCombat);
-						else
-							playerinfo->SetCombatState(CombatState::OutOfCombat);
-					}
-
-					// update combat status of player
-					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-						// the player should always be valid. If they don't the game doesn't work either anyway
-						if (playerinfo->GetActor()->IsInCombat()) {
-							playerinfo->SetCombatState(CombatState::InCombat);
-							// if player is in combat, decrease actorsincombat by 1 to ensure that the player won't affect
-							// the statistics
-							actorsincombat--;
-						}
-						else
-							playerinfo->SetCombatState(CombatState::OutOfCombat);
-					}
-
 					// first decrease all cooldowns for all registered actors
 					// decreasing durations
 					//
 					// calc actors in combat
 					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
-					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
-						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-							DecreaseActorCooldown(acinfo);
-							// retrieve runtime data
-							HandleActorRuntimeData(acinfo);
-							if (acinfo->IsInCombat()) {
-								actorsincombat++;
-								combatants.push_front(acinfo);
-								if (acinfo->GetPlayerHostile())
-									hostileactors++;
+					SKSE::GetTaskInterface()->AddTask([actors, &playerweak]() {
+						std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+							if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+								DecreaseActorCooldown(acinfo);
+								// retrieve runtime data
+								HandleActorRuntimeData(acinfo);
+								if (acinfo->IsInCombat()) {
+									actorsincombat++;
+									combatants.push_front(acinfo);
+									if (acinfo->GetPlayerHostile())
+										hostileactors++;
+								}
 							}
-						}
 						});
 
+						// update combat status of player
+						if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+							// the player should always be valid. If they don't the game doesn't work either anyway
+							if (hostileactors > 0) {
+								playerinfo->SetCombatState(CombatState::InCombat);
+								HandleActorRuntimeData(playerinfo);
+							}
+							else
+								playerinfo->SetCombatState(CombatState::OutOfCombat);
+						}
+					});
 
 					if (!CanProcess())
 						goto CheckActorsSkipIteration;
@@ -665,7 +656,7 @@ CheckActorsSkipIteration:
 				LOG_1("{}[Events] [LoadGameSub] Started RemoveItemsHandler");
 			}
 		}
-
+		/*
 		SKSE::GetTaskInterface()->AddTask([]() {
 			// when loading the game, the attach detach events for actors aren't fired until cells have been changed
 			// thus we need to get all currently loaded npcs manually
@@ -701,7 +692,7 @@ CheckActorsSkipIteration:
 					}
 				}
 			}
-		});
+		});*/
 
 		InitializeCompatibilityObjects();
 

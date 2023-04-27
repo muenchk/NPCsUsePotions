@@ -2718,7 +2718,7 @@ void Settings::ClassifyItems()
 
 				// if the value of the item is less than zero, we should not insert them into the distribution lists, since they are likely to be broken
 				// or test/dummy items
-				if (item->GetGoldValue() <= 0) {
+				if (item) {
 					// determine the type of item
 					if (std::get<2>(clas) == ItemType::kFood &&
 						(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
@@ -2780,6 +2780,10 @@ void Settings::ClassifyItems()
 						}
 						_potionEffectsFound |= std::get<0>(clas);
 					}
+				}
+				else
+				{
+					LOGLE1_1("[Settings] [ClassifyItems] Item {} has value 0 and will not be distributed", Utility::PrintForm(item));
 				}
 				int dosage = 0;
 				if (item->IsPoison())
