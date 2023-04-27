@@ -254,8 +254,13 @@ namespace Events
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}
-			if (effect != 0)
-				acinfo->SetNextFoodTime(RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24);
+			if (effect != 0) {
+				// if duration is zero (vanilla food) set cooldown to at least 3 minutes
+				if (dur == 0)
+					acinfo->SetNextFoodTime(RE::Calendar::GetSingleton()->GetDaysPassed() + 180 * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24);
+				else
+					acinfo->SetNextFoodTime(RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24);
+			}
 			LOG2_2("{}[Events] [CheckActors] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
 		}
 	}
