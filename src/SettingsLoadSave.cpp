@@ -41,15 +41,18 @@ void Settings::FixConsumables()
 
 	if (SOM_player1st && SOM_verb) {
 		RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
-		if (Utility::Mods::GetPluginIndex("Audio Overhaul Skyrim.esp") != 0x1) {
-			SOMMono01400_verb->attenuation->data.curve[0] = 100;
-			SOMMono01400_verb->attenuation->data.curve[1] = 50;
-			SOMMono01400_verb->attenuation->data.curve[2] = 20;
-			SOMMono01400_verb->attenuation->data.curve[3] = 5;
-			SOMMono01400_verb->attenuation->data.curve[4] = 0;
-			SOMMono01400_verb->attenuation->data.minDistance = 150;
-			SOMMono01400_verb->attenuation->data.maxDistance = 1400;
-			SOMMono01400_verb->data.reverbSendPct = 100;
+		bool soundscomp = false;
+		RE::TESForm* NUP_SOM_verb = nullptr;
+		RE::BGSSoundOutput* NUP_SOMMono01400_verb = nullptr;
+		if (Utility::Mods::GetPluginIndex("NPCsUsePotions_Sounds.esp") != 0x1) {
+			NUP_SOM_verb = Data::GetSingleton()->FindForm(0x800, "NPCsUsePotions_Sounds.esp");
+			if (NUP_SOM_verb) {
+				NUP_SOMMono01400_verb = NUP_SOM_verb->As<RE::BGSSoundOutput>();
+				if (NUP_SOMMono01400_verb)
+				{
+					soundscomp = true;
+				}
+			}
 		}
 		RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
 
@@ -75,7 +78,12 @@ void Settings::FixConsumables()
 						// consumption sound is non-empty
 						sounddesc = alch->data.consumptionSound->soundDescriptor;
 						soundOM = (RE::BGSStandardSoundDef*)sounddesc;
-						if (soundOM->outputModel == SOMMono01400Player1st) {
+						if (soundscomp && (soundOM->outputModel == SOMMono01400Player1st || soundOM->outputModel == SOMMono01400_verb))
+						{
+							soundOM->outputModel = NUP_SOMMono01400_verb;
+							LOGL2_4("{}[Settings] [FixConsumables] changed output model for sound {} used by item {} to custom ouput model", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
+						}
+						else if (soundOM->outputModel == SOMMono01400Player1st) {
 							soundOM->outputModel = SOMMono01400_verb;
 							LOGL2_4("{}[Settings] [FixConsumables] changed output model for sound {} used by item {}", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
 						}
