@@ -39,6 +39,7 @@ namespace
 		spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
 
 		Profile::Init(Settings::PluginNamePlain);
+		LogUsage::Init(Settings::PluginNamePlain);
 	}
 }
 
@@ -150,6 +151,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	profile("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
+	logusage("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
 
