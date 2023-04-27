@@ -140,7 +140,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
-			if (item) {
+			if (item && iter->second.first > 0) {
 				LOG1_5("{}[ActorManipulation] [GetMatchingPotions] checking item {}", Utility::PrintForm(item));
 				if (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion)) {
 					LOG_4("{}[ActorManipulation] [GetMatchingPotions] found medicine");
@@ -173,7 +173,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllPotions(std::shared_ptr<ActorInfo> const&
 		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("{}[ActorManipulation] [GetAllPotions] checking item");
-			if (item && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
+			if (item && iter->second.first > 0 && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
 				LOG1_4("{}[ActorManipulation] [GetAllPotions] found potion {}", Utility::PrintForm(item));
 				ret.insert(ret.begin(), item);
 			}
@@ -203,7 +203,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
-			if (item) {
+			if (item && iter->second.first > 0) {
 				LOG1_5("{}[ActorManipulation] [GetMatchingPoisons] checking item {}", Utility::PrintForm(item));
 				if (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison)) {
 					LOG_4("{}[ActorManipulation] [GetMatchingPoisons] found poison");
@@ -232,7 +232,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllPoisons(std::shared_ptr<ActorInfo> const&
 	auto iter = itemmap.begin();
 	RE::AlchemyItem* item = nullptr;
 	while (iter != itemmap.end()) {
-		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("{}[ActorManipulation] [GetAllPoisons] checking item");
 			if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
@@ -267,7 +267,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("{}[ActorManipulation] [GetMatchingFood] checking item");
 
-			if (item &&
+			if (item && iter->second.first > 0 &&
 				(item->IsFood() ||
 					item->HasKeyword(Settings::VendorItemFood) ||
 					(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
@@ -297,7 +297,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllFood(std::shared_ptr<ActorInfo> const& ac
 	auto iter = itemmap.begin();
 	RE::AlchemyItem* item = nullptr;
 	while (iter != itemmap.end()) {
-		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("{}[GetAllFood] checking item");
 			if (item && (item->IsFood() || item->HasKeyword(Settings::VendorItemFoodRaw) || item->HasKeyword(Settings::VendorItemFood))) {
@@ -337,7 +337,7 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> ACM::GetRandomFood(s
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("{}[ActorManipulation] [GetRandomFood] checking item");
 
-			if (item &&
+			if (item && iter->second.first > 0 &&
 				(item->IsFood() ||
 					item->HasKeyword(Settings::VendorItemFood) ||
 					(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
@@ -429,7 +429,7 @@ std::unordered_map<uint32_t, int> ACM::GetCustomItems(std::shared_ptr<ActorInfo>
 	auto itemmap = acinfo->GetInventory();
 	auto iter = itemmap.begin();
 	while (iter != itemmap.end()) {
-		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
+		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
 			if (acinfo->IsCustomItem(iter->first)) {
 				ret.insert_or_assign(iter->first->GetFormID(), std::get<0>(iter->second));
 				LOG1_4("{}[ActorManipulation] [GetCustomItems] found custom item {}", Utility::PrintForm(iter->first));
@@ -455,7 +455,7 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shar
 	auto iter = itemmap.begin();
 	RE::AlchemyItem* alch = nullptr;
 	while (iter != itemmap.end()) {
-		if (iter->first && std::get<1>(iter->second).get() &&
+		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() &&
 			std::get<1>(iter->second).get()->IsQuestObject() == false &&
 			(alch = iter->first->As<RE::AlchemyItem>()) != nullptr &&
 			acinfo->IsCustomAlchItem(alch)) {
