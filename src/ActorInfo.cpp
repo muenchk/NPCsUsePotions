@@ -116,7 +116,7 @@ ActorInfo::ActorInfo()
 bool ActorInfo::IsValid()
 {
 	aclock;
-	return valid;
+	return valid && actor.get() && actor.get().get();
 }
 
 void ActorInfo::SetValid()
@@ -811,9 +811,11 @@ int32_t ActorInfo::GetDataSize()
 	//size += 1;
 	// combatstate
 	//size += 4;
+	// haslefthand
+	//size = 1;
 
 	// all except string are constant:
-	size += 60;
+	size += 61;
 	return size;
 }
 
@@ -826,6 +828,8 @@ int32_t ActorInfo::GetMinDataSize(int32_t vers)
 		return 55;
 	case 3:
 		return 60;
+	case 4:
+		return 61;
 	default:
 		return 0;
 	}
@@ -882,6 +886,8 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	Buffer::Write(globalCooldownTimer, buffer, offset);
 	// combatstate
 	Buffer::Write(static_cast<uint32_t>(combatstate), buffer, offset);
+	// haslefthand
+	Buffer::Write(_haslefthand, buffer, offset);
 	return true;
 }
 
@@ -1037,6 +1043,60 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				Animation_busy = Buffer::ReadBool(buffer, offset);
 				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
 				combatstate = static_cast<CombatState>(Buffer::ReadUInt32(buffer, offset));
+
+				// init dependend stuff
+				pluginID = Utility::Mods::GetPluginIndex(pluginname);
+				if (pluginID == 0x1) {
+					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
+				}
+				_formstring = Utility::PrintForm(this);
+			}
+			return true;
+		case 0x00000004:
+			{
+				valid = Buffer::ReadBool(buffer, offset);
+
+				// first try to make sure that the buffer contains all necessary data and we do not go out of bounds
+				int size = GetMinDataSize(ver);
+				int strsize = (int)Buffer::CalcStringLength(buffer, offset + 4);  // offset + actorid is begin of pluginname
+				if (length < size + strsize)
+					return false;
+
+				formid = Buffer::ReadUInt32(buffer, offset);
+				pluginname = Buffer::ReadString(buffer, offset);
+				// if the actorinfo is not valid, then do not evaluate the actor
+				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
+				if (form == nullptr) {
+					form = RE::TESForm::LookupByID(formid);
+					if (!form) {
+						return false;
+					}
+				}
+				RE::Actor* reac = form->As<RE::Actor>();
+				if (reac == nullptr) {
+					return false;
+				}
+				actor = reac->GetHandle();
+				// set formid to the full formid including plugin index
+				formid = reac->GetFormID();
+
+				name = reac->GetName();
+				durHealth = Buffer::ReadInt32(buffer, offset);
+				durMagicka = Buffer::ReadInt32(buffer, offset);
+				durStamina = Buffer::ReadInt32(buffer, offset);
+				durFortify = Buffer::ReadInt32(buffer, offset);
+				durRegeneration = Buffer::ReadInt32(buffer, offset);
+				nextFoodTime = Buffer::ReadFloat(buffer, offset);
+				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				durCombat = Buffer::ReadInt32(buffer, offset);
+				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
+				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
+				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
+				_boss = Buffer::ReadBool(buffer, offset);
+				Animation_busy = Buffer::ReadBool(buffer, offset);
+				globalCooldownTimer = Buffer::ReadInt32(buffer, offset);
+				combatstate = static_cast<CombatState>(Buffer::ReadUInt32(buffer, offset));
+				_haslefthand = Buffer::ReadBool(buffer, offset);
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
