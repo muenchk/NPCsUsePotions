@@ -255,6 +255,10 @@ private:
 	// whether the weapons are drawn
 	bool weaponsDrawn = false;
 
+	
+	/// <summary>
+	/// string that represents this object (for fast usage)
+	/// </summary>
 	std::string _formstring;
 
 
@@ -262,7 +266,7 @@ public:
 	/// <summary>
 	/// version of class [used for save and load]
 	/// </summary>
-	static inline const uint32_t version = 0x00000003;
+	static inline const uint32_t version = 0x00000004;
 
 	ActorInfo(RE::Actor* _actor);
 	ActorInfo(bool blockedReset);
