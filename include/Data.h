@@ -166,6 +166,13 @@ public:
 	/// <returns></returns>
 	RE::BGSPerk* FindPerk(uint32_t formid, std::string pluginname);
 	/// <summary>
+	/// Returns the AlchemyItem associated with the formid from an internal buffer
+	/// </summary>
+	/// <param name="formid"></param>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
+	RE::AlchemyItem* FindAlchemyItem(uint32_t formid, std::string pluginname);
+	/// <summary>
 	/// Removes an actor from the data
 	/// </summary>
 	/// <param name="actor"></param>

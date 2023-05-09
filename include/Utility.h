@@ -121,6 +121,25 @@ public:
 	static std::string PrintForm(std::weak_ptr<ActorInfo> acweak);
 
 	/// <summary>
+	/// Returns a string representing the given form
+	/// </summary>
+	/// <param name="form"></param>
+	/// <returns></returns>
+	template <class T>
+	static std::string PrintFormNonDebug(T* form)
+	{
+		if (form == nullptr || form->GetFormID() == 0 || Logging::EnableGenericLogging == false)
+			return "None";
+		std::string plugin = "";
+		if ((form->GetFormID() & 0xFF000000) != 0xFE000000) {
+			plugin = Settings::pluginnames[(form->GetFormID() >> 24)];
+		} else
+			plugin = Settings::pluginnames[256 + (((form->GetFormID() & 0x00FFF000)) >> 12)];
+
+		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
+	}
+
+	/// <summary>
 	/// Converts all symbols in a string into lower case.
 	/// </summary>
 	/// <param name="s"></param>

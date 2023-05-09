@@ -277,7 +277,7 @@ namespace Events
 		/// <param name="died"></param>
 		static void PlayerDied(bool died) { playerdied = died; }
 
-		//-------------------GameCallbacks-------------------------
+		//-------------------GameFunctions-------------------------
 
 		/// <summary>
 		/// Callback on loading a save game, initializes actor processing
@@ -295,6 +295,21 @@ namespace Events
 		/// </summary>
 		/// <param name=""></param>
 		static void SaveGameCallback(SKSE::SerializationInterface* a_intfc);
+
+		/// <summary>
+		/// Saves the list of already dead actors
+		/// </summary>
+		/// <param name="a_intfc"></param>
+		static long SaveDeadActors(SKSE::SerializationInterface* a_intfc);
+
+		/// <summary>
+		/// Read a dead actor record
+		/// </summary>
+		/// <param name="a_intfc"></param>
+		/// <param name="length"></param>
+		/// <returns></returns>
+		static long ReadDeadActors(SKSE::SerializationInterface* a_intfc, uint32_t length);
+
 	};
 
 

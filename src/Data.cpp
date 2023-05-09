@@ -440,6 +440,19 @@ RE::BGSPerk* Data::FindPerk(uint32_t formid, std::string pluginname)
 	return nullptr;
 }
 
+RE::AlchemyItem* Data::FindAlchemyItem(uint32_t formid, std::string pluginname)
+{
+	auto itr = customItemFormMap.find(formid);
+	if (itr != customItemFormMap.end())
+		return itr->second->As<RE::AlchemyItem>();
+	RE::TESForm* form = Utility::GetTESForm(datahandler, formid, pluginname, "");
+	if (form != nullptr) {
+		customItemFormMap.insert_or_assign(formid, form);
+		return form->As<RE::AlchemyItem>();
+	}
+	return nullptr;
+}
+
 void Data::DeleteFormCustom(RE::FormID formid)
 {
 	lockdata.acquire();

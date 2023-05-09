@@ -134,6 +134,9 @@ namespace Storage
 			case 'DAID':  // Deleted Actor
 				size += data->ReadDeletedActors(a_intfc, length);
 				break; 
+			case 'EDID':  // Dead Actor
+				size += Events::Main::ReadDeadActors(a_intfc, length);
+				break;
 			}
 		}
 
@@ -165,6 +168,7 @@ namespace Storage
 		
 		size += data->SaveActorInfoMap(a_intfc);
 		size += data->SaveDeletedActors(a_intfc);
+		size += Events::Main::SaveDeadActors(a_intfc);
 
 		LOG_1("{}[DataStorage] [WriteData] Finished writing data");
 

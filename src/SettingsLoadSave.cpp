@@ -39,6 +39,8 @@ void Settings::FixConsumables()
 		0x3C7B0 /*UIItemGenericUpSD*/
 	};
 
+	auto datahandler = RE::TESDataHandler::GetSingleton();
+
 	if (SOM_player1st && SOM_verb) {
 		RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
 		bool soundscomp = false;
@@ -60,7 +62,6 @@ void Settings::FixConsumables()
 		RE::BGSStandardSoundDef* soundOM = nullptr;
 
 		// get all alchemyitems and then fix their consumption sounds
-		auto datahandler = RE::TESDataHandler::GetSingleton();
 		auto alchs = datahandler->GetFormArray<RE::AlchemyItem>();
 		for (auto& alch : alchs) {
 			if (alch && alch->GetFormID() != 0x7) {
@@ -90,6 +91,34 @@ void Settings::FixConsumables()
 					}
 				}
 			}
+		}
+	}
+
+
+	// Fix potion flags of specific items
+	{
+		RE::AlchemyItem* item = nullptr;
+
+		// -----------Sacrilege - Minimalistic Vampires of Skyrim.esp-----------
+		// Potion of Embracing
+		if (item = Data::GetSingleton()->FindAlchemyItem(0xA1934, "Sacrilege - Minimalistic Vampires of Skyrim.esp"); item != nullptr) {
+			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+		}
+		// Potion of Viscera
+		if (item = Data::GetSingleton()->FindAlchemyItem(0xA193A, "Sacrilege - Minimalistic Vampires of Skyrim.esp"); item != nullptr) {
+			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+		}
+		// Potion of Hunger
+		if (item = Data::GetSingleton()->FindAlchemyItem(0x158E03, "Sacrilege - Minimalistic Vampires of Skyrim.esp"); item != nullptr) {
+			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+		}
+		// Potion of Purging
+		if (item = Data::GetSingleton()->FindAlchemyItem(0x176977, "Sacrilege - Minimalistic Vampires of Skyrim.esp"); item != nullptr) {
+			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+		}
+		// Potion of Thaumaturgy
+		if (item = Data::GetSingleton()->FindAlchemyItem(0x17B8C9, "Sacrilege - Minimalistic Vampires of Skyrim.esp"); item != nullptr) {
+			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 		}
 	}
 }

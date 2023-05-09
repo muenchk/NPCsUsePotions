@@ -532,7 +532,7 @@ std::tuple<int, AlchemyEffectBase, float, std::list<std::tuple<float, int, RE::A
 			if (potion = std::get<2>(ls.front()); potion) {
 				std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> val = ls.front();
 				LOG3_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {} with duration {} and magnitude {}", Utility::PrintForm(potion), std::get<1>(val), std::get<0>(val));
-				logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintForm(potion), std::get<1>(val), std::get<0>(val));
+				logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(potion), std::get<1>(val), std::get<0>(val));
 				if (comp->LoadedAnimatedPotions() && acinfo->IsPlayer() == false) {
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] AnimatedPotions loaded, apply potion later");
 					comp->AnPoti_AddActorPotion(acinfo->GetFormID(), potion);
@@ -610,7 +610,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(std::shared_ptr<ActorInfo> c
 			// add statistics
 			Statistics::Misc_FoodEaten++;
 			LOG3_2("{}[ActorManipulation] [ActorUseFood] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(ls.front())), std::get<1>(ls.front()), std::get<0>(ls.front()));
-			logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintForm(std::get<2>(ls.front())), std::get<1>(ls.front()), std::get<0>(ls.front()));
+			logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(std::get<2>(ls.front())), std::get<1>(ls.front()), std::get<0>(ls.front()));
 			if (Settings::CompatibilityFoodPapyrus()) {
 				LOG_3("{}[ActorManipulation] [ActorUseFood] Compatibility Mode");
 				// use same event as for potions, since it takes a TESForm* and works for anything
@@ -652,7 +652,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUseFood(std::shared_ptr<ActorInfo> c
 			// save statistics
 			Statistics::Misc_FoodEaten++;
 			LOG3_2("{}[ActorManipulation] [ActorUseFood-Random] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
-			logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintForm(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
+			logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
 			if (Settings::CompatibilityFoodPapyrus()) {
 				LOG_3("{}[ActorManipulation] [ActorUseFood-Random] Compatibility Mode");
 				// use same event as for potions, since it takes a TESForm* and works for anything
@@ -720,7 +720,7 @@ std::pair<int, AlchemyEffectBase> ACM::ActorUsePoison(std::shared_ptr<ActorInfo>
 					return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 				} else {
 					LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
-					logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
+					logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
 					if (!audiomanager)
 						audiomanager = RE::BSAudioManager::GetSingleton();
 					RE::ExtraDataList* extra = new RE::ExtraDataList();
