@@ -46,6 +46,19 @@ public:
 		return _actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av);
 	}
 	/// <summary>
+	/// Returns the current maximum for an actor value.
+	/// This takes the base av and any modifiers into account
+	/// </summary>
+	/// <param name="_actor"></param>
+	/// <param name="av"></param>
+	/// <returns></returns>
+	static float GetAV(RE::Actor* _actor, RE::ActorValue av)
+	{
+		if (_actor == nullptr)
+			return 1;
+		return _actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, av);
+	}
+	/// <summary>
 	/// Returns the current percentage of an actor value (like percentag of health remaining)
 	/// </summary>
 	/// <param name="_actor">Actor to get av from</param>

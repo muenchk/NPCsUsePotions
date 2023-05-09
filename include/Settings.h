@@ -187,6 +187,10 @@ public:
 		/// [Settings] Disallows the usage of poisons, while the weapons are sheathed
 		/// </summary>
 		static inline bool _DontUseWithWeaponsSheathed = true;
+		/// <summary>
+		/// [Settings] NPCs and the player will not use Poisons against those that have 100% poison resistance anymore
+		/// </summary>
+		static inline bool _DontUseAgainst100PoisonResist = true;
 
 		/// <summary>
 		/// [Settings] Scaling factor for when an NPC is considered powerful enough to warrant the usage of poisons

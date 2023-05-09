@@ -207,6 +207,9 @@ namespace Events
 					if (std::shared_ptr<ActorInfo> tar = acinfo->GetTarget().lock())
 						target = tar->GetActor();
 					if (target) {
+						if (Settings::Poisons::_DontUseAgainst100PoisonResist && target->GetActorValue(RE::ActorValue::kPoisonResist) >= 100) {
+							return;
+						}
 						// we can make the usage dependent on the target
 						if (target->GetRace() && target->GetRace()->HasKeyword(Settings::ActorTypeDwarven) || target->GetActorBase() && target->GetActorBase()->HasKeyword(Settings::ActorTypeDwarven))
 							return;

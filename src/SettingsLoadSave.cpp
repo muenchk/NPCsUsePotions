@@ -261,9 +261,9 @@ void Settings::Load()
 		loginfo("[SETTINGS] {} {}", "Potions:           EnableMagickaRestoration", std::to_string(Potions::_enableMagickaRestoration));
 		Potions::_enableStaminaRestoration = ini.GetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration);
 		loginfo("[SETTINGS] {} {}", "Potions:           EnableStaminaRestoration", std::to_string(Potions::_enableStaminaRestoration));
-		Potions::_AllowDetrimentalEffects = static_cast<int>(ini.GetLongValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects));
+		Potions::_AllowDetrimentalEffects = ini.GetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects);
 		loginfo("[SETTINGS] {} {}", "Potions:           AllowDetrimentalEffects", std::to_string(Potions::_AllowDetrimentalEffects));
-		Potions::_HandleWeaponSheathedAsOutOfCombat = static_cast<int>(ini.GetLongValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Potions::_HandleWeaponSheathedAsOutOfCombat));
+		Potions::_HandleWeaponSheathedAsOutOfCombat = ini.GetBoolValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Potions::_HandleWeaponSheathedAsOutOfCombat);
 		loginfo("[SETTINGS] {} {}", "Potions:           HandleWeaponSheathedAsOutOfCombat", std::to_string(Potions::_HandleWeaponSheathedAsOutOfCombat));
 
 		Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold));
@@ -288,10 +288,12 @@ void Settings::Load()
 		// poisons
 		Poisons::_enablePoisons = ini.GetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons);
 		loginfo("[SETTINGS] {} {}", "Poisons:           EnablePoisonUsage", std::to_string(Poisons::_enablePoisons));
-		Poisons::_AllowPositiveEffects = static_cast<int>(ini.GetLongValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects));
+		Poisons::_AllowPositiveEffects = ini.GetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects);
 		loginfo("[SETTINGS] {} {}", "Poisons:           AllowPositiveEffects", std::to_string(Poisons::_AllowPositiveEffects));
-		Poisons::_DontUseWithWeaponsSheathed = static_cast<int>(ini.GetLongValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed));
+		Poisons::_DontUseWithWeaponsSheathed = ini.GetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed);
 		loginfo("[SETTINGS] {} {}", "Poisons:           DontUseWithWeaponsSheathed", std::to_string(Poisons::_DontUseWithWeaponsSheathed));
+		Poisons::_DontUseAgainst100PoisonResist = ini.GetBoolValue("Poisons", "DontUseAgainst100PoisonResist", Poisons::_DontUseAgainst100PoisonResist);
+		loginfo("[SETTINGS] {} {}", "Poisons:           DontUseAgainst100PoisonResist", std::to_string(Poisons::_DontUseAgainst100PoisonResist));
 		Poisons::_EnemyLevelScalePlayerLevel = static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel));
 		loginfo("[SETTINGS] {} {}", "Poisons:           EnemyLevelScalePlayerLevel", std::to_string(Poisons::_EnemyLevelScalePlayerLevel));
 		Poisons::_EnemyNumberThreshold = ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold);
@@ -318,7 +320,7 @@ void Settings::Load()
 		// food
 		Food::_enableFood = ini.GetBoolValue("Food", "EnableFoodUsage", Food::_enableFood);
 		loginfo("[SETTINGS] {} {}", "Food:              EnableFoodUsage", std::to_string(Food::_enableFood));
-		Food::_AllowDetrimentalEffects = static_cast<int>(ini.GetLongValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects));
+		Food::_AllowDetrimentalEffects = ini.GetBoolValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects);
 		loginfo("[SETTINGS] {} {}", "Food:              AllowDetrimentalEffects", std::to_string(Food::_AllowDetrimentalEffects));
 		Food::_RestrictFoodToCombatStart = ini.GetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart);
 		loginfo("[SETTINGS] {} {}", "Food:              OnlyAllowFoodAtCombatStart", std::to_string(Food::_RestrictFoodToCombatStart));
@@ -601,6 +603,7 @@ void Settings::Save()
 																				"// that does not use spells, is not appropiate.");
 	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, "// This allows NPCs to use poisons that apply positive effects to their opponents");
 	ini.SetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed, "// If the weapons are sheathed, poisons will not be used.");
+	ini.SetBoolValue("Poisons", "DontUseAgainst100PoisonResist", Poisons::_DontUseAgainst100PoisonResist, "// NPCs and the player will not use Poisons against those that have 100% poison resistance anymore.");
 	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, "// If the enemy they are facing has a level greater equal \n"
 																										"// 'this value' * PlayerLevel followers use poisons.");
 	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold, "// When the number of NPCs in a fight is at least at this value, followers\n"
