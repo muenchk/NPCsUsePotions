@@ -212,7 +212,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase>> ACM::GetM
 						ret.insert(ret.begin(), { mag, dur, item, static_cast<AlchemyEffectBase>(AlchemyEffect::kCustom) });
 					} else if (res = HasAlchemyEffect(item, alchemyEffect);
 							   std::get<0>(res) &&
-							   (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
+							   (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == true /*either we allow poisons with positive effects, or there are no positive effects*/)) {
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 					}
 				}

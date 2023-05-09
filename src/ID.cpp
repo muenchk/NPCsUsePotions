@@ -13,6 +13,22 @@ ID::ID(RE::FormID id) :
 
 }
 
+ID::ID(RE::Actor* actor)
+{
+	_id = actor->GetFormID();
+	// get original id
+	if (const auto extraLvlCreature = actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+		if (const auto originalBase = extraLvlCreature->originalBase) {
+			_originalID = (originalBase->GetFormID());
+		}
+		if (const auto templateBase = extraLvlCreature->templateBase) {
+			_templateIDs.push_back(templateBase->GetFormID());
+		}
+	} else {
+		_originalID = (actor->GetActorBase()->GetFormID());
+	}
+}
+
 bool ID::operator==(RE::FormID a_formID) const
 {
 	if (_id == a_formID || _originalID == a_formID)

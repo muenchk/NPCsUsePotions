@@ -40,8 +40,6 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "ActorBase:\t\t\t\t\t" + Utility::PrintForm(actor->GetActorBase()) + "\t" + std::string(actor->GetActorBase()->GetName());
 	console->Print(tmp.c_str());
-	tmp = "Race:\t\t\t\t\t\t" + Utility::PrintForm(actor->GetActorBase()->GetRace()) + "\t" + std::string(actor->GetActorBase()->GetRace()->GetFormEditorID());
-	console->Print(tmp.c_str());
 	tmp = "Valid:\t\t\t\t\t\t" + std::to_string(acinfo->IsValid());
 	console->Print(tmp.c_str());
 	tmp = "Excluded:\t\t\t\t\t\t" + std::to_string(Distribution::ExcludedNPC(acinfo));

@@ -4,6 +4,7 @@ struct ID
 {
 	ID() = default;
 	ID(RE::FormID id, RE::FormID originalID);
+	ID(RE::Actor* actor);
 	ID(RE::FormID id);
 
 	bool operator==(RE::FormID a_formID) const;

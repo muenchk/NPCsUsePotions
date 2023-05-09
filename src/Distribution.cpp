@@ -1405,7 +1405,9 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 	bool ret = Distribution::excludedNPCs()->contains(acinfo->GetFormID());
 	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetPluginID());
 	ret |= acinfo->IsFollower();
-	ret |= (Distribution::excludedNPCs()->contains(acinfo->GetActorBaseFormID()));
+	ret |= (Distribution::excludedNPCs()->contains(acinfo->GetFormIDOriginal()));
+	for (auto& id : acinfo->GetTemplateIDs())
+		ret |= Distribution::excludedNPCs()->contains(id);
 	ret |= acinfo->IsGhost();
 	ret |= acinfo->IsSummonable();
 	if (acinfo->Bleeds() == false && Utility::ToLower(acinfo->GetActorBaseFormEditorID()).find("ghost") != std::string::npos) {
@@ -1413,7 +1415,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 		return true;
 	}
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-	if (!Distribution::npcMap()->contains(acinfo->GetFormID()) && !Distribution::npcMap()->contains(acinfo->GetActorBaseFormID()) && ret == false) {
+	if (!Distribution::npcMap()->contains(acinfo->GetFormID()) && !Distribution::npcMap()->contains(acinfo->GetFormIDOriginal()) && ret == false) {
 		auto base = acinfo->GetActorBase();
 		for (uint32_t i = 0; i < base->numKeywords; i++) {
 			if (base->keywords[i])
@@ -1444,14 +1446,15 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 	if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
 	if (Settings::Usage::_DisableItemUsageForExcludedNPCs) {
+		ID id = ID(actor);
 		// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
-		bool ret = Distribution::excludedNPCs()->contains(actor->GetFormID());
+		bool ret = Distribution::excludedNPCs()->contains(id);
 		ret |= Distribution::excludedPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(actor));
 		ret |= (Utility::Mods::GetPluginIndex(actor) == 0x1 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID));
-		ret |= actor->GetActorBase() && Distribution::excludedNPCs()->contains(actor->GetActorBase()->GetFormID());
+		ret |= actor->GetActorBase() && Distribution::excludedNPCs()->contains(id.GetOriginalID());
 		ret |= actor->IsGhost();
 		ret |= actor->GetActorBase() && actor->GetActorBase()->IsSummonable();
-		if (ret == false && !Distribution::npcMap()->contains(actor->GetFormID()) && !Distribution::npcMap()->contains(actor->GetActorBase()->GetFormID())) {
+		if (ret == false && !Distribution::npcMap()->contains(id) && !Distribution::npcMap()->contains(id.GetOriginalID())) {
 			auto race = actor->GetRace();
 			if (race) {
 				ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
