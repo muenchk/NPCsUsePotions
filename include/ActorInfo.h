@@ -1,6 +1,7 @@
 #include "NUPInterface.h"
 #include "CustomItem.h"
 #include "AlchemyEffect.h"
+#include "ID.h"
 
 #include <mutex>
 #include <memory>
@@ -55,6 +56,7 @@ enum class CombatState
 /// </summary>
 class ActorInfo
 {
+
 #pragma region static
 
 private:
@@ -142,7 +144,7 @@ private:
 	/// <summary>
 	/// form id of the actor
 	/// </summary>
-	RE::FormID formid = 0;
+	ID formid;
 	/// <summary>
 	/// pluginname the actor is defined in
 	/// </summary>
@@ -385,6 +387,16 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	RE::FormID GetFormIDBlank();
+	/// <summary>
+	/// Returns the original formid
+	/// </summary>
+	/// <returns></returns>
+	RE::FormID GetFormIDOriginal();
+	/// <summary>
+	/// Returns all known formids of the actors templates
+	/// </summary>
+	/// <returns></returns>
+	std::vector<RE::FormID> GetTemplateIDs();
 	/// <summary>
 	/// Returns the name of the plugin the actor is defined in
 	/// </summary>

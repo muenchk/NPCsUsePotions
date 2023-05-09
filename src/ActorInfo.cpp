@@ -8,6 +8,7 @@
 #include "ActorManipulation.h"
 #include "Data.h"
 
+
 void ActorInfo::Init()
 {
 	playerRef = RE::PlayerCharacter::GetSingleton();
@@ -18,7 +19,18 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 	LOG_3("{}[ActorInfo] [ActorInfo]");
 	actor = _actor->GetHandle();
 	if (_actor) {
-		formid = _actor->GetFormID();
+		formid.SetID(_actor->GetFormID());
+		// get original id
+		if (const auto extraLvlCreature = _actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+			if (const auto originalBase = extraLvlCreature->originalBase) {
+				formid.SetOriginalID(originalBase->GetFormID());
+			}
+			if (const auto templateBase = extraLvlCreature->templateBase) {
+				formid.AddTemplateID(templateBase->GetFormID());
+			}
+		} else {
+			formid.SetOriginalID(_actor->GetActorBase()->GetFormID());
+		}
 		name = std::string(_actor->GetName());
 		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
@@ -59,7 +71,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	durRegeneration = 0;
 	globalCooldownTimer = 0;
 	citems.Reset();
-	formid = 0;
+	formid = ID();
 	pluginname = "";
 	pluginID = 1;
 	name = "";
@@ -78,7 +90,18 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	target = std::weak_ptr<ActorInfo>{};
 	handleactor = false;
 	if (_actor) {
-		formid = _actor->GetFormID();
+		formid.SetID(_actor->GetFormID());
+		// get original id
+		if (const auto extraLvlCreature = _actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+			if (const auto originalBase = extraLvlCreature->originalBase) {
+				formid.SetOriginalID(originalBase->GetFormID());
+			}
+			if (const auto templateBase = extraLvlCreature->templateBase) {
+				formid.AddTemplateID(templateBase->GetFormID());
+			}
+		} else {
+			formid.SetOriginalID(_actor->GetActorBase()->GetFormID());
+		}
 		name = std::string(_actor->GetName());
 		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
@@ -163,6 +186,22 @@ RE::FormID ActorInfo::GetFormID()
 RE::FormID ActorInfo::GetFormIDBlank()
 {
 	return formid;
+}
+
+RE::FormID ActorInfo::GetFormIDOriginal()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0;
+	return formid.GetOriginalID();
+}
+
+std::vector<RE::FormID> ActorInfo::GetTemplateIDs()
+{
+	aclock;
+	if (!valid || deleted)
+		return {};
+	return formid.GetTemplateIDs();
 }
 
 std::string ActorInfo::GetPluginname()
@@ -903,7 +942,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
 				if (!form) {
@@ -915,7 +954,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -942,6 +981,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		case 0x00000002:
@@ -952,7 +1002,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
 				if (!form) {
@@ -967,7 +1017,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -995,6 +1045,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		case 0x00000003:
@@ -1007,7 +1068,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				// if the actorinfo is not valid, then do not evaluate the actor
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
@@ -1023,7 +1084,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -1048,6 +1109,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		case 0x00000004:
@@ -1060,7 +1132,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				// if the actorinfo is not valid, then do not evaluate the actor
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
@@ -1076,7 +1148,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -1102,6 +1174,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		default:
