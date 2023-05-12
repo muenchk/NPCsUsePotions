@@ -377,13 +377,13 @@ void Data::DeleteActorInfoMap()
 	lockdata.release();
 }
 
-void Data::SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude, bool detrimental, int dosage)
+void Data::SetAlchItemEffects(uint32_t id, AlchemicEffect effects, int duration, float magnitude, bool detrimental, int dosage)
 {
-	std::tuple<AlchemyEffectBase, int, float, bool, int> t = { effects, duration, magnitude, detrimental, dosage };
+	std::tuple<AlchemicEffect, int, float, bool, int> t = { effects, duration, magnitude, detrimental, dosage };
 	alchitemEffectMap.insert_or_assign(id, t);
 }
 
-std::tuple<bool, AlchemyEffectBase, int, float, bool, int> Data::GetAlchItemEffects(uint32_t id)
+std::tuple<bool, AlchemicEffect, int, float, bool, int> Data::GetAlchItemEffects(uint32_t id)
 {
 	auto itr = alchitemEffectMap.find(id);
 	if (itr != alchitemEffectMap.end()) {

@@ -3,6 +3,7 @@
   "version": "1",
   "dependencies": [
     "boost-stl-interfaces",
+    "boost-multiprecision",
     "rsm-binary-io",
     "spdlog"
   ]

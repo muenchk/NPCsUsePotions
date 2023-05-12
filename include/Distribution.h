@@ -91,37 +91,37 @@ public:
 		std::vector<int> foodChance;
 
 		// distributions for different item types
-		std::vector<std::tuple<int, AlchemyEffect>> potionDistr;
-		std::vector<std::tuple<int, AlchemyEffect>> potionDistrChance;
-		std::vector<std::tuple<int, AlchemyEffect>> poisonDistr;
-		std::vector<std::tuple<int, AlchemyEffect>> poisonDistrChance;
-		std::vector<std::tuple<int, AlchemyEffect>> fortifyDistr;
-		std::vector<std::tuple<int, AlchemyEffect>> fortifyDistrChance;
-		std::vector<std::tuple<int, AlchemyEffect>> foodDistr;
-		std::vector<std::tuple<int, AlchemyEffect>> foodDistrChance;
+		std::vector<std::tuple<int, AlchemicEffect>> potionDistr;
+		std::vector<std::tuple<int, AlchemicEffect>> potionDistrChance;
+		std::vector<std::tuple<int, AlchemicEffect>> poisonDistr;
+		std::vector<std::tuple<int, AlchemicEffect>> poisonDistrChance;
+		std::vector<std::tuple<int, AlchemicEffect>> fortifyDistr;
+		std::vector<std::tuple<int, AlchemicEffect>> fortifyDistrChance;
+		std::vector<std::tuple<int, AlchemicEffect>> foodDistr;
+		std::vector<std::tuple<int, AlchemicEffect>> foodDistrChance;
 
 		// raw effect maps for the item types
-		std::map<AlchemyEffect, float> potionEffectMap;
-		std::map<AlchemyEffect, float> poisonEffectMap;
-		std::map<AlchemyEffect, float> fortifyEffectMap;
-		std::map<AlchemyEffect, float> foodEffectMap;
+		std::map<AlchemicEffect, float> potionEffectMap;
+		std::map<AlchemicEffect, float> poisonEffectMap;
+		std::map<AlchemicEffect, float> fortifyEffectMap;
+		std::map<AlchemicEffect, float> foodEffectMap;
 
 		/// <summary>
 		/// accumulated alchemy effects valid for potions
 		/// </summary>
-		uint64_t validPotions = 0;
+		AlchemicEffect validPotions = 0;
 		/// <summary>
 		/// accumulated alchemy effect valid for poisons
 		/// </summary>
-		uint64_t validPoisons = 0;
+		AlchemicEffect validPoisons = 0;
 		/// <summary>
 		/// accumulated alchemy effects valid for fortify potions
 		/// </summary>
-		uint64_t validFortifyPotions = 0;
+		AlchemicEffect validFortifyPotions = 0;
 		/// <summary>
 		/// accumulated alchemy effects valid for food
 		/// </summary>
-		uint64_t validFood = 0;
+		AlchemicEffect validFood = 0;
 
 		/// <summary>
 		/// returns a random potion according to [strength] and [acsstrength]
@@ -151,7 +151,7 @@ public:
 		/// <summary>
 		/// Returns a distribution scaled according to the number of custom items of an actor and their combat style
 		/// </summary>
-		std::vector<std::tuple<int, AlchemyEffect>> GetScaledDistribution(Settings::ItemType type, std::shared_ptr<ActorInfo> const& acinfo);
+		std::vector<std::tuple<int, AlchemicEffect>> GetScaledDistribution(Settings::ItemType type, std::shared_ptr<ActorInfo> const& acinfo);
 
 #define COPY(vec1, vec2)       \
 	vec2.reserve(vec1.size()); \
@@ -232,11 +232,11 @@ public:
 			int _maxFortify, std::vector<int> _fortify1Chance, std::vector<int> _fortify2Chance, std::vector<int> _fortify3Chance, std::vector<int> _fortify4Chance, std::vector<int> _fortifyAddtionalChance, int _fortifyTierAdjust,
 			int _maxPoisons, std::vector<int> _poison1Chance, std::vector<int> _poison2Chance, std::vector<int> _poison3Chance, std::vector<int> _poison4Chance, std::vector<int> _poisonAdditionalChance, int _poisonTierAdjust, 
 			std::vector<int> _foodChance, 
-			std::vector<std::tuple<int, AlchemyEffect>> _potionDistr,
-			std::vector<std::tuple<int, AlchemyEffect>> _poisonDistr,
-			std::vector<std::tuple<int, AlchemyEffect>> _fortifyDistr,
-			std::vector<std::tuple<int, AlchemyEffect>> _foodDistr, 
-			uint64_t _validPotions, uint64_t _validPoisons, uint64_t _validFortifyPotions, uint64_t _validFood) :
+			std::vector<std::tuple<int, AlchemicEffect>> _potionDistr,
+			std::vector<std::tuple<int, AlchemicEffect>> _poisonDistr,
+			std::vector<std::tuple<int, AlchemicEffect>> _fortifyDistr,
+			std::vector<std::tuple<int, AlchemicEffect>> _foodDistr, 
+			AlchemicEffect _validPotions, AlchemicEffect _validPoisons, AlchemicEffect _validFortifyPotions, AlchemicEffect _validFood) :
 			ruleVersion{ _ruleVersion },
 			ruleType{ _ruleType },
 			ruleName{ _ruleName },
@@ -274,14 +274,14 @@ public:
 			validFortifyPotions{ _validFortifyPotions },
 			validFood{ _validFood }
 		{
-			potionDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_potionDistr);
-			potionDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
-			poisonDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_poisonDistr);
-			poisonDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
-			fortifyDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_fortifyDistr);
-			fortifyDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
-			foodDistrChance = std::vector<std::tuple<int, AlchemyEffect>>(_foodDistr);
-			foodDistrChance.push_back({ RandomRange, AlchemyEffect::kCustom });
+			potionDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_potionDistr);
+			potionDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
+			poisonDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_poisonDistr);
+			poisonDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
+			fortifyDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_fortifyDistr);
+			fortifyDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
+			foodDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_foodDistr);
+			foodDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
 		}
 		Rule() {}
 		/// <summary>
@@ -415,41 +415,41 @@ public:
 		/// </summary>
 		/// <param name="type">Determines which items effect property is consulted</param>
 		/// <returns></returns>
-		AlchemyEffect GetRandomEffect(Settings::ItemType type);
+		AlchemicEffect GetRandomEffect(Settings::ItemType type);
 		/// <summary>
 		/// Returns a random effect according to the given distribution
 		/// </summary>
 		/// <param name="distribution">distribution to pull effect from</param>
 		/// <returns></returns>
-		AlchemyEffect GetRandomEffect(std::vector<std::tuple<int, AlchemyEffect>> distribution);
+		AlchemicEffect GetRandomEffect(std::vector<std::tuple<int, AlchemicEffect>> distribution);
 		/// <summary>
 		/// Returns a random effect accoring to the rules item effect properties with additional custom item chance
 		/// </summary>
 		/// <param name="type">Determines which items effect property is consulted</param>
 		/// <returns></returns>
-		AlchemyEffect GetRandomEffectChance(Settings::ItemType type);
+		AlchemicEffect GetRandomEffectChance(Settings::ItemType type);
 
 	public:
 		/// <summary>
 		/// Removes an AlchemyEffect from the list of valid potion effects
 		/// </summary>
 		/// <param name="effect"></param>
-		void RemoveAlchemyEffectPotion(AlchemyEffect effect);
+		void RemoveAlchemyEffectPotion(AlchemicEffect effect);
 		/// <summary>
 		/// Removes an AlchemyEffect from the list of valid poison effects
 		/// </summary>
 		/// <param name="effect"></param>
-		void RemoveAlchemyEffectPoison(AlchemyEffect effect);
+		void RemoveAlchemyEffectPoison(AlchemicEffect effect);
 		/// <summary>
 		/// Removes an AlchemyEffect from the list of valid fortify potion effects
 		/// </summary>
 		/// <param name="effect"></param>
-		void RemoveAlchemyEffectFortifyPotion(AlchemyEffect effect);
+		void RemoveAlchemyEffectFortifyPotion(AlchemicEffect effect);
 		/// <summary>
 		/// Removes an AlchemyEffect from the list of valid food effects
 		/// </summary>
 		/// <param name="effect"></param>
-		void RemoveAlchemyEffectFood(AlchemyEffect effect);
+		void RemoveAlchemyEffectFood(AlchemicEffect effect);
 	};
 
 	// Storage for custom items
@@ -563,11 +563,11 @@ private:
 	/// <summary>
 	/// map that contains the dosages set for alchemic effects (lower priority than items) [forced, usesetting, integer]
 	/// </summary>
-	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dosageEffectMap;
+	static inline std::unordered_map<AlchemicEffect, std::tuple<bool, bool, int>> _dosageEffectMap;
 	/// <summary>
 	/// map that contains from distribution excluded effects
 	/// </summary>
-	static inline std::unordered_set<AlchemyEffect> _excludedEffects;
+	static inline std::unordered_set<AlchemicEffect> _excludedEffects;
 	/// <summary>
 	/// set of plugin indexes for plugins, which npcs are excluded
 	/// </summary>
@@ -587,7 +587,7 @@ private:
 	/// <summary>
 	/// map that defines overwrites for AlchemyEffects for MagicEffects
 	/// </summary>
-	static inline std::unordered_map<RE::FormID, AlchemyEffect> _magicEffectAlchMap;
+	static inline std::unordered_map<RE::FormID, AlchemicEffect> _magicEffectAlchMap;
 
 	
 public:
@@ -598,12 +598,12 @@ public:
 	static inline std::unordered_map<RE::FormID, ItemStrength> _dummyMap3;
 	static inline std::unordered_map<RE::FormID, int> _dummyMap4;
 	static inline std::unordered_map<RE::FormID, std::tuple<bool, bool, int>> _dummyMap5;
-	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>> _dummyMap6;
-	static inline std::unordered_map<RE::FormID, AlchemyEffect> _dummyMap7;
+	static inline std::unordered_map<AlchemicEffect, std::tuple<bool, bool, int>> _dummyMap6;
+	static inline std::unordered_map<RE::FormID, AlchemicEffect> _dummyMap7;
 	static inline std::unordered_set<RE::FormID> _dummySet1;
 	static inline std::unordered_set<uint8_t> _dummySet2;
 	static inline std::unordered_set<uint16_t> _dummySet3;
-	static inline std::unordered_set<AlchemyEffect> _dummySet4;
+	static inline std::unordered_set<AlchemicEffect> _dummySet4;
 	static inline std::unordered_set<uint32_t> _dummySet5;
 
 	/// <summary>
@@ -686,12 +686,12 @@ public:
 	/// return the map that contains the dosages for alchemic effects
 	/// </summary>
 	/// <returns></returns>
-	static inline std::unordered_map<AlchemyEffect, std::tuple<bool, bool, int>>* dosageEffectMap() { return initialised ? &_dosageEffectMap : &_dummyMap6; }
+	static inline std::unordered_map<AlchemicEffect, std::tuple<bool, bool, int>>* dosageEffectMap() { return initialised ? &_dosageEffectMap : &_dummyMap6; }
 	/// <summary>
 	/// return the set of excluded alchemy effects
 	/// </summary>
 	/// <returns></returns>
-	static inline std::unordered_set<AlchemyEffect>* excludedEffects() { return initialised ? &_excludedEffects : &_dummySet4; }
+	static inline std::unordered_set<AlchemicEffect>* excludedEffects() { return initialised ? &_excludedEffects : &_dummySet4; }
 	/// <summary>
 	/// returns the set of plugin indexes for plugins which npcs are excluded
 	/// </summary>
@@ -712,13 +712,13 @@ public:
 	/// <summary>
 	/// return the map that defines overwrites for AlchemyEffects for MagicEffects
 	/// </summary>
-	static inline std::unordered_map<RE::FormID, AlchemyEffect>* magicEffectAlchMap() { return initialised ? &_magicEffectAlchMap : &_dummyMap7; }
+	static inline std::unordered_map<RE::FormID, AlchemicEffect>* magicEffectAlchMap() { return initialised ? &_magicEffectAlchMap : &_dummyMap7; }
 
 
 
-	static std::vector<std::tuple<int, AlchemyEffect>> GetVector(int i, AlchemyEffect alch)
+	static std::vector<std::tuple<int, AlchemicEffect>> GetVector(int i, AlchemicEffect alch)
 	{
-		std::vector<std::tuple<int, AlchemyEffect>> vec;
+		std::vector<std::tuple<int, AlchemicEffect>> vec;
 		vec.push_back({ i, alch });
 		return vec;
 	}
@@ -793,7 +793,7 @@ public:
 	/// <param name="poison"></param>
 	/// <param name="effects"></param>
 	/// <returns></returns>
-	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemyEffectBase effects);
+	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects);
 
 	/// <summary>
 	/// Returns whether an actor has been excluded from distribution

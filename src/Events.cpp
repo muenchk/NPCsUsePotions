@@ -21,8 +21,6 @@
 		
 namespace Events
 {
-	using AlchemyEffect = AlchemyEffect;
-
 	//-------------------Random-------------------------
 
 	/// <summary>

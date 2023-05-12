@@ -10,12 +10,13 @@ ID::ID(RE::FormID id, RE::FormID originalID) :
 ID::ID(RE::FormID id) :
 	_id(id)
 {
-
+	_originalID = 0;
 }
 
 ID::ID(RE::Actor* actor)
 {
 	_id = actor->GetFormID();
+	_originalID = 0;
 	// get original id
 	if (const auto extraLvlCreature = actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
 		if (const auto originalBase = extraLvlCreature->originalBase) {

@@ -90,7 +90,7 @@ namespace Events
 		/// <summary>
 		/// Calculates the cooldowns of an actor for a specific effect
 		/// </summary>
-		static void CalcActorCooldowns(std::shared_ptr<ActorInfo> acinfo, AlchemyEffectBase effect, int dur);
+		static void CalcActorCooldowns(std::shared_ptr<ActorInfo> acinfo, AlchemicEffect effect, int dur);
 
 		/// <summary>
 		/// Calculates poison effects based on [combatdata], [target], and [tcombatdata]
@@ -99,7 +99,7 @@ namespace Events
 		/// <param name="target">target</param>
 		/// <param name="tcombatdata">combatdata of the target</param>
 		/// <returns>valid poison effects</returns>
-		static uint64_t CalcPoisonEffects(uint32_t combatdata, RE::Actor* target, uint32_t tcombatdata);
+		static AlchemicEffect CalcPoisonEffects(uint32_t combatdata, RE::Actor* target, uint32_t tcombatdata);
 
 		/// <summary>
 		/// Calculates all fortify effects that an actor is equitable for, based on their and their targets combat data
@@ -108,21 +108,21 @@ namespace Events
 		/// <param name="combatdata">combatdata of [acinfo]</param>
 		/// <param name="tcombatdata">combatdata of target</param>
 		/// <returns></returns>
-		static uint64_t CalcFortifyEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata, uint32_t tcombatdata = 0);
+		static AlchemicEffect CalcFortifyEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata, uint32_t tcombatdata = 0);
 
 		/// <summary>
 		/// Calculates all regeneration effects that an actor is equitable for, based on their combat data
 		/// </summary>
 		/// <param name="combatdata">combatdata of the actor</param>
 		/// <returns>valid regeneration effects</returns>
-		static uint64_t CalcRegenEffects(uint32_t combatdata);
+		static AlchemicEffect CalcRegenEffects(uint32_t combatdata);
 		/// <summary>
 		/// Calculates all regeneration effects that an actor is equitable for, based on their combat data
 		/// </summary>
 		/// <param name="acinfo"></param>
 		/// <param name="combatdata"></param>
 		/// <returns></returns>
-		static uint64_t CalcRegenEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata);
+		static AlchemicEffect CalcRegenEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata);
 
 		/// <summary>
 		/// Processes the item distribution for an actor

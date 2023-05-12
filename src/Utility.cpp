@@ -3,7 +3,7 @@
 #include <Distribution.h>
 #include "Compatibility.h"
 
-bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> first, std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> second)
+bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second)
 {
 	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
 }
@@ -67,264 +67,270 @@ std::string Utility::ToString(ItemStrength is)
 	}
 }
 
-std::string Utility::ToString(AlchemyEffect ae)
+std::string Utility::ToString(AlchemicEffect ae)
 {
-	switch (ae) {
-	case AlchemyEffect::kAlteration:
-		return "Alteration";
-	case AlchemyEffect::kAnyFood:
-		return "AnyFood";
-	case AlchemyEffect::kAnyFortify:
-		return "AnyFortify";
-	case AlchemyEffect::kAnyPoison:
-		return "AnyPoison";
-	case AlchemyEffect::kAnyPotion:
-		return "AnyPotion";
-	case AlchemyEffect::kArchery:
-		return "Archery";
-	case AlchemyEffect::kAttackDamageMult:
-		return "AttackDamageMult";
-	case AlchemyEffect::kBlock:
-		return "Block";
-	case AlchemyEffect::kBlood:
-		return "Blood";
-	case AlchemyEffect::kBowSpeed:
-		return "BowSpeed";
-	case AlchemyEffect::kConjuration:
-		return "Conjuration";
-	case AlchemyEffect::kCriticalChance:
-		return "CriticalChance";
-	case AlchemyEffect::kDamageResist:
-		return "DamageResist";
-	case AlchemyEffect::kDestruction:
-		return "Destruction";
-	case AlchemyEffect::kFear:
-		return "Fear";
-	case AlchemyEffect::kFrenzy:
-		return "Frenzy";
-	case AlchemyEffect::kHealRate:
-		return "HealRate";
-	case AlchemyEffect::kHealRateMult:
-		return "HealRateMult";
-	case AlchemyEffect::kHealth:
-		return "Health";
-	case AlchemyEffect::kHeavyArmor:
-		return "HeavyArmor";
-	case AlchemyEffect::kIllusion:
-		return "Illusion";
-	case AlchemyEffect::kInvisibility:
-		return "Invisibility";
-	case AlchemyEffect::kLightArmor:
-		return "LightArmor";
-	case AlchemyEffect::kLockpicking:
-		return "Lockpicking";
-	case AlchemyEffect::kMagicka:
-		return "Magicka";
-	case AlchemyEffect::kMagickaRate:
-		return "MagickaRate";
-	case AlchemyEffect::kMagickaRateMult:
-		return "MagickaRateMult";
-	case AlchemyEffect::kMeleeDamage:
-		return "MeleeDamage";
-	case AlchemyEffect::kNone:
-		return "None";
-	case AlchemyEffect::kOneHanded:
-		return "OneHanded";
-	case AlchemyEffect::kParalysis:
-		return "Paralysis";
-	case AlchemyEffect::kPickpocket:
-		return "Pickpocket";
-	case AlchemyEffect::kPoisonResist:
-		return "PoisonResist";
-	case AlchemyEffect::kReflectDamage:
-		return "ReflectDamage";
-	case AlchemyEffect::kResistDisease:
-		return "ResistDisease";
-	case AlchemyEffect::kResistFire:
-		return "ResistFire";
-	case AlchemyEffect::kResistFrost:
-		return "ResistFrost";
-	case AlchemyEffect::kResistMagic:
-		return "ResistMagic";
-	case AlchemyEffect::kResistShock:
-		return "ResistShock";
-	case AlchemyEffect::kRestoration:
-		return "Restoration";
-	case AlchemyEffect::kSneak:
-		return "Sneak";
-	case AlchemyEffect::kSpeedMult:
-		return "SpeedMult";
-	case AlchemyEffect::kStamina:
-		return "Stamina";
-	case AlchemyEffect::kStaminaRate:
-		return "StaminaRate";
-	case AlchemyEffect::kStaminaRateMult:
-		return "StaminaRateMult";
-	case AlchemyEffect::kTwoHanded:
-		return "TwoHanded";
-	case AlchemyEffect::kUnarmedDamage:
-		return "UnarmedDamage";
-	case AlchemyEffect::kWeaponSpeedMult:
-		return "WeapenSpeedMult";
-	case AlchemyEffect::kCureDisease:
-		return "CureDisease";
-	case AlchemyEffect::kCurePoison:
-		return "CurePoison";
-	case AlchemyEffect::kEnchanting:
-		return "Enchanting";
-	case AlchemyEffect::kWaterbreathing:
-		return "Waterbreathing";
-	case AlchemyEffect::kSmithing:
-		return "Smithing";
-	case AlchemyEffect::kSpeech:
-		return "Speech";
-	case AlchemyEffect::kCarryWeight:
-		return "CarryWeight";
-	case AlchemyEffect::kAlchemy:
-		return "Alchemy";
-	case AlchemyEffect::kPersuasion:
-		return "Persuasion";
-	case AlchemyEffect::kFortifyHealth:
-		return "FortifyHealth";
-	case AlchemyEffect::kFortifyMagicka:
-		return "FortifyMagicka";
-	case AlchemyEffect::kFortifyStamina:
-		return "FortifyStamina";
-	case AlchemyEffect::kCustom:
-		return "Custom";
-	case AlchemyEffect::kShield:
-		return "Shield";
-	default:
-		return "Unknown";
+	if (ae.IsEffect()) {
+		switch (ae.AlchemyBaseEffectFirst())
+		{
+		case AlchemyBaseEffectFirst::kNone:
+			break;
+		default:
+			return "Unknown";
+		}
+		switch (ae.AlchemyBaseEffectSecond()) {
+		case AlchemyBaseEffectSecond::kAlteration:
+			return "Alteration";
+		case AlchemyBaseEffectSecond::kAnyFood:
+			return "AnyFood";
+		case AlchemyBaseEffectSecond::kAnyFortify:
+			return "AnyFortify";
+		case AlchemyBaseEffectSecond::kAnyPoison:
+			return "AnyPoison";
+		case AlchemyBaseEffectSecond::kAnyPotion:
+			return "AnyPotion";
+		case AlchemyBaseEffectSecond::kArchery:
+			return "Archery";
+		case AlchemyBaseEffectSecond::kAttackDamageMult:
+			return "AttackDamageMult";
+		case AlchemyBaseEffectSecond::kBlock:
+			return "Block";
+		case AlchemyBaseEffectSecond::kBlood:
+			return "Blood";
+		case AlchemyBaseEffectSecond::kBowSpeed:
+			return "BowSpeed";
+		case AlchemyBaseEffectSecond::kConjuration:
+			return "Conjuration";
+		case AlchemyBaseEffectSecond::kCriticalChance:
+			return "CriticalChance";
+		case AlchemyBaseEffectSecond::kDamageResist:
+			return "DamageResist";
+		case AlchemyBaseEffectSecond::kDestruction:
+			return "Destruction";
+		case AlchemyBaseEffectSecond::kFear:
+			return "Fear";
+		case AlchemyBaseEffectSecond::kFrenzy:
+			return "Frenzy";
+		case AlchemyBaseEffectSecond::kHealRate:
+			return "HealRate";
+		case AlchemyBaseEffectSecond::kHealRateMult:
+			return "HealRateMult";
+		case AlchemyBaseEffectSecond::kHealth:
+			return "Health";
+		case AlchemyBaseEffectSecond::kHeavyArmor:
+			return "HeavyArmor";
+		case AlchemyBaseEffectSecond::kIllusion:
+			return "Illusion";
+		case AlchemyBaseEffectSecond::kInvisibility:
+			return "Invisibility";
+		case AlchemyBaseEffectSecond::kLightArmor:
+			return "LightArmor";
+		case AlchemyBaseEffectSecond::kLockpicking:
+			return "Lockpicking";
+		case AlchemyBaseEffectSecond::kMagicka:
+			return "Magicka";
+		case AlchemyBaseEffectSecond::kMagickaRate:
+			return "MagickaRate";
+		case AlchemyBaseEffectSecond::kMagickaRateMult:
+			return "MagickaRateMult";
+		case AlchemyBaseEffectSecond::kMeleeDamage:
+			return "MeleeDamage";
+		case AlchemyBaseEffectSecond::kNone:
+			return "None";
+		case AlchemyBaseEffectSecond::kOneHanded:
+			return "OneHanded";
+		case AlchemyBaseEffectSecond::kParalysis:
+			return "Paralysis";
+		case AlchemyBaseEffectSecond::kPickpocket:
+			return "Pickpocket";
+		case AlchemyBaseEffectSecond::kPoisonResist:
+			return "PoisonResist";
+		case AlchemyBaseEffectSecond::kReflectDamage:
+			return "ReflectDamage";
+		case AlchemyBaseEffectSecond::kResistDisease:
+			return "ResistDisease";
+		case AlchemyBaseEffectSecond::kResistFire:
+			return "ResistFire";
+		case AlchemyBaseEffectSecond::kResistFrost:
+			return "ResistFrost";
+		case AlchemyBaseEffectSecond::kResistMagic:
+			return "ResistMagic";
+		case AlchemyBaseEffectSecond::kResistShock:
+			return "ResistShock";
+		case AlchemyBaseEffectSecond::kRestoration:
+			return "Restoration";
+		case AlchemyBaseEffectSecond::kSneak:
+			return "Sneak";
+		case AlchemyBaseEffectSecond::kSpeedMult:
+			return "SpeedMult";
+		case AlchemyBaseEffectSecond::kStamina:
+			return "Stamina";
+		case AlchemyBaseEffectSecond::kStaminaRate:
+			return "StaminaRate";
+		case AlchemyBaseEffectSecond::kStaminaRateMult:
+			return "StaminaRateMult";
+		case AlchemyBaseEffectSecond::kTwoHanded:
+			return "TwoHanded";
+		case AlchemyBaseEffectSecond::kUnarmedDamage:
+			return "UnarmedDamage";
+		case AlchemyBaseEffectSecond::kWeaponSpeedMult:
+			return "WeapenSpeedMult";
+		case AlchemyBaseEffectSecond::kCureDisease:
+			return "CureDisease";
+		case AlchemyBaseEffectSecond::kCurePoison:
+			return "CurePoison";
+		case AlchemyBaseEffectSecond::kEnchanting:
+			return "Enchanting";
+		case AlchemyBaseEffectSecond::kWaterbreathing:
+			return "Waterbreathing";
+		case AlchemyBaseEffectSecond::kSmithing:
+			return "Smithing";
+		case AlchemyBaseEffectSecond::kSpeech:
+			return "Speech";
+		case AlchemyBaseEffectSecond::kCarryWeight:
+			return "CarryWeight";
+		case AlchemyBaseEffectSecond::kAlchemy:
+			return "Alchemy";
+		case AlchemyBaseEffectSecond::kPersuasion:
+			return "Persuasion";
+		case AlchemyBaseEffectSecond::kFortifyHealth:
+			return "FortifyHealth";
+		case AlchemyBaseEffectSecond::kFortifyMagicka:
+			return "FortifyMagicka";
+		case AlchemyBaseEffectSecond::kFortifyStamina:
+			return "FortifyStamina";
+		case AlchemyBaseEffectSecond::kCustom:
+			return "Custom";
+		case AlchemyBaseEffectSecond::kShield:
+			return "Shield";
+		default:
+			return "Unknown";
+		}
+	} else {
+		std::string ret = "|";
+		if ((ae & AlchemicEffect::kAlteration).IsValid())
+			ret += "Alteration|";
+		if ((ae & AlchemicEffect::kArchery).IsValid())
+			ret += "Archery|";
+		if ((ae & AlchemicEffect::kAttackDamageMult).IsValid())
+			ret += "AttackDamageMult|";
+		if ((ae & AlchemicEffect::kBlock).IsValid())
+			ret += "Block|";
+		if ((ae & AlchemicEffect::kBlood).IsValid())
+			ret += "Blood|";
+		if ((ae & AlchemicEffect::kBowSpeed).IsValid())
+			ret += "BowSpeed|";
+		if ((ae & AlchemicEffect::kConjuration).IsValid())
+			ret += "Conjuration|";
+		if ((ae & AlchemicEffect::kCriticalChance).IsValid())
+			ret += "CriticalChance|";
+		if ((ae & AlchemicEffect::kDamageResist).IsValid())
+			ret += "DamageResist|";
+		if ((ae & AlchemicEffect::kDestruction).IsValid())
+			ret += "Destruction|";
+		if ((ae & AlchemicEffect::kFear).IsValid())
+			ret += "Fear|";
+		if ((ae & AlchemicEffect::kFrenzy).IsValid())
+			ret += "Frenzy|";
+		if ((ae & AlchemicEffect::kHealRate).IsValid())
+			ret += "HealRate|";
+		if ((ae & AlchemicEffect::kHealRateMult).IsValid())
+			ret += "HealRateMult|";
+		if ((ae & AlchemicEffect::kHealth).IsValid())
+			ret += "Health|";
+		if ((ae & AlchemicEffect::kHeavyArmor).IsValid())
+			ret += "HeavyArmor|";
+		if ((ae & AlchemicEffect::kIllusion).IsValid())
+			ret += "Illusion|";
+		if ((ae & AlchemicEffect::kInvisibility).IsValid())
+			ret += "Invisibility|";
+		if ((ae & AlchemicEffect::kLightArmor).IsValid())
+			ret += "LightArmor|";
+		if ((ae & AlchemicEffect::kLockpicking).IsValid())
+			ret += "Lockpicking|";
+		if ((ae & AlchemicEffect::kMagicka).IsValid())
+			ret += "Magicka|";
+		if ((ae & AlchemicEffect::kMagickaRate).IsValid())
+			ret += "MagickaRate|";
+		if ((ae & AlchemicEffect::kMagickaRateMult).IsValid())
+			ret += "MagickaRateMult|";
+		if ((ae & AlchemicEffect::kMeleeDamage).IsValid())
+			ret += "MeleeDamage|";
+		if ((ae & AlchemicEffect::kNone).IsValid())
+			ret += "None|";
+		if ((ae & AlchemicEffect::kOneHanded).IsValid())
+			ret += "OneHanded|";
+		if ((ae & AlchemicEffect::kParalysis).IsValid())
+			ret += "Paralysis|";
+		if ((ae & AlchemicEffect::kPickpocket).IsValid())
+			ret += "Pickpocket|";
+		if ((ae & AlchemicEffect::kPoisonResist).IsValid())
+			ret += "PoisonResist|";
+		if ((ae & AlchemicEffect::kReflectDamage).IsValid())
+			ret += "ReflectDamage|";
+		if ((ae & AlchemicEffect::kResistDisease).IsValid())
+			ret += "ResistDisease|";
+		if ((ae & AlchemicEffect::kResistFire).IsValid())
+			ret += "ResistFire|";
+		if ((ae & AlchemicEffect::kResistFrost).IsValid())
+			ret += "ResistFrost|";
+		if ((ae & AlchemicEffect::kResistMagic).IsValid())
+			ret += "ResistMagic|";
+		if ((ae & AlchemicEffect::kResistShock).IsValid())
+			ret += "ResistShock|";
+		if ((ae & AlchemicEffect::kRestoration).IsValid())
+			ret += "Restoration|";
+		if ((ae & AlchemicEffect::kSneak).IsValid())
+			ret += "Sneak|";
+		if ((ae & AlchemicEffect::kSpeedMult).IsValid())
+			ret += "SpeedMult|";
+		if ((ae & AlchemicEffect::kStamina).IsValid())
+			ret += "Stamina|";
+		if ((ae & AlchemicEffect::kStaminaRate).IsValid())
+			ret += "StaminaRate|";
+		if ((ae & AlchemicEffect::kStaminaRateMult).IsValid())
+			ret += "StaminaRateMult|";
+		if ((ae & AlchemicEffect::kTwoHanded).IsValid())
+			ret += "TwoHanded|";
+		if ((ae & AlchemicEffect::kUnarmedDamage).IsValid())
+			ret += "UnarmedDamage|";
+		if ((ae & AlchemicEffect::kWeaponSpeedMult).IsValid())
+			ret += "WeapenSpeedMult|";
+		if ((ae & AlchemicEffect::kCureDisease).IsValid())
+			ret += "CureDisease|";
+		if ((ae & AlchemicEffect::kCurePoison).IsValid())
+			ret += "CurePoison|";
+		if ((ae & AlchemicEffect::kEnchanting).IsValid())
+			ret += "Enchanting|";
+		if ((ae & AlchemicEffect::kWaterbreathing).IsValid())
+			ret += "Waterbreathing|";
+		if ((ae & AlchemicEffect::kSmithing).IsValid())
+			ret += "Smithing|";
+		if ((ae & AlchemicEffect::kSpeech).IsValid())
+			ret += "Speech|";
+		if ((ae & AlchemicEffect::kCarryWeight).IsValid())
+			ret += "CarryWeight|";
+		if ((ae & AlchemicEffect::kAlchemy).IsValid())
+			ret += "Alchemy|";
+		if ((ae & AlchemicEffect::kPersuasion).IsValid())
+			ret += "Persuasion|";
+		if ((ae & AlchemicEffect::kFortifyHealth).IsValid())
+			ret += "FortifyHealth|";
+		if ((ae & AlchemicEffect::kFortifyMagicka).IsValid())
+			ret += "FortifyMagicka|";
+		if ((ae & AlchemicEffect::kFortifyStamina).IsValid())
+			ret += "FortifyStamina|";
+		if ((ae & AlchemicEffect::kCustom).IsValid())
+			ret += "Custom|";
+		if ((ae & AlchemicEffect::kShield).IsValid())
+			ret += "Shield|";
+
+		if (ret == "|")
+			return "|Unknown|";
+		return ret;
 	}
 }
 
-std::string Utility::ToString(AlchemyEffectBase ae)
-{
-	std::string ret = "|";
-	if (ae & Base(AlchemyEffect::kAlteration))
-		ret += "Alteration|";
-	if (ae & Base(AlchemyEffect::kArchery))
-		ret += "Archery|";
-	if (ae & Base(AlchemyEffect::kAttackDamageMult))
-		ret += "AttackDamageMult|";
-	if (ae & Base(AlchemyEffect::kBlock))
-		ret += "Block|";
-	if (ae & Base(AlchemyEffect::kBlood))
-		ret += "Blood|";
-	if (ae & Base(AlchemyEffect::kBowSpeed))
-		ret += "BowSpeed|";
-	if (ae & Base(AlchemyEffect::kConjuration))
-		ret += "Conjuration|";
-	if (ae & Base(AlchemyEffect::kCriticalChance))
-		ret += "CriticalChance|";
-	if (ae & Base(AlchemyEffect::kDamageResist))
-		ret += "DamageResist|";
-	if (ae & Base(AlchemyEffect::kDestruction))
-		ret += "Destruction|";
-	if (ae & Base(AlchemyEffect::kFear))
-		ret += "Fear|";
-	if (ae & Base(AlchemyEffect::kFrenzy))
-		ret += "Frenzy|";
-	if (ae & Base(AlchemyEffect::kHealRate))
-		ret += "HealRate|";
-	if (ae & Base(AlchemyEffect::kHealRateMult))
-		ret += "HealRateMult|";
-	if (ae & Base(AlchemyEffect::kHealth))
-		ret += "Health|";
-	if (ae & Base(AlchemyEffect::kHeavyArmor))
-		ret += "HeavyArmor|";
-	if (ae & Base(AlchemyEffect::kIllusion))
-		ret += "Illusion|";
-	if (ae & Base(AlchemyEffect::kInvisibility))
-		ret += "Invisibility|";
-	if (ae & Base(AlchemyEffect::kLightArmor))
-		ret += "LightArmor|";
-	if (ae & Base(AlchemyEffect::kLockpicking))
-		ret += "Lockpicking|";
-	if (ae & Base(AlchemyEffect::kMagicka))
-		ret += "Magicka|";
-	if (ae & Base(AlchemyEffect::kMagickaRate))
-		ret += "MagickaRate|";
-	if (ae & Base(AlchemyEffect::kMagickaRateMult))
-		ret += "MagickaRateMult|";
-	if (ae & Base(AlchemyEffect::kMeleeDamage))
-		ret += "MeleeDamage|";
-	if (ae & Base(AlchemyEffect::kNone))
-		ret += "None|";
-	if (ae & Base(AlchemyEffect::kOneHanded))
-		ret += "OneHanded|";
-	if (ae & Base(AlchemyEffect::kParalysis))
-		ret += "Paralysis|";
-	if (ae & Base(AlchemyEffect::kPickpocket))
-		ret += "Pickpocket|";
-	if (ae & Base(AlchemyEffect::kPoisonResist))
-		ret += "PoisonResist|";
-	if (ae & Base(AlchemyEffect::kReflectDamage))
-		ret += "ReflectDamage|";
-	if (ae & Base(AlchemyEffect::kResistDisease))
-		ret += "ResistDisease|";
-	if (ae & Base(AlchemyEffect::kResistFire))
-		ret += "ResistFire|";
-	if (ae & Base(AlchemyEffect::kResistFrost))
-		ret += "ResistFrost|";
-	if (ae & Base(AlchemyEffect::kResistMagic))
-		ret += "ResistMagic|";
-	if (ae & Base(AlchemyEffect::kResistShock))
-		ret += "ResistShock|";
-	if (ae & Base(AlchemyEffect::kRestoration))
-		ret += "Restoration|";
-	if (ae & Base(AlchemyEffect::kSneak))
-		ret += "Sneak|";
-	if (ae & Base(AlchemyEffect::kSpeedMult))
-		ret += "SpeedMult|";
-	if (ae & Base(AlchemyEffect::kStamina))
-		ret += "Stamina|";
-	if (ae & Base(AlchemyEffect::kStaminaRate))
-		ret += "StaminaRate|";
-	if (ae & Base(AlchemyEffect::kStaminaRateMult))
-		ret += "StaminaRateMult|";
-	if (ae & Base(AlchemyEffect::kTwoHanded))
-		ret += "TwoHanded|";
-	if (ae & Base(AlchemyEffect::kUnarmedDamage))
-		ret += "UnarmedDamage|";
-	if (ae & Base(AlchemyEffect::kWeaponSpeedMult))
-		ret += "WeapenSpeedMult|";
-	if (ae & Base(AlchemyEffect::kCureDisease))
-		ret += "CureDisease|";
-	if (ae & Base(AlchemyEffect::kCurePoison))
-		ret += "CurePoison|";
-	if (ae & Base(AlchemyEffect::kEnchanting))
-		ret += "Enchanting|";
-	if (ae & Base(AlchemyEffect::kWaterbreathing))
-		ret += "Waterbreathing|";
-	if (ae & Base(AlchemyEffect::kSmithing))
-		ret += "Smithing|";
-	if (ae & Base(AlchemyEffect::kSpeech))
-		ret += "Speech|";
-	if (ae & Base(AlchemyEffect::kCarryWeight))
-		ret += "CarryWeight|";
-	if (ae & Base(AlchemyEffect::kAlchemy))
-		ret += "Alchemy|";
-	if (ae & Base(AlchemyEffect::kPersuasion))
-		ret += "Persuasion|";
-	if (ae & Base(AlchemyEffect::kFortifyHealth))
-		ret += "FortifyHealth|";
-	if (ae & Base(AlchemyEffect::kFortifyMagicka))
-		ret += "FortifyMagicka|";
-	if (ae & Base(AlchemyEffect::kFortifyStamina))
-		ret += "FortifyStamina|";
-	if (ae & Base(AlchemyEffect::kCustom))
-		ret += "Custom|";
-	if (ae & Base(AlchemyEffect::kShield))
-		ret += "Shield|";
-
-	if (ret == "|")
-		return "|Unknown|";
-	return ret;
-}
-
-std::string Utility::PrintDistribution(std::vector<std::tuple<int, AlchemyEffect>> distribution)
+std::string Utility::PrintDistribution(std::vector<std::tuple<int, AlchemicEffect>> distribution)
 {
 	std::string ret = "|";
 	for (int i = 0; i < distribution.size(); i++) {
@@ -333,7 +339,7 @@ std::string Utility::PrintDistribution(std::vector<std::tuple<int, AlchemyEffect
 	return ret;
 }
 
-std::string Utility::PrintEffectMap(std::map<AlchemyEffect, float> effectMap)
+std::string Utility::PrintEffectMap(std::map<AlchemicEffect, float> effectMap)
 {
 	std::string ret = "|";
 	for (auto& [key, value] : effectMap) {
@@ -1375,14 +1381,14 @@ Distribution::AssocType Utility::MatchValidFormType(RE::FormType type, bool& val
 	}
 }
 
-std::vector<std::tuple<uint64_t, float>> Utility::ParseAlchemyEffects(std::string input, bool& error)
+std::vector<std::tuple<AlchemicEffect, float>> Utility::ParseAlchemyEffects(std::string input, bool& error)
 {
 	LOG_3("{}[Utility] [ParseAlchemyEffect]");
-	std::vector<std::tuple<uint64_t, float>> ret;
+	std::vector<std::tuple<AlchemicEffect, float>> ret;
 	try {
 		float modifier = 1.0f;
 		size_t pos = 0;
-		uint64_t effect = 0;
+		AlchemicEffect effect = 0;
 		while (input.empty() == false) {
 			effect = 0;
 			modifier = 1.0f;
@@ -1403,7 +1409,7 @@ std::vector<std::tuple<uint64_t, float>> Utility::ParseAlchemyEffects(std::strin
 				}
 				try {
 					// read the effectmapping in hex
-					effect = std::stoull(entry, nullptr, 16);
+					effect = entry;
 				} catch (std::exception&) {
 				}
 				if (!(effect == 0 || modifier == 0.0f)) {
@@ -1424,25 +1430,25 @@ std::vector<std::tuple<uint64_t, float>> Utility::ParseAlchemyEffects(std::strin
 	return ret;
 }
 
-std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::vector<std::tuple<uint64_t, float>> effectmap, int range, bool chance)
+std::vector<std::tuple<int, AlchemicEffect>> Utility::GetDistribution(std::vector<std::tuple<AlchemicEffect, float>> effectmap, int range, bool chance)
 {
-	std::vector<std::tuple<int, AlchemyEffect>> ret;
+	std::vector<std::tuple<int, AlchemicEffect>> ret;
 	if (effectmap.size() == 0)
 		return ret;
-	uint64_t tmp = 0;
-	std::map<AlchemyEffect, float> map;
+	AlchemicEffect tmp = 0;
+	std::map<AlchemicEffect, float> map;
 	// iterate over all effects in effect map
 	for (int i = 0; i < effectmap.size(); i++) {
 		// iterate over all effects that could be mashed up in the effect map we can only iterate until c 62 so as to avoid
 		// an overflow error
-		for (uint64_t c = 1; c < 4611686018427387905; c = c << 1) {
+		for (AlchemicEffect c = 1; c < AlchemicEffect(4611686018427387904, 1); c = c << 1) {
 			if ((tmp = (std::get<0>(effectmap[i]) & c)) > 0) {
-				map.insert_or_assign(static_cast<AlchemyEffect>(tmp), std::get<1>(effectmap[i]));
+				map.insert_or_assign(tmp, std::get<1>(effectmap[i]));
 			}
 		}
 	}
 	if (chance) {
-		map.insert_or_assign(static_cast<AlchemyEffect>(AlchemyEffect::kCustom), 1.0f);
+		map.insert_or_assign(AlchemicEffect::kCustom, 1.0f);
 	}
 	// get the weighted sum of all modifiers over all effects and do multiply mashed up effects with the number of contained effects
 	float sum = 0.0f;
@@ -1462,12 +1468,12 @@ std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::vector
 	return ret;
 }
 
-std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::map<AlchemyEffect, float> map, int range, bool chance)
+std::vector<std::tuple<int, AlchemicEffect>> Utility::GetDistribution(std::map<AlchemicEffect, float> map, int range, bool chance)
 {
 	if (chance) {
-		map.insert_or_assign(static_cast<AlchemyEffect>(AlchemyEffect::kCustom), 1.0f);
+		map.insert_or_assign(AlchemicEffect::kCustom, 1.0f);
 	}
-	std::vector<std::tuple<int, AlchemyEffect>> ret;
+	std::vector<std::tuple<int, AlchemicEffect>> ret;
 	if (map.size() == 0)
 		return ret;
 	// get the weighted sum of all modifiers over all effects and do multiply mashed up effects with the number of contained effects
@@ -1488,31 +1494,31 @@ std::vector<std::tuple<int, AlchemyEffect>> Utility::GetDistribution(std::map<Al
 	return ret;
 }
 
-std::map<AlchemyEffect, float> Utility::UnifyEffectMap(std::vector<std::tuple<uint64_t, float>> effectmap)
+std::map<AlchemicEffect, float> Utility::UnifyEffectMap(std::vector<std::tuple<AlchemicEffect, float>> effectmap)
 {
-	uint64_t tmp = 0;
-	std::map<AlchemyEffect, float> map;
+	AlchemicEffect tmp = 0;
+	std::map<AlchemicEffect, float> map;
 	// iterate over all effects in effect map
 	for (int i = 0; i < effectmap.size(); i++) {
 		// iterate over all effects that could be mashed up in the effect map we can only iterate until c 62 so as to avoid
 		// an overflow error
-		for (uint64_t c = 1; c < 4611686018427387905; c = c << 1) {
+		for (AlchemicEffect c = 1; c < AlchemicEffect(4611686018427387904, 1); c = c << 1) {
 			if ((tmp = (std::get<0>(effectmap[i]) & c)) > 0) {
-				map.insert_or_assign(static_cast<AlchemyEffect>(tmp), std::get<1>(effectmap[i]));
+				map.insert_or_assign(tmp, std::get<1>(effectmap[i]));
 			}
 		}
 	}
 	return map;
 }
 
-uint64_t Utility::SumAlchemyEffects(std::vector<std::tuple<int, AlchemyEffect>> list, bool chance)
+AlchemicEffect Utility::SumAlchemyEffects(std::vector<std::tuple<int, AlchemicEffect>> list, bool chance)
 {
-	uint64_t ret = 0;
+	AlchemicEffect ret = 0;
 	for (int i = 0; i < list.size(); i++) {
-		ret |= static_cast<uint64_t>(std::get<1>(list[i]));
+		ret |= std::get<1>(list[i]);
 	}
 	if (chance)
-		ret |= static_cast<uint64_t>(AlchemyEffect::kCustom);
+		ret |= AlchemicEffect::kCustom;
 	return ret;
 }
 

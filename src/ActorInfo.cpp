@@ -242,8 +242,6 @@ void ActorInfo::UpdateMetrics(RE::Actor* reac)
 	playerHostile = reac->IsHostileToActor(playerRef);
 }
 
-#define CV(x) static_cast<uint64_t>(x)
-
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");

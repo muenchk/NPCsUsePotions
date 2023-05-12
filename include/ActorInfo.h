@@ -294,19 +294,19 @@ public:
 	/// <summary>
 	/// custom potion distribution to be applied
 	/// </summary>
-	std::vector<std::tuple<int, AlchemyEffect>> potionDistr;
+	std::vector<std::tuple<int, AlchemicEffect>> potionDistr;
 	/// <summary>
 	/// custom poison distribution to be applied
 	/// </summary>
-	std::vector<std::tuple<int, AlchemyEffect>> poisonDistr;
+	std::vector<std::tuple<int, AlchemicEffect>> poisonDistr;
 	/// <summary>
 	/// custom food distribution to be applied
 	/// </summary>
-	std::vector<std::tuple<int, AlchemyEffect>> foodDistr;
+	std::vector<std::tuple<int, AlchemicEffect>> foodDistr;
 	/// <summary>
 	/// custom fortify distribution to be applied
 	/// </summary>
-	std::vector<std::tuple<int, AlchemyEffect>> fortifyDistf;
+	std::vector<std::tuple<int, AlchemicEffect>> fortifyDistf;
 
 private:
 	/// <summary>

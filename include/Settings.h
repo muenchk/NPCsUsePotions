@@ -590,68 +590,68 @@ public:
 
 	// intern
 private:
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _dummylist{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _dummylist{};
 	/// <summary>
 	/// list of Weak-tiered potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_main{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsWeak_main{};
 	/// <summary>
 	/// list of Weak-tiered fortify potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsWeak_rest{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsWeak_rest{};
 	/// <summary>
 	/// list of Standard-tiered potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_main{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsStandard_main{};
 	/// <summary>
 	/// list of Standard-tiered fortify potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsStandard_rest{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsStandard_rest{};
 	/// <summary>
 	/// list of Potent-tiered potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsPotent_main{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsPotent_main{};
 	/// <summary>
 	/// list of Potent-tiered fortify potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsPotent_rest{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsPotent_rest{};
 	/// <summary>
 	/// list of Insane-tiered potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_main{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsInsane_main{};
 	/// <summary>
 	/// list of Insane-tiered fortify potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsInsane_rest{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsInsane_rest{};
 	/// <summary>
 	/// list of blood potions
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _potionsBlood{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _potionsBlood{};
 	/// <summary>
 	/// list of Weak-tiered poisons
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsWeak{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _poisonsWeak{};
 	/// <summary>
 	/// list of Standard-tiered poisons
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsStandard{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _poisonsStandard{};
 	/// <summary>
 	/// list of Potent-tiered poisons
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsPotent{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _poisonsPotent{};
 	/// <summary>
 	/// list of Insane-tiered poisons
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _poisonsInsane{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _poisonsInsane{};
 	/// <summary>
 	/// list of all food
 	/// </summary>
-	static inline std::list<std::pair<uint64_t, RE::AlchemyItem*>> _foodall{};
+	static inline std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>> _foodall{};
 
-	static inline AlchemyEffectBase _alchemyEffectsFound;
-	static inline AlchemyEffectBase _potionEffectsFound;
-	static inline AlchemyEffectBase _poisonEffectsFound;
-	static inline AlchemyEffectBase _foodEffectsFound;
+	static inline AlchemicEffect _alchemyEffectsFound;
+	static inline AlchemicEffect _potionEffectsFound;
+	static inline AlchemicEffect _poisonEffectsFound;
+	static inline AlchemicEffect _foodEffectsFound;
 
 	static inline bool _itemsInit = false;
 
@@ -666,72 +666,72 @@ public:
 	/// Returns the list of Weak-tiered potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsWeak_main() { return _itemsInit ? &_potionsWeak_main : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsWeak_main() { return _itemsInit ? &_potionsWeak_main : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Weak-tiered fortify potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsWeak_rest() { return _itemsInit ? &_potionsWeak_rest : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsWeak_rest() { return _itemsInit ? &_potionsWeak_rest : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Standard-tiered potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsStandard_main() { return _itemsInit ? &_potionsStandard_main : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsStandard_main() { return _itemsInit ? &_potionsStandard_main : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Standard-tiered fortify potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsStandard_rest() { return _itemsInit ? &_potionsStandard_rest : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsStandard_rest() { return _itemsInit ? &_potionsStandard_rest : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Potent-tiered potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsPotent_main() { return _itemsInit ? &_potionsPotent_main : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsPotent_main() { return _itemsInit ? &_potionsPotent_main : &_dummylist; }
 	/// <summary>
 	/// returns the list of Potent-tiered fortify potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsPotent_rest() { return _itemsInit ? &_potionsPotent_rest : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsPotent_rest() { return _itemsInit ? &_potionsPotent_rest : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Insane-tiered potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsInsane_main() { return _itemsInit ? &_potionsInsane_main : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsInsane_main() { return _itemsInit ? &_potionsInsane_main : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Insane-tiered fortify potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsInsane_rest() { return _itemsInit ? &_potionsInsane_rest : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsInsane_rest() { return _itemsInit ? &_potionsInsane_rest : &_dummylist; }
 	/// <summary>
 	/// Returns the list of blood potions
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* potionsBlood() { return _itemsInit ? &_potionsBlood : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* potionsBlood() { return _itemsInit ? &_potionsBlood : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Weak-tiered poison
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsWeak() { return _itemsInit ? &_poisonsWeak : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* poisonsWeak() { return _itemsInit ? &_poisonsWeak : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Standard-tiered poisons
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsStandard() { return _itemsInit ? &_poisonsStandard : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* poisonsStandard() { return _itemsInit ? &_poisonsStandard : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Potent-tiered poisons
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsPotent() { return _itemsInit ? &_poisonsPotent : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* poisonsPotent() { return _itemsInit ? &_poisonsPotent : &_dummylist; }
 	/// <summary>
 	/// Returns the list of Insane-tiered poisons
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* poisonsInsane() { return _itemsInit ? &_poisonsInsane : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* poisonsInsane() { return _itemsInit ? &_poisonsInsane : &_dummylist; }
 	/// <summary>
 	/// Returns the list of all food items
 	/// </summary>
 	/// <returns></returns>
-	static std::list<std::pair<uint64_t, RE::AlchemyItem*>>* foodall() { return _itemsInit ? &_foodall : &_dummylist; }
+	static std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>* foodall() { return _itemsInit ? &_foodall : &_dummylist; }
 
 	//static inline std::list<RE::AlchemyItem*> alitems{};
 	//static inline std::list<RE::AlchemyItem*> potions{};
@@ -836,7 +836,7 @@ public:
 	/// </summary>
 	/// <param name="item"></param>
 	/// <returns>effects, strength, type, duration, magnitude, whether an effect is detrimental</returns>
-	static std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> ClassifyItem(RE::AlchemyItem* item);
+	static std::tuple<AlchemicEffect, ItemStrength, ItemType, int, float, bool> ClassifyItem(RE::AlchemyItem* item);
 
 	/// <summary>
 	/// classifies all AlchemyItems in the game according to its effects
@@ -849,7 +849,7 @@ public:
 	/// <param name="list"></param>
 	/// <param name="effect"></param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetMatchingItems(std::list<std::pair<uint64_t, RE::AlchemyItem*>>& list, uint64_t effect)
+	static std::vector<RE::AlchemyItem*> GetMatchingItems(std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>& list, AlchemicEffect effect)
 	{
 		std::vector<RE::AlchemyItem*> ret;
 		for (auto entry : list) {

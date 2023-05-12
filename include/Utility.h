@@ -9,8 +9,6 @@
 #include <tuple>
 #include <utility>
 
-#define Base(x) static_cast<uint64_t>(x)
-
 using ActorInfoPtr = std::weak_ptr<ActorInfo>;
 
 /// <summary>
@@ -50,7 +48,7 @@ public:
 	/// <param name="first"></param>
 	/// <param name="second"></param>
 	/// <returns></returns>
-	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> first, std::tuple<float, int, RE::AlchemyItem*, AlchemyEffectBase> second);
+	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second);
 	#pragma endregion
 
 	/// <summary>
@@ -95,6 +93,28 @@ public:
 	{
 		std::stringstream ss;
 		ss << std::hex << val;
+		return ss.str();
+	}
+	/// <summary>
+	/// Returns a string showing [val] as Hexadecimal number with padding
+	/// </summary>
+	/// <param name="val"></param>
+	/// <returns></returns>
+	static std::string GetHexFill(uint32_t val)
+	{
+		std::stringstream ss;
+		ss << std::setw(16) << std::hex << std::setfill('0') << val;
+		return ss.str();
+	}
+	/// <summary>
+	/// Returns a string showing [val] as Hexadecimal number with padding
+	/// </summary>
+	/// <param name="val"></param>
+	/// <returns></returns>
+	static std::string GetHexFill(uint64_t val)
+	{
+		std::stringstream ss;
+		ss << std::setw(16) << std::hex << std::setfill('0') << val;
 		return ss.str();
 	}
 
@@ -167,32 +187,25 @@ public:
 	static std::string ToString(ItemStrength is);
 
 	/// <summary>
-	/// Converts an AlchemyEffect to a String
+	/// Converts an AlchemicEffect to a String
 	/// </summary>
 	/// <param name="ae"></param>
 	/// <returns></returns>
-	static std::string ToString(AlchemyEffect ae);
-
-	/// <summary>
-	/// Converts accumulated alchemy effects into a String
-	/// </summary>
-	/// <param name="ae"></param>
-	/// <returns></returns>
-	static std::string ToString(AlchemyEffectBase ae);
+	static std::string ToString(AlchemicEffect ae);
 
 	/// <summary>
 	/// Returns a string representation of a distribution
 	/// </summary>
 	/// <param name="distribution"></param>
 	/// <returns></returns>
-	static std::string PrintDistribution(std::vector<std::tuple<int, AlchemyEffect>> distribution);
+	static std::string PrintDistribution(std::vector<std::tuple<int, AlchemicEffect>> distribution);
 
 	/// <summary>
 	/// Returns a string representation of an effect map
 	/// </summary>
 	/// <param name="distribution"></param>
 	/// <returns></returns>
-	static std::string PrintEffectMap(std::map<AlchemyEffect, float> effectMap);
+	static std::string PrintEffectMap(std::map<AlchemicEffect, float> effectMap);
 
 	/// <summary>
 	/// Splits a string at a delimiter and optionally removes empty results
@@ -317,7 +330,7 @@ public:
 	/// <param name="input">string to parse</param>
 	/// <param name="error">Overrisable value, which is set to true if there is an error during parsing.</param>
 	/// <returns>A vector of AlchemyEffects and Weights</returns>
-	static std::vector<std::tuple<uint64_t, float>> ParseAlchemyEffects(std::string input, bool& error);
+	static std::vector<std::tuple<AlchemicEffect, float>> ParseAlchemyEffects(std::string input, bool& error);
 
 	/// <summary>
 	/// Computes a distribution from an effectmap.
@@ -325,28 +338,28 @@ public:
 	/// <param name="effectmap">effectmap containing effects and weights which will be translated into the distribution</param>
 	/// <param name="range">range the distribution chances are computed for</param>
 	/// <returns>Weighted Distribution</returns>
-	static std::vector<std::tuple<int, AlchemyEffect>> GetDistribution(std::vector<std::tuple<uint64_t, float>> effectmap, int range, bool chance = false);
+	static std::vector<std::tuple<int, AlchemicEffect>> GetDistribution(std::vector<std::tuple<AlchemicEffect, float>> effectmap, int range, bool chance = false);
 
 	/// <summary>
 	/// Computes a distribution from a unified effect map
 	/// <param name="map">unified effect map the distribution is calculated from</param>
 	/// <param name="range">range the distribution chances are computed for</param>
 	/// </summary>
-	static std::vector<std::tuple<int, AlchemyEffect>> GetDistribution(std::map<AlchemyEffect, float> map, int range, bool chance = false);
+	static std::vector<std::tuple<int, AlchemicEffect>> GetDistribution(std::map<AlchemicEffect, float> map, int range, bool chance = false);
 
 	/// <summary>
 	/// Calculates a unified effect map, that contains at most one entry per AlchemyEffect present
 	/// </summary>
 	/// <param name="effectmap">effectmap containing effects and weights that shal be unified</param>
 	/// <returns>map with alchemyeffects and their weights</returns>
-	static std::map<AlchemyEffect, float> UnifyEffectMap(std::vector<std::tuple<uint64_t, float>> effectmap);
+	static std::map<AlchemicEffect, float> UnifyEffectMap(std::vector<std::tuple<AlchemicEffect, float>> effectmap);
 
 	/// <summary>
 	/// Sums the Alchemyeffects in [list]
 	/// </summary>
 	/// <param name="list">list with AlchemyEffects to sum</param>
 	/// <returns>Combined value with all Alchemyeffects</returns>
-	static uint64_t SumAlchemyEffects(std::vector<std::tuple<int, AlchemyEffect>> list, bool chance = false);
+	static AlchemicEffect SumAlchemyEffects(std::vector<std::tuple<int, AlchemicEffect>> list, bool chance = false);
 
 	/// <summary>
 	/// Checks whether poison can be applied to the weapons of an actor
@@ -466,11 +479,13 @@ public:
 			auto datahandler = RE::TESDataHandler::GetSingleton();
 			const RE::TESFile* file = nullptr;
 			uint32_t pindex = Utility::Mods::GetPluginIndex(pluginname);
+			std::vector<T*> ret;
+			if (pindex == 0x1) // if mod cannot be found return
+				return ret;
 			if ((pindex & 0x00FFF000) != 0)  // light mod
 				file = datahandler->LookupLoadedLightModByIndex((uint16_t)((pindex & 0x00FFF000) >> 12));
 			else  // normal mod
 				file = datahandler->LookupLoadedModByIndex((uint8_t)(pindex >> 24));
-			std::vector<T*> ret;
 			if (file != nullptr) {
 				uint32_t mask = 0;
 				uint32_t index = 0;
