@@ -558,6 +558,9 @@ AlchemicEffect AlchemicEffect::ShiftLeft(const uint64_t& shift) const
 		// we are shifting second into first
 		alc.first = second;
 		alc.second = 0;
+	} else if (shift == 0) {
+		alc.first = first;
+		alc.second = second;
 	} else {
 		// we shift less than 64 bytes, thus we need an intermediary
 		// save bytes shifted out

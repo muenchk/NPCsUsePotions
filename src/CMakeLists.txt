@@ -121,22 +121,14 @@ target_include_directories(
 		"${SOURCE_DIR}"
 )
 
-if (DEFINED CACHE{SKYRIM_SUPPORT_AE353})
-	add_compile_definitions(SKYRIM_SUPPORT_AE353=1)
-	add_subdirectory($ENV{CommonLibSSE353Path} CommonLibSSE)
-	target_link_libraries(
-		"${PROJECT_NAME}"
-		PRIVATE
-			CommonLibSSE::CommonLibSSE
-	)
-else()
-	add_subdirectory($ENV{CommonLibSSEPath} CommonLibSSE)
-	target_link_libraries(
-		"${PROJECT_NAME}"
-		PRIVATE
-			CommonLibSSE::CommonLibSSE
-	)
-endif()
+
+add_subdirectory($ENV{CommonLibNGPath} CommonLibSSE EXCLUDE_FROM_ALL)
+
+target_link_libraries(
+	"${PROJECT_NAME}"
+	PRIVATE
+		CommonLibSSE::CommonLibSSE
+)
 
 target_precompile_headers(
 	"${PROJECT_NAME}"

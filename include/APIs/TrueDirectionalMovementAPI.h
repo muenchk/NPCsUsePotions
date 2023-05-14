@@ -156,7 +156,9 @@
 	/// <returns>The pointer to the API singleton, or nullptr if request failed</returns>
 	[[nodiscard]] inline void* RequestPluginAPI(const InterfaceVersion a_interfaceVersion = InterfaceVersion::V2)
 	{
-		auto pluginHandle = GetModuleHandle("TrueDirectionalMovement.dll");
+		std::string str = "TrueDirectionalMovement.dll";
+		std::wstring wstr = std::wstring(str.begin(), str.end());
+		auto pluginHandle = GetModuleHandle(wstr.c_str());
 		_RequestPluginAPI requestAPIFunction = (_RequestPluginAPI)GetProcAddress(pluginHandle, "RequestPluginAPI");
 		if (requestAPIFunction) {
 			return requestAPIFunction(a_interfaceVersion);

@@ -207,7 +207,7 @@ namespace Events
 					if (std::shared_ptr<ActorInfo> tar = acinfo->GetTarget().lock())
 						target = tar->GetActor();
 					if (target) {
-						if (Settings::Poisons::_DontUseAgainst100PoisonResist && target->GetActorValue(RE::ActorValue::kPoisonResist) >= 100) {
+						if (Settings::Poisons::_DontUseAgainst100PoisonResist && target->AsActorValueOwner()->GetActorValue(RE::ActorValue::kPoisonResist) >= 100) {
 							return;
 						}
 						// we can make the usage dependent on the target
@@ -349,7 +349,7 @@ namespace Events
 			RE::ActorHandle handle;
 			if (acinfo->IsPlayer() == false && acinfo->GetActor() != nullptr) {
 				// retrieve target of current actor if present
-				acinfo->SetTarget(CheckHandle(acinfo->GetActor()->currentCombatTarget));
+				acinfo->SetTarget(CheckHandle(acinfo->GetActor()->GetActorRuntimeData().currentCombatTarget));
 				if (std::shared_ptr<ActorInfo> tar = acinfo->GetTarget().lock()) {
 					// we can make the usage dependent on the target
 					acinfo->SetCombatDataTarget(Utility::GetCombatData(tar->GetActor()));
@@ -380,7 +380,7 @@ namespace Events
 		}
 
 		// if actor is valid and not dead
-		if (acinfo->IsValid() && !(acinfo->IsDead()) && acinfo->GetActor() && acinfo->GetActor()->GetActorValue(RE::ActorValue::kHealth) > 0) {
+		if (acinfo->IsValid() && !(acinfo->IsDead()) && acinfo->GetActor() && acinfo->GetActor()->AsActorValueOwner()->GetActorValue(RE::ActorValue::kHealth) > 0) {
 			acinfo->SetHandleActor(true);
 		} else
 			acinfo->SetHandleActor(false);
@@ -434,7 +434,7 @@ namespace Events
 			// update active actors
 			actorhandlerworking = true;
 
-			PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+			PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
 			
 			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
 			// do not compute, since nobody can actually take potions.
@@ -619,9 +619,11 @@ CheckActorsSkipIteration:
 		// reset list of actors in combat
 		combatants.clear();
 		// set player to alive
-		PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+		PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
 
 		enableProcessing = true;
+
+		LOG_1("{}[Events] [LoadGameSub] Checking for special tasks");
 
 		/// <summary>
 		/// thread which executes varying test functions
@@ -645,6 +647,8 @@ CheckActorsSkipIteration:
 			}
 		}
 
+		LOG_1("{}[Events] [LoadGameSub] Finding loaded actors");
+
 		// when loading the game, the attach detach events for actors aren't fired until cells have been changed
 		// thus we need to get all currently loaded npcs manually
 		RE::TESObjectCELL* cell = nullptr;
@@ -652,30 +656,29 @@ CheckActorsSkipIteration:
 		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
 		{
 			const RE::BSReadLockGuard locker{ lock };
-			auto iter = hashtable->begin();
-			while (iter != hashtable->end()) {
-				if ((*iter).second) {
-					cell = ((*iter).second)->As<RE::TESObjectCELL>();
-					if (cell) {
-						gamecells.push_back(cell);
+			if (hashtable) {
+				for (auto& [id, form] : *hashtable) {
+					if (form) {
+						cell = form->As<RE::TESObjectCELL>();
+						if (cell) {
+							gamecells.push_back(cell);
+						}
 					}
 				}
-				iter++;
 			}
 		}
 		LOG1_1("{}[Events] [LoadGameSub] found {} cells", std::to_string(gamecells.size()));
 		for (int i = 0; i < (int)gamecells.size(); i++) {
 			if (gamecells[i]->IsAttached()) {
-				auto itr = gamecells[i]->references.begin();
-				while (itr != gamecells[i]->references.end()) {
-					if (itr->get()) {
-						RE::Actor* actor = itr->get()->As<RE::Actor>();
+				for (auto& ptr : gamecells[i]->GetRuntimeData().references)
+				{
+					if (ptr.get()) {
+						RE::Actor* actor = ptr.get()->As<RE::Actor>();
 						if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && !actor->IsPlayerRef()) {
 							if (Distribution::ExcludedNPCFromHandling(actor) == false)
 								RegisterNPC(actor);
 						}
 					}
-					itr++;
 				}
 			}
 		}

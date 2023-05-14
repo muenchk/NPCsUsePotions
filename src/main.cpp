@@ -42,7 +42,7 @@ namespace
 		LogUsage::Init(Settings::PluginNamePlain);
 	}
 }
-
+/*
 #if defined(SKYRIM_SUPPORT_AE353)
 	// AE
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
@@ -95,6 +95,41 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
 	return true;
 } 
 #endif
+*/
+
+extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
+	SKSE::PluginVersionData v;
+
+	v.PluginVersion(Plugin::VERSION);
+	v.PluginName(Plugin::NAME);
+	v.AuthorName("KoeniglichePM");
+
+	v.UsesAddressLibrary();
+	v.CompatibleVersions({ SKSE::RUNTIME_SSE_LATEST });
+	v.UsesNoStructs();
+
+	return v;
+}();
+
+extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
+{
+	InitializeLog();
+	a_info->infoVersion = SKSE::PluginInfo::kVersion;
+	a_info->name = Plugin::NAME.data();
+	a_info->version = Plugin::VERSION[0];
+
+	if (a_skse->IsEditor()) {
+		logger::critical("Loaded in editor, marking as incompatible"sv);
+		return false;
+	}
+
+	const auto ver = a_skse->RuntimeVersion();
+	if (ver < SKSE::RUNTIME_SSE_1_5_39) {
+		logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
+		return false;
+	}
+	return true;
+} 
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
@@ -145,9 +180,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
-#ifdef SKYRIM_SUPPORT_AE
 	InitializeLog();
-#endif
 
 	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	profile("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());

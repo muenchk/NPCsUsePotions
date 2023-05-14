@@ -88,20 +88,21 @@ namespace Tests
 
 		RE::TESObjectCELL* cell = nullptr;
 		std::vector<RE::TESObjectCELL*> cs;
-		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
 		{
+			const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
 			const RE::BSReadLockGuard locker{ lock };
-			auto iter = hashtable->begin();
-			while (iter != hashtable->end()) {
-				if ((*iter).second) {
-					cell = ((*iter).second)->As<RE::TESObjectCELL>();
-					if (cell) {
-						cs.push_back(cell);
-						out << cell->GetFormEditorID() << "\n";
-						outid << Utility::GetHex(cell->GetFormID()) << "\n";
+			if (hashtable) {
+				RE::TESObjectCELL* cell = nullptr;
+				for (auto& [id, form] : *hashtable) {
+					if (form) {
+						cell = (form)->As<RE::TESObjectCELL>();
+						if (cell) {
+							cs.push_back(cell);
+							out << cell->GetFormEditorID() << "\n";
+							outid << Utility::GetHex(cell->GetFormID()) << "\n";
+						}
 					}
 				}
-				iter++;
 			}
 		}
 		//auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
@@ -136,12 +137,12 @@ namespace Tests
 				while (ui->GameIsPaused()) {
 					std::this_thread::sleep_for(100ms);
 				}
-				if (cell->references.size() > 0) {
+				if (cell->GetRuntimeData().references.size() > 0) {
 					char buff[70] = "Moving to cell:\t";
 					strcat_s(buff, 70, cell->GetFormEditorID());
 					LogConsole(buff);
 					loginfo("Moving to cell:\t{}", cell->GetFormEditorID());
-					RE::PlayerCharacter::GetSingleton()->MoveTo((*(cell->references.begin())).get());
+					RE::PlayerCharacter::GetSingleton()->MoveTo((*(cell->GetRuntimeData().references.begin())).get());
 				}
 				std::this_thread::sleep_for(7s);
 			}
@@ -163,34 +164,42 @@ namespace Tests
 		std::ofstream out = std::ofstream(path, std::ofstream::out);
 		std::ofstream outid = std::ofstream(pathid, std::ofstream::out);
 		//loginfo("tryna start");
-		auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
-		auto iter = hashtable->begin();
-		RE::TESObjectCELL* cell = nullptr;
-		while (iter != hashtable->end()) {
-			if ((*iter).second) {
-				cell = ((*iter).second)->As<RE::TESObjectCELL>();
-				if (cell) {
-					out << cell->GetFormEditorID() << "\n";
-					outid << Utility::GetHex(cell->GetFormID()) << "\n";
+		{
+			const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+			const RE::BSReadLockGuard locker{ lock };
+			if (hashtable) {
+				RE::TESObjectCELL* cell = nullptr;
+				for (auto& [id, form] : *hashtable) {
+					if (form) {
+						cell = (form)->As<RE::TESObjectCELL>();
+						if (cell) {
+							out << cell->GetFormEditorID() << "\n";
+							outid << Utility::GetHex(cell->GetFormID()) << "\n";
+						}
+					}
 				}
 			}
-			iter++;
 		}
 
 		std::this_thread::sleep_for(10s);
 		RE::UI* ui = RE::UI::GetSingleton();
-		iter = hashtable->begin();
-		while (iter != hashtable->end()) {
-			if ((*iter).second) {
-				cell = ((*iter).second)->As<RE::TESObjectCELL>();
-				if (cell) {
-					while (ui->GameIsPaused()) {
-						std::this_thread::sleep_for(100ms);
+		{
+			const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+			const RE::BSReadLockGuard locker{ lock };
+			if (hashtable) {
+				RE::TESObjectCELL* cell = nullptr;
+				for (auto& [id, form] : *hashtable) {
+					if (form) {
+						cell = (form)->As<RE::TESObjectCELL>();
+						if (cell) {
+							while (ui->GameIsPaused()) {
+								std::this_thread::sleep_for(100ms);
+							}
+							Settings::CheckCellForActors(cell->GetFormID());
+						}
 					}
-					Settings::CheckCellForActors(cell->GetFormID());
 				}
 			}
-			iter++;
 		}
 	}
 }

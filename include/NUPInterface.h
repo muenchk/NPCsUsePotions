@@ -187,7 +187,9 @@ namespace NPCsUsePotions
 
 	[[nodiscard]] inline void* RequestPluginAPI()
 	{
-		auto pluginHandle = GetModuleHandle("NPCsUsePotions.dll");
+		std::string str = "NPCsUsePotions.dll";
+		std::wstring wstr = std::wstring(str.begin(), str.end());
+		auto pluginHandle = GetModuleHandle(wstr.c_str());
 		if (pluginHandle != 0) {
 			_RequestPluginAPI requestAPIFunction = (_RequestPluginAPI)GetProcAddress(pluginHandle, "RequestPluginAPI");
 			if (requestAPIFunction) {

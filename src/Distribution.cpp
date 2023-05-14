@@ -1519,7 +1519,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
+		auto diff = RE::PlayerCharacter::GetSingleton()->GetGameStatsData().difficulty;
 		if (diff == 0 || diff == 1) {
 			acs = ActorStrength::Weak;
 			is = ItemStrength::kWeak;
@@ -2167,7 +2167,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
+		auto diff = RE::PlayerCharacter::GetSingleton()->GetGameStatsData().difficulty;
 		if (diff == 0 || diff == 1) {
 			acinfo->SetActorStrength(ActorStrength::Weak);
 			acinfo->SetItemStrength(ItemStrength::kWeak);
@@ -2714,7 +2714,7 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 	// calc strength section
 	if (Settings::Distr::_GameDifficultyScaling) {
 		// 0 novice, 1 apprentice, 2 adept, 3 expert, 4 master, 5 legendary
-		auto diff = RE::PlayerCharacter::GetSingleton()->difficulty;
+		auto diff = RE::PlayerCharacter::GetSingleton()->GetGameStatsData().difficulty;
 		if (diff == 0 || diff == 1) {
 			acs = ActorStrength::Weak;
 			is = ItemStrength::kWeak;

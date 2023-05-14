@@ -557,7 +557,7 @@ namespace Events
 
 	bool Main::IsDead(RE::Actor* actor)
 	{
-		return actor == nullptr || deads.contains(actor->GetFormID()) || actor->boolBits & RE::Actor::BOOL_BITS::kDead;
+		return actor == nullptr || deads.contains(actor->GetFormID()) || actor->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead;
 	}
 
 	bool Main::IsDeadEventFired(RE::Actor* actor)
@@ -590,49 +590,49 @@ namespace Events
 		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
 		{
 			const RE::BSReadLockGuard locker{ lock };
-			auto iter = hashtable->begin();
-			while (iter != hashtable->end()) {
-				EvalProcessing();
-				if ((*iter).second) {
-					actor = ((*iter).second)->As<RE::Actor>();
-					if (Utility::ValidateActor(actor)) {
-						std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
-						auto items = ACM::GetAllPotions(acinfo);
-						auto it = items.begin();
-						while (it != items.end()) {
-							if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+			if (hashtable) {
+				for (auto& [id, form] : *hashtable) {
+					EvalProcessing();
+					if (form) {
+						actor = form->As<RE::Actor>();
+						if (Utility::ValidateActor(actor)) {
+							std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
+							auto items = ACM::GetAllPotions(acinfo);
+							auto it = items.begin();
+							while (it != items.end()) {
+								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+									it++;
+									continue;
+								}
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 								it++;
-								continue;
 							}
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
-							it++;
-						}
-						items = ACM::GetAllPoisons(acinfo);
-						it = items.begin();
-						while (it != items.end()) {
-							if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+							items = ACM::GetAllPoisons(acinfo);
+							it = items.begin();
+							while (it != items.end()) {
+								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+									it++;
+									continue;
+								}
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 								it++;
-								continue;
 							}
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
-							it++;
-						}
-						items = ACM::GetAllFood(acinfo);
-						it = items.begin();
-						while (it != items.end()) {
-							if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+							items = ACM::GetAllFood(acinfo);
+							it = items.begin();
+							while (it != items.end()) {
+								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+									it++;
+									continue;
+								}
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 								it++;
-								continue;
 							}
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
-							it++;
 						}
 					}
 				}
-				iter++;
 			}
 		}
 		LogConsole("Finished Thread RemoveItemsOnStartup");

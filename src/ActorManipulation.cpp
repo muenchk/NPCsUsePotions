@@ -722,6 +722,44 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 						audiomanager = RE::BSAudioManager::GetSingleton();
 					RE::ExtraDataList* extra = new RE::ExtraDataList();
 					int dosage = data->GetPoisonDosage(poison);
+					auto ied = acinfo->GetEquippedEntryData(false);
+					if (ied) {
+						ied->PoisonObject(poison, dosage);
+						acinfo->RemoveItem(poison, 1);
+						{
+							// play poison sound
+							RE::BSSoundHandle handle;
+							if (poison->data.consumptionSound)
+								audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+							else if (Settings::PoisonUse)
+								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+							handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
+							handle.SetVolume(1.0);
+							handle.Play();
+						}
+						return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+					} else {
+						ied = acinfo->GetEquippedEntryData(true);
+						if (ied) {
+							if (ied->object && ied->object->IsWeapon()) {
+								ied->PoisonObject(poison, dosage);
+								acinfo->RemoveItem(poison, 1);
+								{
+									// play poison sound
+									RE::BSSoundHandle handle;
+									if (poison->data.consumptionSound)
+										audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+									else
+										audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+									handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
+									handle.SetVolume(1.0);
+									handle.Play();
+								}
+								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+							}
+						}
+					}
+					/*
 					extra->Add(new RE::ExtraPoison(poison, dosage));
 					auto ied = acinfo->GetEquippedEntryData(false);
 					if (ied) {
@@ -759,7 +797,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 							}
 						}
-					}
+					}*/
 				}
 			}
 		}

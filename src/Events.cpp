@@ -262,7 +262,7 @@ namespace Events
 		// return if feature disabled
 		if (Settings::Usage::_DisableOutOfCombatProcessing)
 			return EventResult::kContinue;
-		Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+		Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
 		//auto begin = std::chrono::steady_clock::now();
 
 		if (a_event && a_event->reference) {
@@ -460,7 +460,7 @@ namespace Events
 		scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
 		if (Settings::Debug::_CalculateCellRules) {
-			RE::PlayerCharacter::GetSingleton()->GetEventSource<RE::BGSActorCellEvent>()->AddEventSink(EventHandler::GetSingleton());
+			RE::PlayerCharacter::GetSingleton()->AsBGSActorCellEventSource()->AddEventSink(EventHandler::GetSingleton());
 			LOG1_1("{}Registered {}", typeid(RE::BGSActorCellEvent).name());
 		}
 		scriptEventSourceHolder->GetEventSource<RE::TESCellAttachDetachEvent>()->AddEventSink(EventHandler::GetSingleton());
