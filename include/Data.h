@@ -23,7 +23,7 @@ private:
 	/// <summary>
 	/// map that maps potionids to potion properties (effect, duration, magnitude, detrimental, dosage)
 	/// </summary>
-	std::unordered_map<uint32_t, std::tuple<AlchemyEffectBase, int, float, bool, int>> alchitemEffectMap;
+	std::unordered_map<uint32_t, std::tuple<AlchemicEffect, int, float, bool, int>> alchitemEffectMap;
 
 	/// <summary>
 	/// map that contains game objects that are used in custom object conditions, for fast access
@@ -132,13 +132,13 @@ public:
 	/// </summary>
 	/// <param name="id">id of the AlchemyItem</param>
 	/// <param name="effects">the alchemic effects of the item</param>
-	void SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude, bool detrimental, int dosage);
+	void SetAlchItemEffects(uint32_t id, AlchemicEffect effects, int duration, float magnitude, bool detrimental, int dosage);
 	/// <summary>
 	/// Retrieves the alchemic effects of an AlchemyItem
 	/// </summary>
 	/// <param name="id">the id of the AlchemyItem</param>
 	/// <returns>whether the item was found, and the saved effects [found, effect, duration, magnitude, detrimental, dosage]</returns>
-	std::tuple<bool, AlchemyEffectBase, int, float, bool, int> GetAlchItemEffects(uint32_t id);
+	std::tuple<bool, AlchemicEffect, int, float, bool, int> GetAlchItemEffects(uint32_t id);
 	/// <summary>
 	/// Resets all saved AlchemyItem effects
 	/// </summary>
@@ -165,6 +165,13 @@ public:
 	/// <param name="pluginname"></param>
 	/// <returns></returns>
 	RE::BGSPerk* FindPerk(uint32_t formid, std::string pluginname);
+	/// <summary>
+	/// Returns the AlchemyItem associated with the formid from an internal buffer
+	/// </summary>
+	/// <param name="formid"></param>
+	/// <param name="pluginname"></param>
+	/// <returns></returns>
+	RE::AlchemyItem* FindAlchemyItem(uint32_t formid, std::string pluginname);
 	/// <summary>
 	/// Removes an actor from the data
 	/// </summary>

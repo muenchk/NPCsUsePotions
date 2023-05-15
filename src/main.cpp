@@ -43,7 +43,7 @@ namespace
 		LogUsage::Init(Settings::PluginNamePlain);
 	}
 }
-
+/*
 // VR
 extern "C" DLLEXPORT bool SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 {
@@ -63,7 +63,43 @@ extern "C" DLLEXPORT bool SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, S
 		return false;
 	}
 	return true;
-}
+} 
+#endif
+*/
+
+extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
+	SKSE::PluginVersionData v;
+
+	v.PluginVersion(Plugin::VERSION);
+	v.PluginName(Plugin::NAME);
+	v.AuthorName("KoeniglichePM");
+
+	v.UsesAddressLibrary();
+	v.CompatibleVersions({ SKSE::RUNTIME_SSE_LATEST });
+	v.UsesNoStructs();
+
+	return v;
+}();
+
+extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
+{
+	InitializeLog();
+	a_info->infoVersion = SKSE::PluginInfo::kVersion;
+	a_info->name = Plugin::NAME.data();
+	a_info->version = Plugin::VERSION[0];
+
+	if (a_skse->IsEditor()) {
+		logger::critical("Loaded in editor, marking as incompatible"sv);
+		return false;
+	}
+
+	const auto ver = a_skse->RuntimeVersion();
+	if (ver < SKSE::RUNTIME_LATEST_VR) {
+		logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
+		return false;
+	}
+	return true;
+} 
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
@@ -93,14 +129,14 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// register data storage
 		// datastorage must always register game callbacks before events, to ensure read data is present
 		Storage::Register();
+		// register compatibility
+		Compatibility::Register();
 		// register eventhandlers
 		Events::RegisterAllEventHandlers();
 		logger::info("Registered Events");
 		// register console commands
 		//Console::RegisterConsoleCommands();
 		//logger::info("Registered Console Commands");
-		// register compatibility
-		Compatibility::Register();
 		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		break;
 	case SKSE::MessagingInterface::kPostLoad:
@@ -111,9 +147,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
-#ifdef SKYRIM_SUPPORT_AE
 	InitializeLog();
-#endif
 
 	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	profile("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());

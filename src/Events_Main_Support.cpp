@@ -28,22 +28,22 @@ namespace Events
 	/// <summary>
 	/// Calculates the cooldowns of an actor for a specific effect
 	/// </summary>
-	void Main::CalcActorCooldowns(std::shared_ptr<ActorInfo> acinfo, AlchemyEffectBase effect, int dur)
+	void Main::CalcActorCooldowns(std::shared_ptr<ActorInfo> acinfo, AlchemicEffect effect, int dur)
 	{
 		EvalProcessing();
-		if (effect & static_cast<uint64_t>(AlchemyEffect::kHealth)) {
+		if ((effect & AlchemicEffect::kHealth).IsValid()) {
 			acinfo->SetDurHealth(dur);
 		}
-		if (effect & static_cast<uint64_t>(AlchemyEffect::kMagicka)) {
+		if ((effect & AlchemicEffect::kMagicka).IsValid()) {
 			acinfo->SetDurMagicka(dur);
 		}
-		if (effect & static_cast<uint64_t>(AlchemyEffect::kStamina)) {
+		if ((effect & AlchemicEffect::kStamina).IsValid()) {
 			acinfo->SetDurStamina(dur);
 		}
-		if (effect & static_cast<uint64_t>(AlchemyEffect::kAnyRegen)) {
+		if ((effect & AlchemicEffect::kAnyRegen).IsValid()) {
 			acinfo->SetDurRegeneration(dur);
 		}
-		if (effect & static_cast<uint64_t>(AlchemyEffect::kAnyFortify)) {
+		if ((effect & AlchemicEffect::kAnyFortify).IsValid()) {
 			acinfo->SetDurFortify(dur);
 		}
 	}
@@ -55,123 +55,151 @@ namespace Events
 	/// <param name="target">target</param>
 	/// <param name="tcombatdata">combatdata of the target</param>
 	/// <returns>valid poison effects</returns>
-	uint64_t Main::CalcPoisonEffects(uint32_t combatdata, RE::Actor* target, uint32_t tcombatdata)
+	AlchemicEffect Main::CalcPoisonEffects(uint32_t combatdata, RE::Actor* target, uint32_t tcombatdata)
 	{
 		LOG_4("{}[Events] [CalcPoisonEffects]");
-		uint64_t effects = 0;
-		effects |= static_cast<uint64_t>(AlchemyEffect::kDamageResist) |
-		           static_cast<uint64_t>(AlchemyEffect::kResistMagic) |
-		           static_cast<uint64_t>(AlchemyEffect::kPoisonResist) |
-		           static_cast<uint64_t>(AlchemyEffect::kResistDisease) |
-		           static_cast<uint64_t>(AlchemyEffect::kReflectDamage) |
-		           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-		           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-		           static_cast<uint64_t>(AlchemyEffect::kHealth);
+		AlchemicEffect effects = 0;
+		effects |= AlchemicEffect::kDamageResist |
+		           AlchemicEffect::kResistMagic |
+		           AlchemicEffect::kPoisonResist |
+		           AlchemicEffect::kResistDisease |
+		           AlchemicEffect::kParalysis |
+		           AlchemicEffect::kFear |
+		           AlchemicEffect::kFrenzy |
+		           AlchemicEffect::kCarryWeight |
+		           AlchemicEffect::kReflectDamage |
+		           AlchemicEffect::kSpeedMult |
+		           AlchemicEffect::kFortifyHealth |
+		           AlchemicEffect::kHealRate |
+		           AlchemicEffect::kHealRateMult |
+		           AlchemicEffect::kHealth;
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kMeleeDamage |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyMagicka |
+			           AlchemicEffect::kMagickaRate |
+			           AlchemicEffect::kMagickaRateMult |
+			           AlchemicEffect::kFortifyStamina |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult |
+			           AlchemicEffect::kStamina;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kMagicka);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kMeleeDamage |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyMagicka |
+			           AlchemicEffect::kMagickaRate |
+			           AlchemicEffect::kMagickaRateMult |
+			           AlchemicEffect::kFortifyStamina |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult |
+			           AlchemicEffect::kStamina |
+			           AlchemicEffect::kMagicka;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHandedShield)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kBlock) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kBlock |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyStamina |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult |
+			           AlchemicEffect::kStamina;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kTwoHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kBlock) |
-			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kStamina);
+			effects |= AlchemicEffect::kTwoHanded |
+			           AlchemicEffect::kBlock |
+			           AlchemicEffect::kMeleeDamage |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyStamina |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult |
+			           AlchemicEffect::kStamina;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Ranged)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kArchery) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kBowSpeed) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kStamina);
+			effects |= AlchemicEffect::kArchery |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kBowSpeed |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyStamina |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult |
+			           AlchemicEffect::kStamina;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualWield)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyStamina |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult |
+			           AlchemicEffect::kStamina;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kUnarmedDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina) |
-			           static_cast<uint64_t>(AlchemyEffect::kStamina);
+			effects |= AlchemicEffect::kUnarmedDamage |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kFortifyStamina |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult |
+			           AlchemicEffect::kStamina;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualStaff)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kMagicka);
+			effects |= AlchemicEffect::kFortifyMagicka |
+			           AlchemicEffect::kMagickaRate |
+			           AlchemicEffect::kMagickaRateMult |
+			           AlchemicEffect::kMagicka;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kMagicka);
+			effects |= AlchemicEffect::kFortifyMagicka |
+			           AlchemicEffect::kMagickaRate |
+			           AlchemicEffect::kMagickaRateMult |
+			           AlchemicEffect::kMagicka;
 		}
 		// magic related stuff
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicAlteration)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kAlteration);
+			effects |= AlchemicEffect::kAlteration;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicConjuration)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kConjuration);
+			effects |= AlchemicEffect::kConjuration;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kDestruction);
+			effects |= AlchemicEffect::kDestruction;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicIllusion)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kIllusion);
+			effects |= AlchemicEffect::kIllusion;
 		}
 		if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicRestoration)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kRestoration);
+			effects |= AlchemicEffect::kRestoration;
 		}
 		// resistance values based on our expected damage type
 		if (combatdata != 0) {
 			if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire)) {
-				effects |= static_cast<uint64_t>(AlchemyEffect::kResistFire);
+				effects |= AlchemicEffect::kResistFire;
 			}
 			if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost)) {
-				effects |= static_cast<uint64_t>(AlchemyEffect::kResistFrost);
+				effects |= AlchemicEffect::kResistFrost;
 			}
 			if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock)) {
-				effects |= static_cast<uint64_t>(AlchemyEffect::kResistShock);
+				effects |= AlchemicEffect::kResistShock;
 			}
 		}
 		// light and heavy armor
 		uint32_t armordata = Utility::GetArmorData(target);
 		if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::LightArmor))
-			effects |= static_cast<uint64_t>(AlchemyEffect::kLightArmor);
+			effects |= AlchemicEffect::kLightArmor;
 		if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
-			effects |= static_cast<uint64_t>(AlchemyEffect::kHeavyArmor);
+			effects |= AlchemicEffect::kHeavyArmor;
 
 		return effects;
 	}
@@ -183,137 +211,137 @@ namespace Events
 	/// <param name="combatdata">combatdata of [acinfo]</param>
 	/// <param name="tcombatdata">combatdata of target</param>
 	/// <returns></returns>
-	uint64_t Main::CalcFortifyEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata, uint32_t tcombatdata)
+	AlchemicEffect Main::CalcFortifyEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata, uint32_t tcombatdata)
 	{
 		LOG_4("{}[Events] [CalcFortifyEffects]");
-		uint64_t effects = 0;
-		effects |= static_cast<uint64_t>(AlchemyEffect::kDamageResist) |
-		           static_cast<uint64_t>(AlchemyEffect::kResistMagic) |
-		           static_cast<uint64_t>(AlchemyEffect::kPoisonResist) |
-		           static_cast<uint64_t>(AlchemyEffect::kResistDisease) |
-		           static_cast<uint64_t>(AlchemyEffect::kReflectDamage);
+		AlchemicEffect effects = 0;
+		effects |= AlchemicEffect::kDamageResist |
+		           AlchemicEffect::kResistMagic |
+		           AlchemicEffect::kPoisonResist |
+		           AlchemicEffect::kResistDisease |
+		           AlchemicEffect::kReflectDamage;
 
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kMeleeDamage |
+			           AlchemicEffect::kSpeedMult |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyHealth |
+			           AlchemicEffect::kFortifyMagicka |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kMeleeDamage |
+			           AlchemicEffect::kSpeedMult |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyHealth |
+			           AlchemicEffect::kFortifyMagicka |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHandedShield)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kBlock) |
-			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kBlock |
+			           AlchemicEffect::kSpeedMult |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyHealth |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHanded)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kBlock) |
-			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kBlock |
+			           AlchemicEffect::kMeleeDamage |
+			           AlchemicEffect::kSpeedMult |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyHealth |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::TwoHanded)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kTwoHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kBlock) |
-			           static_cast<uint64_t>(AlchemyEffect::kMeleeDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kTwoHanded |
+			           AlchemicEffect::kBlock |
+			           AlchemicEffect::kMeleeDamage |
+			           AlchemicEffect::kSpeedMult |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyHealth |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Ranged)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kArchery) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kBowSpeed) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kArchery |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kBowSpeed |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualWield)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kOneHanded) |
-			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kWeaponSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kCriticalChance) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kOneHanded |
+			           AlchemicEffect::kSpeedMult |
+			           AlchemicEffect::kWeaponSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kCriticalChance |
+			           AlchemicEffect::kFortifyHealth |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kUnarmedDamage) |
-			           static_cast<uint64_t>(AlchemyEffect::kSpeedMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kAttackDamageMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyHealth) |
-			           static_cast<uint64_t>(AlchemyEffect::kFortifyStamina);
+			effects |= AlchemicEffect::kUnarmedDamage |
+			           AlchemicEffect::kSpeedMult |
+			           AlchemicEffect::kAttackDamageMult |
+			           AlchemicEffect::kFortifyHealth |
+			           AlchemicEffect::kFortifyStamina;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::DualStaff)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka);
+			effects |= AlchemicEffect::kFortifyMagicka;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kFortifyMagicka);
+			effects |= AlchemicEffect::kFortifyMagicka;
 		}
 		// magic related stuff
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicAlteration)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kAlteration);
+			effects |= AlchemicEffect::kAlteration;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicConjuration)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kConjuration);
+			effects |= AlchemicEffect::kConjuration;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kDestruction);
+			effects |= AlchemicEffect::kDestruction;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicIllusion)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kIllusion);
+			effects |= AlchemicEffect::kIllusion;
 		}
 		if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicRestoration)) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kRestoration);
+			effects |= AlchemicEffect::kRestoration;
 		}
 		// resistance values based on their enemies expected damage type
 		if (tcombatdata != 0) {
 			if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire)) {
-				effects |= static_cast<uint64_t>(AlchemyEffect::kResistFire);
+				effects |= AlchemicEffect::kResistFire;
 			}
 			if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost)) {
-				effects |= static_cast<uint64_t>(AlchemyEffect::kResistFrost);
+				effects |= AlchemicEffect::kResistFrost;
 			}
 			if (tcombatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock)) {
-				effects |= static_cast<uint64_t>(AlchemyEffect::kResistShock);
+				effects |= AlchemicEffect::kResistShock;
 			}
 		}
 		// light and heavy armor
 		uint32_t armordata = Utility::GetArmorData(acinfo->GetActor());
 		if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::LightArmor))
-			effects |= static_cast<uint64_t>(AlchemyEffect::kLightArmor);
+			effects |= AlchemicEffect::kLightArmor;
 		if (armordata & static_cast<uint32_t>(Utility::CurrentArmor::HeavyArmor))
-			effects |= static_cast<uint64_t>(AlchemyEffect::kHeavyArmor);
+			effects |= AlchemicEffect::kHeavyArmor;
 
 		// shield potions
-		effects |= static_cast<uint64_t>(AlchemyEffect::kShield);
+		effects |= AlchemicEffect::kShield;
 		return effects;
 	}
 
@@ -323,20 +351,20 @@ namespace Events
 	/// </summary>
 	/// <param name="combatdata">combatdata of the actor</param>
 	/// <returns>valid regeneration effects</returns>
-	uint64_t Main::CalcRegenEffects(uint32_t combatdata)
+	AlchemicEffect Main::CalcRegenEffects(uint32_t combatdata)
 	{
 		LOG_4("{}[Events] [CalcRegenEffects]");
-		uint64_t effects = 0;
-		effects |= static_cast<uint64_t>(AlchemyEffect::kHealRate) |
-		           static_cast<uint64_t>(AlchemyEffect::kHealRateMult);
+		AlchemicEffect effects = 0;
+		effects |= AlchemicEffect::kHealRate |
+		           AlchemicEffect::kHealRateMult;
 
 		if (combatdata &
 			(static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword) |
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword))) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kMagickaRate) |
-			           static_cast<uint64_t>(AlchemyEffect::kMagickaRateMult) |
-			           static_cast<uint64_t>(AlchemyEffect::kStaminaRate) |
-			           static_cast<uint64_t>(AlchemyEffect::kStaminaRateMult);
+			effects |= AlchemicEffect::kMagickaRate |
+			           AlchemicEffect::kMagickaRateMult |
+			           AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult;
 		}
 		if (combatdata &
 			(static_cast<uint32_t>(Utility::CurrentCombatStyle::OneHandedShield) |
@@ -344,14 +372,14 @@ namespace Events
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::Ranged) |
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::DualWield) |
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand))) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kStaminaRate) |
-			           static_cast<uint64_t>(AlchemyEffect::kStaminaRateMult);
+			effects |= AlchemicEffect::kStaminaRate |
+			           AlchemicEffect::kStaminaRateMult;
 		}
 		if (combatdata &
 			(static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage) |
 				static_cast<uint32_t>(Utility::CurrentCombatStyle::DualStaff))) {
-			effects |= static_cast<uint64_t>(AlchemyEffect::kMagickaRate) |
-			           static_cast<uint64_t>(AlchemyEffect::kMagickaRateMult);
+			effects |= AlchemicEffect::kMagickaRate |
+			           AlchemicEffect::kMagickaRateMult;
 		}
 		return effects;
 	}
@@ -362,7 +390,7 @@ namespace Events
 	/// <param name="acinfo"></param>
 	/// <param name="combatdata"></param>
 	/// <returns></returns>
-	uint64_t Main::CalcRegenEffects(std::shared_ptr<ActorInfo> /*acinfo*/, uint32_t combatdata)
+	AlchemicEffect Main::CalcRegenEffects(std::shared_ptr<ActorInfo> /*acinfo*/, uint32_t combatdata)
 	{
 		return CalcRegenEffects(combatdata);
 	}
@@ -532,7 +560,7 @@ namespace Events
 
 	bool Main::IsDead(RE::Actor* actor)
 	{
-		return actor == nullptr || deads.contains(actor->GetFormID()) || actor->boolBits & RE::Actor::BOOL_BITS::kDead;
+		return actor == nullptr || deads.contains(actor->GetFormID()) || actor->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead;
 	}
 
 	bool Main::IsDeadEventFired(RE::Actor* actor)
@@ -565,49 +593,49 @@ namespace Events
 		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
 		{
 			const RE::BSReadLockGuard locker{ lock };
-			auto iter = hashtable->begin();
-			while (iter != hashtable->end()) {
-				EvalProcessing();
-				if ((*iter).second) {
-					actor = ((*iter).second)->As<RE::Actor>();
-					if (Utility::ValidateActor(actor)) {
-						std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
-						auto items = ACM::GetAllPotions(acinfo);
-						auto it = items.begin();
-						while (it != items.end()) {
-							if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+			if (hashtable) {
+				for (auto& [id, form] : *hashtable) {
+					EvalProcessing();
+					if (form) {
+						actor = form->As<RE::Actor>();
+						if (Utility::ValidateActor(actor)) {
+							std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
+							auto items = ACM::GetAllPotions(acinfo);
+							auto it = items.begin();
+							while (it != items.end()) {
+								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+									it++;
+									continue;
+								}
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 								it++;
-								continue;
 							}
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
-							it++;
-						}
-						items = ACM::GetAllPoisons(acinfo);
-						it = items.begin();
-						while (it != items.end()) {
-							if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+							items = ACM::GetAllPoisons(acinfo);
+							it = items.begin();
+							while (it != items.end()) {
+								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+									it++;
+									continue;
+								}
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 								it++;
-								continue;
 							}
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
-							it++;
-						}
-						items = ACM::GetAllFood(acinfo);
-						it = items.begin();
-						while (it != items.end()) {
-							if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+							items = ACM::GetAllFood(acinfo);
+							it = items.begin();
+							while (it != items.end()) {
+								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+									it++;
+									continue;
+								}
+								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
 								it++;
-								continue;
 							}
-							actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-							LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
-							it++;
 						}
 					}
 				}
-				iter++;
 			}
 		}
 		LogConsole("Finished Thread RemoveItemsOnStartup");

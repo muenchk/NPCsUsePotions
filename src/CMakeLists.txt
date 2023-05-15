@@ -18,6 +18,7 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Events_Main_Support.cpp"
 	"${SOURCE_DIR}/Game.cpp"
 	"${SOURCE_DIR}/Hooks.cpp"
+	"${SOURCE_DIR}/ID.cpp"
 	"${SOURCE_DIR}/main.cpp"
 	"${SOURCE_DIR}/NUPInterface.cpp"
 	"${SOURCE_DIR}/Papyrus.cpp" 
@@ -52,8 +53,7 @@ add_library(
 	"${VERSION_HEADER}"
 	"${CMAKE_CURRENT_BINARY_DIR}/version.rc"
 	"${ROOT_DIR}/.clang-format"
-	"${ROOT_DIR}/.editorconfig"
- "Papyrus/NPCsUsePotions_Poisons.cpp")
+	"${ROOT_DIR}/.editorconfig")
 
 target_compile_features(
 	"${PROJECT_NAME}"
@@ -121,11 +121,13 @@ target_include_directories(
 		"${SOURCE_DIR}"
 )
 
-add_subdirectory($ENV{CommonLibVRPath} CommonLibVR)
+
+add_subdirectory($ENV{CommonLibNGPath} CommonLibSSE EXCLUDE_FROM_ALL)
+
 target_link_libraries(
 	"${PROJECT_NAME}"
 	PRIVATE
-		CommonLibVR::CommonLibVR
+		CommonLibSSE::CommonLibSSE
 )
 
 target_precompile_headers(

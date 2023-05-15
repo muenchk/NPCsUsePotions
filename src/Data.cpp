@@ -377,13 +377,13 @@ void Data::DeleteActorInfoMap()
 	lockdata.release();
 }
 
-void Data::SetAlchItemEffects(uint32_t id, AlchemyEffectBase effects, int duration, float magnitude, bool detrimental, int dosage)
+void Data::SetAlchItemEffects(uint32_t id, AlchemicEffect effects, int duration, float magnitude, bool detrimental, int dosage)
 {
-	std::tuple<AlchemyEffectBase, int, float, bool, int> t = { effects, duration, magnitude, detrimental, dosage };
+	std::tuple<AlchemicEffect, int, float, bool, int> t = { effects, duration, magnitude, detrimental, dosage };
 	alchitemEffectMap.insert_or_assign(id, t);
 }
 
-std::tuple<bool, AlchemyEffectBase, int, float, bool, int> Data::GetAlchItemEffects(uint32_t id)
+std::tuple<bool, AlchemicEffect, int, float, bool, int> Data::GetAlchItemEffects(uint32_t id)
 {
 	auto itr = alchitemEffectMap.find(id);
 	if (itr != alchitemEffectMap.end()) {
@@ -436,6 +436,19 @@ RE::BGSPerk* Data::FindPerk(uint32_t formid, std::string pluginname)
 	if (form != nullptr) {
 		customItemFormMap.insert_or_assign(formid, form);
 		return form->As<RE::BGSPerk>();
+	}
+	return nullptr;
+}
+
+RE::AlchemyItem* Data::FindAlchemyItem(uint32_t formid, std::string pluginname)
+{
+	auto itr = customItemFormMap.find(formid);
+	if (itr != customItemFormMap.end())
+		return itr->second->As<RE::AlchemyItem>();
+	RE::TESForm* form = Utility::GetTESForm(datahandler, formid, pluginname, "");
+	if (form != nullptr) {
+		customItemFormMap.insert_or_assign(formid, form);
+		return form->As<RE::AlchemyItem>();
 	}
 	return nullptr;
 }

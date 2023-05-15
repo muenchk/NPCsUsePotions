@@ -8,6 +8,7 @@
 #include "ActorManipulation.h"
 #include "Data.h"
 
+
 void ActorInfo::Init()
 {
 	SKSE::GetTaskInterface()->AddTask([]() {
@@ -20,7 +21,18 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 	LOG_3("{}[ActorInfo] [ActorInfo]");
 	actor = _actor->GetHandle();
 	if (_actor) {
-		formid = _actor->GetFormID();
+		formid.SetID(_actor->GetFormID());
+		// get original id
+		if (const auto extraLvlCreature = _actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+			if (const auto originalBase = extraLvlCreature->originalBase) {
+				formid.SetOriginalID(originalBase->GetFormID());
+			}
+			if (const auto templateBase = extraLvlCreature->templateBase) {
+				formid.AddTemplateID(templateBase->GetFormID());
+			}
+		} else {
+			formid.SetOriginalID(_actor->GetActorBase()->GetFormID());
+		}
 		name = std::string(_actor->GetName());
 		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
@@ -61,7 +73,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	durRegeneration = 0;
 	globalCooldownTimer = 0;
 	citems.Reset();
-	formid = 0;
+	formid = ID();
 	pluginname = "";
 	pluginID = 1;
 	name = "";
@@ -80,7 +92,18 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	target = std::weak_ptr<ActorInfo>{};
 	handleactor = false;
 	if (_actor) {
-		formid = _actor->GetFormID();
+		formid.SetID(_actor->GetFormID());
+		// get original id
+		if (const auto extraLvlCreature = _actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+			if (const auto originalBase = extraLvlCreature->originalBase) {
+				formid.SetOriginalID(originalBase->GetFormID());
+			}
+			if (const auto templateBase = extraLvlCreature->templateBase) {
+				formid.AddTemplateID(templateBase->GetFormID());
+			}
+		} else {
+			formid.SetOriginalID(_actor->GetActorBase()->GetFormID());
+		}
 		name = std::string(_actor->GetName());
 		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
@@ -167,6 +190,22 @@ RE::FormID ActorInfo::GetFormIDBlank()
 	return formid;
 }
 
+RE::FormID ActorInfo::GetFormIDOriginal()
+{
+	aclock;
+	if (!valid || deleted)
+		return 0;
+	return formid.GetOriginalID();
+}
+
+std::vector<RE::FormID> ActorInfo::GetTemplateIDs()
+{
+	aclock;
+	if (!valid || deleted)
+		return {};
+	return formid.GetTemplateIDs();
+}
+
 std::string ActorInfo::GetPluginname()
 {
 	aclock;
@@ -204,8 +243,6 @@ void ActorInfo::UpdateMetrics(RE::Actor* reac)
 	playerDistance = reac->GetPosition().GetSquaredDistance(playerPosition);
 	playerHostile = reac->IsHostileToActor(playerRef);
 }
-
-#define CV(x) static_cast<uint64_t>(x)
 
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
@@ -445,7 +482,7 @@ bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 			case CustomItemConditionsAll::kHasMagicEffect:
 				{
 					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-					if (tmp == nullptr || reac->HasMagicEffect(tmp) == false)
+					if (tmp == nullptr || reac->AsMagicTarget()->HasMagicEffect(tmp) == false)
 						return false;
 				}
 				break;
@@ -499,7 +536,7 @@ bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 			case CustomItemConditionsAny::kHasMagicEffect:
 				{
 					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-					if (tmp != nullptr && reac->HasMagicEffect(tmp) == true)
+					if (tmp != nullptr && reac->AsMagicTarget()->HasMagicEffect(tmp) == true)
 						return true;
 				}
 				break;
@@ -554,7 +591,7 @@ bool ActorInfo::CalcDistrConditionsIntern(CustomItem* item)
 			case CustomItemConditionsAll::kHasMagicEffect:
 				{
 					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-					if (tmp == nullptr || reac->HasMagicEffect(tmp) == false)
+					if (tmp == nullptr || reac->AsMagicTarget()->HasMagicEffect(tmp) == false)
 						return false;
 				}
 				break;
@@ -629,7 +666,7 @@ bool ActorInfo::CalcDistrConditionsIntern(CustomItem* item)
 			case CustomItemConditionsAny::kHasMagicEffect:
 				{
 					auto tmp = Data::GetSingleton()->FindMagicEffect(std::get<1>(item->conditionsall[i]), std::get<2>(item->conditionsall[i]));
-					if (tmp != nullptr && reac->HasMagicEffect(tmp) == true)
+					if (tmp != nullptr && reac->AsMagicTarget()->HasMagicEffect(tmp) == true)
 						return true;
 				}
 				break;
@@ -905,7 +942,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
 				if (!form) {
@@ -917,7 +954,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -944,6 +981,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		case 0x00000002:
@@ -954,7 +1002,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
 				if (!form) {
@@ -969,7 +1017,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -997,6 +1045,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		case 0x00000003:
@@ -1009,7 +1068,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				// if the actorinfo is not valid, then do not evaluate the actor
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
@@ -1025,7 +1084,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -1050,6 +1109,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		case 0x00000004:
@@ -1062,7 +1132,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				if (length < size + strsize)
 					return false;
 
-				formid = Buffer::ReadUInt32(buffer, offset);
+				formid.SetID(Buffer::ReadUInt32(buffer, offset));
 				pluginname = Buffer::ReadString(buffer, offset);
 				// if the actorinfo is not valid, then do not evaluate the actor
 				RE::TESForm* form = Utility::GetTESForm(RE::TESDataHandler::GetSingleton(), formid, pluginname);
@@ -1078,7 +1148,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				actor = reac->GetHandle();
 				// set formid to the full formid including plugin index
-				formid = reac->GetFormID();
+				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
 				durHealth = Buffer::ReadInt32(buffer, offset);
@@ -1104,6 +1174,17 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
+				// get original id
+				if (const auto extraLvlCreature = reac->extraList.GetByType<RE::ExtraLeveledCreature>()) {
+					if (const auto originalBase = extraLvlCreature->originalBase) {
+						formid.SetOriginalID(originalBase->GetFormID());
+					}
+					if (const auto templateBase = extraLvlCreature->templateBase) {
+						formid.AddTemplateID(templateBase->GetFormID());
+					}
+				} else {
+					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
+				}
 			}
 			return true;
 		default:
@@ -1277,7 +1358,7 @@ void ActorInfo::UpdateWeaponsDrawn()
 		weaponsDrawn = false;
 
 	if (actor.get() && actor.get().get())
-		weaponsDrawn = actor.get().get()->IsWeaponDrawn();
+		weaponsDrawn = actor.get().get()->AsActorState()->IsWeaponDrawn();
 }
 
 #pragma region ActorSpecificFunctions
@@ -1339,7 +1420,7 @@ bool ActorInfo::HasMagicEffect(RE::EffectSetting* effect)
 		return false;
 
 	if (actor.get() && actor.get().get())
-		return actor.get().get()->HasMagicEffect(effect);
+		return actor.get().get()->AsMagicTarget()->HasMagicEffect(effect);
 	return false;
 }
 
@@ -1404,7 +1485,7 @@ bool ActorInfo::IsDead()
 		return true;
 
 	if (actor.get() && actor.get().get())
-		if (actor.get().get()->boolBits & RE::Actor::BOOL_BITS::kDead)
+		if (actor.get().get()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead)
 			return true;
 	return false;
 }
@@ -1436,12 +1517,12 @@ std::string ActorInfo::GetActorBaseFormEditorID()
 {
 	aclock;
 	if (!valid || deleted)
-		return 0;
+		return "";
 
 	if (actor.get() && actor.get().get())
 		if (actor.get().get()->GetActorBase())
 			return actor.get().get()->GetActorBase()->GetFormEditorID();
-	return 0;
+	return "";
 }
 
 RE::TESCombatStyle* ActorInfo::GetCombatStyle()
@@ -1532,7 +1613,7 @@ SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> ActorInfo::GetBoolBits()
 		return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
 
 	if (actor.get() && actor.get().get())
-		return actor.get().get()->boolBits;
+		return actor.get().get()->GetActorRuntimeData().boolBits;
 	return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
 }
 
@@ -1543,7 +1624,7 @@ bool ActorInfo::IsFlying()
 		return false;
 
 	if (actor.get() && actor.get().get())
-		return actor.get().get()->IsFlying();
+		return actor.get().get()->AsActorState()->IsFlying();
 	return false;
 }
 
@@ -1587,7 +1668,7 @@ bool ActorInfo::IsUnconscious()
 		return false;
 
 	if (actor.get() && actor.get().get())
-		return actor.get().get()->IsUnconscious();
+		return actor.get().get()->AsActorState()->IsUnconscious();
 	return false;
 }
 
@@ -1598,7 +1679,7 @@ bool ActorInfo::IsParalyzed()
 		return false;
 
 	if (actor.get() && actor.get().get())
-		if (actor.get().get()->boolBits & RE::Actor::BOOL_BITS::kParalyzed)
+		if (actor.get().get()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kParalyzed)
 			return true;
 	return false;
 }
@@ -1610,7 +1691,7 @@ bool ActorInfo::IsStaggered()
 		return false;
 
 	if (actor.get() && actor.get().get())
-		return actor.get().get()->actorState2.staggered;
+		return actor.get().get()->AsActorState()->actorState2.staggered;
 	return false;
 }
 
@@ -1621,7 +1702,7 @@ bool ActorInfo::IsBleedingOut()
 		return false;
 
 	if (actor.get() && actor.get().get())
-		return actor.get().get()->IsBleedingOut();
+		return actor.get().get()->AsActorState()->IsBleedingOut();
 	return false;
 }
 

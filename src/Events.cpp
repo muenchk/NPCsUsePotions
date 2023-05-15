@@ -21,8 +21,6 @@
 		
 namespace Events
 {
-	using AlchemyEffect = AlchemyEffect;
-
 	//-------------------Random-------------------------
 
 	/// <summary>
@@ -94,6 +92,7 @@ namespace Events
 			} else {
 				// if not already dead, do stuff
 				if (Main::IsDeadEventFired(actor) == false) {
+					Main::SetDead(actor);
 					EvalProcessingEvent();
 					// invalidate actor
 					std::shared_ptr<ActorInfo> acinfo = Main::data->FindActorExisting(actor);
@@ -104,7 +103,6 @@ namespace Events
 					// as with potion distribution, exlude excluded actors and potential followers
 					if (!excluded) {
 						// create and insert new event
-						Main::SetDead(actor);
 						if (Settings::Removal::_RemoveItemsOnDeath) {
 							LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
 							auto items = Distribution::GetAllInventoryItems(acinfo);
@@ -256,13 +254,14 @@ namespace Events
 			return EventResult::kContinue;
 
 		SKSE::GetTaskInterface()->AddTask([]() {
-			Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->boolBits & RE::Actor::BOOL_BITS::kDead));
+			Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
 		});
 		//auto begin = std::chrono::steady_clock::now();
 
 		if (a_event && a_event->reference) {
 			RE::Actor* actor = a_event->reference->As<RE::Actor>();
 			if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && !actor->IsPlayerRef()) {
+				LOG_1("{}[Events] [TESCellAttachDetachEvent]");
 				if (a_event->attached) {
 					if (Distribution::ExcludedNPCFromHandling(actor) == false)
 						Main::RegisterNPC(actor);

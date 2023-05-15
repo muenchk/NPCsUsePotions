@@ -80,15 +80,17 @@ namespace Papyrus
 			comp->AnPoti_RemoveActorPoison(actor->GetFormID());
 
 			LOG1_2("{}[Papyrus] [Poison] [AnimatedPotions_RestorePoison] Restore Poison {}", Utility::PrintForm(poison));
-			RE::ExtraDataList* extra = new RE::ExtraDataList();
-			extra->Add(new RE::ExtraPoison(poison, count));
+			//RE::ExtraDataList* extra = new RE::ExtraDataList();
+			//extra->Add(new RE::ExtraPoison(poison, count));
 			auto ied = actor->GetEquippedEntryData(false);
 			if (ied) {
-				ied->AddExtraList(extra);
+				//ied->AddExtraList(extra);
+				ied->PoisonObject(poison, count);
 			} else {
 				ied = actor->GetEquippedEntryData(true);
 				if (ied) {
-					ied->AddExtraList(extra);
+					//ied->AddExtraList(extra);
+					ied->PoisonObject(poison, count);
 				}
 			}
 		}

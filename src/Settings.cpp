@@ -453,22 +453,22 @@ void Settings::LoadDistrConfig()
 									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
 
 									// parse the item properties
-									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
 									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
 									rule->potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
 									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr, true);
-									std::vector<std::tuple<uint64_t, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
 									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
 									rule->poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
 									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr, true);
-									std::vector<std::tuple<uint64_t, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
 									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
 									rule->fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
 									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr, true);
-									std::vector<std::tuple<uint64_t, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
 									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
 									rule->foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
@@ -1123,10 +1123,10 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									bool error = false;
-									std::vector<std::tuple<uint64_t, float>> effects = Utility::ParseAlchemyEffects(seffects, error);
+									std::vector<std::tuple<AlchemicEffect, float>> effects = Utility::ParseAlchemyEffects(seffects, error);
 									for (int i = 0; i < effects.size(); i++) {
-										AlchemyEffect effect = static_cast<AlchemyEffect>(std::get<0>(effects[i]));
-										if (effect != AlchemyEffect::kNone) {
+										AlchemicEffect effect = std::get<0>(effects[i]);
+										if (effect != AlchemicEffect::kNone) {
 											Distribution::_dosageEffectMap.insert_or_assign(effect, std::tuple<bool, bool, int>{ enforce, setting, dosage });
 										}
 									}
@@ -1141,16 +1141,15 @@ void Settings::LoadDistrConfig()
 									}
 									std::string effect = splits->at(splitindex);
 									splitindex++;
-									AlchemyEffectBase eff = 0;
+									AlchemicEffect e = 0;
 									try {
-										eff = std::stoull(effect, nullptr, 16);
+										e = effect;
 									} catch (std::exception&) {
 										logwarn("[Settings] [LoadDistrRules] expection in field \"Effect\". file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										continue;
 									}
-									AlchemyEffect e = static_cast<AlchemyEffect>(eff);
-									if (e != AlchemyEffect::kNone) {
+									if (e != AlchemicEffect::kNone) {
 										Distribution::_excludedEffects.insert(e);
 									}
 									// since we are done delete splits
@@ -1230,16 +1229,15 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									std::string effect = splits->at(splitindex);
 									splitindex++;
-									AlchemyEffectBase eff = 0;
+									AlchemicEffect e = 0;
 									try {
-										eff = std::stoull(effect, nullptr, 16);
+										e = effect;
 									} catch (std::exception&) {
 										logwarn("[Settings] [LoadDistrRules] expection in field \"Effect\". file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										continue;
 									}
-									AlchemyEffect e = static_cast<AlchemyEffect>(eff);
-									if (e != AlchemyEffect::kNone) {
+									if (e != AlchemicEffect::kNone) {
 										bool error = false;
 										int total = 0;
 										auto items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
@@ -1592,7 +1590,7 @@ void Settings::LoadDistrConfig()
 									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
 
 									// parse the item properties
-									std::vector<std::tuple<uint64_t, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
 									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
 									LOG1_4("{}[Settings] [LoadDistrRules] PotionDistr:\t{}", Utility::PrintDistribution(rule->potionDistr));
 									rule->potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
@@ -1600,7 +1598,7 @@ void Settings::LoadDistrConfig()
 									LOG1_4("{}[Settings] [LoadDistrRules] PotionEffMap:\t{}", Utility::PrintEffectMap(rule->potionEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
 									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr, true);
-									std::vector<std::tuple<uint64_t, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
 									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
 									LOG1_4("{}[Settings] [LoadDistrRules] PoisonDistr:\t{}", Utility::PrintDistribution(rule->poisonDistr));
 									rule->poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
@@ -1608,7 +1606,7 @@ void Settings::LoadDistrConfig()
 									LOG1_4("{}[Settings] [LoadDistrRules] PoisonEffMap:\t{}", Utility::PrintEffectMap(rule->poisonEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
 									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr, true);
-									std::vector<std::tuple<uint64_t, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
 									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
 									LOG1_4("{}[Settings] [LoadDistrRules] FortifyDistr:\t{}", Utility::PrintDistribution(rule->fortifyDistr));
 									rule->fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
@@ -1616,7 +1614,7 @@ void Settings::LoadDistrConfig()
 									LOG1_4("{}[Settings] [LoadDistrRules] FortifyEffMap:\t{}", Utility::PrintEffectMap(rule->fortifyEffectMap));
 									LOGLE2_2("[Settings] [LoadDistrRules] rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
 									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr, true);
-									std::vector<std::tuple<uint64_t, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
+									std::vector<std::tuple<AlchemicEffect, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
 									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
 									LOG1_4("{}[Settings] [LoadDistrRules] FoodDistr:\t{}", Utility::PrintDistribution(rule->foodDistr));
 									rule->foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
@@ -1693,14 +1691,14 @@ void Settings::LoadDistrConfig()
 			5 /*maxPoisons*/, std::vector<int>{ 30, 35, 40, 45, 50 } /*poison1Chance*/, std::vector<int>{ 20, 25, 30, 35, 40 } /*poison2Chance*/, std::vector<int>{ 10, 15, 20, 25, 30 } /*poison3Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*poison4Chance*/,
 			std::vector<int>{ 0, 5, 10, 15, 20 } /*poisonAddChance*/, 0 /*poisonTierAdjust*/, 
 			std::vector<int>{ 70, 80, 90, 100, 100 } /*foodChance*/,
-			Distribution::GetVector(RandomRange, AlchemyEffect::kAnyPotion) /*potionDistr*/,
-			Distribution::GetVector(RandomRange, AlchemyEffect::kAnyPoison) /*poisonDistr*/,
-			Distribution::GetVector(RandomRange, AlchemyEffect::kAnyFortify) /*fortifyDistr*/,
-			Distribution::GetVector(RandomRange, AlchemyEffect::kAnyFood) /*foodDistr*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyPotion) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPotions*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyPoison) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPoisons*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyFortify) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFortifyPotions*/,
-			static_cast<uint64_t>(AlchemyEffect::kAnyFood) | static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFood*/);
+			Distribution::GetVector(RandomRange, AlchemicEffect::kAnyPotion) /*potionDistr*/,
+			Distribution::GetVector(RandomRange, AlchemicEffect::kAnyPoison) /*poisonDistr*/,
+			Distribution::GetVector(RandomRange, AlchemicEffect::kAnyFortify) /*fortifyDistr*/,
+			Distribution::GetVector(RandomRange, AlchemicEffect::kAnyFood) /*foodDistr*/,
+			AlchemicEffect::kAnyPotion | AlchemicEffect::kCustom /*validPotions*/,
+			AlchemicEffect::kAnyPoison | AlchemicEffect::kCustom /*validPoisons*/,
+			AlchemicEffect::kAnyFortify | AlchemicEffect::kCustom /*validFortifyPotions*/,
+			AlchemicEffect::kAnyFood | AlchemicEffect::kCustom /*validFood*/);
 	}
 	if (Distribution::defaultCustomRule == nullptr) {
 		Distribution::defaultCustomRule = new Distribution::Rule(1 /*version*/, 1 /*type*/, DefaultRuleName, INT_MIN + 1 /*rulePriority*/, true /*allowMixed*/, true /*styleScaling*/, 5 /*maxPotions*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*potion1Chance*/,
@@ -1709,14 +1707,14 @@ void Settings::LoadDistrConfig()
 			5 /*maxPoisons*/, std::vector<int>{ 30, 35, 40, 45, 50 } /*poison1Chance*/, std::vector<int>{ 20, 25, 30, 35, 40 } /*poison2Chance*/, std::vector<int>{ 10, 15, 20, 25, 30 } /*poison3Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*poison4Chance*/,
 			std::vector<int>{ 0, 5, 10, 15, 20 } /*poisonAddChance*/, 0 /*poisonTierAdjust*/,
 			std::vector<int>{ 70, 80, 90, 100, 100 } /*foodChance*/,
-			std::vector<std::tuple<int, AlchemyEffect>>{} /*potionDistr*/,
-			std::vector<std::tuple<int, AlchemyEffect>>{} /*poisonDistr*/,
-			std::vector<std::tuple<int, AlchemyEffect>>{} /*fortifyDistr*/,
-			std::vector<std::tuple<int, AlchemyEffect>>{} /*foodDistr*/,
-			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPotions*/,
-			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validPoisons*/,
-			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFortifyPotions*/,
-			static_cast<uint64_t>(AlchemyEffect::kCustom) /*validFood*/);
+			std::vector<std::tuple<int, AlchemicEffect>>{} /*potionDistr*/,
+			std::vector<std::tuple<int, AlchemicEffect>>{} /*poisonDistr*/,
+			std::vector<std::tuple<int, AlchemicEffect>>{} /*fortifyDistr*/,
+			std::vector<std::tuple<int, AlchemicEffect>>{} /*foodDistr*/,
+			AlchemicEffect::kCustom /*validPotions*/,
+			AlchemicEffect::kCustom /*validPoisons*/,
+			AlchemicEffect::kCustom /*validFortifyPotions*/,
+			AlchemicEffect::kCustom /*validFood*/);
 	}
 
 	if (copyrules.size() > 0) {
@@ -2286,157 +2284,147 @@ void Settings::CheckActorsForRules()
 	std::ofstream outpris("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_NPCs_without_Rule_Prisoners.txt");
 	out << "PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
 
-	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
-	auto end = hashtable->end();
-	auto iter = hashtable->begin();
-	std::set<RE::FormID> visited{};
-	RE::Actor* act = nullptr;
-	RE::TESNPC* npc = nullptr;
-	ActorStrength acs;
-	ItemStrength is;
-	uint32_t index;
-	std::string name;
-	while (iter != hashtable->end()) {
-		try {
-			if ((*iter).second) {
-				act = (*iter).second->As<RE::Actor>();
-				npc = (*iter).second->As<RE::TESNPC>();
-				logwarn("[Settings] [CheckActorsForRules] act {}\t\t npc {}", act ? Utility::PrintForm(act) : "", npc ? Utility::PrintForm(npc) : "");
-				if (npc && npc->GetFormID() != 0x07 && (npc->GetFormID() >> 24) != 0xFF) {
-					if (!visited.contains(npc->GetFormID())) {
-						visited.insert(npc->GetFormID());
-						{
-							index = Utility::ExtractTemplateInfo(npc).pluginID;
-							if (index == 0x1) {
-								iter++;
-								continue;
+	const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+	{
+		const RE::BSReadLockGuard locker{ lock };
+		if (hashtable) {
+			std::set<RE::FormID> visited{};
+			RE::Actor* act = nullptr;
+			RE::TESNPC* npc = nullptr;
+			ActorStrength acs;
+			ItemStrength is;
+			uint32_t index;
+			std::string name;
+			for (auto& [id, form] : *hashtable) {
+				if (form) {
+					act = form->As<RE::Actor>();
+					npc = form->As<RE::TESNPC>();
+					logwarn("[Settings] [CheckActorsForRules] act {}\t\t npc {}", act ? Utility::PrintForm(act) : "", npc ? Utility::PrintForm(npc) : "");
+					if (npc && npc->GetFormID() != 0x07 && (npc->GetFormID() >> 24) != 0xFF) {
+						if (!visited.contains(npc->GetFormID())) {
+							visited.insert(npc->GetFormID());
+							{
+								index = Utility::ExtractTemplateInfo(npc).pluginID;
+								if (index == 0x1) {
+									continue;
+								}
+								name = Utility::Mods::GetPluginName(index);
 							}
-							name = Utility::Mods::GetPluginName(index);
-						}
-						// check wether there is a rule that applies
-						if (Distribution::ExcludedNPC(npc)) {
-							iter++;
-							//coun++;
-							continue;  // the npc is covered by an exclusion
-						}
-						// get rule
-						Misc::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
-						Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
-
-						//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
-						if (rl && rl->ruleName == DefaultRuleName && !IsLeveledChar(npc)) {
-							if (name.empty() == false)
-								out << name << ";";
-							else
-								out << ";";
-							// we found an actor that does not have a rule, so print that to the output
-							out << npc->GetName() << ";"
-								<< "0x" << Utility::GetHex(npc->GetFormID()) << ";"
-								<< ";";
-
-							if (npc->GetRace())
-								out << npc->GetRace()->GetFormEditorID() << ";"
-									<< "0x" << Utility::GetHex(npc->GetRace()->GetFormID()) << ";";
-							else
-								out << ";;";
-
-							for (uint32_t i = 0; i < npc->factions.size(); i++) {
-								out << ";"
-									<< "0x" << Utility::GetHex(npc->factions[i].faction->GetFormID());
+							// check wether there is a rule that applies
+							if (Distribution::ExcludedNPC(npc)) {
+								//coun++;
+								continue;  // the npc is covered by an exclusion
 							}
-							out << "\n";
-							out.flush();
+							// get rule
+							Misc::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
+							Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
 
-							// prisoner check
-							if (std::string(npc->GetName()).find("prisoner") != std::string::npos ||
-								std::string(npc->GetName()).find("Prisoner") != std::string::npos ||
-								std::string(npc->GetName()).find("Slave") != std::string::npos ||
-								std::string(npc->GetName()).find("slave") != std::string::npos) {
-								if (std::string(name).find("Skyrim.esm") != std::string::npos)
-									outpris << "<"
-											<< Utility::GetHex((npc->GetFormID() & 0x00FFFFFF))
-											<< ","
-											<< ">";
-								else if ((index & 0x00FFF000) != 0) { // light plugin
-									outpris << "<"
-											<< Utility::GetHex((npc->GetFormID() & 0x00000FFF))
-											<< ","
-											<< name
-											<< ">";
-								} else {
-									outpris << "<"
-											<< Utility::GetHex((npc->GetFormID() & 0x00FFFFFF))
-											<< ","
-											<< name
-											<< ">";
+							//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
+							if (rl && rl->ruleName == DefaultRuleName && !IsLeveledChar(npc)) {
+								if (name.empty() == false)
+									out << name << ";";
+								else
+									out << ";";
+								// we found an actor that does not have a rule, so print that to the output
+								out << npc->GetName() << ";"
+									<< "0x" << Utility::GetHex(npc->GetFormID()) << ";"
+									<< ";";
+
+								if (npc->GetRace())
+									out << npc->GetRace()->GetFormEditorID() << ";"
+										<< "0x" << Utility::GetHex(npc->GetRace()->GetFormID()) << ";";
+								else
+									out << ";;";
+
+								for (uint32_t i = 0; i < npc->factions.size(); i++) {
+									out << ";"
+										<< "0x" << Utility::GetHex(npc->factions[i].faction->GetFormID());
+								}
+								out << "\n";
+								out.flush();
+
+								// prisoner check
+								if (std::string(npc->GetName()).find("prisoner") != std::string::npos ||
+									std::string(npc->GetName()).find("Prisoner") != std::string::npos ||
+									std::string(npc->GetName()).find("Slave") != std::string::npos ||
+									std::string(npc->GetName()).find("slave") != std::string::npos) {
+									if (std::string(name).find("Skyrim.esm") != std::string::npos)
+										outpris << "<"
+												<< Utility::GetHex((npc->GetFormID() & 0x00FFFFFF))
+												<< ","
+												<< ">";
+									else if ((index & 0x00FFF000) != 0) {  // light plugin
+										outpris << "<"
+												<< Utility::GetHex((npc->GetFormID() & 0x00000FFF))
+												<< ","
+												<< name
+												<< ">";
+									} else {
+										outpris << "<"
+												<< Utility::GetHex((npc->GetFormID() & 0x00FFFFFF))
+												<< ","
+												<< name
+												<< ">";
+									}
 								}
 							}
 						}
-					}
-				} else if (act && act->GetFormID() != 0x14 && (act->GetFormID() >> 24) != 0xFF) {
-					if (!visited.contains(act->GetFormID())) {
-						// lookup pluing of the actor base
-						{
-							index = Utility::ExtractTemplateInfo(act).pluginID;
-							if (index == 0x1) {
-								iter++;
-								continue;
+					} else if (act && act->GetFormID() != 0x14 && (act->GetFormID() >> 24) != 0xFF) {
+						if (!visited.contains(act->GetFormID())) {
+							// lookup pluing of the actor base
+							{
+								index = Utility::ExtractTemplateInfo(act).pluginID;
+								if (index == 0x1) {
+									continue;
+								}
+								name = Utility::Mods::GetPluginName(index);
 							}
-							name = Utility::Mods::GetPluginName(index);
-						}
 
-						// we didn't consider the current actors base so far
-						visited.insert(act->GetFormID());
-						
-						std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(act);
-						// get rule
-						Distribution::Rule* rl = Distribution::CalcRule(acinfo);
-						// check wether there is a rule that applies
-						if (Distribution::ExcludedNPC(acinfo)) {
-							iter++;
-							//coun++;
-							continue;  // the npc is covered by an exclusion
-						}
-						//logwarn("[CheckActorsForRules] got rule");
-						if (rl && rl->ruleName == DefaultRuleName) {
-							// lookup plugin of the actor red
-							if (name.empty() == false)
-								out << name << ";";
-							else
-								out << ";";
-							// we found an actor that does not have a rule, so print that to the output
-							out << act->GetName() << ";"
-								<< "0x" << Utility::GetHex(act->GetActorBase()->GetFormID()) << ";"
-								<< "0x" << Utility::GetHex(act->GetFormID()) << ";";
+							// we didn't consider the current actors base so far
+							visited.insert(act->GetFormID());
 
-							if (act->GetRace())
-								out << act->GetRace()->GetFormEditorID() << ";"
-									<< "0x" << Utility::GetHex(act->GetRace()->GetFormID()) << ";";
-							else
-								out << ";;";
+							std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(act);
+							// get rule
+							Distribution::Rule* rl = Distribution::CalcRule(acinfo);
+							// check wether there is a rule that applies
+							if (Distribution::ExcludedNPC(acinfo)) {
+								//coun++;
+								continue;  // the npc is covered by an exclusion
+							}
+							//logwarn("[CheckActorsForRules] got rule");
+							if (rl && rl->ruleName == DefaultRuleName) {
+								// lookup plugin of the actor red
+								if (name.empty() == false)
+									out << name << ";";
+								else
+									out << ";";
+								// we found an actor that does not have a rule, so print that to the output
+								out << act->GetName() << ";"
+									<< "0x" << Utility::GetHex(act->GetActorBase()->GetFormID()) << ";"
+									<< "0x" << Utility::GetHex(act->GetFormID()) << ";";
 
-							if (act->GetSaveParentCell())
-								out << act->GetSaveParentCell()->GetName();
+								if (act->GetRace())
+									out << act->GetRace()->GetFormEditorID() << ";"
+										<< "0x" << Utility::GetHex(act->GetRace()->GetFormID()) << ";";
+								else
+									out << ";;";
 
-							act->VisitFactions([&out](RE::TESFaction* a_faction, std::int8_t) {
-								if (a_faction)
-									out << ";"
-										<< "0x" << Utility::GetHex(a_faction->GetFormID());
-								return false;
-							});
-							out << "\n";
-							out.flush();
+								if (act->GetSaveParentCell())
+									out << act->GetSaveParentCell()->GetName();
+
+								act->VisitFactions([&out](RE::TESFaction* a_faction, std::int8_t) {
+									if (a_faction)
+										out << ";"
+											<< "0x" << Utility::GetHex(a_faction->GetFormID());
+									return false;
+								});
+								out << "\n";
+								out.flush();
+							}
 						}
 					}
 				}
 			}
-		} catch (...) {
-			out << ";";
-		}
-		try {
-			iter++;
-		} catch (...) {
-			break;
 		}
 	}
 	loginfo("[Settings] [CheckActorsForRules] finished checking...");
@@ -2463,12 +2451,10 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 	if (tmp)
 		cell = tmp->As<RE::TESObjectCELL>();
 	if (cell) {
-		auto hashtable = cell->references;
-		auto iter = hashtable.begin();
-		while (iter != hashtable.end()) {
+		for (auto& ptr : cell->GetRuntimeData().references) {
 			try {
-				if ((*iter).get()) {
-					act = (*iter)->As<RE::Actor>();
+				if (ptr.get()) {
+					act = ptr->As<RE::Actor>();
 					if (Utility::ValidateActor(act) && act->GetFormID() != 0x14) {
 						if (!visited.contains(act->GetFormID())) {
 							// we didn't consider the current actors base so far
@@ -2476,7 +2462,6 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							{
 								index = Utility::ExtractTemplateInfo(act).pluginID;
 								if (index == 0x1) {
-									iter++;
 									continue;
 								}
 								name = Utility::Mods::GetPluginName(index);
@@ -2534,12 +2519,6 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 				}
 			} catch (...) {
 				out << ";";
-			}
-			try {
-				iter++;
-				//coun++;
-			} catch (...) {
-				break;
 			}
 		}
 	}
@@ -2608,207 +2587,203 @@ void Settings::ClassifyItems()
 	// start sorting items
 
 	auto begin = std::chrono::steady_clock::now();
-	auto hashtable = std::get<0>(RE::TESForm::GetAllForms());
-	auto end = hashtable->end();
-	auto iter = hashtable->begin();
-	RE::AlchemyItem* item = nullptr;
-	RE::IngredientItem* itemi = nullptr;
-	while (iter != end) {
-		if ((*iter).second && (*iter).second->IsMagicItem()) {
-			item = (*iter).second->As<RE::AlchemyItem>();
-			if (item) {
-				LOGL1_4("{}[Settings] [ClassifyItems] Found AlchemyItem {}", Utility::PrintForm(item));
-				// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
-				if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0 ||
-					std::string(item->GetName()).find(std::string("Dummy")) != std::string::npos ||
-					std::string(item->GetName()).find(std::string("dummy")) != std::string::npos) {
-					iter++;
-					continue;
-				}
-				// check whether item is excluded, or whether it is not whitelisted when in whitelist mode
-				// if it is excluded and whitelisted it is still excluded
-				if (Distribution::excludedItems()->contains(item->GetFormID()) ||
-					Settings::Whitelist::EnabledItems &&
-						!Distribution::whitelistItems()->contains(item->GetFormID())
-					) {
-					iter++;
-					continue;
-				}
-				// check whether the plugin is excluded
-				if (Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(item)) == true) {
-					iter++;
-					continue;
-				}
+	const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+	{
+		const RE::BSReadLockGuard locker{ lock };
+		if (hashtable) {
+			RE::AlchemyItem* item = nullptr;
+			RE::IngredientItem* itemi = nullptr;
+			for (auto& [id, form] : *hashtable) {
+				if (form && form->IsMagicItem()) {
+					item = form->As<RE::AlchemyItem>();
+					if (item) {
+						LOGL1_4("{}[Settings] [ClassifyItems] Found AlchemyItem {}", Utility::PrintForm(item));
+						// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
+						if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0 ||
+							std::string(item->GetName()).find(std::string("Dummy")) != std::string::npos ||
+							std::string(item->GetName()).find(std::string("dummy")) != std::string::npos) {
+							continue;
+						}
+						// check whether item is excluded, or whether it is not whitelisted when in whitelist mode
+						// if it is excluded and whitelisted it is still excluded
+						if (Distribution::excludedItems()->contains(item->GetFormID()) ||
+							Settings::Whitelist::EnabledItems &&
+								!Distribution::whitelistItems()->contains(item->GetFormID())) {
+							continue;
+						}
+						// check whether the plugin is excluded
+						if (Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(item)) == true) {
+							continue;
+						}
 
-				auto clas = ClassifyItem(item);
+						auto clas = ClassifyItem(item);
 
-				// there is a little bit of a problem for some items that have wrong flags and no keywords set. Try to detect them by sound and set the flags
-				if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
-					if (item->data.consumptionSound == Settings::FoodEat) {
-						item->data.flags = RE::AlchemyItem::AlchemyFlag::kFoodItem | item->data.flags;
-					} else if (item->data.consumptionSound == Settings::PoisonUse) {
-						item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
-					} else if (item->data.consumptionSound == Settings::PotionUse) {
-						item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
-					}
-				}
-				// set medicine flag for those who need it
-				if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
-					item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
-					if (Logging::EnableLoadLog && Logging::LogLevel >= 4) {
-						//LOGLE1_1("Item: {}", Utility::PrintForm(item));
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
-							LOGLE_1("\tFlag: CostOverride");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kFoodItem)
-							LOGLE_1("\tFlag: FoodItem");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kExtendDuration)
-							LOGLE_1("\tFlag: ExtendedDuration");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kMedicine)
-							LOGLE_1("\tFlag: Medicine");
-						if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kPoison)
-							LOGLE_1("\tFlag: Poison");
-					}
-					//LOGLE1_1("[Settings] [ClassifyItems] [AssignPotionFlag] {}", Utility::PrintForm(item));
-				}
-				// exclude item, if it has an alchemy effect that has been excluded
-				AlchemyEffectBase effects = std::get<0>(clas);
-				auto itr = Distribution::excludedEffects()->begin();
-				while (itr != Distribution::excludedEffects()->end()) {
-					if (effects & static_cast<AlchemyEffectBase>(*itr)) {
-						Distribution::_excludedItems.insert(item->GetFormID());
-					}
-					itr++;
-				}
-				if (Distribution::excludedItems()->contains(item->GetFormID())) {
-					iter++;
-					continue;
-				}
-
-				// if the item has the ReflectDamage effect, with a strength of more than 50%, remove the item
-				if (std::get<0>(clas) & static_cast<AlchemyEffectBase>(AlchemyEffect::kReflectDamage)) {
-					for (int i = 0; i < (int)item->effects.size(); i++) {
-						if (item->effects[i]->baseEffect &&
-							((ConvertToAlchemyEffectPrimary(item->effects[i]->baseEffect) == AlchemyEffect::kReflectDamage) ||
-								(item->effects[i]->baseEffect->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (ConvertToAlchemyEffectSecondary(item->effects[i]->baseEffect) == AlchemyEffect::kReflectDamage)))) {
-							if (item->effects[i]->effectItem.magnitude > 50) {
+						// there is a little bit of a problem for some items that have wrong flags and no keywords set. Try to detect them by sound and set the flags
+						if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
+							if (item->data.consumptionSound == Settings::FoodEat) {
+								item->data.flags = RE::AlchemyItem::AlchemyFlag::kFoodItem | item->data.flags;
+							} else if (item->data.consumptionSound == Settings::PoisonUse) {
+								item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
+							} else if (item->data.consumptionSound == Settings::PotionUse) {
+								item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+							}
+						}
+						// set medicine flag for those who need it
+						if (item->IsFood() == false && item->IsPoison() == false) {  //  && item->IsMedicine() == false
+							item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
+							if (Logging::EnableLoadLog && Logging::LogLevel >= 4) {
+								//LOGLE1_1("Item: {}", Utility::PrintForm(item));
+								if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kCostOverride)
+									LOGLE_1("\tFlag: CostOverride");
+								if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kFoodItem)
+									LOGLE_1("\tFlag: FoodItem");
+								if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kExtendDuration)
+									LOGLE_1("\tFlag: ExtendedDuration");
+								if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kMedicine)
+									LOGLE_1("\tFlag: Medicine");
+								if (item->data.flags & RE::AlchemyItem::AlchemyFlag::kPoison)
+									LOGLE_1("\tFlag: Poison");
+							}
+							//LOGLE1_1("[Settings] [ClassifyItems] [AssignPotionFlag] {}", Utility::PrintForm(item));
+						}
+						// exclude item, if it has an alchemy effect that has been excluded
+						AlchemicEffect effects = std::get<0>(clas);
+						auto itr = Distribution::excludedEffects()->begin();
+						while (itr != Distribution::excludedEffects()->end()) {
+							if ((effects & *itr).IsValid()) {
 								Distribution::_excludedItems.insert(item->GetFormID());
-								LOGLE1_1("[Settings] [ClassifyItems] Excluded {} due to strong ReflectDamage effect", Utility::PrintForm(item));
-								iter++;
-								continue;
+							}
+							itr++;
+						}
+						if (Distribution::excludedItems()->contains(item->GetFormID())) {
+							continue;
+						}
+
+						// if the item has the ReflectDamage effect, with a strength of more than 50%, remove the item
+						if ((std::get<0>(clas) & AlchemicEffect::kReflectDamage).IsValid()) {
+							for (int i = 0; i < (int)item->effects.size(); i++) {
+								if (item->effects[i]->baseEffect &&
+									((ConvertToAlchemyEffectPrimary(item->effects[i]->baseEffect) == AlchemicEffect::kReflectDamage) ||
+										(item->effects[i]->baseEffect->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (ConvertToAlchemyEffectSecondary(item->effects[i]->baseEffect) == AlchemicEffect::kReflectDamage)))) {
+									if (item->effects[i]->effectItem.magnitude > 50) {
+										Distribution::_excludedItems.insert(item->GetFormID());
+										LOGLE1_1("[Settings] [ClassifyItems] Excluded {} due to strong ReflectDamage effect", Utility::PrintForm(item));
+										continue;
+									}
+								}
 							}
 						}
-					}
-				}
 
-				// check if item has known alcohol keywords and add it to list of alcohol
-				if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol) || comp->LoadedApothecary() && item->HasKeyword(comp->Apot_SH_AlcoholDrinkKeyword)) {
-					Distribution::_alcohol.insert(item->GetFormID());
-				}
-
-				// check for player excluded magiceffects
-				for (int i = 0; i < (int)item->effects.size(); i++) {
-					if (item->effects[i]->baseEffect && Distribution::excludedItemsPlayer()->contains(item->effects[i]->baseEffect->GetFormID())) {
-						LOGLE1_1("[Settings] [ClassifyItems] Excluded {} for player due to effect", Utility::PrintForm(item));
-						Distribution::_excludedItemsPlayer.insert(item->GetFormID());
-					}
-				}
-
-				// since the item is not to be excluded, save which alchemic effects are present
-				_alchemyEffectsFound |= std::get<0>(clas);
-
-				RE::Actor* player = RE::PlayerCharacter::GetSingleton();
-
-				// if the value of the item is less than zero, we should not insert them into the distribution lists, since they are likely to be broken
-				// or test/dummy items
-				if (item->CalculateTotalGoldValue(player)) {
-					// determine the type of item
-					if (std::get<2>(clas) == ItemType::kFood &&
-						(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
-						_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
-						_foodEffectsFound |= std::get<0>(clas);
-					} else if (std::get<2>(clas) == ItemType::kPoison &&
-							   (Settings::Poisons::_AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
-						switch (std::get<1>(clas)) {
-						case ItemStrength::kWeak:
-							_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kStandard:
-							_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kPotent:
-							_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
-							break;
-						case ItemStrength::kInsane:
-							_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
-							break;
+						// check if item has known alcohol keywords and add it to list of alcohol
+						if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol) || comp->LoadedApothecary() && item->HasKeyword(comp->Apot_SH_AlcoholDrinkKeyword)) {
+							Distribution::_alcohol.insert(item->GetFormID());
 						}
-						_poisonEffectsFound |= std::get<0>(clas);
-					} else if (std::get<2>(clas) == ItemType::kPotion &&
-							   (Settings::Potions::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
-						if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kBlood)) > 0)
-							_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
-						else if ((std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kHealth)) > 0 ||
-								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kMagicka)) > 0 ||
-								 (std::get<0>(clas) & static_cast<uint64_t>(AlchemyEffect::kStamina)) > 0) {
-							switch (std::get<1>(clas)) {
-							case ItemStrength::kWeak:
-								_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kStandard:
-								_potionsStandard_main.insert(_potionsStandard_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kPotent:
-								_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kInsane:
-								_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
-								break;
-							}
-						} else if (std::get<0>(clas) != static_cast<uint64_t>(AlchemyEffect::kNone)) {
-							switch (std::get<1>(clas)) {
-							case ItemStrength::kWeak:
-								_potionsWeak_rest.insert(_potionsWeak_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kStandard:
-								_potionsStandard_rest.insert(_potionsStandard_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kPotent:
-								_potionsPotent_rest.insert(_potionsPotent_rest.end(), { std::get<0>(clas), item });
-								break;
-							case ItemStrength::kInsane:
-								_potionsInsane_rest.insert(_potionsInsane_rest.end(), { std::get<0>(clas), item });
-								break;
+
+						// check for player excluded magiceffects
+						for (int i = 0; i < (int)item->effects.size(); i++) {
+							if (item->effects[i]->baseEffect && Distribution::excludedItemsPlayer()->contains(item->effects[i]->baseEffect->GetFormID())) {
+								LOGLE1_1("[Settings] [ClassifyItems] Excluded {} for player due to effect", Utility::PrintForm(item));
+								Distribution::_excludedItemsPlayer.insert(item->GetFormID());
 							}
 						}
-						_potionEffectsFound |= std::get<0>(clas);
-					}
-				} else {
-					LOGLE1_1("[Settings] [ClassifyItems] Item {} has value 0 and will not be distributed", Utility::PrintForm(item));
-				}
-				int dosage = 0;
-				if (item->IsPoison())
-					dosage = Distribution::GetPoisonDosage(item, std::get<0>(clas));
-				// add item into effect map
-				data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas), dosage);
-				LOGLE4_1("[Settings] [ClassifyItems] Saved effects for {} dur {} mag {} effect {}", Utility::PrintForm(item), std::get<3>(clas), std::get<4>(clas), Utility::GetHex(std::get<0>(clas)));
-			}
 
-			itemi = (*iter).second->As<RE::IngredientItem>();
-			if (itemi) {
-				LOGL1_4("{}[Settings] [ClassifyItems] Found IngredientItem {}", Utility::PrintForm(itemi));
-				for (int i = 0; i < (int)itemi->effects.size(); i++) {
-					auto sett = itemi->effects[i]->baseEffect;
-					// just retrieve the effects, we will analyze them later
-					if (sett) {
-						ingredienteffectmap.push_back({ itemi->GetName(), Utility::ToString(ConvertToAlchemyEffectPrimary(sett)) });
-						
-						// the effects of ingredients may lead to valid potions being brewed, so we need to save that these effects actually exist in the game
-						_alchemyEffectsFound |= static_cast<uint64_t>(ConvertToAlchemyEffectPrimary(sett));
+						// since the item is not to be excluded, save which alchemic effects are present
+						_alchemyEffectsFound |= std::get<0>(clas);
+
+						RE::Actor* player = RE::PlayerCharacter::GetSingleton();
+
+						// if the value of the item is less than zero, we should not insert them into the distribution lists, since they are likely to be broken
+						// or test/dummy items
+						if (item->CalculateTotalGoldValue(player)) {
+							// determine the type of item
+							if (std::get<2>(clas) == ItemType::kFood &&
+								(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
+								_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
+								_foodEffectsFound |= std::get<0>(clas);
+							} else if (std::get<2>(clas) == ItemType::kPoison &&
+									   (Settings::Poisons::_AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
+								switch (std::get<1>(clas)) {
+								case ItemStrength::kWeak:
+									_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
+									break;
+								case ItemStrength::kStandard:
+									_poisonsStandard.insert(_poisonsStandard.end(), { std::get<0>(clas), item });
+									break;
+								case ItemStrength::kPotent:
+									_poisonsPotent.insert(_poisonsPotent.end(), { std::get<0>(clas), item });
+									break;
+								case ItemStrength::kInsane:
+									_poisonsInsane.insert(_poisonsInsane.end(), { std::get<0>(clas), item });
+									break;
+								}
+								_poisonEffectsFound |= std::get<0>(clas);
+							} else if (std::get<2>(clas) == ItemType::kPotion &&
+									   (Settings::Potions::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
+								if ((std::get<0>(clas) & AlchemicEffect::kBlood) > 0)
+									_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
+								else if ((std::get<0>(clas) & AlchemicEffect::kHealth) > 0 ||
+										 (std::get<0>(clas) & AlchemicEffect::kMagicka) > 0 ||
+										 (std::get<0>(clas) & AlchemicEffect::kStamina) > 0) {
+									switch (std::get<1>(clas)) {
+									case ItemStrength::kWeak:
+										_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
+										break;
+									case ItemStrength::kStandard:
+										_potionsStandard_main.insert(_potionsStandard_main.end(), { std::get<0>(clas), item });
+										break;
+									case ItemStrength::kPotent:
+										_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+										break;
+									case ItemStrength::kInsane:
+										_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+										break;
+									}
+								} else if (std::get<0>(clas) != AlchemicEffect::kNone) {
+									switch (std::get<1>(clas)) {
+									case ItemStrength::kWeak:
+										_potionsWeak_rest.insert(_potionsWeak_rest.end(), { std::get<0>(clas), item });
+										break;
+									case ItemStrength::kStandard:
+										_potionsStandard_rest.insert(_potionsStandard_rest.end(), { std::get<0>(clas), item });
+										break;
+									case ItemStrength::kPotent:
+										_potionsPotent_rest.insert(_potionsPotent_rest.end(), { std::get<0>(clas), item });
+										break;
+									case ItemStrength::kInsane:
+										_potionsInsane_rest.insert(_potionsInsane_rest.end(), { std::get<0>(clas), item });
+										break;
+									}
+								}
+								_potionEffectsFound |= std::get<0>(clas);
+							}
+						} else {
+							LOGLE1_1("[Settings] [ClassifyItems] Item {} has value 0 and will not be distributed", Utility::PrintForm(item));
+						}
+						int dosage = 0;
+						if (item->IsPoison())
+							dosage = Distribution::GetPoisonDosage(item, std::get<0>(clas));
+						// add item into effect map
+						data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas), dosage);
+						LOGLE4_1("[Settings] [ClassifyItems] Saved effects for {} dur {} mag {} effect {}", Utility::PrintForm(item), std::get<3>(clas), std::get<4>(clas), std::get<0>(clas).string());
+					}
+
+					itemi = form->As<RE::IngredientItem>();
+					if (itemi) {
+						LOGL1_4("{}[Settings] [ClassifyItems] Found IngredientItem {}", Utility::PrintForm(itemi));
+						for (int i = 0; i < (int)itemi->effects.size(); i++) {
+							auto sett = itemi->effects[i]->baseEffect;
+							// just retrieve the effects, we will analyze them later
+							if (sett) {
+								ingredienteffectmap.push_back({ itemi->GetName(), Utility::ToString(ConvertToAlchemyEffectPrimary(sett)) });
+
+								// the effects of ingredients may lead to valid potions being brewed, so we need to save that these effects actually exist in the game
+								_alchemyEffectsFound |= ConvertToAlchemyEffectPrimary(sett);
+							}
+						}
 					}
 				}
 			}
 		}
-		iter++;
 	}
 	PROF1_1("{}[ClassifyItems] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 
@@ -2951,14 +2926,14 @@ void Settings::ClassifyItems()
 	}
 }
 
-std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::ClassifyItem(RE::AlchemyItem* item)
+std::tuple<AlchemicEffect, ItemStrength, ItemType, int, float, bool> Settings::ClassifyItem(RE::AlchemyItem* item)
 {
 	RE::EffectSetting* sett = nullptr;
 	if ((item->avEffectSetting) == nullptr && item->effects.size() == 0) {
 		return { 0, ItemStrength::kStandard, ItemType::kFood, 0, 0.0f, false};
 	}
 	// we look at max 4 effects
-	AlchemyEffectBase av[4]{
+	AlchemicEffect av[4]{
 		0,
 		0,
 		0,
@@ -2980,7 +2955,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	bool positive = false;
 	// we will not abort the loop, since the number of effects on one item is normally very
 	// limited, so we don't have much iterations
-	AlchemyEffectBase tmp = 0;
+	AlchemicEffect tmp = 0;
 	if (item->effects.size() > 0) {
 		for (uint32_t i = 0; i < item->effects.size() && i < 4; i++) {
 			sett = item->effects[i]->baseEffect;
@@ -2996,11 +2971,11 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 				positive |= !sett->IsDetrimental();
 
 				uint32_t formid = sett->GetFormID();
-				if ((tmp = (static_cast<uint64_t>(ConvertToAlchemyEffectPrimary(sett)))) > 0) {
+				if ((tmp = (ConvertToAlchemyEffectPrimary(sett))) > 0) {
 
 					av[i] |= tmp;
 				}
-				if (sett->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (tmp = ((static_cast<uint64_t>(ConvertToAlchemyEffectSecondary(sett))))) > 0) {
+				if (sett->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (tmp = ConvertToAlchemyEffectSecondary(sett)) > 0) {
 
 					av[i] |= tmp;
 				}
@@ -3017,24 +2992,24 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 		positive |= !item->avEffectSetting->IsDetrimental();
 		switch (item->avEffectSetting->data.primaryAV) {
 		case RE::ActorValue::kHealth:
-			av[0] = static_cast<uint64_t>(ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV));
+			av[0] = ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV);
 			mag[0] = err.magnitude;
 			dur[0] = 1;
 			break;
 		case RE::ActorValue::kMagicka:
-			av[0] = static_cast<uint64_t>(ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV));
+			av[0] = ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV);
 			mag[0] = err.magnitude;
 			dur[0] = 1;
 			break;
 		case RE::ActorValue::kStamina:
-			av[0] = static_cast<uint64_t>(ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV));
+			av[0] = ConvertToAlchemyEffect(item->avEffectSetting->data.primaryAV);
 			mag[0] = err.magnitude;
 			dur[0] = 1;
 			break;
 		}
 	}
 	// analyze the effect types
-	AlchemyEffectBase alch = 0;
+	AlchemicEffect alch = 0;
 	ItemStrength str = ItemStrength::kWeak;
 	float maxmag = 0;
 	int maxdur = 0;
@@ -3074,7 +3049,7 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 	// effects are overriden to AlchemyEffect::kBlood
 	if (std::string(item->GetName()).find(std::string("Blood")) != std::string::npos &&
 		std::string(item->GetName()).find(std::string("Potion")) != std::string::npos) {
-		alch = static_cast<uint64_t>(AlchemyEffect::kBlood);
+		alch = AlchemicEffect::kBlood;
 		// if we have a blood potion, make sure that it has the medicine flag
 		if (item->IsMedicine() == false)
 			item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
@@ -3108,34 +3083,34 @@ std::tuple<uint64_t, ItemStrength, ItemType, int, float, bool> Settings::Classif
 
 void Settings::CleanAlchemyEffects()
 {
-	std::vector<AlchemyEffect> effectsToRemovePotion;
-	std::vector<AlchemyEffect> effectsToRemovePoison;
-	std::vector<AlchemyEffect> effectsToRemoveFood;
+	std::vector<AlchemicEffect> effectsToRemovePotion;
+	std::vector<AlchemicEffect> effectsToRemovePoison;
+	std::vector<AlchemicEffect> effectsToRemoveFood;
 	// iterate over existing alchemy effects
-	for (uint64_t i = 0; i <= 63; i++) {
+	for (uint64_t i = 0; i <= 127; i++) {
 		// potion
-		if (_potionEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
+		if (_potionEffectsFound & (AlchemicEffect(0, 1) << i) && Distribution::excludedEffects()->contains(AlchemicEffect(0, 1) << i) == false) {
 			// found existing effect, which is not excluded
 		} else {
 			// effect excluded or not present in any items
 			// remove from all distribution rules
-			effectsToRemovePotion.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
+			effectsToRemovePotion.push_back(AlchemicEffect(0, 1) << i);
 		}
 		// poison
-		if (_poisonEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
+		if (_poisonEffectsFound & (AlchemicEffect(0, 1) << i) && Distribution::excludedEffects()->contains(AlchemicEffect(0, 1) << i) == false) {
 			// found existing effect, which is not excluded
 		} else {
 			// effect excluded or not present in any items
 			// remove from all distribution rules
-			effectsToRemovePoison.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
+			effectsToRemovePoison.push_back(AlchemicEffect(0, 1) << i);
 		}
 		// food
-		if (_foodEffectsFound & ((AlchemyEffectBase)1 << i) && Distribution::excludedEffects()->contains(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i)) == false) {
+		if (_foodEffectsFound & (AlchemicEffect(0, 1) << i) && Distribution::excludedEffects()->contains(AlchemicEffect(0, 1) << i) == false) {
 			// found existing effect, which is not excluded
 		} else {
 			// effect excluded or not present in any items
 			// remove from all distribution rules
-			effectsToRemoveFood.push_back(static_cast<AlchemyEffect>((AlchemyEffectBase)1 << i));
+			effectsToRemoveFood.push_back(AlchemicEffect(0, 1) << i);
 		}
 	}
 

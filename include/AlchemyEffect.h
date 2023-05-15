@@ -1,14 +1,20 @@
 #pragma once
 
+typedef uint64_t AlchemyBaseEffect;
 
 
-
-typedef uint64_t AlchemyEffectBase;
-
-	/// <summary>
-/// Supported AlchemyEffects
+/// <summary>
+/// Supported AlchemyEffects for first identifier
 /// </summary>
-enum class AlchemyEffect : AlchemyEffectBase
+enum class AlchemyBaseEffectFirst : AlchemyBaseEffect
+{
+	kNone = 0,										// 0
+};
+
+/// <summary>
+/// Supported AlchemyEffects for second identifier
+/// </summary>
+enum class AlchemyBaseEffectSecond : AlchemyBaseEffect
 {
 	kNone = 0,                                      // 0
 	kHealth = 1 << 0,                               // 1
@@ -181,47 +187,222 @@ enum class AlchemyEffect : AlchemyEffectBase
 
 };
 
-/// <summary>
-/// Converts the primary effect of [effect] to an AlchemyEffect
-/// </summary>
-/// <param name="effect"></param>
-/// <returns></returns>
-AlchemyEffect ConvertToAlchemyEffect(RE::EffectSetting* effect);
+class AlchemicEffect;
+
+template <>
+struct std::hash<AlchemicEffect>
+{
+	std::size_t operator()(AlchemicEffect const& effect) const noexcept;
+};
+
+class AlchemicEffect
+{
+public:
+	class InitializationError : public std::exception
+	{
+	private:
+		std::string _newmessage;
+
+	public:
+		InitializationError(const char* const _Message, const char* const _OrigMessage)
+		{
+			exception::exception(_OrigMessage);
+			_newmessage = _Message;
+		}
+
+		inline std::string what()
+		{
+			return _newmessage + "\t|\tOriginal Error Message: " + exception::what();
+		}
+	};
+
+private:
+	/// <summary>
+	/// first identifier
+	/// </summary>
+	uint64_t first;
+	/// <summary>
+	/// second identifier
+	/// </summary>
+	uint64_t second;
+
+	AlchemicEffect ShiftLeft(const uint64_t& shift) const;
+
+public:
+	AlchemicEffect() = default;
+	virtual ~AlchemicEffect() = default;
+	AlchemicEffect(uint64_t ident_1, uint64_t ident_2) :
+		first(ident_1),
+		second(ident_2)
+	{
+	}
+	AlchemicEffect(const std::string& rhs);
+	AlchemicEffect(const uint64_t& rhs);
+	AlchemicEffect(const int& rhs);
+	AlchemicEffect(const AlchemyBaseEffectSecond& rhs);
+
+	// comparison
+	bool operator==(const AlchemicEffect& rhs) const;
+	bool operator==(const int& rhs) const;
+	bool operator<(const AlchemicEffect& rhs) const;
+	bool operator>(const int& rhs) const;
+	// logical
+	bool operator!() const;
+	bool operator&&(const AlchemicEffect& rhs) const;
+	bool operator&&(const bool& rhs) const;
+	bool operator||(const AlchemicEffect& rhs) const;
+	// arithmetic
+	AlchemicEffect operator~() const;
+	AlchemicEffect operator&(const AlchemicEffect& rhs) const;
+	AlchemicEffect operator|(const AlchemicEffect& rhs) const;
+	AlchemicEffect operator^(const AlchemicEffect& rhs) const;
+	AlchemicEffect operator<<(const int& rhs) const;
+	AlchemicEffect operator<<(const uint64_t& rhs) const;
+	//friend AlchemicEffect operator|(const AlchemicEffect& lhs, const AlchemicEffect& rhs);
+	//friend AlchemicEffect operator&(const AlchemicEffect& lhs, const AlchemicEffect& rhs);
+	//friend AlchemicEffect operator^(const AlchemicEffect& lhs, const AlchemicEffect& rhs);
+	// assignment
+	AlchemicEffect& operator=(const AlchemicEffect& rhs);
+	AlchemicEffect& operator&=(const AlchemicEffect& rhs);
+	AlchemicEffect& operator|=(const AlchemicEffect& rhs);
+	AlchemicEffect& operator^=(const AlchemicEffect& rhs);
+
+	// conversion
+	operator std::string();
+	std::string string();
+	AlchemyBaseEffectSecond AlchemyBaseEffectSecond();
+	AlchemyBaseEffectFirst AlchemyBaseEffectFirst();
+
+	// functions
+	bool IsEffect();
+	bool IsEffectMap();
+
+	bool IsValid();
+
+	friend std::hash<AlchemicEffect>;
+
+public:
+	// Constants
+	static const AlchemicEffect kNone;
+	static const AlchemicEffect kHealth;
+	static const AlchemicEffect kMagicka;
+	static const AlchemicEffect kStamina;
+	static const AlchemicEffect kOneHanded;
+	static const AlchemicEffect kTwoHanded;
+	static const AlchemicEffect kArchery;
+	static const AlchemicEffect kBlock;
+	static const AlchemicEffect kHeavyArmor;
+	static const AlchemicEffect kLightArmor;
+	static const AlchemicEffect kAlteration;
+	static const AlchemicEffect kConjuration;
+	static const AlchemicEffect kDestruction;
+	static const AlchemicEffect kIllusion;
+	static const AlchemicEffect kRestoration;
+	static const AlchemicEffect kHealRate;
+	static const AlchemicEffect kMagickaRate;
+	static const AlchemicEffect kStaminaRate;
+	static const AlchemicEffect kSpeedMult;
+	static const AlchemicEffect kCriticalChance;
+	static const AlchemicEffect kMeleeDamage;
+	static const AlchemicEffect kUnarmedDamage;
+	static const AlchemicEffect kDamageResist;
+	static const AlchemicEffect kPoisonResist;
+	static const AlchemicEffect kResistFire;
+	static const AlchemicEffect kResistShock;
+	static const AlchemicEffect kResistFrost;
+	static const AlchemicEffect kResistMagic;
+	static const AlchemicEffect kResistDisease;
+	static const AlchemicEffect kParalysis;
+	static const AlchemicEffect kInvisibility;
+	static const AlchemicEffect kWeaponSpeedMult;
+	static const AlchemicEffect kAttackDamageMult;
+	static const AlchemicEffect kHealRateMult;
+	static const AlchemicEffect kMagickaRateMult;
+	static const AlchemicEffect kStaminaRateMult;
+	static const AlchemicEffect kBlood;
+	static const AlchemicEffect kPickpocket;
+	static const AlchemicEffect kLockpicking;
+	static const AlchemicEffect kSneak;
+	static const AlchemicEffect kFrenzy;
+	static const AlchemicEffect kFear;
+	static const AlchemicEffect kBowSpeed;
+	static const AlchemicEffect kReflectDamage;
+	static const AlchemicEffect kCureDisease;
+	static const AlchemicEffect kCurePoison;
+	static const AlchemicEffect kEnchanting;
+	static const AlchemicEffect kWaterbreathing;
+	static const AlchemicEffect kSmithing;
+	static const AlchemicEffect kSpeech;
+	static const AlchemicEffect kCarryWeight;
+	static const AlchemicEffect kPersuasion;
+	static const AlchemicEffect kAlchemy;
+	static const AlchemicEffect kFortifyHealth;
+	static const AlchemicEffect kFortifyMagicka;
+	static const AlchemicEffect kFortifyStamina;
+	static const AlchemicEffect kShield;
+	static const AlchemicEffect kUnused2;
+	static const AlchemicEffect kUnused3;
+	static const AlchemicEffect kUnused4;
+	static const AlchemicEffect kUnused5;
+	static const AlchemicEffect kUnused6;
+	static const AlchemicEffect kUnused7;
+	static const AlchemicEffect kUnused8;
+	static const AlchemicEffect kCustom;
+
+	static const AlchemicEffect kAnyPotion;
+	static const AlchemicEffect kAnyPoison;
+	static const AlchemicEffect kAnyRegen;
+	static const AlchemicEffect kAnyFortify;
+	static const AlchemicEffect kAnyFood;
+};
+
+//AlchemicEffect operator|(const AlchemicEffect& lhs, const AlchemicEffect& rhs);
+//AlchemicEffect operator&(const AlchemicEffect& lhs, const AlchemicEffect& rhs);
+//AlchemicEffect operator^(const AlchemicEffect& lhs, const AlchemicEffect& rhs);
+
+
 
 /// <summary>
 /// Converts the primary effect of [effect] to an AlchemyEffect
 /// </summary>
 /// <param name="effect"></param>
 /// <returns></returns>
-AlchemyEffect ConvertToAlchemyEffectPrimary(RE::EffectSetting* effect);
+AlchemicEffect ConvertToAlchemyEffect(RE::EffectSetting* effect);
+
+/// <summary>
+/// Converts the primary effect of [effect] to an AlchemyEffect
+/// </summary>
+/// <param name="effect"></param>
+/// <returns></returns>
+AlchemicEffect ConvertToAlchemyEffectPrimary(RE::EffectSetting* effect);
 
 /// <summary>
 /// Converts the secondary effect of [effect] to an AlchemyEffect
 /// </summary>
 /// <param name="effect"></param>
 /// <returns></returns>
-AlchemyEffect ConvertToAlchemyEffectSecondary(RE::EffectSetting* effect);
+AlchemicEffect ConvertToAlchemyEffectSecondary(RE::EffectSetting* effect);
 
 /// <summary>
 /// Converts [effect] to an AlchemyEffect based on its FormID
 /// </summary>
 /// <param name="effect"></param>
 /// <returns></returns>
-AlchemyEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect);
+AlchemicEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect);
 
 /// <summary>
 /// Converts an ActorValue to an AlchemyEffect
 /// </summary>
 /// <param name="val"></param>
 /// <returns></returns>
-AlchemyEffect ConvertToAlchemyEffect(RE::ActorValue val);
+AlchemicEffect ConvertToAlchemyEffect(RE::ActorValue val);
 
 /// <summary>
 /// converts an AlchemyEffect into RE::ActorValue
 /// </summary>
 /// <param name="eff"></param>
 /// <returns></returns>
-RE::ActorValue ConvertAlchemyEffect(AlchemyEffect eff);
+RE::ActorValue ConvertAlchemyEffect(AlchemicEffect eff);
 
 namespace AlchEff
 {
@@ -230,17 +411,18 @@ namespace AlchEff
 	/// </summary>
 	/// <param name="effects"></param>
 	/// <returns></returns>
-	bool IsPotion(AlchemyEffectBase effects);
+	bool IsPotion(AlchemicEffect effects);
 	/// <summary>
 	/// Returns whether the [effects] are that of a fortify potion
 	/// </summary>
 	/// <param name="effects"></param>
 	/// <returns></returns>
-	bool IsFortify(AlchemyEffectBase effects);
+	bool IsFortify(AlchemicEffect effects);
 	/// <summary>
 	/// Converts accumulated [effects] into a list of AlchemyEffect
 	/// </summary>
 	/// <param name="effects">accumulated effects</param>
 	/// <returns>list of AlchemyEffect</returns>
-	std::vector<AlchemyEffect> GetAlchemyEffects(AlchemyEffectBase effects);
+	std::vector<AlchemicEffect> GetAlchemyEffects(AlchemicEffect effects);
 }
+
