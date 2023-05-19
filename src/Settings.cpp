@@ -3085,7 +3085,7 @@ void Settings::CleanAlchemyEffects()
 	// iterate over existing alchemy effects
 	for (uint64_t i = 0; i <= 127; i++) {
 		AlchemicEffect eff = AlchemicEffect(0, 1) << i;
-		loginfo("[DDD]X {}", eff.string());
+		LOG1_5("[DDD]X {}", eff.string());
 		// potion
 		if ((_potionEffectsFound & (eff)).IsValid() && Distribution::excludedEffects()->contains(eff) == false) {
 			// found existing effect, which is not excluded
@@ -3134,13 +3134,13 @@ void Settings::CleanAlchemyEffects()
 	}
 
 	for (uint64_t i = 0; i <= effectsToRemovePotion.size(); i++) {
-		loginfo("[DDD]P {}", effectsToRemovePotion[i].string());
+		LOG1_5("[DDD]P {}", effectsToRemovePotion[i].string());
 	}
 	for (uint64_t i = 0; i <= effectsToRemovePoison.size(); i++) {
-		loginfo("[DDD]S {}", effectsToRemovePoison[i].string());
+		LOG1_5("[DDD]S {}", effectsToRemovePoison[i].string());
 	}
 	for (uint64_t i = 0; i <= effectsToRemoveFood.size(); i++) {
-		loginfo("[DDD]F {}", effectsToRemoveFood[i].string());
+		LOG1_5("[DDD]F {}", effectsToRemoveFood[i].string());
 	}
 }
 
