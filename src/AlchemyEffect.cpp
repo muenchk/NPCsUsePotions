@@ -676,10 +676,10 @@ AlchemyBaseEffectSecond AlchemicEffect::AlchemyBaseEffectSecond()
 
 AlchemyBaseEffectFirst AlchemicEffect::AlchemyBaseEffectFirst()
 {
-	if (first > 0)
+	if (second > 0)
 		return ::AlchemyBaseEffectFirst::kNone;
 	else
-		return static_cast<::AlchemyBaseEffectFirst>(second);
+		return static_cast<::AlchemyBaseEffectFirst>(first);
 }
 
 bool AlchemicEffect::IsEffect()

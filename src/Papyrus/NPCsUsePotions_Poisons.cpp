@@ -45,16 +45,16 @@ namespace Papyrus
 
 			LOG1_2("{}[Papyrus] [Poison] [AnimatedPoisons_Callback] Use Poison {}", Utility::PrintForm(poison));
 			logusage("Actor:\t{}\tItem:\t{}", Utility::PrintForm(actor), Utility::PrintForm(poison));
-			RE::ExtraDataList* extra = new RE::ExtraDataList();
-			extra->Add(new RE::ExtraPoison(poison, dosage));
+			//RE::ExtraDataList* extra = new RE::ExtraDataList();
+			//extra->Add(new RE::ExtraPoison(poison, dosage));
 			auto ied = actor->GetEquippedEntryData(false);
 			if (ied) {
-				ied->AddExtraList(extra);
+				ied->PoisonObject(poison, dosage);
 				actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 			} else {
 				ied = actor->GetEquippedEntryData(true);
 				if (ied && ied->object && ied->object->IsWeapon()) {
-					ied->AddExtraList(extra);
+					ied->PoisonObject(poison, dosage);
 					actor->RemoveItem(poison, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 				}
 			}

@@ -186,6 +186,10 @@
 	if (Logging::EnableLoadLog && Logging::LogLevel >= 2) \
 		static_cast<void>(logger::info(s, t, u));
 
+#define LOGLE3_3(s, t, u, v)                                 \
+	if (Logging::EnableLoadLog && Logging::LogLevel >= 2) \
+		static_cast<void>(logger::info(s, t, u, v));
+
 // regular logging with timestamps
 
 #define LOG_1(s)             \

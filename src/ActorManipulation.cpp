@@ -720,7 +720,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 					logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
 					if (!audiomanager)
 						audiomanager = RE::BSAudioManager::GetSingleton();
-					RE::ExtraDataList* extra = new RE::ExtraDataList();
+					//RE::ExtraDataList* extra = new RE::ExtraDataList();
 					int dosage = data->GetPoisonDosage(poison);
 					auto ied = acinfo->GetEquippedEntryData(false);
 					if (ied) {
