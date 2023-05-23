@@ -87,7 +87,7 @@ namespace Events
 			// use potions
 			// do the first round
 			if (alch != 0 && (Settings::Potions::_UsePotionChance == 100 || rand100(rand) < Settings::Potions::_UsePotionChance)) {
-				auto tup = ACM::ActorUsePotion(acinfo, alch, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
+				auto tup = ACM::ActorUsePotion(acinfo, alch, false, false);
 				LOG1_2("{}[Events] [CheckActors] found potion has Alchemy Effect {}", std::get<1>(tup).string());
 				if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
 					acinfo->SetDurHealth(std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);  // convert to milliseconds
@@ -143,7 +143,7 @@ namespace Events
 				// std::tuple<int, AlchemicEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>>
 				//loginfo("take fortify with effects: {}", Utility::GetHex(effects));
 				LOG1_4("{}[Events] [CheckActors] check for fortify potion with effect {}", effects.string());
-				auto tup = ACM::ActorUsePotion(acinfo, effects, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify, true);
+				auto tup = ACM::ActorUsePotion(acinfo, effects, false, true);
 				if (std::get<0>(tup) != -1) {
 					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
 					AlchemicEffect eff = std::get<1>(tup);
@@ -282,7 +282,7 @@ namespace Events
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
 			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
-			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
+			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, false, false);
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
 				acinfo->SetDurHealth(std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);  // convert to milliseconds
 				// update global cooldown
