@@ -99,6 +99,10 @@ public:
 	/// <param name="actor"></param>
 	void DeleteActor(RE::FormID actorid);
 	/// <summary>
+	/// Cleans invalid or deleted actorinfos
+	/// </summary>
+	void CleanActorInfos();
+	/// <summary>
 	/// Resets information about actors
 	/// </summary>
 	void ResetActorInfoMap();

@@ -263,6 +263,11 @@ private:
 	/// </summary>
 	std::string _formstring;
 
+	/// <summary>
+	/// timestamp when the object was invalidated
+	/// </summary>
+	long long timestamp_invalid;
+
 
 public:
 	/// <summary>
@@ -357,6 +362,10 @@ public:
 	/// Sets the ActorInfo to invalid
 	/// </summary>
 	void SetInvalid();
+	/// <summary>
+	/// return whether the object is invalid and expired
+	/// </summary>
+	bool IsExpired();
 	/// <summary>
 	/// Sets the ActorInfo to deleted
 	/// </summary>

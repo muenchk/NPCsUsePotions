@@ -143,9 +143,15 @@ std::shared_ptr<ActorInfo> Data::FindActor(RE::FormID actorid)
 bool Data::UpdateActorInfo(std::shared_ptr<ActorInfo> acinfo)
 {
 	acinfo->Update();
-	if (!acinfo->IsValid() || acinfo->GetDeleted()) {
+	// if actorinfo is marked deleted, or expired, delete it
+	if (acinfo->GetDeleted() || acinfo->IsExpired()) {
 		validActors.erase(acinfo->GetFormID());
 		DeleteActorInfo(acinfo->GetFormID());
+		return false;
+	}
+	// if it is invalid, don't delete it just yet, we may need it again
+	if (!acinfo->IsValid())
+	{
 		return false;
 	}
 	return true;
@@ -164,6 +170,26 @@ void Data::DeleteActor(RE::FormID actorid)
 		// save deleted actors, so we do not create new actorinfos for these
 		deletedActors.insert(actorid);
 		DeleteActorInfo(actorid);
+	}
+	lockdata.release();
+}
+
+void Data::CleanActorInfos()
+{
+	lockdata.acquire();
+	std::vector<uint32_t> keys;
+	auto proc = [&keys](uint32_t key, std::shared_ptr<ActorInfo>& acinfo) {
+		acinfo->Update();
+		if (acinfo->GetDeleted() || acinfo->IsExpired())
+			keys.push_back(key);
+	};
+	for (auto& [key, val] : actorinfoMap)
+	{
+		proc(key, val);
+	}
+	for (auto& key : keys)
+	{
+		actorinfoMap.erase(key);
 	}
 	lockdata.release();
 }

@@ -65,7 +65,7 @@ namespace Events
 		AlchemicEffect alch2 = 0;
 		AlchemicEffect alch3 = 0;
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
-			LOG_2("{}[Events] [CheckActors] [potions]")
+			LOG_2("{}[Events] [CheckActors] [HandleActorPotions] usage allowed")
 			// get combined effect for magicka, health, and stamina
 			if (Settings::Potions::_enableHealthRestoration && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold)
 				alch = AlchemicEffect::kHealth;
@@ -83,26 +83,15 @@ namespace Events
 			if (alch && acinfo->IsVampire())
 				alch |= AlchemicEffect::kBlood;
 			alch |= alch2 | alch3;
-			LOG4_4("{}[Events] [CheckActors] check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch.string(), acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina());
+			LOG4_4("{}[Events] [CheckActors] [HandleActorPotions] check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch.string(), acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina());
 			// use potions
 			// do the first round
 			if (alch != 0 && (Settings::Potions::_UsePotionChance == 100 || rand100(rand) < Settings::Potions::_UsePotionChance)) {
-				auto tup = ACM::ActorUsePotion(acinfo, alch, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
-				LOG1_2("{}[Events] [CheckActors] found potion has Alchemy Effect {}", std::get<1>(tup).string());
-				if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
-					acinfo->SetDurHealth(std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);  // convert to milliseconds
-					LOG2_4("{}[Events] [CheckActors] use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
-				}
-				if ((AlchemicEffect::kMagicka & std::get<1>(tup)).IsValid()) {
-					acinfo->SetDurMagicka(std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);
-					LOG2_4("{}[Events] [CheckActors] use magicka pot with duration {} and magnitude {}", acinfo->GetDurMagicka(), std::get<0>(tup));
-				}
-				if ((AlchemicEffect::kStamina & std::get<1>(tup)).IsValid()) {
-					acinfo->SetDurStamina(std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);
-					LOG2_4("{}[Events] [CheckActors] use stamina pot with duration {} and magnitude {}", acinfo->GetDurStamina(), std::get<0>(tup));
-				}
-				// check if we have a valid duration
-				if (std::get<1>(tup) != 0) {
+				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, alch, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
+				LOG3_2("{}[Events] [CheckActors] used potion with duration {}, magnitude {} and Alchemy Effect {}", dur, mag, Utility::ToString(eff));
+				// check if we have a valid effect
+				if (eff != AlchemicEffect::kNone) {
+					CalcActorCooldowns(acinfo, eff, dur);
 					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
 				}
 			}
@@ -121,7 +110,6 @@ namespace Events
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance &&
 			Settings::FortifyPotions::_enableFortifyPotions &&
 			(!(acinfo->IsPlayer()) || Settings::Player::_playerFortifyPotions)) {
-			//LOG_2("{}[Events] [CheckActors] [fortify]");
 
 			if ((acinfo->IsFollower() || acinfo->IsPlayer()) && !(Settings::FortifyPotions::_EnemyNumberThresholdFortify < hostileactors || (acinfo->GetTargetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify))) {
 				return;
@@ -140,21 +128,12 @@ namespace Events
 					effects |= CalcFortifyEffects(acinfo, acinfo->GetCombatData(), acinfo->GetCombatDataTarget());
 				}
 
-				// std::tuple<int, AlchemicEffect, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>>
-				//loginfo("take fortify with effects: {}", Utility::GetHex(effects));
-				LOG1_4("{}[Events] [CheckActors] check for fortify potion with effect {}", effects.string());
-				auto tup = ACM::ActorUsePotion(acinfo, effects, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify, true);
-				if (std::get<0>(tup) != -1) {
+				LOG1_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] check for fortify potion with effect {}", effects.string());
+				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, effects, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify, true);
+				if (dur != -1) {
 					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
-					AlchemicEffect eff = std::get<1>(tup);
-					if ((eff & AlchemicEffect::kAnyRegen).IsValid()) {
-						CalcActorCooldowns(acinfo, eff, std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000);
-						LOG3_4("{}[Events] [CheckActors] used regeneration potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), std::get<0>(tup) * 1000, Utility::ToString(std::get<1>(tup)));
-					}
-					if ((eff & AlchemicEffect::kAnyFortify).IsValid()) {
-						CalcActorCooldowns(acinfo, eff, std::get<0>(tup) * 1000 > Settings::_MaxFortifyDuration ? Settings::_MaxFortifyDuration : std::get<0>(tup) * 1000);
-						LOG3_4("{}[Events] [CheckActors] used fortify av potion with tracked duration {} {} and effect {}", acinfo->GetDurFortify(), std::get<0>(tup) * 1000, Utility::ToString(std::get<1>(tup)));
-					}
+					CalcActorCooldowns(acinfo, eff, dur);
+					LOG3_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] used potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), dur * 1000, Utility::ToString(eff));
 				}
 			}
 		}
@@ -174,10 +153,11 @@ namespace Events
 			Settings::Poisons::_enablePoisons &&
 			(Settings::Poisons::_UsePoisonChance == 100 || rand100(rand) < Settings::Poisons::_UsePoisonChance) &&
 			(!acinfo->IsPlayer() || Settings::Player::_playerPoisons)) {
-			LOG_2("{}[Events] [CheckActors] [poisons]");
+			LOG_2("{}[Events] [CheckActors] [HandleActorPoisons] usage allowed");
 			// handle poisons
-			if (acinfo->GetCombatData() != 0 && (acinfo->GetCombatData() & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
-				(acinfo->GetCombatData() & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0 /* &&
+			auto combatdata = acinfo->GetCombatData();
+			if (combatdata != 0 && (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
+				(combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::HandToHand)) == 0 /* &&
 									comp->AnPois_FindActorPoison(curr->actor->GetFormID()) == nullptr*/
 				&&
 				Utility::CanApplyPoison(acinfo)) {
@@ -190,15 +170,15 @@ namespace Events
 					// time to use some poisons
 					AlchemicEffect effects = 0;
 					// kResistMagic, kResistFire, kResistFrost, kResistMagic should only be used if the follower is a spellblade
-					if (acinfo->GetCombatData() & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) ||
-						acinfo->GetCombatData() & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword))) {
+					if (combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Spellsword)) ||
+						combatdata & (static_cast<uint32_t>(Utility::CurrentCombatStyle::Staffsword))) {
 						effects |= AlchemicEffect::kResistMagic;
-						if (acinfo->GetCombatData() & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
-							if (acinfo->GetCombatData() & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire))
+						if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDestruction)) {
+							if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFire))
 								effects |= AlchemicEffect::kResistFire;
-							if (acinfo->GetCombatData() & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost))
+							if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageFrost))
 								effects |= AlchemicEffect::kResistFrost;
-							if (acinfo->GetCombatData() & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock))
+							if (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::MagicDamageShock))
 								effects |= AlchemicEffect::kResistShock;
 						}
 					}
@@ -214,19 +194,19 @@ namespace Events
 						if (target->GetRace() && target->GetRace()->HasKeyword(Settings::ActorTypeDwarven) || target->GetActorBase() && target->GetActorBase()->HasKeyword(Settings::ActorTypeDwarven))
 							return;
 						effects |= CalcRegenEffects(acinfo->GetCombatDataTarget());
-						effects |= CalcPoisonEffects(acinfo->GetCombatData(), target, acinfo->GetCombatDataTarget());
+						effects |= CalcPoisonEffects(combatdata, target, acinfo->GetCombatDataTarget());
 					} else {
 						// we dont have a target so just use any poison
 						effects |= AlchemicEffect::kAnyPoison;
 					}
 					LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects.string());
-					auto tup = ACM::ActorUsePoison(acinfo, effects);
-					if (std::get<1>(tup) != 0)  // check whether an effect was applied
+					auto const& [dur, eff] = ACM::ActorUsePoison(acinfo, effects);
+					if (eff != 0)  // check whether an effect was applied
 						acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
 				}
 			}
-			if (acinfo->GetCombatData() == 0)
-				LOG1_2("{}[Events] [CheckActors] couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo));
+			if (combatdata == 0)
+				LOG1_2("{}[Events] [CheckActors] [HandleActorPoisons] couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo));
 			// else Mage or Hand to Hand which cannot use poisons
 		}
 	}
@@ -253,19 +233,15 @@ namespace Events
 			effects |= CalcFortifyEffects(acinfo, acinfo->GetCombatData(), acinfo->GetCombatDataTarget());
 			effects |= CalcRegenEffects(acinfo, acinfo->GetCombatData());
 			auto [dur, effect] = ACM::ActorUseFood(acinfo, effects, false);
-			if (effect == 0) {  // nothing found
+			if (effect == 0 && dur == -1) {  // nothing found
 				auto tup = acinfo->IsPlayer() && Settings::Player::_DontEatRawFood ? ACM::ActorUseFood(acinfo, false) : ACM::ActorUseFood(acinfo, true);
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}
-			if (effect != 0) {
-				// if duration is zero (vanilla food) set cooldown to at least 3 minutes
-				if (dur == 0)
-					acinfo->SetNextFoodTime(RE::Calendar::GetSingleton()->GetDaysPassed() + 180 * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24);
-				else
-					acinfo->SetNextFoodTime(RE::Calendar::GetSingleton()->GetDaysPassed() + dur * RE::Calendar::GetSingleton()->GetTimescale() / 60 / 60 / 24);
+			if (effect != 0 || dur != -1) {
+				acinfo->SetNextFoodTime(Main::CalcFoodDuration(dur));
 			}
-			LOG2_2("{}[Events] [CheckActors] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
+			LOG2_2("{}[Events] [CheckActors] [HandleActorFood] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
 		}
 	}
 
@@ -284,10 +260,10 @@ namespace Events
 			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
 			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, false);
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
-				acinfo->SetDurHealth(std::get<0>(tup) * 1000 > Settings::_MaxDuration ? Settings::_MaxDuration : std::get<0>(tup) * 1000);  // convert to milliseconds
+				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
 				// update global cooldown
 				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
-				LOG2_4("{}[Events] [CheckActors] use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
+				LOG2_4("{}[Events] [CheckActors] [HandleActorOOCPotions] use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
 			}
 		}
 	}
@@ -318,14 +294,14 @@ namespace Events
 				acinfo->IsUnconscious() ||
 				acinfo->IsStaggered() ||
 				acinfo->IsBleedingOut()) {
-				LOG_1("{}[Events] [CheckActors] [Actor] Actor is unable to use items");
+				LOG_1("{}[Events] [CheckActors] [HandleActorRuntimeData] Actor is unable to use items");
 				acinfo->SetHandleActor(false);
 				return;
 			}
 		}
 		// check for non-follower option
 		if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->IsPlayer() == false) {
-			LOG_2("{}[Events] [CheckActors] [Actor] Actor is not a follower, and non-follower processing has been disabled");
+			LOG_2("{}[Events] [CheckActors] [HandleActorRuntimeData] Actor is not a follower, and non-follower processing has been disabled");
 			acinfo->SetHandleActor(false);
 			return;
 		}
@@ -345,7 +321,7 @@ namespace Events
 		if (acinfo->IsInCombat()) {
 			// get combatdata of current actor
 			acinfo->SetCombatData(Utility::GetCombatData(acinfo->GetActor()));
-			LOG1_2("{}[Events] [HandleActorRuntimeData] CombatData: {}", Utility::GetHex(acinfo->GetCombatData()));
+			LOG1_2("{}[Events] [CheckActors] [HandleActorRuntimeData] CombatData: {}", Utility::GetHex(acinfo->GetCombatData()));
 			RE::ActorHandle handle;
 			if (acinfo->IsPlayer() == false && acinfo->GetActor() != nullptr) {
 				// retrieve target of current actor if present
@@ -380,7 +356,7 @@ namespace Events
 		}
 
 		// if actor is valid and not dead
-		if (acinfo->IsValid() && !(acinfo->IsDead()) && acinfo->GetActor() && acinfo->GetActor()->AsActorValueOwner()->GetActorValue(RE::ActorValue::kHealth) > 0) {
+		if (acinfo->IsValid() && !acinfo->IsDead() && acinfo->GetActor() && acinfo->GetActor()->AsActorValueOwner()->GetActorValue(RE::ActorValue::kHealth) > 0) {
 			acinfo->SetHandleActor(true);
 		} else
 			acinfo->SetHandleActor(false);
@@ -424,8 +400,6 @@ namespace Events
 		AlchemicEffect alch3 = 0;
 
 		auto datahandler = RE::TESDataHandler::GetSingleton();
-		const RE::TESFile* file = nullptr;
-		std::string_view name = std::string_view{ "" };
 
 		// main loop, if the thread should be stopped, exit the loop
 		while (!stopactorhandler) {
@@ -434,7 +408,7 @@ namespace Events
 			// update active actors
 			actorhandlerworking = true;
 
-			PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
+			PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead) || RE::PlayerCharacter::GetSingleton()->IsDead());
 			
 			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
 			// do not compute, since nobody can actually take potions.
@@ -556,8 +530,6 @@ CheckActorsSkipIteration:
 			// reset combatants
 			combatants.clear();
 			actorhandlerworking = false;
-			// update the set again before sleeping, to account for all stuff that happended while we were busy
-			// otherwise we may encounter already deleted actors and such dangerous stuff
 			if (!stopactorhandler)
 				std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::System::_cycletime));
 		}
@@ -619,8 +591,7 @@ CheckActorsSkipIteration:
 		// reset list of actors in combat
 		combatants.clear();
 		// set player to alive
-		PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
-
+		PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead) || RE::PlayerCharacter::GetSingleton()->IsDead());
 		enableProcessing = true;
 
 		LOG_1("{}[Events] [LoadGameSub] Checking for special tasks");

@@ -156,6 +156,34 @@ namespace Events
 		/// </summary>
 		static void RemoveItemsOnStartup();
 
+		/// <summary>
+		/// Calculates the internal duration of a potion with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcPotionDuration(int dur);
+
+		/// <summary>
+		/// Calculates the internal duration of a fortify potion with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcFortifyDuration(int dur);
+
+		/// <summary>
+		/// Calculates the internal duration of a regeneration potion with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcRegenerationDuration(int dur);
+
+		/// <summary>
+		/// Calculates the internal duration of a food with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcFoodDuration(int dur);
+
 		//----------------------Main-----------------------
 
 		/// <summary>
