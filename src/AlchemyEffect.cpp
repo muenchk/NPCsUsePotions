@@ -702,6 +702,15 @@ bool AlchemicEffect::IsEffectMap()
 	return !IsEffect();
 }
 
+bool AlchemicEffect::HasRestorativeEffect()
+{
+	if (second & static_cast<AlchemyBaseEffect>(AlchemyBaseEffectSecond::kHealth) ||
+		second & static_cast<AlchemyBaseEffect>(AlchemyBaseEffectSecond::kMagicka) ||
+		second & static_cast<AlchemyBaseEffect>(AlchemyBaseEffectSecond::kStamina))
+		return true;
+	return false;
+}
+
 std::size_t std::hash<AlchemicEffect>::operator()(AlchemicEffect const& effect) const noexcept
 {
 	size_t h1 = std::hash<uint64_t>{}(effect.first);

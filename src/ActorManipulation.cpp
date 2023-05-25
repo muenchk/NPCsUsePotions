@@ -498,7 +498,10 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 		//RE::EffectSetting* sett = nullptr;
 		LOG_2("{}[ActorManipulation] [ActorUsePotion] trying to find potion");
 		auto ls = GetMatchingPotions(acinfo, alchemyEffect, fortify);
-		ls.sort(Utility::SortMagnitude);
+		if (fortify)
+			ls.sort(Utility::SortFortify);
+		else
+			ls.sort(Utility::SortPotion);
 		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid() && acinfo->CanUsePot(std::get<2>(tup)->GetFormID()) == false; });
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
@@ -759,45 +762,6 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 							}
 						}
 					}
-					/*
-					extra->Add(new RE::ExtraPoison(poison, dosage));
-					auto ied = acinfo->GetEquippedEntryData(false);
-					if (ied) {
-						ied->AddExtraList(extra);
-						acinfo->RemoveItem(poison, 1);
-						{
-							// play poison sound
-							RE::BSSoundHandle handle;
-							if (poison->data.consumptionSound)
-								audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-							else if (Settings::PoisonUse)
-								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-							handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-							handle.SetVolume(1.0);
-							handle.Play();
-						}
-						return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
-					} else {
-						ied = acinfo->GetEquippedEntryData(true);
-						if (ied) {
-							if (ied->object && ied->object->IsWeapon()) {
-								ied->AddExtraList(extra);
-								acinfo->RemoveItem(poison, 1);
-								{
-									// play poison sound
-									RE::BSSoundHandle handle;
-									if (poison->data.consumptionSound)
-										audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-									else
-										audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-									handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-									handle.SetVolume(1.0);
-									handle.Play();
-								}
-								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
-							}
-						}
-					}*/
 				}
 			}
 		}

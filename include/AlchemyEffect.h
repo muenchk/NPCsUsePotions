@@ -277,6 +277,12 @@ public:
 	bool IsEffect();
 	bool IsEffectMap();
 
+	/// <summary>
+	/// Whether the effect contains attribute restoring effects, e.g. kHealth
+	/// </summary>
+	/// <returns></returns>
+	bool HasRestorativeEffect();
+
 	bool IsValid();
 
 	friend std::hash<AlchemicEffect>;

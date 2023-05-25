@@ -49,6 +49,10 @@ public:
 	/// <param name="second"></param>
 	/// <returns></returns>
 	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second);
+
+	static bool SortPotion(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second);
+
+	static bool SortFortify(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second);
 	#pragma endregion
 
 	/// <summary>
