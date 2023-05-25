@@ -400,7 +400,7 @@ namespace Events
 	{
 		// check wether this charackter maybe a follower
 		if (acinfo->GetLastDistrTime() == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->GetLastDistrTime() > 1) {
-			if (!Distribution::ExcludedNPC(acinfo)) {
+			if (!Distribution::ExcludedNPC(acinfo) && acinfo->IsDead() == false) {
 				// begin with compatibility mode removing items before distributing new ones
 				if (Settings::Debug::_CompatibilityRemoveItemsBeforeDist) {
 					auto items = ACM::GetAllPotions(acinfo);
@@ -557,18 +557,18 @@ namespace Events
 
 	bool Main::IsDead(RE::Actor* actor)
 	{
-		return actor == nullptr || deads.contains(actor->GetFormID()) || actor->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead;
+		return actor == nullptr || deads.contains(actor->GetHandle()) || actor->IsDead();
 	}
 
 	bool Main::IsDeadEventFired(RE::Actor* actor)
 	{
-		return actor == nullptr || deads.contains(actor->GetFormID());
+		return actor == nullptr || deads.contains(actor->GetHandle());
 	}
 
 	void Main::SetDead(RE::Actor* actor)
 	{
 		if (actor != nullptr)
-			deads.insert(actor->GetFormID());
+			deads.insert(actor->GetHandle());
 	}
 
 	/// <summary>

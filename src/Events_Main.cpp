@@ -714,29 +714,32 @@ CheckActorsSkipIteration:
 		long size = 0;
 		long successfulwritten = 0;
 
-		for (auto& actorid : deads)
+		for (auto& handle : deads)
 		{
-			uint32_t formid = Utility::Mods::GetIndexLessFormID(actorid);
-			std::string pluginname = Utility::Mods::GetPluginNameFromID(actorid);
-			if (a_intfc->OpenRecord('EDID', 0)) {
-				// get entry length
-				int length = 4 + Buffer::CalcStringLength(pluginname);
-				// save written bytes number
-				size += length;
-				// create buffer
-				unsigned char* buffer = new unsigned char[length + 1];
-				if (buffer == nullptr) {
-					logwarn("[Events] [SaveDeadActors] failed to write Dead Actor record: buffer null");
-					continue;
+			if (RE::Actor* actor = handle.get().get(); actor != nullptr) {
+				RE::FormID id = actor->GetFormID();
+				uint32_t formid = Utility::Mods::GetIndexLessFormID(id);
+				std::string pluginname = Utility::Mods::GetPluginNameFromID(id);
+				if (a_intfc->OpenRecord('EDID', 0)) {
+					// get entry length
+					int length = 4 + Buffer::CalcStringLength(pluginname);
+					// save written bytes number
+					size += length;
+					// create buffer
+					unsigned char* buffer = new unsigned char[length + 1];
+					if (buffer == nullptr) {
+						logwarn("[Events] [SaveDeadActors] failed to write Dead Actor record: buffer null");
+						continue;
+					}
+					// fill buffer
+					int offset = 0;
+					Buffer::Write(id, buffer, offset);
+					Buffer::Write(pluginname, buffer, offset);
+					// write record
+					a_intfc->WriteRecordData(buffer, length);
+					delete[] buffer;
+					successfulwritten++;
 				}
-				// fill buffer
-				int offset = 0;
-				Buffer::Write(actorid, buffer, offset);
-				Buffer::Write(pluginname, buffer, offset);
-				// write record
-				a_intfc->WriteRecordData(buffer, length);
-				delete[] buffer;
-				successfulwritten++;
 			}
 		}
 
@@ -749,7 +752,7 @@ CheckActorsSkipIteration:
 	{
 		long size = 0;
 
-		LOG_1("{}[Data] [ReadDeletedActors] Reading Dead Actor...");
+		LOG_1("{}[Events] [ReadDeadActors] Reading Dead Actor...");
 		unsigned char* buffer = new unsigned char[length];
 		a_intfc->ReadRecordData(buffer, length);
 		if (length >= 12) {
@@ -758,7 +761,11 @@ CheckActorsSkipIteration:
 			std::string pluginname = Buffer::ReadString(buffer, offset);
 			RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formid, pluginname);
 			if (form)
-				deads.insert(form->GetFormID());
+			{
+				if (RE::Actor* actor = form->As<RE::Actor>(); actor != nullptr) {
+					deads.insert(actor->GetHandle());
+				}
+			}
 		}
 		delete[] buffer;
 

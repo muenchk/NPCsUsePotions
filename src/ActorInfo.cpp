@@ -1481,7 +1481,7 @@ bool ActorInfo::IsDead()
 		return true;
 
 	if (actor.get() && actor.get().get())
-		if (actor.get().get()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead)
+		if (actor.get().get()->IsDead())
 			return true;
 	return false;
 }

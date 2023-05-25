@@ -2,9 +2,30 @@
 
 #include <semaphore>
 #include <set>
+#include <functional>
 
 #include "Compatibility.h"
 #include "Data.h"
+
+
+
+template <>
+struct std::hash<RE::ActorHandle>
+{
+	std::size_t operator()(RE::ActorHandle const& handle) const noexcept
+	{
+		return std::hash<unsigned long long>{}((uintptr_t)handle.get().get());
+	}
+};
+
+template <>
+struct std::equal_to<RE::ActorHandle>
+{
+	std::size_t operator()(RE::ActorHandle const& lhs, RE::ActorHandle const& rhs) const
+	{
+		return lhs.get().get() == rhs.get().get();
+	}
+};
 
 namespace Events
 {
@@ -33,7 +54,7 @@ namespace Events
 		/// <summary>
 		/// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
 		/// </summary>
-		static inline std::unordered_set<RE::FormID> deads;
+		static inline std::unordered_set<RE::ActorHandle> deads;
 		/// <summary>
 		/// list of npcs that are currently in combat
 		/// </summary>
