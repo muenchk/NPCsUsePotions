@@ -2618,8 +2618,8 @@ void Settings::ClassifyItems()
 						if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
 							if (item->data.consumptionSound == Settings::FoodEat) {
 								item->data.flags = RE::AlchemyItem::AlchemyFlag::kFoodItem | item->data.flags;
-							} else if (item->data.consumptionSound == Settings::PoisonUse) {
-								item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
+							//} else if (item->data.consumptionSound == Settings::PoisonUse) {
+							//	item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
 							} else if (item->data.consumptionSound == Settings::PotionUse) {
 								item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 							}
