@@ -269,12 +269,33 @@ public:
 
 	// conversion
 	operator std::string();
+	/// <summary>
+	/// Returns the hexadecimal representation of the object as string
+	/// </summary>
+	/// <returns></returns>
 	std::string string();
+	/// <summary>
+	/// Returns the singular effect represented by the object as AlchemyBaseEffectSecond
+	/// </summary>
+	/// <returns></returns>
 	AlchemyBaseEffectSecond AlchemyBaseEffectSecond();
+	/// <summary>
+	/// Returns the singular effect represented by the object as AlchemyBaseEffectFirst
+	/// </summary>
+	/// <returns></returns>
 	AlchemyBaseEffectFirst AlchemyBaseEffectFirst();
 
 	// functions
+	
+	/// <summary>
+	/// Returns whether the object represents a single effect
+	/// </summary>
+	/// <returns></returns>
 	bool IsEffect();
+	/// <summary>
+	/// Returns whether the object represents multiple effects
+	/// </summary>
+	/// <returns></returns>
 	bool IsEffectMap();
 
 	/// <summary>
@@ -283,6 +304,10 @@ public:
 	/// <returns></returns>
 	bool HasRestorativeEffect();
 
+	/// <summary>
+	/// Returns whether the object contains any effects
+	/// </summary>
+	/// <returns></returns>
 	bool IsValid();
 
 	friend std::hash<AlchemicEffect>;

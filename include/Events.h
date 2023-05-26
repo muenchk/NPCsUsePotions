@@ -8,7 +8,9 @@
 #include "Data.h"
 
 
-
+/// <summary>
+/// standard namespacee hash function for RE::ActorHandles
+/// </summary>
 template <>
 struct std::hash<RE::ActorHandle>
 {
@@ -18,6 +20,9 @@ struct std::hash<RE::ActorHandle>
 	}
 };
 
+/// <summary>
+/// standard namespace equality comparator for RE::ActorHandles
+/// </summary>
 template <>
 struct std::equal_to<RE::ActorHandle>
 {

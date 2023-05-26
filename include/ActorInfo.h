@@ -123,7 +123,13 @@ public:
 		/// </summary>
 		bool calculated = false;
 
+		/// <summary>
+		/// Creates maps for fast access
+		/// </summary>
 		void CreateMaps();
+		/// <summary>
+		/// Resets all custom items
+		/// </summary>
 		void Reset();
 	};
 	/// <summary>
@@ -195,7 +201,13 @@ private:
 	/// </summary>
 	bool _distributedCustomItems = false;
 
+	/// <summary>
+	/// strength of the actor
+	/// </summary>
 	ActorStrength actorStrength = ActorStrength::Weak;
+	/// <summary>
+	/// strength of given items
+	/// </summary>
 	ItemStrength itemStrength = ItemStrength::kWeak;
 
 	/// <summary>
@@ -348,6 +360,9 @@ private:
 
 public:
 
+	/// <summary>
+	/// Returns the string representation of the ActorInfo
+	/// </summary>
 	std::string GetFormString() { return _formstring; }
 
 	/// <summary>
@@ -422,35 +437,134 @@ public:
 	/// <returns></returns>
 	std::string GetName();
 
+	/// <summary>
+	/// Returns the duration of health potions
+	/// </summary>
+	/// <returns></returns>
 	int GetDurHealth() { return durHealth; }
+	/// <summary>
+	/// Sets the duration of health potions
+	/// <param name="value"></param>
+	/// </summary>
 	void SetDurHealth(int value) { durHealth = value; }
+	/// <summary>
+	/// Decreases the duration of health potions
+	/// </summary>
+	/// <param name="value"></param>
+	/// <returns></returns>
 	void DecDurHealth(int value) { durHealth -= value; }
+	/// <summary>
+	/// Returns the duration of magicka potions
+	/// </summary>
+	/// <returns></returns>
 	int GetDurMagicka() { return durMagicka; }
+	/// <summary>
+	/// Sets the duration of magicka potions
+	/// </summary>
+	/// <param name="value"></param>
+	/// <returns></returns>
 	void SetDurMagicka(int value) { durMagicka = value; }
+	/// <summary>
+	/// Decreases the duration of magicka potions
+	/// </summary>
+	/// <param name="value"></param>
+	/// <returns></returns>
 	void DecDurMagicka(int value) { durMagicka -= value; }
+	/// <summary>
+	/// Returns the duration of stamina potions
+	/// </summary>
+	/// <returns></returns>
 	int GetDurStamina() { return durStamina; }
+	/// <summary>
+	/// Sets the duration of stamina potions
+	/// </summary>
+	/// <param name="value"></param>
 	void SetDurStamina(int value) { durStamina = value; }
+	/// <summary>
+	/// Decreases the duration of stamina potions
+	/// </summary>
+	/// <param name="value"></param>
 	void DecDurStamina(int value) { durStamina -= value; }
+	/// <summary>
+	/// Returns the duration of fortify potions
+	/// </summary>
+	/// <returns></returns>
 	int GetDurFortify() { return durFortify; }
+	/// <summary>
+	/// Sets the duration of fortify potions
+	/// </summary>
+	/// <param name="value"></param>
 	void SetDurFortify(int value) { durFortify = value; }
+	/// <summary>
+	/// Decreases the duration of fortify potions
+	/// </summary>
+	/// <param name="value"></param>
 	void DecDurFortify(int value) { durFortify -= value; }
+	/// <summary>
+	/// Returns the duration of regeneration potions
+	/// </summary>
 	int GetDurRegeneration() { return durRegeneration; }
+	/// <summary>
+	/// Sets the duration of regeneration potions
+	/// </summary>
 	void SetDurRegeneration(int value) { durRegeneration = value; }
+	/// <summary>
+	/// Decreases the duration of regeneration potions
+	/// </summary>
 	void DecDurRegeneration(int value) { durRegeneration -= value; }
+	/// <summary>
+	/// Returns the game time the next food item may be consumed
+	/// </summary>
 	float GetNextFoodTime() { return nextFoodTime; }
+	/// <summary>
+	/// Set the game time the next food item may be consumed
+	/// </summary>
 	void SetNextFoodTime(float value) { nextFoodTime = value; }
+	/// <summary>
+	/// Returns the time items were last distributed
+	/// </summary>
 	float GetLastDistrTime() { return lastDistrTime; }
+	/// <summary>
+	/// Set the time items were last distributed
+	/// </summary>
 	void SetLastDistrTime(float value) { lastDistrTime = value; }
+	/// <summary>
+	/// Returns the time spent in combat
+	/// </summary>
 	int GetDurCombat() { return durCombat; }
+	/// <summary>
+	/// Set time spent in combat
+	/// </summary>
 	void SetDurCombat(int value) { durCombat = value; }
+	/// <summary>
+	/// Increase time spent in combat
+	/// </summary>
 	void IncDurCombat(int value) { durCombat += value; }
 
+	/// <summary>
+	/// Returns whether items have been distributed
+	/// </summary>
 	bool DistributedItems() { return _distributedCustomItems; }
+	/// <summary>
+	/// Sets whether items have been distributed
+	/// </summary>
 	void DistributedItems(bool distributed) { _distributedCustomItems = distributed; }
 
+	/// <summary>
+	/// Returns the actors strength
+	/// </summary>
 	ActorStrength GetActorStrength() { return actorStrength; }
+	/// <summary>
+	/// Sets the actors strength
+	/// </summary>
 	void SetActorStrength(ActorStrength acs) { actorStrength = acs; }
+	/// <summary>
+	/// Returns the strength of given items
+	/// </summary>
 	ItemStrength GetItemStrength() { return itemStrength; }
+	/// <summary>
+	/// Sets the strength of given items
+	/// </summary>
 	void SetItemStrength(ItemStrength ics) { itemStrength = ics; }
 
 	/// <summary>
@@ -464,13 +578,34 @@ public:
 	/// <param name="value"></param>
 	void SetAnimationBusy(bool value) { Animation_busy = value; }
 
+	/// <summary>
+	/// Return the global cooldown
+	/// </summary>
 	int GetGlobalCooldownTimer() { return globalCooldownTimer; }
+	/// <summary>
+	/// Set the global cooldown
+	/// </summary>
 	void SetGlobalCooldownTimer(int value) { globalCooldownTimer = value; }
+	/// <summary>
+	/// Decreases the global cooldown
+	/// </summary>
 	void DecGlobalCooldownTimer(int value) { globalCooldownTimer -= value; }
 
+	/// <summary>
+	/// Return whether the actor is whitelisted
+	/// </summary>
 	bool IsWhitelisted() { return whitelisted; }
+	/// <summary>
+	/// Set that the actor is whitelisted
+	/// </summary>
 	void SetWhitelisted() { whitelisted = true; }
+	/// <summary>
+	/// Returns whether the whitelist status of the actors has been calculated
+	/// </summary>
 	bool IsWhitelistCalculated() { return whitelistedcalculated; }
+	/// <summary>
+	/// Set that the whitelist status of the actor has been calculated
+	/// </summary>
 	void SetWhitelistCalculated() { whitelistedcalculated = true; }
 
 	/// <summary>
@@ -517,21 +652,70 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	std::weak_ptr<ActorInfo> GetTarget();
+	/// <summary>
+	/// Resets the current target
+	/// </summary>
 	void ResetTarget();
+	/// <summary>
+	/// Set the currebt combat target
+	/// </summary>
 	void SetTarget(std::weak_ptr<ActorInfo> tar);
+	/// <summary>
+	/// Returns the level of the current target
+	/// </summary>
 	short GetTargetLevel();
+	/// <summary>
+	/// Returns the combat data of the actor
+	/// </summary>
 	uint32_t GetCombatData();
+	/// <summary>
+	/// Sets the combat data of the actor
+	/// </summary>
 	void SetCombatData(uint32_t data);
+	/// <summary>
+	/// Returns the combat data of the current target
+	/// </summary>
 	uint32_t GetCombatDataTarget();
+	/// <summary>
+	/// Set the combat data of the current target
+	/// </summary>
 	void SetCombatDataTarget(uint32_t data);
+	/// <summary>
+	/// Returns whether the actor should be handled
+	/// </summary>
 	bool GetHandleActor();
+	/// <summary>
+	/// Sets whether to handle the actor
+	/// </summary>
 	void SetHandleActor(bool handle);
+	/// <summary>
+	/// Returns the distance to the player
+	/// </summary>
 	float GetPlayerDistance();
+	/// <summary>
+	/// Sets the dstance to the player
+	/// </summary>
 	void SetPlayerDistance(float distance);
+	/// <summary>
+	/// Returns whether the actor is hostile to the player [intern]
+	/// </summary>
 	bool GetPlayerHostile();
+	/// <summary>
+	/// Set wether the actor is hostile to the player [intern]
+	/// </summary>
 	void SetPlayerHostile(bool hostile);
+	/// <summary>
+	/// Returns whether the actors weapons are drawn [intern]
+	/// </summary>
 	bool GetWeaponsDrawn();
+	/// <summary>
+	/// Set whether the actor has his weapons drawn [intern]
+	/// </summary>
+	/// <param name="drawn">Whether the weapons are drawn</param>
 	void SetWeaponsDrawn(bool drawn);
+	/// <summary>
+	/// Updates the weapon drawn state of the actor [intern]
+	/// </summary>
 	void UpdateWeaponsDrawn();
 
 	/// <summary>
@@ -781,34 +965,79 @@ public:
 	/// <returns></returns>
 	RE::TESCombatStyle* GetCombatStyle();
 
+	/// <summary>
+	/// Returns the actors race
+	/// </summary>
 	RE::TESRace* GetRace();
 
+	/// <summary>
+	/// Returns the FormID of the actors race
+	/// </summary>
 	RE::FormID GetRaceFormID();
 
+	/// <summary>
+	/// Returns whether the actor is a Ghost
+	/// </summary>
 	bool IsGhost();
 
+	/// <summary>
+	/// Returns whether the actor is summonable
+	/// </summary>
 	bool IsSummonable();
 
+	/// <summary>
+	/// Returns whether the actor bleeds
+	/// </summary>
 	bool Bleeds();
 
+	/// <summary>
+	/// Returns the actors level
+	/// </summary>
 	short GetLevel();
 
+	/// <summary>
+	/// Returns the boolbits of the actor
+	/// </summary>
 	SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> GetBoolBits();
 
+	/// <summary>
+	/// Returns whether the actor is flying
+	/// </summary>
 	bool IsFlying();
 
+	/// <summary>
+	/// Returns whether the actor is in a kill move
+	/// </summary>
 	bool IsInKillMove();
 
+	/// <summary>
+	/// Returns whether the actor is in midair
+	/// </summary>
 	bool IsInMidair();
 
+	/// <summary>
+	/// Returns whether the actor is ragdolling
+	/// </summary>
 	bool IsInRagdollState();
 
+	/// <summary>
+	/// Returns whether the actor is unconcious
+	/// </summary>
 	bool IsUnconscious();
 
+	/// <summary>
+	/// Returns whether the actor is paralyzed
+	/// </summary>
 	bool IsParalyzed();
 
+	/// <summary>
+	/// Returns whether the actor is staggered
+	/// </summary>
 	bool IsStaggered();
 
+	/// <summary>
+	/// Returns whether the actor is bleeding out
+	/// </summary>
 	bool IsBleedingOut();
 
 #pragma endregion
