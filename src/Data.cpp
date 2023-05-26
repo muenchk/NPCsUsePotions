@@ -8,6 +8,7 @@
 #include "Statistics.h"
 #include "ActorManipulation.h"
 #include "BufferOperations.h"
+#include "Events.h"
 
 void Data::Init()
 {
@@ -384,6 +385,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	} else if (acinfo->IsDead()) {
 		acdcounter++;
 		logwarn("[Data] [ReadActorInfoMap] actor dead {}", acinfo->GetName());
+		Events::Main::SetDead(acinfo->GetActor());
 	} else {
 		accounter++;
 		RegisterActorInfo(acinfo);

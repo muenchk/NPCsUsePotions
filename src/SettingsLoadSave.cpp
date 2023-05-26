@@ -167,9 +167,6 @@ void Settings::Load()
 		Fixes::_ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", Fixes::_ForceFixPotionSounds);
 
 		// compatibility
-		Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation = ini.GetBoolValue("Compatibility", "UltimatePotionAnimation", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation);
-		Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify = ini.GetBoolValue("Compatibility", "UltimatePotionAnimationFortify", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify);
-
 		Compatibility::_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode);
 
 		Whitelist::EnabledItems = ini.GetBoolValue("Compatibility", "WhitelistMode", Whitelist::EnabledItems);
@@ -436,12 +433,6 @@ void Settings::Load()
 		Compatibility::_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode);
 		loginfo("[SETTINGS] {} {}", "Compatibility:     Compatibility", std::to_string(Compatibility::_CompatibilityMode));
 
-		// compatibility zxlice's Ultimate Potions Animation
-		Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation = ini.GetBoolValue("Compatibility: zxliceUltimatePotions", "EnablePotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation);
-		loginfo("[SETTINGS] {} {}", "Compatibility:     EnablePotionCompatibility", std::to_string(Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation));
-		Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify = ini.GetBoolValue("Compatibility: zxliceUltimatePotions", "EnableFortifyPotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify);
-		loginfo("[SETTINGS] {} {}", "Compatibility:     EnableFortifyPotionCompatibility", std::to_string(Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify));
-
 		// compatibility animated poisons
 		Compatibility::AnimatedPoisons::_Enable = ini.GetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable);
 		loginfo("[SETTINGS] {} {}", "Compatibility:     EnableAnimatedPoisons", std::to_string(Compatibility::AnimatedPoisons::_Enable));
@@ -498,11 +489,6 @@ void Settings::Load()
 	// save user settings, before applying adjustments
 	Save();
 
-	// apply settings for ultimate potions
-	if (Ultimateoptions) {
-		Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation = true;
-		loginfo("[SETTINGS] [OVERRIDE] Compatibility - {} hase been overwritten and set to true", "UltimatePotionAnimation");
-	}
 	loginfo("[SETTINGS] checking for plugins");
 
 	// search for PotionAnimatedFx.esp for compatibility
@@ -542,12 +528,6 @@ void Settings::Load()
 			loginfo("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
 		} else {
 			loginfo("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, all use of potions, poisons and food is effectively disabled, except you have another sink for the papyrus events. Distribution is not affected");
-		}
-	} else if (Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation) {
-		if (const uint32_t index = Utility::Mods::GetPluginIndex(PluginName); index != 0x1) {
-			loginfo("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
-		} else {
-			loginfo("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, Potion drinking will be effectively disabled, except you have another plugin that listens to the Papyrus Mod Events. Other functionality is not affected");
 		}
 	}
 	// Check for CACO
@@ -756,13 +736,6 @@ void Settings::Save()
 	ini.SetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode, "// General Compatibility Mode. If set to true, all items will be\n"
 																						  "// equipped using Papyrus workaround. Requires the Skyrim esp plugin.");
 
-	// compatibility zxlices ultimate potion animation
-	ini.SetBoolValue("Compatibility: zxliceUltimatePotions", "EnablePotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation, "// Compatibility mode for \"zxlice's ultimate potion animation\". \n"
-																																								 "// Requires the Skyrim esp plugin. Only uses compatibility mode \n"
-																																								 "// for Health, Stamina and Magicka Potions.");
-	ini.SetBoolValue("Compatibility: zxliceUltimatePotions", "EnableFortifyPotionCompatibility", Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify, "// Compatibility mode for \"zxlice's ultimate potion animation\". \n"
-																																											   "// Requires the Skyrim esp plugin. Uses compatibility mode for \n"
-																																											   "// Fortify Potions.");
 
 	// compatibility animated poisons
 	ini.SetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable, "// Enables the automatic usage of poison animations for npcs.");

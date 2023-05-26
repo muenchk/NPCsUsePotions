@@ -446,17 +446,6 @@ public:
 		/// </summary>
 		static inline bool _DisableCreaturesWithoutRules = true;
 
-		struct UltimatePotionAnimation
-		{
-			/// <summary>
-			/// [Setting] Whether the compatibility mode for zxlice's Ultimate Potion Animation has been activate for Potions
-			/// </summary>
-			static inline bool _CompatibilityPotionAnimation = false;					// Use Potions with Papyrus
-			/// <summary>
-			/// [Setting] Whether the compatibility mode for zxlice's Ultimate Potion Animation has been activate for Fortify Potions
-			/// </summary>
-			static inline bool _CompatibilityPotionAnimationFortify = false;                   // Use Potions with Papyrus
-		};
 
 		struct PotionAnimatedFx
 		{
