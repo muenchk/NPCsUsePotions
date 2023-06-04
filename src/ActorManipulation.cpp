@@ -498,7 +498,10 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 		//RE::EffectSetting* sett = nullptr;
 		LOG_2("{}[ActorManipulation] [ActorUsePotion] trying to find potion");
 		auto ls = GetMatchingPotions(acinfo, alchemyEffect, fortify);
-		ls.sort(Utility::SortMagnitude);
+		if (fortify)
+			ls.sort(Utility::SortFortify);
+		else
+			ls.sort(Utility::SortPotion);
 		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid() && acinfo->CanUsePot(std::get<2>(tup)->GetFormID()) == false; });
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
@@ -571,8 +574,11 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 					// save statistics
 					Statistics::Misc_PotionsAdministered++;
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
-					//acinfo->actor->DrinkPotion(std::get<2>(val), nullptr);
-					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), std::get<2>(ls.front()), nullptr, 1, nullptr, true, false, false);
+
+					SKSE::GetTaskInterface()->AddTask([acinfo, potion]() {
+						RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), potion, nullptr, 1, nullptr, true, false, false);
+					});
+					//RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
 				}
 				ls.pop_front();
 				return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
@@ -603,30 +609,35 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 		//LOG_2("{}[ActorManipulation] [ActorUseFood] step2");
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
-		if (ls.size() > 0 && std::get<2>(ls.front())) {
-			// add statistics
-			Statistics::Misc_FoodEaten++;
-			LOG3_2("{}[ActorManipulation] [ActorUseFood] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(ls.front())), std::get<1>(ls.front()), std::get<0>(ls.front()));
-			logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(std::get<2>(ls.front())), std::get<1>(ls.front()), std::get<0>(ls.front()));
-			if (Settings::CompatibilityFoodPapyrus()) {
-				LOG_3("{}[ActorManipulation] [ActorUseFood] Compatibility Mode");
-				// use same event as for potions, since it takes a TESForm* and works for anything
-				SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = acinfo->GetActor();
-				SKSE::GetModCallbackEventSource()->SendEvent(ev);
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = std::get<2>(ls.front());
-				SKSE::GetModCallbackEventSource()->SendEvent(ev);
-			} else {
-				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), std::get<2>(ls.front()), nullptr, 1, nullptr, true, false, false);
+		if (ls.size() > 0) {
+			RE::AlchemyItem* food;
+			if (food = std::get<2>(ls.front()); food) {
+				// add statistics
+				Statistics::Misc_FoodEaten++;
+				LOG3_2("{}[ActorManipulation] [ActorUseFood] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
+				logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
+				if (Settings::CompatibilityFoodPapyrus()) {
+					LOG_3("{}[ActorManipulation] [ActorUseFood] Compatibility Mode");
+					// use same event as for potions, since it takes a TESForm* and works for anything
+					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = acinfo->GetActor();
+					SKSE::GetModCallbackEventSource()->SendEvent(ev);
+					ev = new SKSE::ModCallbackEvent();
+					ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
+					ev->strArg = RE::BSFixedString("");
+					ev->numArg = 0.0f;
+					ev->sender = std::get<2>(ls.front());
+					SKSE::GetModCallbackEventSource()->SendEvent(ev);
+				} else {
+					SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
+						RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
+					});
+				}
+				return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 			}
-			return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 		}
 		//LOG_2("{}[ActorManipulation] [ActorUseFood] step3");
 	}
@@ -645,7 +656,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 		auto item = GetRandomFood(acinfo, raw);
 		//LOG_2("{}[ActorManipulation] [ActorUseFood-Random] step1");
 		// use the random food
-		if (std::get<2>(item)) {
+		if (RE::AlchemyItem* food = std::get<2>(item); food) {
 			// save statistics
 			Statistics::Misc_FoodEaten++;
 			LOG3_2("{}[ActorManipulation] [ActorUseFood-Random] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
@@ -666,7 +677,9 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 				ev->sender = std::get<2>(item);
 				SKSE::GetModCallbackEventSource()->SendEvent(ev);
 			} else {
-				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), std::get<2>(item), nullptr, 1, nullptr, true, false, false);
+				SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
+					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
+				});
 			}
 			return { std::get<1>(item), std::get<3>(item) };
 		}
@@ -758,46 +771,6 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 							}
 						}
 					}
-					/*
-					RE::ExtraDataList* extra = new RE::ExtraDataList();
-					extra->Add(new RE::ExtraPoison(poison, dosage));
-					auto ied = acinfo->GetEquippedEntryData(false);
-					if (ied) {
-						ied->AddExtraList(extra);
-						acinfo->RemoveItem(poison, 1);
-						{
-							// play poison sound
-							RE::BSSoundHandle handle;
-							if (poison->data.consumptionSound)
-								audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-							else if (Settings::PoisonUse)
-								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-							handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-							handle.SetVolume(1.0);
-							handle.Play();
-						}
-						return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
-					} else {
-						ied = acinfo->GetEquippedEntryData(true);
-						if (ied) {
-							if (ied->object && ied->object->IsWeapon()) {
-								ied->AddExtraList(extra);
-								acinfo->RemoveItem(poison, 1);
-								{
-									// play poison sound
-									RE::BSSoundHandle handle;
-									if (poison->data.consumptionSound)
-										audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-									else
-										audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-									handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-									handle.SetVolume(1.0);
-									handle.Play();
-								}
-								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
-							}
-						}
-					}*/
 				}
 			}
 		}

@@ -8,6 +8,37 @@ bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemicEff
 	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
 }
 
+bool Utility::SortPotion(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second)
+{
+	// the goal is to sort item so, that items with fewer effects are prioritized, and they are still sorted for their magnitude
+	// first sort for number of magic effects attached to the item
+	if (std::get<2>(first)->effects.size() != std::get<2>(second)->effects.size())
+		return std::get<2>(first)->effects.size() > std::get<2>(second)->effects.size();
+	// then sort for the magnitude of the most potent effect
+	else
+		return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
+}
+
+bool Utility::SortFortify(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second)
+{
+	// the goal is to sort items so, that items with fewer effects are prioritized, and they are still sorted for their magnitude
+	// additionally, items that have restorative effects have a lower priority, so as not to waste any effects.
+	// 
+	// first check whether there are restorative options attached
+	if (std::get<3>(first).HasRestorativeEffect() && std::get<3>(second).HasRestorativeEffect() == false)
+		return false;
+	else if (std::get<3>(first).HasRestorativeEffect() == false && std::get<3>(second).HasRestorativeEffect())
+		return true;
+	else {
+		// first sort for number of magic effects attached to the item
+		if (std::get<2>(first)->effects.size() != std::get<2>(second)->effects.size())
+			return std::get<2>(first)->effects.size() > std::get<2>(second)->effects.size();
+		// then sort for the magnitude of the most potent effect
+		else
+			return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
+	}
+}
+
 std::string Utility::PrintForm(ActorInfo* acinfo)
 {
 	if (acinfo == nullptr)

@@ -49,6 +49,24 @@ public:
 	/// <param name="second"></param>
 	/// <returns></returns>
 	static bool SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second);
+
+	// comparator used to sort magnitude - duration - AlchemyItem* lists for minimal amount of effects and max magnitude
+	/// <summary>
+	/// Compares the magnitude of two alchemy items
+	/// </summary>
+	/// <param name="first"></param>
+	/// <param name="second"></param>
+	/// <returns></returns>
+	static bool SortPotion(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second);
+
+	// comparator used to sort magnitude - duration - AlchemyItem* lists for no restorative effects, minimal amount of effects and max magnitude
+	/// <summary>
+	/// Compares the magnitude of two alchemy items
+	/// </summary>
+	/// <param name="first"></param>
+	/// <param name="second"></param>
+	/// <returns></returns>
+	static bool SortFortify(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second);
 	#pragma endregion
 
 	/// <summary>

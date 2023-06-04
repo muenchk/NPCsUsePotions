@@ -166,6 +166,7 @@ namespace Storage
 
 		LOG_1("{}[DataStorage] [WriteData] Beginning to write data...");
 		
+		data->CleanActorInfos();
 		size += data->SaveActorInfoMap(a_intfc);
 		size += data->SaveDeletedActors(a_intfc);
 		size += Events::Main::SaveDeadActors(a_intfc);

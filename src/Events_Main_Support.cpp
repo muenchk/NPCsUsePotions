@@ -32,19 +32,19 @@ namespace Events
 	{
 		EvalProcessing();
 		if ((effect & AlchemicEffect::kHealth).IsValid()) {
-			acinfo->SetDurHealth(dur);
+			acinfo->SetDurHealth(CalcPotionDuration(dur));
 		}
 		if ((effect & AlchemicEffect::kMagicka).IsValid()) {
-			acinfo->SetDurMagicka(dur);
+			acinfo->SetDurMagicka(CalcPotionDuration(dur));
 		}
 		if ((effect & AlchemicEffect::kStamina).IsValid()) {
-			acinfo->SetDurStamina(dur);
+			acinfo->SetDurStamina(CalcPotionDuration(dur));
 		}
 		if ((effect & AlchemicEffect::kAnyRegen).IsValid()) {
-			acinfo->SetDurRegeneration(dur);
+			acinfo->SetDurRegeneration(CalcRegenerationDuration(dur));
 		}
 		if ((effect & AlchemicEffect::kAnyFortify).IsValid()) {
-			acinfo->SetDurFortify(dur);
+			acinfo->SetDurFortify(CalcFortifyDuration(dur));
 		}
 	}
 
@@ -403,7 +403,7 @@ namespace Events
 	{
 		// check wether this charackter maybe a follower
 		if (acinfo->GetLastDistrTime() == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->GetLastDistrTime() > 1) {
-			if (!Distribution::ExcludedNPC(acinfo)) {
+			if (!Distribution::ExcludedNPC(acinfo) && acinfo->IsDead() == false) {
 				// begin with compatibility mode removing items before distributing new ones
 				if (Settings::Debug::_CompatibilityRemoveItemsBeforeDist) {
 					auto items = ACM::GetAllPotions(acinfo);
@@ -560,19 +560,56 @@ namespace Events
 
 	bool Main::IsDead(RE::Actor* actor)
 	{
-		return actor == nullptr || deads.contains(actor->GetFormID()) || actor->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead;
+		return actor == nullptr || deads.contains(actor->GetHandle()) || actor->IsDead();
 	}
 
 	bool Main::IsDeadEventFired(RE::Actor* actor)
 	{
-		return actor == nullptr || deads.contains(actor->GetFormID());
+		return actor == nullptr || deads.contains(actor->GetHandle());
 	}
 
 	void Main::SetDead(RE::Actor* actor)
 	{
 		if (actor != nullptr)
-			deads.insert(actor->GetFormID());
+			deads.insert(actor->GetHandle());
 	}
+
+	int Main::CalcPotionDuration(int dur)
+	{
+		return dur == 0 ?
+		           1000 :
+		       dur * 1000 > Settings::_MaxDuration ?
+		           Settings::_MaxDuration :
+		           dur * 1000;
+	}
+
+	int Main::CalcFortifyDuration(int dur)
+	{
+		return dur == 0 ?
+		           1000 :
+		       dur * 1000 > Settings::_MaxFortifyDuration ?
+		           Settings::_MaxFortifyDuration :
+		           dur * 1000;
+	}
+
+	int Main::CalcRegenerationDuration(int dur)
+	{
+		return dur == 0 ?
+		           1000 :
+		       dur * 1000 > Settings::_MaxFortifyDuration ?
+		           Settings::_MaxFortifyDuration :
+		           dur * 1000;
+	}
+
+	int Main::CalcFoodDuration(int dur)
+	{
+		static RE::Calendar* calendar = RE::Calendar::GetSingleton();
+		// if duration is zero (vanilla food) set cooldown to at least 4 minutes
+		return dur <= 0 ?
+		           calendar->GetDaysPassed() + 240 * calendar->GetTimescale() / 60 / 60 / 24 :
+		           calendar->GetDaysPassed() + dur * calendar->GetTimescale() / 60 / 60 / 24;
+	}
+
 
 	/// <summary>
 	/// Removes all distributable alchemy items from all actors in the game on loading a game

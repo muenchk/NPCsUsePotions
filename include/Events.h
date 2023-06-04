@@ -2,9 +2,35 @@
 
 #include <semaphore>
 #include <set>
+#include <functional>
 
 #include "Compatibility.h"
 #include "Data.h"
+
+
+/// <summary>
+/// standard namespacee hash function for RE::ActorHandles
+/// </summary>
+template <>
+struct std::hash<RE::ActorHandle>
+{
+	std::size_t operator()(RE::ActorHandle const& handle) const noexcept
+	{
+		return std::hash<unsigned long long>{}((uintptr_t)handle.get().get());
+	}
+};
+
+/// <summary>
+/// standard namespace equality comparator for RE::ActorHandles
+/// </summary>
+template <>
+struct std::equal_to<RE::ActorHandle>
+{
+	std::size_t operator()(RE::ActorHandle const& lhs, RE::ActorHandle const& rhs) const
+	{
+		return lhs.get().get() == rhs.get().get();
+	}
+};
 
 namespace Events
 {
@@ -37,7 +63,7 @@ namespace Events
 		/// <summary>
 		/// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
 		/// </summary>
-		static inline std::unordered_set<RE::FormID> deads;
+		static inline std::unordered_set<RE::ActorHandle> deads;
 		/// <summary>
 		/// list of npcs that are currently in combat
 		/// </summary>
@@ -138,6 +164,34 @@ namespace Events
 		/// Removes all distributable alchemy items from all actors in the game on loading a game
 		/// </summary>
 		static void RemoveItemsOnStartup();
+
+		/// <summary>
+		/// Calculates the internal duration of a potion with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcPotionDuration(int dur);
+
+		/// <summary>
+		/// Calculates the internal duration of a fortify potion with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcFortifyDuration(int dur);
+
+		/// <summary>
+		/// Calculates the internal duration of a regeneration potion with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcRegenerationDuration(int dur);
+
+		/// <summary>
+		/// Calculates the internal duration of a food with duration [dur]
+		/// </summary>
+		/// <param name="dur"></param>
+		/// <returns></returns>
+		static int CalcFoodDuration(int dur);
 
 		//----------------------Main-----------------------
 

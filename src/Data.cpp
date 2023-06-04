@@ -8,6 +8,7 @@
 #include "Statistics.h"
 #include "ActorManipulation.h"
 #include "BufferOperations.h"
+#include "Events.h"
 
 void Data::Init()
 {
@@ -143,9 +144,15 @@ std::shared_ptr<ActorInfo> Data::FindActor(RE::FormID actorid)
 bool Data::UpdateActorInfo(std::shared_ptr<ActorInfo> acinfo)
 {
 	acinfo->Update();
-	if (!acinfo->IsValid() || acinfo->GetDeleted()) {
+	// if actorinfo is marked deleted, or expired, delete it
+	if (acinfo->GetDeleted() || acinfo->IsExpired()) {
 		validActors.erase(acinfo->GetFormID());
 		DeleteActorInfo(acinfo->GetFormID());
+		return false;
+	}
+	// if it is invalid, don't delete it just yet, we may need it again
+	if (!acinfo->IsValid())
+	{
 		return false;
 	}
 	return true;
@@ -164,6 +171,26 @@ void Data::DeleteActor(RE::FormID actorid)
 		// save deleted actors, so we do not create new actorinfos for these
 		deletedActors.insert(actorid);
 		DeleteActorInfo(actorid);
+	}
+	lockdata.release();
+}
+
+void Data::CleanActorInfos()
+{
+	lockdata.acquire();
+	std::vector<uint32_t> keys;
+	auto proc = [&keys](uint32_t key, std::shared_ptr<ActorInfo>& acinfo) {
+		acinfo->Update();
+		if (acinfo->GetDeleted() || acinfo->IsExpired())
+			keys.push_back(key);
+	};
+	for (auto& [key, val] : actorinfoMap)
+	{
+		proc(key, val);
+	}
+	for (auto& key : keys)
+	{
+		actorinfoMap.erase(key);
 	}
 	lockdata.release();
 }
@@ -261,23 +288,23 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 		[](auto& kv) { return kv.second; });
 	// iterate over the vector entries
 	for (int i = 0; i < acvec.size(); i++) {
-		LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if begin", i);
+		//LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if begin", i);
 		if (std::shared_ptr<ActorInfo> acinfo = acvec[i].lock()) {
 			if (acinfo->IsValid()) {
-				LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if valid", i);
+				//LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if valid", i);
 				if (acinfo->GetActor() != nullptr) {
-					LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not null", i);
+					//LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not null", i);
 					if ((acinfo->GetFormFlags() & RE::TESForm::RecordFlags::kDeleted) == 0) {
-						LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not deleted", i);
+						//LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not deleted", i);
 						if (acinfo->GetActor()->GetFormID() != 0) {
-							LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if id not 0", i);
+							//LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if id not 0", i);
 							if (acinfo->IsDead()) {
-								LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor dead", i);
+								loginfo("[Data] [SaveActorInfoMap] {} Cannot write {}: actor is dead", i, acinfo->GetName());
 							} else {
-								LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not dead", i);
+								//LOG1_3("{}[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor not dead", i);
 								LOG2_3("{}[Data] [SaveActorInfoMap] Writing {}, number {}", acinfo->GetName(), i);
 								if (a_intfc->OpenRecord('ACIF', ActorInfo::GetVersion())) {
-									LOG_3("{}[Data] [SaveActorInfoMap] \tget data size");
+									//LOG_3("{}[Data] [SaveActorInfoMap] \tget data size");
 									// get entry length
 									int length = acinfo->GetDataSize();
 									if (length == 0) {
@@ -286,24 +313,24 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 									}
 									// save written bytes nu´mber
 									size += length;
-									LOG_3("{}[Data] [SaveActorInfoMap] \tcreate buffer");
+									//LOG_3("{}[Data] [SaveActorInfoMap] \tcreate buffer");
 									// create buffer
 									unsigned char* buffer = new unsigned char[length + 1];
 									if (buffer == nullptr) {
 										logwarn("[DataStorage] [WriteData] failed to write ActorInfo record: buffer null");
 										continue;
 									}
-									LOG_3("{}[Data] [SaveActorInfoMap] \twrite data to buffer");
+									//LOG_3("{}[Data] [SaveActorInfoMap] \twrite data to buffer");
 									// fill buffer
 									if (acinfo->WriteData(buffer, 0) == false) {
 										logwarn("[Data] [SaveActorInfoMap] failed to write ActorInfo record: Writing of ActorInfo failed");
 										delete[] buffer;
 										continue;
 									}
-									LOG_3("{}[Data] [SaveActorInfoMap] \twrite record");
+									//LOG_3("{}[Data] [SaveActorInfoMap] \twrite record");
 									// write record
 									a_intfc->WriteRecordData(buffer, length);
-									LOG_3("{}[Data] [SaveActorInfoMap] \tDelete buffer");
+									//LOG_3("{}[Data] [SaveActorInfoMap] \tDelete buffer");
 									delete[] buffer;
 									successfulwritten++;
 								} else if (acinfo == nullptr) {
@@ -319,16 +346,15 @@ long Data::SaveActorInfoMap(SKSE::SerializationInterface* a_intfc)
 								}
 							}
 						} else
-							loginfo("[Data] [SaveActorInfoMap] {} Writing ActorInfo if id 0", i);
+							logwarn("[Data] [SaveActorInfoMap] {} Cannot write {}: formid is 0", i, acinfo->GetName());
 					} else
-						loginfo("[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor deleted", i);
+						logwarn("[Data] [SaveActorInfoMap] {} Cannot write {}: actor deleted", i, acinfo->GetName());
 				} else
-					loginfo("[Data] [SaveActorInfoMap] {} Writing ActorInfo if actor null", i);
+					logwarn("[Data] [SaveActorInfoMap] {} Cannot write {}: actor null", i, acinfo->GetName());
 			} else
-				loginfo("[Data] [SaveActorInfoMap] {} Writing ActorInfo invalid", i);
-			
+				logwarn("[Data] [SaveActorInfoMap] {} Cannot write {}: ActorInfo invalid", i, acinfo->GetName());
 		} else
-			loginfo("[Data] [SaveActorInfoMap] {} Writing ActorInfo if nullptr", i);
+			logwarn("[Data] [SaveActorInfoMap] {} Cannot write {}: ActorInfo is nullptr", i, acinfo->GetName());
 	}
 
 	lockdata.release();
@@ -353,9 +379,13 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	} else if (acinfo->IsValid() == false) {
 		acdcounter++;
 		logwarn("[Data] [ReadActorInfoMap] actor invalid {}", acinfo->GetName());
-	} else if ((acinfo->GetFormFlags() & RE::TESForm::RecordFlags::kDeleted) || acinfo->IsDead()) {
+	} else if ((acinfo->GetFormFlags() & RE::TESForm::RecordFlags::kDeleted)) {
 		acdcounter++;
-		logwarn("[Data] [ReadActorInfoMap] actor dead or deleted {}", acinfo->GetName());
+		logwarn("[Data] [ReadActorInfoMap] actor deleted {}", acinfo->GetName());
+	} else if (acinfo->IsDead()) {
+		acdcounter++;
+		logwarn("[Data] [ReadActorInfoMap] actor dead {}", acinfo->GetName());
+		Events::Main::SetDead(acinfo->GetActor());
 	} else {
 		accounter++;
 		RegisterActorInfo(acinfo);

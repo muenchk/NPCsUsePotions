@@ -2622,8 +2622,8 @@ void Settings::ClassifyItems()
 						if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
 							if (item->data.consumptionSound == Settings::FoodEat) {
 								item->data.flags = RE::AlchemyItem::AlchemyFlag::kFoodItem | item->data.flags;
-							} else if (item->data.consumptionSound == Settings::PoisonUse) {
-								item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
+							//} else if (item->data.consumptionSound == Settings::PoisonUse) {
+							//	item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
 							} else if (item->data.consumptionSound == Settings::PotionUse) {
 								item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 							}
@@ -3089,7 +3089,7 @@ void Settings::CleanAlchemyEffects()
 	// iterate over existing alchemy effects
 	for (uint64_t i = 0; i <= 127; i++) {
 		AlchemicEffect eff = AlchemicEffect(0, 1) << i;
-		LOG1_5("[DDD]X {}", eff.string());
+		LOG1_5("{}[DDD]X {}", eff.string());
 		// potion
 		if ((_potionEffectsFound & (eff)).IsValid() && Distribution::excludedEffects()->contains(eff) == false) {
 			// found existing effect, which is not excluded
@@ -3138,13 +3138,13 @@ void Settings::CleanAlchemyEffects()
 	}
 
 	for (uint64_t i = 0; i <= effectsToRemovePotion.size(); i++) {
-		LOG1_5("[DDD]P {}", effectsToRemovePotion[i].string());
+		LOG1_5("{}[DDD]P {}", effectsToRemovePotion[i].string());
 	}
 	for (uint64_t i = 0; i <= effectsToRemovePoison.size(); i++) {
-		LOG1_5("[DDD]S {}", effectsToRemovePoison[i].string());
+		LOG1_5("{}[DDD]S {}", effectsToRemovePoison[i].string());
 	}
 	for (uint64_t i = 0; i <= effectsToRemoveFood.size(); i++) {
-		LOG1_5("[DDD]F {}", effectsToRemoveFood[i].string());
+		LOG1_5("{}[DDD]F {}", effectsToRemoveFood[i].string());
 	}
 }
 

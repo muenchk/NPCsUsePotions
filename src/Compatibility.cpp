@@ -206,7 +206,7 @@ void Compatibility::Load()
 	}
 
 	// ZUPA
-	if (Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimation || Settings::Compatibility::UltimatePotionAnimation::_CompatibilityPotionAnimationFortify)
+	if (Utility::Mods::GetPluginIndex("zxlice's ultimate potion animation.esp") != 0x1)
 		_loadedZUPA = true;
 
 	// global

@@ -53,6 +53,7 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 		UpdateMetrics(_actor);
 		// set to valid
 		valid = true;
+		timestamp_invalid = 0;
 		deleted = false;
 	}
 }
@@ -122,6 +123,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		UpdateMetrics(_actor);
 		// set to valid
 		valid = true;
+		timestamp_invalid = 0;
 		deleted = false;
 	}
 }
@@ -146,12 +148,27 @@ void ActorInfo::SetValid()
 {
 	aclock;
 	valid = true;
+	timestamp_invalid = 0;
 }
+
+#define CurrentMilliseconds std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
 
 void ActorInfo::SetInvalid()
 {
 	aclock;
 	valid = false;
+	timestamp_invalid = CurrentMilliseconds;
+}
+
+bool ActorInfo::IsExpired()
+{
+	aclock;
+	// if object was invalidated more than 10 seconds ago, it is most likely not needed anymore
+	if (valid == false && (CurrentMilliseconds - timestamp_invalid) > 10000)
+	{
+		return true;
+	}
+	return false;
 }
 
 void ActorInfo::SetDeleted()
@@ -973,6 +990,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				Animation_busy = true;
 				globalCooldownTimer = 0;
 				valid = true;
+				timestamp_invalid = 0;
 				combatstate = CombatState::OutOfCombat;
 
 				// init dependend stuff
@@ -1037,6 +1055,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 
 				// set new variables
 				valid = true;
+				timestamp_invalid = 0;
 				combatstate = CombatState::OutOfCombat;
 
 				// init dependend stuff
@@ -1200,11 +1219,7 @@ void ActorInfo::Update()
 	aclock;
 	if (!valid)
 		return;
-	RE::Actor* reac = RE::TESForm::LookupByID<RE::Actor>(formid);
-	if (reac == nullptr)
-		valid = false;
-	else {
-		actor = reac->GetHandle();
+	if (RE::Actor* reac = actor.get().get(); reac != nullptr) {
 		// update vampire status
 		_vampire = false;
 		if (reac->HasKeyword(Settings::Vampire) || reac->GetRace()->HasKeyword(Settings::Vampire))
@@ -1213,6 +1228,10 @@ void ActorInfo::Update()
 		SKSE::GetTaskInterface()->AddTask([this, reac]() {
 			this->UpdateMetrics(reac);
 		});
+	}
+	else
+	{
+		SetInvalid();
 	}
 }
 
@@ -1485,7 +1504,7 @@ bool ActorInfo::IsDead()
 		return true;
 
 	if (actor.get() && actor.get().get())
-		if (actor.get().get()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead)
+		if (actor.get().get()->IsDead())
 			return true;
 	return false;
 }
