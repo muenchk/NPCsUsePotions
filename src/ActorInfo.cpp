@@ -1406,6 +1406,11 @@ bool ActorInfo::IsPlayer()
 	return formid == 0x14;
 }
 
+RE::ActorHandle ActorInfo::GetHandle()
+{
+	return actor;
+}
+
 RE::TESObjectREFR::InventoryItemMap ActorInfo::GetInventory()
 {
 	aclock;

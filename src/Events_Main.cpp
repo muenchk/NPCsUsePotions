@@ -13,6 +13,7 @@
 #include "Utility.h"
 #include "Tests.h"
 #include "BufferOperations.h"
+#include "APIs/APPSInterface.h"
 
 namespace Events
 {
@@ -302,6 +303,13 @@ namespace Events
 		// check for non-follower option
 		if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->IsPlayer() == false) {
 			LOG_2("{}[Events] [CheckActors] [HandleActorRuntimeData] Actor is not a follower, and non-follower processing has been disabled");
+			acinfo->SetHandleActor(false);
+			return;
+		}
+
+		// check for running animation
+		if (Settings::Interfaces::apps_api != nullptr && Settings::Interfaces::apps_api->IsActorBusy(acinfo->GetHandle())) {
+			LOG_2("{}[Events] [CheckActors] [HandleActorRuntimeData] Animation Interface responded: Actor is busy animating");
 			acinfo->SetHandleActor(false);
 			return;
 		}

@@ -25,6 +25,7 @@
 #include <Logging.h>
 #include <AlchemyEffect.h>
 #include "APIs/TrueDirectionalMovementAPI.h"
+#include "APIs/APPSInterface.h"
 
 class Settings
 {
@@ -573,6 +574,7 @@ public:
 	{
 	public:
 		static inline TDM_API::IVTDM1* tdm_api = nullptr;
+		static inline AnimatedPotionsPoisonsSKSE::APPSInterface* apps_api = nullptr;
 
 		static void RequestAPIs();
 	};

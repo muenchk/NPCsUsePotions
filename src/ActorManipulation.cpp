@@ -533,6 +533,32 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 				std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> val = ls.front();
 				LOG3_2("{}[ActorManipulation] [ActorUsePotion] Drink Potion {} with duration {} and magnitude {}", Utility::PrintForm(potion), std::get<1>(val), std::get<0>(val));
 				logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(potion), std::get<1>(val), std::get<0>(val));
+				if (Settings::Interfaces::apps_api != nullptr && Settings::Interfaces::apps_api->IsPotionEnabled()) {
+					Statistics::Misc_PotionsAdministered++;
+					LOG_2("{}[ActorManipulation] [ActorUsePotion] use potion");
+					AnimatedPotionsPoisonsSKSE::AnimationResult animresult = Settings::Interfaces::apps_api->UsePotion(acinfo->GetHandle(), potion);
+					switch (animresult)
+					{
+					case AnimatedPotionsPoisonsSKSE::AnimationResult::AnimationNotAllowed:
+						// either the actor does not allow animating, or the potion does not allow it
+						// go on with normal method
+						break;
+					case AnimatedPotionsPoisonsSKSE::AnimationResult::AnimationStarted:
+						// animation started successfully
+						return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
+					case AnimatedPotionsPoisonsSKSE::AnimationResult::Busy:
+						// actor is currently animating, so do not use a potion
+						return { -1, AlchemicEffect::kNone, 0.0f, ls };
+					case AnimatedPotionsPoisonsSKSE::AnimationResult::Error:
+						// hard error, either actor does not exist, is dead, or invalid
+						// we can not use potions
+						return { -1, AlchemicEffect::kNone, 0.0f, ls };
+					case AnimatedPotionsPoisonsSKSE::AnimationResult::NoAnimationsLoaded:
+						// no animations found, just use potions normally
+						// this may occur if specific potions do not have animations
+						break;
+					}
+				}
 				if (comp->LoadedAnimatedPotions() && acinfo->IsPlayer() == false) {
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] AnimatedPotions loaded, apply potion later");
 					comp->AnPoti_AddActorPotion(acinfo->GetFormID(), potion);
@@ -725,58 +751,69 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 			if (poison = std::get<2>(ls.front()); poison) {
 				// save statistics
 				Statistics::Misc_PoisonsUsed++;
-				if (comp->LoadedAnimatedPoisons()) {
-					LOG_2("{}[ActorManipulation] [ActorUsePoison] AnimatedPoisons loaded, apply poison later");
-					comp->AnPois_AddActorPoison(acinfo->GetFormID(), poison);
 
-					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-					ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPoisonsEvent");
-					ev->strArg = RE::BSFixedString(std::to_string(poison->GetFormID()));
-					ev->numArg = 0.0f;
-					ev->sender = acinfo->GetActor();
-					SKSE::GetModCallbackEventSource()->SendEvent(ev);
-					return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
-				} else {
-					LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
+				if (Settings::Interfaces::apps_api && Settings::Interfaces::apps_api->IsPoisonEnabled()) {
+					LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {} via Animation plugin", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
 					logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
-					if (!audiomanager)
-						audiomanager = RE::BSAudioManager::GetSingleton();
-					//RE::ExtraDataList* extra = new RE::ExtraDataList();
+
 					int dosage = data->GetPoisonDosage(poison);
-					auto ied = acinfo->GetEquippedEntryData(false);
-					if (ied) {
-						ied->PoisonObject(poison, dosage);
-						acinfo->RemoveItem(poison, 1);
-						{
-							// play poison sound
-							RE::BSSoundHandle handle;
-							if (poison->data.consumptionSound)
-								audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-							else if (Settings::PoisonUse)
-								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-							handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-							handle.SetVolume(1.0);
-							handle.Play();
-						}
+					auto usepoisonextern = [](std::shared_ptr<ActorInfo> acinfo, RE::AlchemyItem* poison, int dosage) { Settings::Interfaces::apps_api->UsePoison(acinfo->GetHandle(), poison, dosage); };
+					std::thread tmp(usepoisonextern, acinfo, poison, dosage);
+					tmp.detach();
+				} else {
+					if (comp->LoadedAnimatedPoisons()) {
+						LOG_2("{}[ActorManipulation] [ActorUsePoison] AnimatedPoisons loaded, apply poison later");
+						comp->AnPois_AddActorPoison(acinfo->GetFormID(), poison);
+
+						SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+						ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPoisonsEvent");
+						ev->strArg = RE::BSFixedString(std::to_string(poison->GetFormID()));
+						ev->numArg = 0.0f;
+						ev->sender = acinfo->GetActor();
+						SKSE::GetModCallbackEventSource()->SendEvent(ev);
 						return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 					} else {
-						ied = acinfo->GetEquippedEntryData(true);
+						LOG3_2("{}[ActorManipulation] [ActorUsePoison] Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
+						logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
+						if (!audiomanager)
+							audiomanager = RE::BSAudioManager::GetSingleton();
+						//RE::ExtraDataList* extra = new RE::ExtraDataList();
+						int dosage = data->GetPoisonDosage(poison);
+						auto ied = acinfo->GetEquippedEntryData(false);
 						if (ied) {
-							if (ied->object && ied->object->IsWeapon()) {
-								ied->PoisonObject(poison, dosage);
-								acinfo->RemoveItem(poison, 1);
-								{
-									// play poison sound
-									RE::BSSoundHandle handle;
-									if (poison->data.consumptionSound)
-										audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-									else
-										audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-									handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-									handle.SetVolume(1.0);
-									handle.Play();
+							ied->PoisonObject(poison, dosage);
+							acinfo->RemoveItem(poison, 1);
+							{
+								// play poison sound
+								RE::BSSoundHandle handle;
+								if (poison->data.consumptionSound)
+									audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+								else if (Settings::PoisonUse)
+									audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+								handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
+								handle.SetVolume(1.0);
+								handle.Play();
+							}
+							return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+						} else {
+							ied = acinfo->GetEquippedEntryData(true);
+							if (ied) {
+								if (ied->object && ied->object->IsWeapon()) {
+									ied->PoisonObject(poison, dosage);
+									acinfo->RemoveItem(poison, 1);
+									{
+										// play poison sound
+										RE::BSSoundHandle handle;
+										if (poison->data.consumptionSound)
+											audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+										else
+											audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+										handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
+										handle.SetVolume(1.0);
+										handle.Play();
+									}
+									return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 								}
-								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 							}
 						}
 					}

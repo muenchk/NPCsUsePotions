@@ -166,7 +166,7 @@ public:
 	template <class T>
 	static std::string PrintFormNonDebug(T* form)
 	{
-		if (form == nullptr || form->GetFormID() == 0 || Logging::EnableGenericLogging == false)
+		if (form == nullptr || form->GetFormID() == 0)
 			return "None";
 		std::string plugin = "";
 		if ((form->GetFormID() & 0xFF000000) != 0xFE000000) {

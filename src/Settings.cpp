@@ -44,6 +44,16 @@ void Settings::Interfaces::RequestAPIs()
 			loginfo("[SETTINGS] [RequestInterfaces] Failed to get True Directional Movement API");
 		}
 	}
+	// get apps api
+	if (!apps_api) {
+		loginfo("[SETTINGS] [RequestInterfaces] Trying to get AnimatedPotionsPoisonsSKSE API");
+		apps_api = reinterpret_cast<AnimatedPotionsPoisonsSKSE::APPSInterface*>(AnimatedPotionsPoisonsSKSE::RequestPluginAPI());
+		if (apps_api) {
+			loginfo("[SETTINGS] [RequestInterfaces] Acquired AnimatedPotionsPoisonsSKSE API");
+		} else {
+			loginfo("[SETTINGS] [RequestInterfaces] Failed to get AnimatedPotionsPoisonsSKSE API");
+		}
+	}
 }
 
 void Settings::InitGameStuff()

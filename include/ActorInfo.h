@@ -883,6 +883,12 @@ public:
 	bool IsPlayer();
 
 	/// <summary>
+	/// Returns the actor handle
+	/// </summary>
+	/// <returns></returns>
+	RE::ActorHandle GetHandle();
+
+	/// <summary>
 	/// Returns the inventory of the actor
 	/// </summary>
 	/// <returns></returns>
