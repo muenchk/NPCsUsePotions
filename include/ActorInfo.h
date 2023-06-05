@@ -333,7 +333,7 @@ private:
 	/// <summary>
 	/// Whether the actor has been deleted;
 	/// </summary>
-	bool deleted = false;
+	bool dead = false;
 	/// <summary>
 	/// Blocks resetting this info
 	/// </summary>
@@ -384,11 +384,11 @@ public:
 	/// <summary>
 	/// Sets the ActorInfo to deleted
 	/// </summary>
-	void SetDeleted();
+	void SetDead();
 	/// <summary>
 	/// Returns whether the actor has been deleted
 	/// </summary>
-	bool GetDeleted();
+	bool GetDead();
 
 	/// <summary>
 	/// Resets the actorinfo to default values

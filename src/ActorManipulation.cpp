@@ -800,7 +800,7 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 
 	LOG_4("{}[AnimatedPoison_ApplyPoison] 1");
 
-	// save form id, since this function will take longer to complete. If the actor is deleted in the meantime we may run into problems
+	// save form id, since this function will take longer to complete. If the actor is dead in the meantime we may run into problems
 	// if we do not reacquire all objects we are working with
 	uint32_t actorid = acinfo->formid;
 

@@ -52,7 +52,7 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 		// set to valid
 		valid = true;
 		timestamp_invalid = 0;
-		deleted = false;
+		dead = false;
 	}
 }
 
@@ -122,7 +122,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		// set to valid
 		valid = true;
 		timestamp_invalid = 0;
-		deleted = false;
+		dead = false;
 	}
 }
 
@@ -169,22 +169,22 @@ bool ActorInfo::IsExpired()
 	return false;
 }
 
-void ActorInfo::SetDeleted()
+void ActorInfo::SetDead()
 {
 	aclock;
-	deleted = true;
+	dead = true;
 }
 
-bool ActorInfo::GetDeleted()
+bool ActorInfo::GetDead()
 {
 	aclock;
-	return deleted;
+	return dead;
 }
 
 RE::Actor* ActorInfo::GetActor()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return nullptr;
 
 	if (actor.get() && actor.get().get())
@@ -195,7 +195,7 @@ RE::Actor* ActorInfo::GetActor()
 RE::FormID ActorInfo::GetFormID()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return 0;
 	return formid;
 }
@@ -208,7 +208,7 @@ RE::FormID ActorInfo::GetFormIDBlank()
 RE::FormID ActorInfo::GetFormIDOriginal()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return 0;
 	return formid.GetOriginalID();
 }
@@ -216,7 +216,7 @@ RE::FormID ActorInfo::GetFormIDOriginal()
 std::vector<RE::FormID> ActorInfo::GetTemplateIDs()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return {};
 	return formid.GetTemplateIDs();
 }
@@ -224,7 +224,7 @@ std::vector<RE::FormID> ActorInfo::GetTemplateIDs()
 std::string ActorInfo::GetPluginname()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return "";
 	return pluginname;
 }
@@ -232,7 +232,7 @@ std::string ActorInfo::GetPluginname()
 uint32_t ActorInfo::GetPluginID()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return 0x1;
 	return pluginID;
 }
@@ -240,7 +240,7 @@ uint32_t ActorInfo::GetPluginID()
 std::string ActorInfo::GetName()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return "";
 	return name;
 }
@@ -248,7 +248,7 @@ std::string ActorInfo::GetName()
 std::string ActorInfo::ToString()
 {
 	aclock;
-	if (!valid || deleted || !actor.get() || !actor.get().get())
+	if (!valid || !actor.get() || !actor.get().get())
 		return "Invalid Actor Info";
 	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor.get().get())) + "\tactor:" + Utility::PrintForm(actor.get().get());
 }
@@ -264,7 +264,7 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
 	aclock;
 	std::vector<CustomItemAlch*> dist;
-	if (!valid || deleted)
+	if (!valid)
 		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0)
@@ -280,7 +280,7 @@ bool ActorInfo::CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
 	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistr]");
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	bool distributable = false;
 	for (int i = 0; i < itms.size(); i++) {
@@ -298,7 +298,7 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
 	aclock;
 	std::vector<CustomItemAlch*> dist;
-	if (!valid || deleted)
+	if (!valid)
 		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
@@ -317,7 +317,7 @@ std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector
 	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems]");
 	aclock;
 	std::vector<CustomItem*> dist;
-	if (!valid || deleted)
+	if (!valid)
 		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
@@ -335,7 +335,7 @@ bool ActorInfo::CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 {
 	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistrItems]");
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	bool distributable = false;
 	for (int i = 0; i < itms.size(); i++) {
@@ -363,7 +363,7 @@ bool ActorInfo::CanUsePotion(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUsePotion]");
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	auto itr = citems.potionsset.find(item);
 	if (itr == citems.potionsset.end() || itr->second < 0 || itr->second > citems.potions.size())
@@ -374,7 +374,7 @@ bool ActorInfo::CanUsePoison(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUsePoison]");
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	auto itr = citems.poisonsset.find(item);
 	if (itr == citems.poisonsset.end() || itr->second < 0 || itr->second > citems.poisons.size())
@@ -385,7 +385,7 @@ bool ActorInfo::CanUseFortify(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFortify]");
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	auto itr = citems.fortifyset.find(item);
 	if (itr == citems.fortifyset.end() || itr->second < 0 || itr->second > citems.fortify.size())
@@ -396,7 +396,7 @@ bool ActorInfo::CanUseFood(RE::FormID item)
 {
 	LOG_3("{}[ActorInfo] [CanUseFood]");
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	auto itr = citems.foodset.find(item);
 	if (itr == citems.foodset.end() || itr->second < 0 || itr->second > citems.food.size())
@@ -460,7 +460,7 @@ bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 bool ActorInfo::CalcUsageConditions(CustomItem* item)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	return CalcUsageConditionsIntern(item);
 }
@@ -581,7 +581,7 @@ bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 bool ActorInfo::CalcDistrConditions(CustomItem* item)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 	return CalcDistrConditionsIntern(item);
 }
@@ -740,7 +740,7 @@ bool ActorInfo::CalcDistrConditionsIntern(CustomItem* item)
 bool ActorInfo::IsInCombat()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 	else if (combatstate == CombatState::InCombat || combatstate == CombatState::Searching)
 		return true;
@@ -751,7 +751,7 @@ bool ActorInfo::IsInCombat()
 CombatState ActorInfo::GetCombatState()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return CombatState::OutOfCombat;
 	return combatstate;
 }
@@ -759,7 +759,7 @@ CombatState ActorInfo::GetCombatState()
 void ActorInfo::SetCombatState(CombatState state)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		combatstate = CombatState::OutOfCombat;
 	combatstate = state;
 }
@@ -767,7 +767,7 @@ void ActorInfo::SetCombatState(CombatState state)
 bool ActorInfo::IsWeaponDrawn()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 	return weaponsDrawn;
 }
@@ -1248,7 +1248,7 @@ void ActorInfo::ResetTarget()
 void ActorInfo::SetTarget(std::weak_ptr<ActorInfo> tar)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		target = std::weak_ptr<ActorInfo>{};
 	else
 		target = tar;
@@ -1257,7 +1257,7 @@ void ActorInfo::SetTarget(std::weak_ptr<ActorInfo> tar)
 short ActorInfo::GetTargetLevel()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return 1;
 	if (std::shared_ptr<ActorInfo> tar = target.lock()) {
 		return tar->GetLevel();
@@ -1268,7 +1268,7 @@ short ActorInfo::GetTargetLevel()
 uint32_t ActorInfo::GetCombatData()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return 0;
 	return combatdata;
 }
@@ -1276,7 +1276,7 @@ uint32_t ActorInfo::GetCombatData()
 void ActorInfo::SetCombatData(uint32_t data)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		combatdata = 0;
 	else
 		combatdata = data;
@@ -1285,7 +1285,7 @@ void ActorInfo::SetCombatData(uint32_t data)
 uint32_t ActorInfo::GetCombatDataTarget()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return 0;
 	return tcombatdata;
 }
@@ -1293,7 +1293,7 @@ uint32_t ActorInfo::GetCombatDataTarget()
 void ActorInfo::SetCombatDataTarget(uint32_t data)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		tcombatdata = 0;
 	else
 		tcombatdata = data;
@@ -1302,7 +1302,7 @@ void ActorInfo::SetCombatDataTarget(uint32_t data)
 bool ActorInfo::GetHandleActor()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 	return handleactor;
 }
@@ -1310,7 +1310,7 @@ bool ActorInfo::GetHandleActor()
 void ActorInfo::SetHandleActor(bool handle)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		handleactor = false;
 	else
 		handleactor = handle;
@@ -1319,7 +1319,7 @@ void ActorInfo::SetHandleActor(bool handle)
 float ActorInfo::GetPlayerDistance()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return FLT_MAX;
 	return playerDistance;
 }
@@ -1327,7 +1327,7 @@ float ActorInfo::GetPlayerDistance()
 void ActorInfo::SetPlayerDistance(float distance)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		playerDistance = FLT_MAX;
 	else
 		playerDistance = distance;
@@ -1336,7 +1336,7 @@ void ActorInfo::SetPlayerDistance(float distance)
 bool ActorInfo::GetPlayerHostile()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 	return playerHostile;
 }
@@ -1344,7 +1344,7 @@ bool ActorInfo::GetPlayerHostile()
 void ActorInfo::SetPlayerHostile(bool hostile)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		playerHostile = false;
 	playerHostile = hostile;
 }
@@ -1352,7 +1352,7 @@ void ActorInfo::SetPlayerHostile(bool hostile)
 bool ActorInfo::GetWeaponsDrawn()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 	return weaponsDrawn;
 }
@@ -1360,7 +1360,7 @@ bool ActorInfo::GetWeaponsDrawn()
 void ActorInfo::SetWeaponsDrawn(bool drawn)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		weaponsDrawn = false;
 	else
 		weaponsDrawn = drawn;
@@ -1369,7 +1369,7 @@ void ActorInfo::SetWeaponsDrawn(bool drawn)
 void ActorInfo::UpdateWeaponsDrawn()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		weaponsDrawn = false;
 
 	if (actor.get() && actor.get().get())
@@ -1381,7 +1381,7 @@ void ActorInfo::UpdateWeaponsDrawn()
 bool ActorInfo::IsFollower()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 
 	if (actor.get() && actor.get().get()) {
@@ -1409,7 +1409,7 @@ bool ActorInfo::IsPlayer()
 RE::TESObjectREFR::InventoryItemMap ActorInfo::GetInventory()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return RE::TESObjectREFR::InventoryItemMap{};
 
 	if (actor.get() && actor.get().get())
@@ -1420,7 +1420,7 @@ RE::TESObjectREFR::InventoryItemMap ActorInfo::GetInventory()
 RE::TESObjectREFR::InventoryCountMap ActorInfo::GetInventoryCounts()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return RE::TESObjectREFR::InventoryCountMap{};
 
 	if (actor.get() && actor.get().get())
@@ -1431,7 +1431,7 @@ RE::TESObjectREFR::InventoryCountMap ActorInfo::GetInventoryCounts()
 bool ActorInfo::HasMagicEffect(RE::EffectSetting* effect)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1442,7 +1442,7 @@ bool ActorInfo::HasMagicEffect(RE::EffectSetting* effect)
 bool ActorInfo::DrinkPotion(RE::AlchemyItem* potion, RE::ExtraDataList* extralist)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1453,7 +1453,7 @@ bool ActorInfo::DrinkPotion(RE::AlchemyItem* potion, RE::ExtraDataList* extralis
 RE::InventoryEntryData* ActorInfo::GetEquippedEntryData(bool leftHand)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return nullptr;
 
 	if (!leftHand || _haslefthand)
@@ -1465,7 +1465,7 @@ RE::InventoryEntryData* ActorInfo::GetEquippedEntryData(bool leftHand)
 void ActorInfo::RemoveItem(RE::TESBoundObject* item, int32_t count)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return;
 
 	if (actor.get() && actor.get().get())
@@ -1475,7 +1475,7 @@ void ActorInfo::RemoveItem(RE::TESBoundObject* item, int32_t count)
 void ActorInfo::AddItem(RE::TESBoundObject* item, int32_t count)
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return;
 
 	if (actor.get() && actor.get().get())
@@ -1485,7 +1485,7 @@ void ActorInfo::AddItem(RE::TESBoundObject* item, int32_t count)
 uint32_t ActorInfo::GetFormFlags()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return 0;
 
 	if (actor.get() && actor.get().get())
@@ -1496,19 +1496,18 @@ uint32_t ActorInfo::GetFormFlags()
 bool ActorInfo::IsDead()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return true;
 
 	if (actor.get() && actor.get().get())
-		if (actor.get().get()->IsDead())
-			return true;
-	return false;
+		return actor.get().get()->IsDead();
+	return true;
 }
 
 RE::TESNPC* ActorInfo::GetActorBase()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return nullptr;
 
 	if (actor.get() && actor.get().get())
@@ -1519,7 +1518,7 @@ RE::TESNPC* ActorInfo::GetActorBase()
 RE::FormID ActorInfo::GetActorBaseFormID()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return 0;
 
 	if (actor.get() && actor.get().get())
@@ -1531,7 +1530,7 @@ RE::FormID ActorInfo::GetActorBaseFormID()
 std::string ActorInfo::GetActorBaseFormEditorID()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return "";
 
 	if (actor.get() && actor.get().get())
@@ -1543,7 +1542,7 @@ std::string ActorInfo::GetActorBaseFormEditorID()
 RE::TESCombatStyle* ActorInfo::GetCombatStyle()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return nullptr;
 
 	if (actor.get() && actor.get().get())
@@ -1555,7 +1554,7 @@ RE::TESCombatStyle* ActorInfo::GetCombatStyle()
 RE::TESRace* ActorInfo::GetRace()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return nullptr;
 
 	if (actor.get() && actor.get().get())
@@ -1567,7 +1566,7 @@ RE::TESRace* ActorInfo::GetRace()
 RE::FormID ActorInfo::GetRaceFormID()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return 0;
 
 	if (actor.get() && actor.get().get())
@@ -1579,7 +1578,7 @@ RE::FormID ActorInfo::GetRaceFormID()
 bool ActorInfo::IsGhost()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1590,7 +1589,7 @@ bool ActorInfo::IsGhost()
 bool ActorInfo::IsSummonable()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1602,7 +1601,7 @@ bool ActorInfo::IsSummonable()
 bool ActorInfo::Bleeds()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1614,7 +1613,7 @@ bool ActorInfo::Bleeds()
 short ActorInfo::GetLevel()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return 1;
 	if (actor.get() && actor.get().get())
 		return actor.get().get()->GetLevel();
@@ -1624,7 +1623,7 @@ short ActorInfo::GetLevel()
 SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> ActorInfo::GetBoolBits()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid)
 		return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
 
 	if (actor.get() && actor.get().get())
@@ -1635,7 +1634,7 @@ SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> ActorInfo::GetBoolBits()
 bool ActorInfo::IsFlying()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1646,7 +1645,7 @@ bool ActorInfo::IsFlying()
 bool ActorInfo::IsInKillMove()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1657,7 +1656,7 @@ bool ActorInfo::IsInKillMove()
 bool ActorInfo::IsInMidair()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1668,7 +1667,7 @@ bool ActorInfo::IsInMidair()
 bool ActorInfo::IsInRagdollState()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1679,7 +1678,7 @@ bool ActorInfo::IsInRagdollState()
 bool ActorInfo::IsUnconscious()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1690,7 +1689,7 @@ bool ActorInfo::IsUnconscious()
 bool ActorInfo::IsParalyzed()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1702,7 +1701,7 @@ bool ActorInfo::IsParalyzed()
 bool ActorInfo::IsStaggered()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())
@@ -1713,7 +1712,7 @@ bool ActorInfo::IsStaggered()
 bool ActorInfo::IsBleedingOut()
 {
 	aclock;
-	if (!valid || deleted)
+	if (!valid || dead)
 		return false;
 
 	if (actor.get() && actor.get().get())

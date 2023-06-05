@@ -1302,28 +1302,37 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 	//logger::info("[SettingsDistribution] GetMatchingInventoryItems enter");
 	Rule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
-	if (Settings::Distr::_DistributePotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> items = ACM::GetMatchingPotions(acinfo, AlchemicEffect::kAnyPotion, false);
+	if (Settings::Distr::_DistributePotions || Settings::Distr::_DistributeFortifyPotions) {
+		std::list<RE::AlchemyItem*> items = ACM::GetAllPotions(acinfo);
+		LOG1_4("{}[Distribution] [GetAllInventoryItems] Potions: {}", items.size());
 		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
+			ret.push_back(i);
 		}
 	}
+	//if (Settings::Distr::_DistributePotions) {
+	//	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> items = ACM::GetMatchingPotions(acinfo, AlchemicEffect::kAnyPotion, false);
+	//	for (auto i : items) {
+	//		ret.insert(ret.end(), std::get<2>(i));
+	//	}
+	//}
 	if (Settings::Distr::_DistributePoisons) {
 		std::list<RE::AlchemyItem*> items = ACM::GetAllPoisons(acinfo);
+		LOG1_4("{}[Distribution] [GetAllInventoryItems] Poisons: {}", items.size());
 		for (auto i : items) {
-			ret.insert(ret.end(), i);
+			ret.push_back(i);
 		}
 	}
-	if (Settings::Distr::_DistributeFortifyPotions) {
-		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> items = ACM::GetMatchingPotions(acinfo, AlchemicEffect::kAnyFortify, true);
-		for (auto i : items) {
-			ret.insert(ret.end(), std::get<2>(i));
-		}
-	}
+	//if (Settings::Distr::_DistributeFortifyPotions) {
+	//	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> items = ACM::GetMatchingPotions(acinfo, AlchemicEffect::kAnyFortify, true);
+	//	for (auto i : items) {
+	//		ret.insert(ret.end(), std::get<2>(i));
+	//	}
+	//}
 	if (Settings::Distr::_DistributeFood) {
 		std::list<RE::AlchemyItem*> items = ACM::GetAllFood(acinfo);
+		LOG1_4("{}[Distribution] [GetAllInventoryItems] Food: {}", items.size());
 		for (auto i : items) {
-			ret.insert(ret.end(), i);
+			ret.push_back(i);
 		}
 	}
 	if (ret.size() != 0) {
@@ -1339,6 +1348,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 			}
 		}
 	}
+	LOG1_4("{}[Distribution] [GetAllInventoryItems] Total: {}", ret.size());
 	return ret;
 }
 

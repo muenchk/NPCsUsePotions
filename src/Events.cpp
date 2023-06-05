@@ -111,7 +111,7 @@ namespace Events
 					// invalidate actor
 					std::shared_ptr<ActorInfo> acinfo = Main::data->FindActorExisting(actor);
 					bool excluded = Distribution::ExcludedNPC(acinfo);
-					acinfo->SetInvalid();
+					acinfo->SetDead();
 					// all npcs must be unregistered, even if distribution oes not apply to them
 					Main::UnregisterNPC(actor);
 					// as with potion distribution, exlude excluded actors and potential followers
@@ -156,6 +156,7 @@ namespace Events
 							actor->AddObjectToContainer(ditems[i]->object, nullptr, ditems[i]->num, nullptr);
 						}
 					}
+					acinfo->SetInvalid();
 					// delete actor from data
 					Main::data->DeleteActor(actor->GetFormID());
 					Main::comp->AnPois_RemoveActorPoison(actor->GetFormID());
