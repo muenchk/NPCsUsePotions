@@ -462,9 +462,9 @@ namespace Events
 		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 		LOG1_1("{}[Events] [RegisterNPC] Found: {}", Utility::PrintForm(acinfo));
-		// if actor was deleted, exit
-		if (acinfo->GetDeleted()) {
-			LOG_1("{}[Events] [RegisterNPC] Actor already deleted");
+		// if actor was dead, exit
+		if (acinfo->GetDead()) {
+			LOG_1("{}[Events] [RegisterNPC] Actor already dead");
 			return;
 		}
 		// reset object to account for changes to underlying objects

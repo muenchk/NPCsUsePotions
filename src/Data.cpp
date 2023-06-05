@@ -45,7 +45,7 @@ std::shared_ptr<ActorInfo> Data::CreateActorInfoEmpty()
 {
 	std::shared_ptr<ActorInfo> empty = std::make_shared<ActorInfo>(true); // blocks resetting this instance
 	empty->SetInvalid();
-	empty->SetDeleted();
+	empty->SetDead();
 	LOG_4("{}[Data] [CreateActorInfoEmpty]");
 	return empty;
 }
@@ -82,8 +82,8 @@ std::shared_ptr<ActorInfo> Data::FindActor(RE::Actor* actor)
 		// find the object
 		auto itr = actorinfoMap.find(actor->GetFormID());
 		if (itr != actorinfoMap.end()) {
-			// found it, check it for validity and deleted status
-			if (itr->second->IsValid() && !itr->second->GetDeleted()) {
+			// found it, check it for validity and dead status
+			if (itr->second->IsValid()) {
 				lockdata.release();
 				return itr->second;
 			}
@@ -116,7 +116,7 @@ std::shared_ptr<ActorInfo> Data::FindActorExisting(RE::Actor* actor)
 		auto itr = actorinfoMap.find(actor->GetFormID());
 		if (itr != actorinfoMap.end()) {
 			// found it, check it for validity and deleted status
-			if (itr->second->IsValid() && !itr->second->GetDeleted()) {
+			if (itr->second->IsValid()) {
 				lockdata.release();
 				return itr->second;
 			}
@@ -145,7 +145,7 @@ bool Data::UpdateActorInfo(std::shared_ptr<ActorInfo> acinfo)
 {
 	acinfo->Update();
 	// if actorinfo is marked deleted, or expired, delete it
-	if (acinfo->GetDeleted() || acinfo->IsExpired()) {
+	if (acinfo->IsExpired()) {
 		validActors.erase(acinfo->GetFormID());
 		DeleteActorInfo(acinfo->GetFormID());
 		return false;
@@ -167,7 +167,7 @@ void Data::DeleteActor(RE::FormID actorid)
 	if (itr != actorinfoMap.end()) {
 		std::shared_ptr<ActorInfo> acinfo = itr->second;
 		acinfo->SetInvalid();
-		acinfo->SetDeleted();
+		acinfo->SetDead();
 		// save deleted actors, so we do not create new actorinfos for these
 		deletedActors.insert(actorid);
 		DeleteActorInfo(actorid);
@@ -181,7 +181,7 @@ void Data::CleanActorInfos()
 	std::vector<uint32_t> keys;
 	auto proc = [&keys](uint32_t key, std::shared_ptr<ActorInfo>& acinfo) {
 		acinfo->Update();
-		if (acinfo->GetDeleted() || acinfo->IsExpired())
+		if (acinfo->IsExpired())
 			keys.push_back(key);
 	};
 	for (auto& [key, val] : actorinfoMap)
