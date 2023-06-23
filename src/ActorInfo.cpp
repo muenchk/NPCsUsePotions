@@ -192,6 +192,17 @@ RE::Actor* ActorInfo::GetActor()
 	return nullptr;
 }
 
+RE::ActorHandle ActorInfo::GetHandle()
+{
+	aclock;
+	if (!valid || dead)
+		return RE::ActorHandle();
+
+	if (actor.get().get())
+		return actor;
+	return RE::ActorHandle();
+}
+
 RE::FormID ActorInfo::GetFormID()
 {
 	aclock;

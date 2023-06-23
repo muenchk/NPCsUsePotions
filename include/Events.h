@@ -313,7 +313,7 @@ namespace Events
 		/// </summary>
 		/// <param name="actor"></param>
 		/// <returns></returns>
-		static void SetDead(RE::Actor* actor);
+		static void SetDead(RE::ActorHandle actor);
 
 		/// <summary>
 		/// initializes important variables, which need to be initialized every time a game is loaded

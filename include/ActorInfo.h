@@ -402,6 +402,11 @@ public:
 	/// <returns></returns>
 	RE::Actor* GetActor();
 	/// <summary>
+	/// Returns the underlying actor handle
+	/// </summary>
+	/// <returns></returns>
+	RE::ActorHandle GetHandle();
+	/// <summary>
 	/// Returns the formid
 	/// </summary>
 	/// <returns></returns>

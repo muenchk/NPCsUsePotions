@@ -129,6 +129,37 @@ std::shared_ptr<ActorInfo> Data::FindActorExisting(RE::Actor* actor)
 	return acinfo;
 }
 
+std::shared_ptr<ActorInfo> Data::FindActorExisting(RE::FormID actor)
+{
+	if (actor == 0)
+		return CreateActorInfoEmpty();  // worst case, should not be necessary here
+	lockdata.acquire();
+	// check whether the actor was deleted before
+	if (deletedActors.contains(actor)) {
+		// create dummy ActorInfo
+		std::shared_ptr<ActorInfo> acinfo = CreateActorInfoEmpty();
+		lockdata.release();
+		return acinfo;
+	}
+	// if there already is an valid object for the actor return it
+	if (validActors.contains(actor)) {
+		// find the object
+		auto itr = actorinfoMap.find(actor);
+		if (itr != actorinfoMap.end()) {
+			// found it, check it for validity and deleted status
+			if (itr->second->IsValid()) {
+				lockdata.release();
+				return itr->second;
+			}
+			// else go to next point
+		}
+	}
+	// if there is no valid actorinfo object present, return an empty one and do not create a new one
+	std::shared_ptr<ActorInfo> acinfo = CreateActorInfoEmpty();
+	lockdata.release();
+	return acinfo;
+}
+
 std::shared_ptr<ActorInfo> Data::FindActor(RE::FormID actorid)
 {
 	RE::Actor* actor = RE::TESForm::LookupByID<RE::Actor>(actorid);
@@ -385,7 +416,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	} else if (acinfo->IsDead()) {
 		acdcounter++;
 		logwarn("[Data] [ReadActorInfoMap] actor dead {}", acinfo->GetName());
-		Events::Main::SetDead(acinfo->GetActor());
+		Events::Main::SetDead(acinfo->GetHandle());
 	} else {
 		accounter++;
 		RegisterActorInfo(acinfo);
