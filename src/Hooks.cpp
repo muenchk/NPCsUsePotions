@@ -17,16 +17,9 @@ namespace Hooks
 		return _FadeThenFastTravel(arg_1, arg_2, arg_3, arg_4);
 	}
 
-	uint64_t TryFast::FadeThenFastTravel(uint64_t arg_1, uint64_t arg_2, uint64_t arg_3, uint64_t arg_4)
-	{
-		LOG_1("{}[Hooks] [TryFast] executed hook");
-		return _FadeThenFastTravel(arg_1, arg_2, arg_3, arg_4);
-	}
-
 	void InstallHooks()
 	{
 		FastTravelConfirmHook::InstallHook();
 		FadeThenFastTravelHook::InstallHook();
-		TryFast::InstallHook();
 	}
 }
