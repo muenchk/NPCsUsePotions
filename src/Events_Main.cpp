@@ -238,7 +238,7 @@ namespace Events
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}
-			if (effect != 0 || dur != -1) {
+			if (dur != -1) {
 				acinfo->SetNextFoodTime(Main::CalcFoodDuration(dur));
 			}
 			LOG2_2("{}[Events] [CheckActors] [HandleActorFood] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));

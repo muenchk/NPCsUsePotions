@@ -187,7 +187,7 @@ namespace Events
 		/// </summary>
 		/// <param name="dur"></param>
 		/// <returns></returns>
-		static int CalcFoodDuration(int dur);
+		static float CalcFoodDuration(int dur);
 
 		//----------------------Main-----------------------
 

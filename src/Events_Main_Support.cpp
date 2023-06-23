@@ -598,7 +598,7 @@ namespace Events
 		           dur * 1000;
 	}
 
-	int Main::CalcFoodDuration(int dur)
+	float Main::CalcFoodDuration(int dur)
 	{
 		static RE::Calendar* calendar = RE::Calendar::GetSingleton();
 		// if duration is zero (vanilla food) set cooldown to at least 4 minutes
