@@ -565,10 +565,9 @@ namespace Events
 		return actor == nullptr || deads.contains(actor->GetHandle());
 	}
 
-	void Main::SetDead(RE::Actor* actor)
+	void Main::SetDead(RE::ActorHandle actor)
 	{
-		if (actor != nullptr)
-			deads.insert(actor->GetHandle());
+		deads.insert(actor);
 	}
 
 	int Main::CalcPotionDuration(int dur)

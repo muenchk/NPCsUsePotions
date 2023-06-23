@@ -435,6 +435,21 @@ namespace Events
 		return EventResult::kContinue;
 	}
 
+	/// <summary>
+	/// EventHandler for end of fast travel
+	/// </summary>
+	/// <param name="a_event"></param>
+	/// <param name="a_eventSource"></param>
+	/// <returns></returns>
+	EventResult EventHandler::ProcessEvent(const RE::TESFastTravelEndEvent* a_event, RE::BSTEventSource<RE::TESFastTravelEndEvent>*)
+	{
+		// very important event. Allows to catch actors and other stuff that gets deleted, without dying, which could cause CTDs otherwise
+		
+		LOG_1("{}[Events] [TESFastTravelEndEvent]");
+
+		return EventResult::kContinue;
+	}
+
     /// <summary>
     /// returns singleton to the EventHandler
     /// </summary>
@@ -470,6 +485,8 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESFormDeleteEvent).name())
 		scriptEventSourceHolder->GetEventSource<RE::TESContainerChangedEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESContainerChangedEvent).name())
+		scriptEventSourceHolder->GetEventSource<RE::TESFastTravelEndEvent>()->AddEventSink(EventHandler::GetSingleton());
+		LOG1_1("{}Registered {}", typeid(RE::TESFastTravelEndEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);
 		LOG1_1("{}Registered {}", typeid(Main::LoadGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000002, Main::RevertGameCallback);
