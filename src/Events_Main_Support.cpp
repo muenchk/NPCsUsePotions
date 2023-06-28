@@ -567,7 +567,8 @@ namespace Events
 
 	void Main::SetDead(RE::ActorHandle actor)
 	{
-		deads.insert(actor);
+		if (actor.get().get())
+			deads.insert(actor);
 	}
 
 	int Main::CalcPotionDuration(int dur)

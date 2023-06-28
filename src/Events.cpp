@@ -109,6 +109,9 @@ namespace Events
 					EvalProcessingEvent();
 					// invalidate actor
 					std::shared_ptr<ActorInfo> acinfo = Main::data->FindActorExisting(actor->GetFormID());
+					// if invalid return
+					if (!acinfo->IsValid())
+						return EventResult::kContinue;
 					Main::SetDead(acinfo->GetHandle());
 					bool excluded = Distribution::ExcludedNPC(acinfo);
 					acinfo->SetDead();
