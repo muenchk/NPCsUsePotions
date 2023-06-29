@@ -1,6 +1,8 @@
 
 #include "ActorManipulation.h"
 #include "Events.h"
+#include "Game.h"
+#include "Threading.h"
 #include "Utility.h"
 
 namespace Events
@@ -456,6 +458,13 @@ namespace Events
 		// exit if the actor is unsafe / not valid
 		if (Utility::ValidateActor(actor) == false)
 			return;
+		// if currently fasttraveling, save actor to register later
+		if (Game::IsFastTravelling()) {
+			LOG1_1("{}[Events] [RegisterNPC] Saving for later: {}", Utility::PrintForm(actor));
+			toregister.push_back(actor->GetHandle());
+			LOG_1("{}[Events] [RegisterNPC] Saved");
+			return;
+		}
 		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 		LOG1_1("{}[Events] [RegisterNPC] Found: {}", Utility::PrintForm(acinfo));
@@ -487,6 +496,21 @@ namespace Events
 			return;
 
 		LOG_1("{}[Events] [RegisterNPC] finished registering NPC");
+	}
+
+	/// <summary>
+	/// Registers NPCs that could not be registered during fast travel
+	/// </summary>
+	void Main::RegisterFastTravelNPCs()
+	{
+		RE::Actor* reg = nullptr;
+
+		while (!toregister.empty()) {
+			reg = toregister.front().get().get();
+			toregister.pop_front();
+			RegisterNPC(reg);
+		}
+		
 	}
 
 	/// <summary>

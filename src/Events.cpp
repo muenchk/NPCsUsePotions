@@ -17,7 +17,9 @@
 #include "Game.h"
 #include "Settings.h"
 #include "Statistics.h"
+#include "Threading.h"
 #include "Utility.h"
+#include "VM.h"
 		
 namespace Events
 {
@@ -450,6 +452,38 @@ namespace Events
 		
 		LOG_1("{}[Events] [TESFastTravelEndEvent]");
 
+		Game::SetFastTraveling(false);
+		Main::InitThreads();
+
+		Main::RegisterFastTravelNPCs();
+
+		return EventResult::kContinue;
+	}
+
+	EventResult EventHandler::ProcessEvent(const RE::TESActivateEvent* a_event, RE::BSTEventSource<RE::TESActivateEvent>*)
+	{
+		// currently unused since another solution for fasttravel tracking has been found
+
+		if (a_event && a_event->actionRef.get() && a_event->objectActivated.get()) {
+			if (a_event->actionRef->IsPlayerRef())
+				LOG1_1("{}[Events] [TESActivateEvent] Activated {}", Utility::PrintForm(a_event->objectActivated.get()));
+			// objects valid
+			static RE::TESQuest* DialogueCarriageSystem = RE::TESForm::LookupByID<RE::TESQuest>(0x17F01);
+			if (a_event->actionRef->IsPlayerRef() && a_event->objectActivated.get()->GetBaseObject()->GetFormID() == 0x103445) {
+				LOG_1("{}[Events] [TESActivateEvent] Activated Carriage Marker");
+				auto scriptobj = ScriptObject::FromForm(DialogueCarriageSystem, "CarriageSystemScript");
+				if (scriptobj.get()) {
+					auto currentDestination = scriptobj->GetProperty("currentDestination");
+					if (currentDestination) {
+						if (currentDestination->GetSInt() != 0 && currentDestination->GetSInt() != -1) {
+							LOG_1("{}[Events] [TESActivateEvent] Recognized player fasttraveling via carriage");
+							Game::SetFastTraveling(true);
+						}
+					}
+				}
+			}
+		}
+
 		return EventResult::kContinue;
 	}
 
@@ -490,6 +524,8 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESContainerChangedEvent).name())
 		scriptEventSourceHolder->GetEventSource<RE::TESFastTravelEndEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESFastTravelEndEvent).name())
+		//scriptEventSourceHolder->GetEventSource<RE::TESActivateEvent>()->AddEventSink(EventHandler::GetSingleton());
+		//LOG1_1("{}Registered {}", typeid(RE::TESActivateEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);
 		LOG1_1("{}Registered {}", typeid(Main::LoadGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000002, Main::RevertGameCallback);

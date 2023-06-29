@@ -8,6 +8,7 @@
 #include "ActorManipulation.h"
 #include "Distribution.h"
 #include "Events.h"
+#include "Game.h"
 #include "Logging.h"
 #include "Settings.h"
 #include "Utility.h"
@@ -405,6 +406,11 @@ namespace Events
 		while (!stopactorhandler) {
 			if (!CanProcess())
 				goto CheckActorsSkipIteration;
+			if (Game::IsFastTravelling())
+			{
+				LOG_2("{}[Events] [CheckActors] Skip iteration due to Fast Travel");
+				goto CheckActorsSkipIteration;
+			}
 			// update active actors
 			actorhandlerworking = true;
 
@@ -454,7 +460,7 @@ namespace Events
 
 				LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(actors.size()));
 
-				if (!CanProcess())
+				if (!CanProcess() || Game::IsFastTravelling())
 					goto CheckActorsSkipIteration;
 				if (IsPlayerDead())
 					break;
@@ -494,7 +500,7 @@ namespace Events
 						}
 					});
 
-					if (!CanProcess())
+					if (!CanProcess() || Game::IsFastTravelling())
 						goto CheckActorsSkipIteration;
 					if (IsPlayerDead())
 						break;
@@ -502,6 +508,9 @@ namespace Events
 					// collect actor runtime data
 					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+							// emergency catch
+							if (Game::IsFastTravelling())
+								return;
 							// handle potions out-of-combat
 							if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
 								HandleActorOOCPotions(acinfo);
@@ -660,6 +669,29 @@ CheckActorsSkipIteration:
 		PROF1_1("{}[Events] [LoadGameSub] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 
+	void Main::KillThreads()
+	{
+		stopactorhandler = true;
+		std::this_thread::sleep_for(10ms);
+		if (actorhandler != nullptr)
+			actorhandler->~thread();
+		actorhandler = nullptr;
+	}
+
+	void Main::InitThreads()
+	{
+		if (actorhandler != nullptr) {
+			// if the thread is there, then destroy and delete it
+			// if it is joinable and not running it has already finished, but needs to be joined before
+			// it can be destroyed savely
+			actorhandler->~thread();
+			delete actorhandler;
+			actorhandler = nullptr;
+		}
+		actorhandler = new std::thread(CheckActors);
+		actorhandler->detach();
+	}
+
 	/// <summary>
 	/// Callback on reverting the game. Disables processing and stops all handlers
 	/// </summary>
@@ -668,10 +700,7 @@ CheckActorsSkipIteration:
 	{
 		LOG_1("{}[Events] [RevertGameCallback]");
 		enableProcessing = false;
-		stopactorhandler = true;
-		std::this_thread::sleep_for(10ms);
-		if (actorhandler != nullptr)
-			actorhandler->~thread();
+		KillThreads();
 		LOG1_1("{}[PlayerDead] {}", playerdied);
 		// reset actor processing list
 		acset.clear();

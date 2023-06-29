@@ -65,6 +65,11 @@ namespace Events
 		/// </summary>
 		static inline std::forward_list<std::shared_ptr<ActorInfo>> combatants;
 
+		/// <summary>
+		/// list of npcs that should be registered after fast travel has ended
+		/// </summary>
+		static inline std::list<RE::ActorHandle> toregister;
+
 		//-------------------Handler-------------------------
 
 		/// <summary>
@@ -249,6 +254,11 @@ namespace Events
 		static void RegisterNPC(RE::Actor* actor);
 
 		/// <summary>
+		/// Registers NPCs that could not be registered during fast travel
+		/// </summary>
+		static void RegisterFastTravelNPCs();
+
+		/// <summary>
 		/// Unregisters an NPC form handling
 		/// </summary>
 		/// <param name="actor"></param>
@@ -364,6 +374,17 @@ namespace Events
 		/// <returns></returns>
 		static long ReadDeadActors(SKSE::SerializationInterface* a_intfc, uint32_t length);
 
+		//---------------------Threads-----------------------
+
+		/// <summary>
+		/// Kills all active threads
+		/// </summary>
+		static void KillThreads();
+		/// <summary>
+		/// Inits all inactive threads
+		/// </summary>
+		static void InitThreads();
+
 	};
 
 
@@ -380,7 +401,8 @@ namespace Events
 		public RE::BSTEventSink<RE::TESEquipEvent>,
 		public RE::BSTEventSink<RE::TESFormDeleteEvent>,
 		public RE::BSTEventSink<RE::TESContainerChangedEvent>,
-		public RE::BSTEventSink<RE::TESFastTravelEndEvent>
+		public RE::BSTEventSink<RE::TESFastTravelEndEvent>,
+		public RE::BSTEventSink<RE::TESActivateEvent>
 	{
 	public:
 		/// <summary>
@@ -460,6 +482,13 @@ namespace Events
 		/// <param name="a_eventSource"></param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::TESFastTravelEndEvent* a_event, RE::BSTEventSource<RE::TESFastTravelEndEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for activate events
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::TESActivateEvent* a_event, RE::BSTEventSource<RE::TESActivateEvent>* a_eventSource) override;
 
 
 		/// <summary>

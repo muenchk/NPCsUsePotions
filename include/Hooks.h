@@ -40,6 +40,80 @@ namespace Hooks
 		static inline REL::Relocation<decltype(FadeThenFastTravel)> _FadeThenFastTravel;
 	};
 
+
+	class Papyrus_FastTravelHook
+	{
+	private:
+		static inline uint64_t remainder_1;
+		static inline uint64_t remainder_2;
+
+	public:
+		static void InstallHook()
+		{
+			REL::Relocation<uintptr_t> targetbegin{ REL::VariantID(54824, 55457, 0), REL::VariantOffset(0x78, 0x78, 0) };
+			REL::Relocation<uintptr_t> targetend{ REL::VariantID(54824, 55457, 0), REL::VariantOffset(0xD7, 0xD7, 0) };
+			auto& trampoline = SKSE::GetTrampoline();
+
+			
+			struct Patch : Xbyak::CodeGenerator
+			{
+				Patch(uintptr_t a_remainder, uintptr_t a_fastTravelBegin)
+				{
+					Xbyak::Label fdec;
+
+					mov(ptr[rsp + 0x50], rcx);
+					//mov(rdi, rdx);
+					//mov(rsi, rcx);
+					call(ptr[rip + fdec]);
+
+					mov(rax, qword[a_remainder]);
+					jmp(rax);
+
+					L(fdec);
+					dq(a_fastTravelBegin);
+				}
+			};
+
+			Patch patch{ (uintptr_t)(&remainder_1), reinterpret_cast<uintptr_t>(FastTravelBegin) };
+			patch.ready();
+
+			remainder_1 = trampoline.write_branch<5>(targetbegin.address(), trampoline.allocate(patch));
+			remainder_1 = targetbegin.address() + 0x5;
+
+
+			/* struct Patch_end : Xbyak::CodeGenerator
+			{
+				Patch_end(uintptr_t a_remainder, uintptr_t a_fastTravelBegin)
+				{
+					Xbyak::Label fdec;
+
+					call(ptr[rip + fdec]);
+
+					add(rsp, 0x70);
+					pop(rbx);
+
+					mov(rax, qword[a_remainder]);
+					jmp(rax);
+
+					L(fdec);
+					dq(a_fastTravelBegin);
+				}
+			};
+
+			Patch_end patch_end{ (uintptr_t)(&remainder_2), reinterpret_cast<uintptr_t>(FastTravelEnd) };
+			patch_end.ready();
+
+			remainder_2 = trampoline.write_branch<5>(targetend.address(), trampoline.allocate(patch_end));
+			remainder_2 = targetend.address() + 0x5;*/
+		}
+
+	private:
+		static void FastTravelBegin();
+
+		static void FastTravelEnd();
+
+	};
+
 	void InstallHooks();
 }
 

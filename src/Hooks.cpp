@@ -1,3 +1,4 @@
+#include "Game.h"
 #include "Hooks.h"
 #include "Events.h"
 #include "Logging.h"
@@ -7,7 +8,9 @@ namespace Hooks
 
 	bool FastTravelConfirmHook::FastTravelConfirm(uint64_t self, uint64_t menu)
 	{
-		LOG_1("{}[Hooks] [FastTravelConfirm] executed hook");
+		LOG_1("{}[Hooks] [FastTravelConfirm] Begin FastTravel");
+		Game::SetFastTraveling(true);
+		Events::Main::KillThreads();
 		return _FastTravelConfirm(self, menu);
 	}
 
@@ -17,9 +20,23 @@ namespace Hooks
 		return _FadeThenFastTravel(arg_1, arg_2, arg_3, arg_4);
 	}
 
+	void Papyrus_FastTravelHook::FastTravelBegin()
+	{
+		LOG_1("{}[Hooks] [FastTravelBegin] Begin Fast Travel");
+		Game::SetFastTraveling(true);
+		Events::Main::KillThreads();
+	}
+
+	void Papyrus_FastTravelHook::FastTravelEnd()
+	{
+		LOG_1("{}[Hooks] [FastTravelEnd] End Fast Travel");
+		Game::SetFastTraveling(false);
+	}
+
 	void InstallHooks()
 	{
 		FastTravelConfirmHook::InstallHook();
-		FadeThenFastTravelHook::InstallHook();
+		Papyrus_FastTravelHook::InstallHook();
+		//FadeThenFastTravelHook::InstallHook();
 	}
 }
