@@ -1213,6 +1213,8 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				} else {
 					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
 				}
+				UpdateMetrics(reac);
+				timestamp_invalid = 0;
 			}
 			return true;
 		default:

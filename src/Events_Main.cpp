@@ -93,7 +93,7 @@ namespace Events
 				// check if we have a valid effect
 				if (eff != AlchemicEffect::kNone) {
 					CalcActorCooldowns(acinfo, eff, dur);
-					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 				}
 			}
 		}
@@ -132,7 +132,7 @@ namespace Events
 				LOG1_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] check for fortify potion with effect {}", effects.string());
 				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, effects, false, true);
 				if (dur != -1) {
-					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 					CalcActorCooldowns(acinfo, eff, dur);
 					LOG3_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] used potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), dur * 1000, Utility::ToString(eff));
 				}
@@ -203,7 +203,7 @@ namespace Events
 					LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects.string());
 					auto const& [dur, eff] = ACM::ActorUsePoison(acinfo, effects);
 					if (eff != 0)  // check whether an effect was applied
-						acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+						acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPoisons());
 				}
 			}
 			if (combatdata == 0)
@@ -241,6 +241,7 @@ namespace Events
 			}
 			if (dur != -1) {
 				acinfo->SetNextFoodTime(Main::CalcFoodDuration(dur));
+				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownFood());
 			}
 			LOG2_2("{}[Events] [CheckActors] [HandleActorFood] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
 		}
@@ -263,7 +264,7 @@ namespace Events
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
 				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
 				// update global cooldown
-				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 				LOG2_4("{}[Events] [CheckActors] [HandleActorOOCPotions] use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
 			}
 		}

@@ -16,7 +16,10 @@ struct std::hash<RE::ActorHandle>
 {
 	std::size_t operator()(RE::ActorHandle const& handle) const noexcept
 	{
-		return std::hash<unsigned long long>{}((uintptr_t)handle.get().get());
+		if (handle._handle.has_value())
+			return std::hash<unsigned long long>{}((uintptr_t)handle._handle.value());
+		else
+			return 0;
 	}
 };
 

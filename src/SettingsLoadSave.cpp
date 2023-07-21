@@ -514,7 +514,7 @@ void Settings::Load()
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_4); index != 0x1) {
 		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
 		Comp::GetSingleton()->AnPoti_Version = 44;
-		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
+		loginfo("[SETTINGS] Found plugin Animated Potions.esp and activated compatibility mode");
 	}
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_3); index != 0x1) {
 		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
