@@ -185,14 +185,15 @@ namespace Events
 					}
 					// incorporate enemy specific data, player is recognized here
 					RE::Actor* target = nullptr;
-					if (std::shared_ptr<ActorInfo> tar = acinfo->GetTarget().lock())
+					std::shared_ptr<ActorInfo> tar = acinfo->GetTarget().lock();
+					if (tar)
 						target = tar->GetActor();
 					if (target) {
-						if (Settings::Poisons::_DontUseAgainst100PoisonResist && target->AsActorValueOwner()->GetActorValue(RE::ActorValue::kPoisonResist) >= 100) {
+						if (Settings::Poisons::_DontUseAgainst100PoisonResist && tar->GetPermanentPoisonResist() >= 100) {
 							return;
 						}
 						// we can make the usage dependent on the target
-						if (target->GetRace() && target->GetRace()->HasKeyword(Settings::ActorTypeDwarven) || target->GetActorBase() && target->GetActorBase()->HasKeyword(Settings::ActorTypeDwarven))
+						if (tar->IsAutomaton())
 							return;
 						effects |= CalcRegenEffects(acinfo->GetCombatDataTarget());
 						effects |= CalcPoisonEffects(combatdata, target, acinfo->GetCombatDataTarget());

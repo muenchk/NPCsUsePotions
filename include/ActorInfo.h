@@ -252,6 +252,11 @@ private:
 	/// </summary>
 	bool _haslefthand = false;
 
+	/// <summary>
+	/// the permanent poison resistance of an actor
+	/// </summary>
+	int _permanentPoisonResist = 0;
+
 	// temporary targeting variables
 	
 	// own combat data
@@ -722,6 +727,16 @@ public:
 	/// Updates the weapon drawn state of the actor [intern]
 	/// </summary>
 	void UpdateWeaponsDrawn();
+
+	/// <summary>
+	/// Returns the permanent Poison Resistance of the actor
+	/// </summary>
+	/// <returns></returns>
+	int GetPermanentPoisonResist() { return _permanentPoisonResist; }
+	/// <summary>
+	/// Updates the permanent Poison Resistance value of the actor
+	/// </summary>
+	void UpdatePermanentPoisonResist();
 
 	/// <summary>
 	/// Filters a list of custom items and returns only those that can be distributed

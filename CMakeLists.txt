@@ -24,7 +24,7 @@ if(NOT DEFINED SkyrimOutputPath)
 	message(FATAL_ERROR "SkyrimOutputPath is not set")
 endif()
 
-option(COPY_OUTPUT "copy the output of build operations to the game directory" OFF)
+option(COPY_OUTPUT "copy the output of build operations to the game directory" ON)
 option(ENABLE_SKYRIM_SE "Enable support for Skyrim SE in the dynamic runtime feature." ON)
 option(ENABLE_SKYRIM_AE "Enable support for Skyrim AE in the dynamic runtime feature." ON)
 option(ENABLE_SKYRIM_VR "Enable support for Skyrim VR in the dynamic runtime feature." OFF)

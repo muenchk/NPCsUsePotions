@@ -49,6 +49,8 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
+		// update poison resistance
+		UpdatePermanentPoisonResist();
 		// set to valid
 		valid = true;
 		timestamp_invalid = 0;
@@ -119,6 +121,8 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
+		// update poison resistance
+		UpdatePermanentPoisonResist();
 		// set to valid
 		valid = true;
 		timestamp_invalid = 0;
@@ -1019,6 +1023,8 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				} else {
 					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
 				}
+				// update poison resitance
+				UpdatePermanentPoisonResist();
 			}
 			return true;
 		case 0x00000002:
@@ -1084,6 +1090,8 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				} else {
 					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
 				}
+				// update poison resitance
+				UpdatePermanentPoisonResist();
 			}
 			return true;
 		case 0x00000003:
@@ -1148,6 +1156,8 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				} else {
 					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
 				}
+				// update poison resitance
+				UpdatePermanentPoisonResist();
 			}
 			return true;
 		case 0x00000004:
@@ -1215,6 +1225,8 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				}
 				UpdateMetrics(reac);
 				timestamp_invalid = 0;
+				// update poison resitance
+				UpdatePermanentPoisonResist();
 			}
 			return true;
 		default:
@@ -1387,6 +1399,36 @@ void ActorInfo::UpdateWeaponsDrawn()
 
 	if (actor.get() && actor.get().get())
 		weaponsDrawn = actor.get().get()->AsActorState()->IsWeaponDrawn();
+}
+
+void ActorInfo::UpdatePermanentPoisonResist()
+{
+	aclock;
+	if (!valid || dead)
+		return;
+	if (RE::Actor* ac = actor.get().get(); ac != nullptr) {
+		auto race = ac->GetRace();
+		if (race && race->actorEffects && race->actorEffects->numSpells > 0) {
+			// find all abilities that add poison resistance
+			for (int i = 0; i < race->actorEffects->numSpells; i++) {
+				if (race->actorEffects->spells[i]) {
+					RE::EffectSetting* sett = nullptr;
+					for (int c = 0; c < race->actorEffects->spells[i]->effects.size(); c++) {
+						sett = race->actorEffects->spells[i]->effects[c]->baseEffect;
+						if (sett) {
+							if ((ConvertToAlchemyEffectPrimary(sett) & AlchemicEffect::kPoisonResist).IsValid() || (ConvertToAlchemyEffectSecondary(sett) & AlchemicEffect::kPoisonResist).IsValid()) {
+								// found effect wth poison resist
+								if (sett->IsDetrimental())
+									_permanentPoisonResist -= race->actorEffects->spells[i]->effects[c]->effectItem.magnitude;
+								else
+									_permanentPoisonResist += race->actorEffects->spells[i]->effects[c]->effectItem.magnitude;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 #pragma region ActorSpecificFunctions
