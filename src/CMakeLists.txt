@@ -25,7 +25,10 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp" 
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp"
 	"${SOURCE_DIR}/BufferOperations.cpp"
+	"${SOURCE_DIR}/Settings.cpp"
+	"${SOURCE_DIR}/SettingsLoadSave.cpp"
 	"${SOURCE_DIR}/Tests.cpp"
+	"${SOURCE_DIR}/Utility.cpp"
 	"${SOURCE_DIR}/VM.cpp" )
 
 

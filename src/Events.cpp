@@ -511,8 +511,6 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESFormDeleteEvent).name())
 		scriptEventSourceHolder->GetEventSource<RE::TESContainerChangedEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESContainerChangedEvent).name())
-		scriptEventSourceHolder->GetEventSource<RE::TESFastTravelEndEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESFastTravelEndEvent).name())
 		//scriptEventSourceHolder->GetEventSource<RE::TESActivateEvent>()->AddEventSink(EventHandler::GetSingleton());
 		//LOG1_1("{}Registered {}", typeid(RE::TESActivateEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);

@@ -175,7 +175,8 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	// register papyrus functions
 	SKSE::GetPapyrusInterface()->Register(Papyrus::Register);
 
-	Hooks::InstallHooks();
+	// do not install fast travel hooks, since fasttravelend event is not available on VR
+	//Hooks::InstallHooks();
 
 	return true;
 }

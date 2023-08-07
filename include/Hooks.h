@@ -50,8 +50,8 @@ namespace Hooks
 	public:
 		static void InstallHook()
 		{
-			REL::Relocation<uintptr_t> targetbegin{ REL::VariantID(54824, 55457, 0), REL::VariantOffset(0x78, 0x78, 0) };
-			REL::Relocation<uintptr_t> targetend{ REL::VariantID(54824, 55457, 0), REL::VariantOffset(0xD7, 0xD7, 0) };
+			REL::Relocation<uintptr_t> targetbegin{ REL::VariantID(54824, 55457, 0x9ac3a0), REL::VariantOffset(0x78, 0x78, 0x7D) };
+			REL::Relocation<uintptr_t> targetend{ REL::VariantID(54824, 55457, 0x9ac3a0), REL::VariantOffset(0xD7, 0xD7, 0xDA) };
 			auto& trampoline = SKSE::GetTrampoline();
 
 			
