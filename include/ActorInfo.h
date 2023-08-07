@@ -903,6 +903,12 @@ public:
 	bool IsPlayer();
 
 	/// <summary>
+	/// Returns whether the 3D of the actor is loaded
+	/// </summary>
+	/// <returns></returns>
+	bool Is3DLoaded();
+
+	/// <summary>
 	/// Returns the inventory of the actor
 	/// </summary>
 	/// <returns></returns>

@@ -284,6 +284,13 @@ namespace Events
 			acinfo->SetHandleActor(false);
 			return;
 		}
+		// if npc 3d isn't loaded, skip them
+		if (acinfo->Is3DLoaded() == false)
+		{
+			LOG1_5("{}[Events] [CheckActors] [HandleActorRuntimeData] 3d not loaded {}", Utility::PrintForm(acinfo));
+			acinfo->SetHandleActor(false);
+			return;
+		}
 		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo));
 		LOG5_2("{}[Events] [CheckActors] [HandleActorRuntimeData] cooldowns: durHealth:{}\tdurMagicka:{}\tdurStamina:{}\tdurFortify:{}\tdurRegen:{}", acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina(), acinfo->GetDurFortify(), acinfo->GetDurRegeneration());
 		// check for staggered option

@@ -575,17 +575,9 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 					Statistics::Misc_PotionsAdministered++;
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
 
-					if (comp->LoadedZUPA()) {
-						SKSE::GetTaskInterface()->AddTask([acinfo, potion]() {
-							RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), potion, nullptr, 1, nullptr, true, false, false);
-						});
-					}
-					else
-					{
-						SKSE::GetTaskInterface()->AddTask([acinfo, potion]() {
-							acinfo->DrinkPotion(potion, nullptr);
-						});
-					}
+					SKSE::GetTaskInterface()->AddTask([acinfo, potion]() {
+						RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), potion, nullptr, 1, nullptr, true, false, false);
+					});
 					//RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
 				}
 				ls.pop_front();

@@ -1461,6 +1461,18 @@ bool ActorInfo::IsPlayer()
 	return formid == 0x14;
 }
 
+bool ActorInfo::Is3DLoaded()
+{
+	aclock;
+	if (!valid)
+		return false;
+	if (RE::Actor* ac = actor.get().get(); ac != nullptr)
+	{
+		return ac->Is3DLoaded();
+	}
+	return false;
+}
+
 RE::TESObjectREFR::InventoryItemMap ActorInfo::GetInventory()
 {
 	aclock;
