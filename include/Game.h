@@ -102,4 +102,8 @@ namespace Game
 		/// <param name="id">unique registration id</param>
 		void UnregisterForRevertCallback(uint32_t id);
 	};
+
+	bool IsFastTravelling();
+
+	void SetFastTraveling(bool travelling = true);
 }

@@ -24,10 +24,10 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Papyrus.cpp" 
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp" 
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp"
-	"${SOURCE_DIR}/Settings.cpp"
-	"${SOURCE_DIR}/SettingsLoadSave.cpp"
+	"${SOURCE_DIR}/BufferOperations.cpp"
 	"${SOURCE_DIR}/Tests.cpp"
-	"${SOURCE_DIR}/Utility.cpp" )
+	"${SOURCE_DIR}/VM.cpp" )
+
 
 source_group(TREE "${ROOT_DIR}" FILES ${SOURCE_FILES})
 
@@ -154,8 +154,9 @@ if("${COPY_OUTPUT}")
 	add_custom_command(
 		TARGET "${PROJECT_NAME}"
 		POST_BUILD
-		COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "${SkyrimOutputPath}/Data/SKSE/Plugins/"
-		COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_PDB_FILE:${PROJECT_NAME}>" "${SkyrimOutputPath}/Data/SKSE/Plugins/"
+		COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "$ENV{NPCsUsePotionsOutputPath}/SKSE/Plugins/"
+		COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_PDB_FILE:${PROJECT_NAME}>" "$ENV{NPCsUsePotionsOutputPath}/SKSE/Plugins/"
 		VERBATIM
 	)
 endif()
+

@@ -4,6 +4,7 @@
 #include <RE/Skyrim.h>
 #include <REL/Relocation.h>
 #include <SKSE/SKSE.h>
+#include <xbyak/xbyak.h>
 
 #ifdef NDEBUG
 #	include <spdlog/sinks/basic_file_sink.h>

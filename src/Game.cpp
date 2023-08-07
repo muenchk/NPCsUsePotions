@@ -106,4 +106,17 @@ namespace Game
 		static SaveLoad singleton;
 		return std::addressof(singleton);
 	}
+
+
+	bool _fasttravelling = false;
+
+	bool IsFastTravelling()
+	{
+		return _fasttravelling;
+	}
+
+	void SetFastTraveling(bool travelling)
+	{
+		_fasttravelling = travelling;
+	}
 }

@@ -5,7 +5,6 @@
 class Compatibility
 {
 public:
-
 	// apothecary
 	static inline std::string Apothecary = "Apothecary.esp";
 	RE::BGSKeyword* Apot_SH_AlcoholDrinkKeyword = nullptr;
@@ -65,7 +64,6 @@ public:
 
 	int AnPois_GlobalCooldown = 4000;
 
-
 	// animated potions
 	static inline std::string AnimatedPotions_4_4 = "Animated Potions.esp";
 	static inline std::string AnimatedPotions_4_3 = "AnimatedPotions.esp";
@@ -78,7 +76,7 @@ public:
 
 	// ZUPA
 	int ZUPA_GlobalCooldown = 2500;
-	
+
 	// potion animated fx
 	static inline std::string PotionAnimatedfx = "PotionAnimatedfx.esp";
 	RE::EffectSetting* PAF_NPCDrinkingCoolDownEffect = nullptr;
@@ -86,7 +84,6 @@ public:
 	std::string PAF_NPCDrinkingCoolDownEffect_name = "PAF_NPCDrinkingCoolDownEffect";
 	std::string PAF_NPCDrinkingCoolDownSpell_name = "PAF_NPCDrinkingCoolDownSpell";
 
-	
 	// general section
 private:
 	/// <summary>
@@ -120,6 +117,19 @@ private:
 	int _globalCooldown = 0;
 
 	/// <summary>
+	/// Global cooldown used for potions
+	/// </summary>
+	int _globalCooldownPotions = 0;
+	/// <summary>
+	/// Global cooldown used for poisons
+	/// </summary>
+	int _globalCooldownPoisons = 0;
+	/// <summary>
+	/// Global cooldown used for food
+	/// </summary>
+	int _globalCooldownFood = 0;
+
+	/// <summary>
 	/// whether item usage while paralyzed is disabled
 	/// </summary>
 	bool _disableParalyzedItems = false;
@@ -139,7 +149,6 @@ private:
 	std::unordered_map<RE::FormID, std::tuple<RE::AlchemyItem*, RE::FormID, int>> _AnPoti_ActorPoisonMap;
 
 public:
-	
 	/// <summary>
 	/// Returns a static Compatibility object
 	/// </summary>
@@ -179,16 +188,16 @@ public:
 	{
 		return Settings::Compatibility::CACO::_CompatibilityCACO && _loadedCACO;
 	}
-	
+
 	/// <summary>
 	/// returns whether compatibility for animated potions is enabled
 	/// </summary>
 	/// <returns></returns>
 	bool LoadedAnimatedPotions()
 	{
-		return Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable && 
-			_loadedAnimatedPotions && 
-			(AnPoti_TogglePlayerPotionAnimation && AnPoti_TogglePlayerPotionAnimation->value == 1);
+		return Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable &&
+		       _loadedAnimatedPotions &&
+		       (AnPoti_TogglePlayerPotionAnimation && AnPoti_TogglePlayerPotionAnimation->value == 1);
 	}
 
 	/// <summary>
@@ -224,9 +233,9 @@ public:
 	/// <returns></returns>
 	bool DisableItemUsageWhileParalyzed()
 	{
-		return Settings::Usage::_DisableItemUsageWhileStaggered || _disableParalyzedItems;	
+		return Settings::Usage::_DisableItemUsageWhileStaggered || _disableParalyzedItems;
 	}
-	
+
 	/// <summary>
 	/// Returns the global cooldown for item usage
 	/// </summary>
@@ -234,6 +243,33 @@ public:
 	int GetGlobalCooldown()
 	{
 		return _globalCooldown;
+	}
+
+	/// <summary>
+	/// Returns the global cooldown for potion usage
+	/// </summary>
+	/// <returns></returns>
+	int GetGlobalCooldownPotions()
+	{
+		return _globalCooldownPotions;
+	}
+
+	/// <summary>
+	/// Returns the global cooldown for poison usage
+	/// </summary>
+	/// <returns></returns>
+	int GetGlobalCooldownPoisons()
+	{
+		return _globalCooldownPoisons;
+	}
+
+	/// <summary>
+	/// Returns the global cooldown for food usage
+	/// </summary>
+	/// <returns></returns>
+	int GetGlobalCooldownFood()
+	{
+		return _globalCooldownFood;
 	}
 
 	/// <summary>
@@ -259,7 +295,6 @@ public:
 	/// <param name="actor"></param>
 	void AnPois_RemoveActorPoison(RE::FormID actor);
 
-	
 	/// <summary>
 	/// [AnimatedPotions] Finds the potion that should be applied to [actor]
 	/// </summary>
@@ -304,7 +339,6 @@ public:
 	/// </summary>
 	/// <param name="actor"></param>
 	void AnPoti_RemoveActorPoison(RE::FormID actor);
-
 
 	/// <summary>
 	/// Registers Game Callbacks

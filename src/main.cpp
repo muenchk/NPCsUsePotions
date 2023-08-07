@@ -155,7 +155,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	SKSE::Init(a_skse);
 
-	//SKSE::AllocTrampoline(1<<4);
+	SKSE::AllocTrampoline(1<<8);
 
 	auto messaging = SKSE::GetMessagingInterface();
 	if (!messaging->RegisterListener("SKSE", MessageHandler)) {
@@ -174,6 +174,8 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	// register papyrus functions
 	SKSE::GetPapyrusInterface()->Register(Papyrus::Register);
+
+	Hooks::InstallHooks();
 
 	return true;
 }

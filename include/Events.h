@@ -16,7 +16,10 @@ struct std::hash<RE::ActorHandle>
 {
 	std::size_t operator()(RE::ActorHandle const& handle) const noexcept
 	{
-		return std::hash<unsigned long long>{}((uintptr_t)handle.get().get());
+		if (handle._handle.has_value())
+			return std::hash<unsigned long long>{}((uintptr_t)handle._handle.value());
+		else
+			return 0;
 	}
 };
 
@@ -68,6 +71,11 @@ namespace Events
 		/// list of npcs that are currently in combat
 		/// </summary>
 		static inline std::forward_list<std::shared_ptr<ActorInfo>> combatants;
+
+		/// <summary>
+		/// list of npcs that should be registered after fast travel has ended
+		/// </summary>
+		static inline std::list<RE::ActorHandle> toregister;
 
 		//-------------------Handler-------------------------
 
@@ -191,7 +199,7 @@ namespace Events
 		/// </summary>
 		/// <param name="dur"></param>
 		/// <returns></returns>
-		static int CalcFoodDuration(int dur);
+		static float CalcFoodDuration(int dur);
 
 		//----------------------Main-----------------------
 
@@ -251,6 +259,11 @@ namespace Events
 		/// </summary>
 		/// <param name="actor"></param>
 		static void RegisterNPC(RE::Actor* actor);
+
+		/// <summary>
+		/// Registers NPCs that could not be registered during fast travel
+		/// </summary>
+		static void RegisterFastTravelNPCs();
 
 		/// <summary>
 		/// Unregisters an NPC form handling
@@ -317,7 +330,7 @@ namespace Events
 		/// </summary>
 		/// <param name="actor"></param>
 		/// <returns></returns>
-		static void SetDead(RE::Actor* actor);
+		static void SetDead(RE::ActorHandle actor);
 
 		/// <summary>
 		/// initializes important variables, which need to be initialized every time a game is loaded
@@ -368,6 +381,17 @@ namespace Events
 		/// <returns></returns>
 		static long ReadDeadActors(SKSE::SerializationInterface* a_intfc, uint32_t length);
 
+		//---------------------Threads-----------------------
+
+		/// <summary>
+		/// Kills all active threads
+		/// </summary>
+		static void KillThreads();
+		/// <summary>
+		/// Inits all inactive threads
+		/// </summary>
+		static void InitThreads();
+
 	};
 
 
@@ -383,7 +407,9 @@ namespace Events
 		public RE::BSTEventSink<RE::TESCellAttachDetachEvent>,
 		public RE::BSTEventSink<RE::TESEquipEvent>,
 		public RE::BSTEventSink<RE::TESFormDeleteEvent>,
-		public RE::BSTEventSink<RE::TESContainerChangedEvent>
+		public RE::BSTEventSink<RE::TESContainerChangedEvent>,
+		public RE::BSTEventSink<RE::TESFastTravelEndEvent>,
+		public RE::BSTEventSink<RE::TESActivateEvent>
 	{
 	public:
 		/// <summary>
@@ -456,6 +482,20 @@ namespace Events
 		/// <param name="a_eventSource"></param>
 		/// <returns></returns>
 		virtual EventResult ProcessEvent(const RE::TESContainerChangedEvent* a_event, RE::BSTEventSource<RE::TESContainerChangedEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for end of fast travel
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::TESFastTravelEndEvent* a_event, RE::BSTEventSource<RE::TESFastTravelEndEvent>* a_eventSource) override;
+		/// <summary>
+		/// EventHandler for activate events
+		/// </summary>
+		/// <param name="a_event"></param>
+		/// <param name="a_eventSource"></param>
+		/// <returns></returns>
+		virtual EventResult ProcessEvent(const RE::TESActivateEvent* a_event, RE::BSTEventSource<RE::TESActivateEvent>* a_eventSource) override;
 
 
 		/// <summary>

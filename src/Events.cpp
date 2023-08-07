@@ -17,7 +17,9 @@
 #include "Game.h"
 #include "Settings.h"
 #include "Statistics.h"
+#include "Threading.h"
 #include "Utility.h"
+#include "VM.h"
 		
 namespace Events
 {
@@ -92,25 +94,28 @@ namespace Events
 			} else {
 				// if not already dead, do stuff
 				if (Main::IsDeadEventFired(actor) == false) {
-					Main::SetDead(actor);
 					EvalProcessingEvent();
 					// invalidate actor
-					std::shared_ptr<ActorInfo> acinfo = Main::data->FindActorExisting(actor);
+					std::shared_ptr<ActorInfo> acinfo = Main::data->FindActorExisting(actor->GetFormID());
+					// if invalid return
+					if (!acinfo->IsValid())
+						return EventResult::kContinue;
+					Main::SetDead(acinfo->GetHandle());
 					bool excluded = Distribution::ExcludedNPC(acinfo);
 					acinfo->SetDead();
 					// all npcs must be unregistered, even if distribution oes not apply to them
-					Main::UnregisterNPC(actor);
+					Main::UnregisterNPC(acinfo->GetActor());
 					// as with potion distribution, exlude excluded actors and potential followers
 					if (!excluded) {
 						// create and insert new event
 						if (Settings::Removal::_RemoveItemsOnDeath) {
-							LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(actor->GetFormID()));
+							LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(acinfo->GetFormID()));
 							auto items = Distribution::GetAllInventoryItems(acinfo);
 							LOG1_1("{}[Events] [TESDeathEvent] found {} items", items.size());
 							if (items.size() > 0) {
 								// remove items that are too much
 								while (items.size() > Settings::Removal::_MaxItemsLeft) {
-									actor->RemoveItem(items.back(), 1 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+									acinfo->RemoveItem(items.back(), 1);
 									LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items.back()));
 									items.pop_back();
 								}
@@ -119,7 +124,7 @@ namespace Events
 								if (Settings::Removal::_ChanceToRemoveItem > 0) {
 									for (int i = (int)items.size() - 1; i >= 0; i--) {
 										if (rand100(rand) <= Settings::Removal::_ChanceToRemoveItem) {
-											actor->RemoveItem(items[i], 100 /*remove all there are*/, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+											acinfo->RemoveItem(items[i], 100 /*remove all there are*/);
 											LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items[i]));
 										} else {
 											LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", Utility::PrintForm(items[i]));
@@ -139,15 +144,15 @@ namespace Events
 						// calc chances
 						if (rand100(rand) <= ditems[i]->chance) {
 							// distr item
-							actor->AddObjectToContainer(ditems[i]->object, nullptr, ditems[i]->num, nullptr);
+							acinfo->AddItem(ditems[i]->object, ditems[i]->num);
 						}
 					}
-					acinfo->SetInvalid();
 					// delete actor from data
-					Main::data->DeleteActor(actor->GetFormID());
-					Main::comp->AnPois_RemoveActorPoison(actor->GetFormID());
-					Main::comp->AnPoti_RemoveActorPotion(actor->GetFormID());
-					Main::comp->AnPoti_RemoveActorPoison(actor->GetFormID());
+					Main::data->DeleteActor(acinfo->GetFormID());
+					Main::comp->AnPois_RemoveActorPoison(acinfo->GetFormID());
+					Main::comp->AnPoti_RemoveActorPotion(acinfo->GetFormID());
+					Main::comp->AnPoti_RemoveActorPoison(acinfo->GetFormID());
+					acinfo->SetInvalid();
 				}
 			}
 		}
@@ -428,6 +433,53 @@ namespace Events
 		return EventResult::kContinue;
 	}
 
+	/// <summary>
+	/// EventHandler for end of fast travel
+	/// </summary>
+	/// <param name="a_event"></param>
+	/// <param name="a_eventSource"></param>
+	/// <returns></returns>
+	EventResult EventHandler::ProcessEvent(const RE::TESFastTravelEndEvent* a_event, RE::BSTEventSource<RE::TESFastTravelEndEvent>*)
+	{
+		// very important event. Allows to catch actors and other stuff that gets deleted, without dying, which could cause CTDs otherwise
+		
+		LOG_1("{}[Events] [TESFastTravelEndEvent]");
+
+		Game::SetFastTraveling(false);
+		Main::InitThreads();
+
+		Main::RegisterFastTravelNPCs();
+
+		return EventResult::kContinue;
+	}
+
+	EventResult EventHandler::ProcessEvent(const RE::TESActivateEvent* a_event, RE::BSTEventSource<RE::TESActivateEvent>*)
+	{
+		// currently unused since another solution for fasttravel tracking has been found
+
+		if (a_event && a_event->actionRef.get() && a_event->objectActivated.get()) {
+			if (a_event->actionRef->IsPlayerRef())
+				LOG1_1("{}[Events] [TESActivateEvent] Activated {}", Utility::PrintForm(a_event->objectActivated.get()));
+			// objects valid
+			static RE::TESQuest* DialogueCarriageSystem = RE::TESForm::LookupByID<RE::TESQuest>(0x17F01);
+			if (a_event->actionRef->IsPlayerRef() && a_event->objectActivated.get()->GetBaseObject()->GetFormID() == 0x103445) {
+				LOG_1("{}[Events] [TESActivateEvent] Activated Carriage Marker");
+				auto scriptobj = ScriptObject::FromForm(DialogueCarriageSystem, "CarriageSystemScript");
+				if (scriptobj.get()) {
+					auto currentDestination = scriptobj->GetProperty("currentDestination");
+					if (currentDestination) {
+						if (currentDestination->GetSInt() != 0 && currentDestination->GetSInt() != -1) {
+							LOG_1("{}[Events] [TESActivateEvent] Recognized player fasttraveling via carriage");
+							Game::SetFastTraveling(true);
+						}
+					}
+				}
+			}
+		}
+
+		return EventResult::kContinue;
+	}
+
     /// <summary>
     /// returns singleton to the EventHandler
     /// </summary>
@@ -459,6 +511,10 @@ namespace Events
 		LOG1_1("{}Registered {}", typeid(RE::TESFormDeleteEvent).name())
 		scriptEventSourceHolder->GetEventSource<RE::TESContainerChangedEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESContainerChangedEvent).name())
+		scriptEventSourceHolder->GetEventSource<RE::TESFastTravelEndEvent>()->AddEventSink(EventHandler::GetSingleton());
+		LOG1_1("{}Registered {}", typeid(RE::TESFastTravelEndEvent).name())
+		//scriptEventSourceHolder->GetEventSource<RE::TESActivateEvent>()->AddEventSink(EventHandler::GetSingleton());
+		//LOG1_1("{}Registered {}", typeid(RE::TESActivateEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);
 		LOG1_1("{}Registered {}", typeid(Main::LoadGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000002, Main::RevertGameCallback);

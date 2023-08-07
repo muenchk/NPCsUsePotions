@@ -2,6 +2,7 @@
 #include "ActorManipulation.h"
 #include "Events.h"
 #include "Game.h"
+#include "Threading.h"
 #include "Utility.h"
 
 namespace Events
@@ -459,6 +460,13 @@ namespace Events
 		// exit if the actor is unsafe / not valid
 		if (Utility::ValidateActor(actor) == false)
 			return;
+		// if currently fasttraveling, save actor to register later
+		if (Game::IsFastTravelling()) {
+			LOG1_1("{}[Events] [RegisterNPC] Saving for later: {}", Utility::PrintForm(actor));
+			toregister.push_back(actor->GetHandle());
+			LOG_1("{}[Events] [RegisterNPC] Saved");
+			return;
+		}
 		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 		LOG1_1("{}[Events] [RegisterNPC] Found: {}", Utility::PrintForm(acinfo));
@@ -490,6 +498,21 @@ namespace Events
 			return;
 
 		LOG_1("{}[Events] [RegisterNPC] finished registering NPC");
+	}
+
+	/// <summary>
+	/// Registers NPCs that could not be registered during fast travel
+	/// </summary>
+	void Main::RegisterFastTravelNPCs()
+	{
+		RE::Actor* reg = nullptr;
+
+		while (!toregister.empty()) {
+			reg = toregister.front().get().get();
+			toregister.pop_front();
+			RegisterNPC(reg);
+		}
+		
 	}
 
 	/// <summary>
@@ -568,10 +591,10 @@ namespace Events
 		return actor == nullptr || deads.contains(actor->GetHandle());
 	}
 
-	void Main::SetDead(RE::Actor* actor)
+	void Main::SetDead(RE::ActorHandle actor)
 	{
-		if (actor != nullptr)
-			deads.insert(actor->GetHandle());
+		if (actor.get().get())
+			deads.insert(actor);
 	}
 
 	int Main::CalcPotionDuration(int dur)
@@ -601,7 +624,7 @@ namespace Events
 		           dur * 1000;
 	}
 
-	int Main::CalcFoodDuration(int dur)
+	float Main::CalcFoodDuration(int dur)
 	{
 		static RE::Calendar* calendar = RE::Calendar::GetSingleton();
 		// if duration is zero (vanilla food) set cooldown to at least 4 minutes

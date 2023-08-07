@@ -644,7 +644,7 @@ public:
 	/// <summary>
 	/// returns the set that contains item IDs that are excluded for the player only
 	/// </summary>
-	static inline std::unordered_set<RE::FormID>* excludedItemsPlayer() { return initialised ? &_excludedItemsPlayer : &_dummySet1; }
+	static const std::unordered_set<RE::FormID>* excludedItemsPlayer() { return initialised ? &_excludedItemsPlayer : &_dummySet1; }
 	/// <summary>
 	/// returns the set of assoc objects excluded from baseline distribution
 	/// </summary>

@@ -212,16 +212,19 @@ void Compatibility::Load()
 	// global
 
 	_globalCooldown = std::max((long)_globalCooldown, Settings::Usage::_globalCooldown);
+	_globalCooldownPotions = _globalCooldown;
+	_globalCooldownPoisons = _globalCooldown;
+	_globalCooldownFood = _globalCooldown;
 	if (_loadedAnimatedPoisons) {
-		_globalCooldown = std::max(_globalCooldown, AnPois_GlobalCooldown);
+		_globalCooldownPoisons = std::max(_globalCooldownPoisons, AnPois_GlobalCooldown);
 		_disableParalyzedItems = true;
 	}
 	if (_loadedAnimatedPotions) {
-		_globalCooldown = std::max(_globalCooldown, AnPoti_GlobalCooldown);
+		_globalCooldownPotions = std::max(_globalCooldownPotions, AnPoti_GlobalCooldown);
 		_disableParalyzedItems = true;
 	}
 	if (_loadedZUPA) {
-		_globalCooldown = std::max(_globalCooldown, ZUPA_GlobalCooldown);
+		_globalCooldownPotions = std::max(_globalCooldownPotions, ZUPA_GlobalCooldown);
 		_disableParalyzedItems = true;
 	}
 	if (_loadedPotionAnimatedFx) {

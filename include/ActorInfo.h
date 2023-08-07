@@ -252,6 +252,11 @@ private:
 	/// </summary>
 	bool _haslefthand = false;
 
+	/// <summary>
+	/// the permanent poison resistance of an actor
+	/// </summary>
+	int _permanentPoisonResist = 0;
+
 	// temporary targeting variables
 	
 	// own combat data
@@ -401,6 +406,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	RE::Actor* GetActor();
+	/// <summary>
+	/// Returns the underlying actor handle
+	/// </summary>
+	/// <returns></returns>
+	RE::ActorHandle GetHandle();
 	/// <summary>
 	/// Returns the formid
 	/// </summary>
@@ -719,6 +729,16 @@ public:
 	void UpdateWeaponsDrawn();
 
 	/// <summary>
+	/// Returns the permanent Poison Resistance of the actor
+	/// </summary>
+	/// <returns></returns>
+	int GetPermanentPoisonResist() { return _permanentPoisonResist; }
+	/// <summary>
+	/// Updates the permanent Poison Resistance value of the actor
+	/// </summary>
+	void UpdatePermanentPoisonResist();
+
+	/// <summary>
 	/// Filters a list of custom items and returns only those that can be distributed
 	/// </summary>
 	/// <param name="itms">list of custom items</param>
@@ -881,6 +901,12 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsPlayer();
+
+	/// <summary>
+	/// Returns whether the 3D of the actor is loaded
+	/// </summary>
+	/// <returns></returns>
+	bool Is3DLoaded();
 
 	/// <summary>
 	/// Returns the inventory of the actor

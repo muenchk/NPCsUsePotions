@@ -8,6 +8,7 @@
 #include "ActorManipulation.h"
 #include "Distribution.h"
 #include "Events.h"
+#include "Game.h"
 #include "Logging.h"
 #include "Settings.h"
 #include "Utility.h"
@@ -92,7 +93,7 @@ namespace Events
 				// check if we have a valid effect
 				if (eff != AlchemicEffect::kNone) {
 					CalcActorCooldowns(acinfo, eff, dur);
-					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 				}
 			}
 		}
@@ -131,7 +132,7 @@ namespace Events
 				LOG1_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] check for fortify potion with effect {}", effects.string());
 				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, effects, false, true);
 				if (dur != -1) {
-					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 					CalcActorCooldowns(acinfo, eff, dur);
 					LOG3_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] used potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), dur * 1000, Utility::ToString(eff));
 				}
@@ -184,14 +185,15 @@ namespace Events
 					}
 					// incorporate enemy specific data, player is recognized here
 					RE::Actor* target = nullptr;
-					if (std::shared_ptr<ActorInfo> tar = acinfo->GetTarget().lock())
+					std::shared_ptr<ActorInfo> tar = acinfo->GetTarget().lock();
+					if (tar)
 						target = tar->GetActor();
 					if (target) {
-						if (Settings::Poisons::_DontUseAgainst100PoisonResist && target->AsActorValueOwner()->GetActorValue(RE::ActorValue::kPoisonResist) >= 100) {
+						if (Settings::Poisons::_DontUseAgainst100PoisonResist && tar->GetPermanentPoisonResist() >= 100) {
 							return;
 						}
 						// we can make the usage dependent on the target
-						if (target->GetRace() && target->GetRace()->HasKeyword(Settings::ActorTypeDwarven) || target->GetActorBase() && target->GetActorBase()->HasKeyword(Settings::ActorTypeDwarven))
+						if (tar->IsAutomaton())
 							return;
 						effects |= CalcRegenEffects(acinfo->GetCombatDataTarget());
 						effects |= CalcPoisonEffects(combatdata, target, acinfo->GetCombatDataTarget());
@@ -202,7 +204,7 @@ namespace Events
 					LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects.string());
 					auto const& [dur, eff] = ACM::ActorUsePoison(acinfo, effects);
 					if (eff != 0)  // check whether an effect was applied
-						acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+						acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPoisons());
 				}
 			}
 			if (combatdata == 0)
@@ -238,8 +240,9 @@ namespace Events
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}
-			if (effect != 0 || dur != -1) {
+			if (dur != -1) {
 				acinfo->SetNextFoodTime(Main::CalcFoodDuration(dur));
+				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownFood());
 			}
 			LOG2_2("{}[Events] [CheckActors] [HandleActorFood] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
 		}
@@ -262,7 +265,7 @@ namespace Events
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
 				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
 				// update global cooldown
-				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldown());
+				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 				LOG2_4("{}[Events] [CheckActors] [HandleActorOOCPotions] use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
 			}
 		}
@@ -278,6 +281,13 @@ namespace Events
 			return;
 		// if global cooldown greater zero, we can skip everything
 		if (acinfo->GetGlobalCooldownTimer() > tolerance) {
+			acinfo->SetHandleActor(false);
+			return;
+		}
+		// if npc 3d isn't loaded, skip them
+		if (acinfo->Is3DLoaded() == false)
+		{
+			LOG1_5("{}[Events] [CheckActors] [HandleActorRuntimeData] 3d not loaded {}", Utility::PrintForm(acinfo));
 			acinfo->SetHandleActor(false);
 			return;
 		}
@@ -409,6 +419,11 @@ namespace Events
 		while (!stopactorhandler) {
 			if (!CanProcess())
 				goto CheckActorsSkipIteration;
+			if (Game::IsFastTravelling())
+			{
+				LOG_2("{}[Events] [CheckActors] Skip iteration due to Fast Travel");
+				goto CheckActorsSkipIteration;
+			}
 			// update active actors
 			actorhandlerworking = true;
 
@@ -460,7 +475,7 @@ namespace Events
 
 				LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(actors.size()));
 
-				if (!CanProcess())
+				if (!CanProcess() || Game::IsFastTravelling())
 					goto CheckActorsSkipIteration;
 				if (IsPlayerDead())
 					break;
@@ -501,7 +516,7 @@ namespace Events
 						}
 					});
 
-					if (!CanProcess())
+					if (!CanProcess() || Game::IsFastTravelling())
 						goto CheckActorsSkipIteration;
 					if (IsPlayerDead())
 						break;
@@ -510,6 +525,9 @@ namespace Events
 					SKSE::GetTaskInterface()->AddTask([actors]() {
 						std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 							if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+								// emergency catch
+								if (Game::IsFastTravelling())
+									return;
 								// handle potions out-of-combat
 								if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
 									HandleActorOOCPotions(acinfo);
@@ -523,7 +541,7 @@ namespace Events
 								// handle food
 								HandleActorFood(acinfo);
 							}
-						});
+							});
 					});
 				}
 				catch (std::bad_alloc& e) {
@@ -679,6 +697,29 @@ CheckActorsSkipIteration:
 		PROF1_1("{}[Events] [LoadGameSub] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
 
+	void Main::KillThreads()
+	{
+		stopactorhandler = true;
+		std::this_thread::sleep_for(10ms);
+		if (actorhandler != nullptr)
+			actorhandler->~thread();
+		actorhandler = nullptr;
+	}
+
+	void Main::InitThreads()
+	{
+		if (actorhandler != nullptr) {
+			// if the thread is there, then destroy and delete it
+			// if it is joinable and not running it has already finished, but needs to be joined before
+			// it can be destroyed savely
+			actorhandler->~thread();
+			delete actorhandler;
+			actorhandler = nullptr;
+		}
+		actorhandler = new std::thread(CheckActors);
+		actorhandler->detach();
+	}
+
 	/// <summary>
 	/// Callback on reverting the game. Disables processing and stops all handlers
 	/// </summary>
@@ -688,10 +729,7 @@ CheckActorsSkipIteration:
 		LOG_1("{}[Events] [RevertGameCallback]");
 		loaded = false;
 		enableProcessing = false;
-		stopactorhandler = true;
-		std::this_thread::sleep_for(10ms);
-		if (actorhandler != nullptr)
-			actorhandler->~thread();
+		KillThreads();
 		LOG1_1("{}[PlayerDead] {}", playerdied);
 		// reset actor processing list
 		acset.clear();
