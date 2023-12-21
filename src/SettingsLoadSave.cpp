@@ -507,7 +507,13 @@ void Settings::Load()
 	// search for AnimatedPoisons.esp
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons); index != 0x1) {
 		Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons = true;
+		Comp::GetSingleton()->AnPois_Version = 32;
 		loginfo("[SETTINGS] Found plugin AnimatedPoisons.esp and activated compatibility mode");
+	}
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons_5); index != 0x1) {
+		Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons = true;
+		Comp::GetSingleton()->AnPois_Version = 50;
+		loginfo("[SETTINGS] Found plugin Animated Poisons.esp and activated compatibility mode");
 	}
 
 	// search for AnimatedPotions.esp

@@ -1026,10 +1026,10 @@ RE::TESForm* Utility::GetTESForm(RE::TESDataHandler* datahandler, RE::FormID for
 	return tmp;
 }
 
-std::vector<std::tuple<Distribution::AssocType, RE::FormID>> Utility::ParseAssocObjects(std::string input, bool& error, std::string file, std::string line, int& totalobjects)
+std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> Utility::ParseAssocObjects(std::string input, bool& error, std::string file, std::string line, int& totalobjects)
 {
 	LOG_3("{}[Utility] [ParseAssocObjects]");
-	std::vector<std::tuple<Distribution::AssocType, RE::FormID>> ret;
+	std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> ret;
 	try {
 		auto datahandler = RE::TESDataHandler::GetSingleton();
 		size_t pos;
@@ -1081,7 +1081,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID>> Utility::ParseAssoc
 				if (tmp != nullptr) {
 					type = MatchValidFormType(tmp->GetFormType(), valid);
 					if (valid) {
-						ret.push_back({ type, tmp->GetFormID() });
+						ret.push_back({ type, tmp->GetFormID() , tmp});
 					} else {
 						logwarn("[Utility] [ParseAssocObjects] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
 					}

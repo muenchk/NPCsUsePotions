@@ -9,6 +9,9 @@
 #include "Compatibility.h"
 #include "Papyrus.h"
 
+#include <string>
+#include <ShlObj_core.h>
+
 namespace
 {
 	void InitializeLog()
@@ -16,13 +19,18 @@ namespace
 #ifndef NDEBUG
 		auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
 #else
-		auto path = logger::log_directory();
+		/* auto path = SKSE::log::log_directory();
 		if (!path) {
 			util::report_and_fail("Failed to find standard logging directory"sv);
 		}
 
+		*path /= Settings::PluginNamePlain;
 		*path /= fmt::format("{}.log"sv, Plugin::NAME);
-		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);
+		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);*/
+		auto path = Settings::log_directory;
+		path /= Settings::PluginNamePlain;
+		path /= fmt::format("{}.log"sv, Plugin::NAME);
+		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.string(), true);
 #endif
 
 #ifndef NDEBUG
@@ -40,6 +48,7 @@ namespace
 
 		Profile::Init(Settings::PluginNamePlain);
 		LogUsage::Init(Settings::PluginNamePlain);
+		LogExcl::Init(Settings::PluginNamePlain);
 	}
 }
 /*
@@ -180,6 +189,27 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
+	// find logging folder
+	PWSTR ppszPath;
+	HRESULT hr = SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &ppszPath);
+	std::wstring myPath;
+	if (SUCCEEDED(hr)) {
+		myPath = ppszPath;
+	}
+
+	CoTaskMemFree(ppszPath);
+
+	Settings::log_directory = myPath;
+	Settings::log_directory /= "My Games";
+	if (REL::Module::IsVR())
+		Settings::log_directory /= "Skyrim VR";
+	else if (a_skse->RuntimeVersion() == SKSE::RUNTIME_SSE_1_6_659)
+		Settings::log_directory /= "Skyrim Special Edition GOG";
+	else
+		Settings::log_directory /= "Skyrim Special Edition";
+	Settings::log_directory /= "SKSE";
+	Logging::log_directory = Settings::log_directory;
+
 	InitializeLog();
 
 	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());

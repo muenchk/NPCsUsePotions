@@ -38,6 +38,10 @@ public:
 	/// </summary>
 	static inline std::string PluginNamePlain = "NPCsUsePotions";
 
+	static inline std::filesystem::path log_directory = "";
+
+	static inline std::filesystem::path file_directory = "";
+
 	/// <summary>
 	/// Supported types of Items
 	/// </summary>
