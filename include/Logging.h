@@ -345,6 +345,10 @@
 	if (Logging::EnableProfiling && Logging::ProfileLevel >= 2) \
 		static_cast<void>(profile(s, Logging::TimePassed() + " | ", t));
 
+#define EXCL(s, t) \
+	if (Logging::EnableLoadLog) \
+		static_cast<void>(logexcl(s, t));
+
 #ifndef NDEBUG
 #	define LogConsole(c_str) \
 		((void)0);
@@ -352,6 +356,58 @@
 #	define LogConsole(c_str) \
 		((void)0);  //RE::ConsoleLog::GetSingleton()->Print(c_str);
 #endif
+
+
+class Logging
+{
+public:
+	/// <summary>
+	/// time the game was started
+	/// </summary>
+	static inline std::chrono::time_point<std::chrono::system_clock> execstart = std::chrono::system_clock::now();
+
+
+
+	/// <summary>
+	/// calculates and returns the time passed sinve programstart
+	/// </summary>
+	/// <returns></returns>
+	static std::string TimePassed()
+	{
+		std::stringstream ss;
+		ss << std::setw(12) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - execstart);
+		return ss.str();
+	}
+
+	/// <summary>
+	/// Whether logging is enables
+	/// </summary>
+	static inline bool EnableLog = false;
+	/// <summary>
+	/// Whether logging during loading the game is enabled
+	/// </summary>
+	static inline bool EnableLoadLog = false;
+	/// <summary>
+	/// Whether profiling is enabled
+	/// </summary>
+	static inline bool EnableProfiling = false;
+	/// <summary>
+	/// Whether generic Logging is enabled
+	/// </summary>
+	static inline bool EnableGenericLogging = true;
+	/// <summary>
+	/// The level of events to log
+	/// </summary>
+	static inline int LogLevel = 0;
+	/// <summary>
+	/// The level of functions to profile
+	/// </summary>
+	static inline int ProfileLevel = 0;
+	/// <summary>
+	/// Directory for logfiles
+	/// </summary>
+	static inline std::filesystem::path log_directory = "";
+};
 
 class Profile
 {
@@ -366,13 +422,14 @@ public:
 	static void Init(std::string pluginname)
 	{
 		lock.acquire();
-		auto path = SKSE::log::log_directory();
-		if (path.has_value()) {
-			_stream = new std::ofstream(path.value() / (pluginname + "_profile.log"), std::ios_base::out | std::ios_base::trunc);
-		}
+		//auto path = SKSE::log::log_directory();
+		//if (path.has_value()) {
+		//	_stream = new std::ofstream(path.value() / pluginname / (pluginname + "_profile.log"), std::ios_base::out | std::ios_base::trunc);
+		//}
+		_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + "_profile.log"), std::ios_base::out | std::ios_base::trunc);
 		lock.release();
 	}
-	
+
 	/// <summary>
 	/// Closes profile log
 	/// </summary>
@@ -422,54 +479,6 @@ struct [[maybe_unused]] profile
 template <class... Args>
 profile(fmt::format_string<Args...>, Args&&...) -> profile<Args...>;
 
-class Logging
-{
-public:
-	/// <summary>
-	/// time the game was started
-	/// </summary>
-	static inline std::chrono::time_point<std::chrono::system_clock> execstart = std::chrono::system_clock::now();
-
-
-
-	/// <summary>
-	/// calculates and returns the time passed sinve programstart
-	/// </summary>
-	/// <returns></returns>
-	static std::string TimePassed()
-	{
-		std::stringstream ss;
-		ss << std::setw(12) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - execstart);
-		return ss.str();
-	}
-
-	/// <summary>
-	/// Whether logging is enables
-	/// </summary>
-	static inline bool EnableLog = false;
-	/// <summary>
-	/// Whether logging during loading the game is enabled
-	/// </summary>
-	static inline bool EnableLoadLog = false;
-	/// <summary>
-	/// Whether profiling is enabled
-	/// </summary>
-	static inline bool EnableProfiling = false;
-	/// <summary>
-	/// Whether generic Logging is enabled
-	/// </summary>
-	static inline bool EnableGenericLogging = true;
-	/// <summary>
-	/// The level of events to log
-	/// </summary>
-	static inline int LogLevel = 0;
-	/// <summary>
-	/// The level of functions to profile
-	/// </summary>
-	static inline int ProfileLevel = 0;
-};
-
-
 class LogUsage
 {
 	static inline std::ofstream* _stream = nullptr;
@@ -483,10 +492,11 @@ public:
 	static void Init(std::string pluginname)
 	{
 		lock.acquire();
-		auto path = SKSE::log::log_directory();
-		if (path.has_value()) {
-			_stream = new std::ofstream(path.value() / (pluginname + "_usage.log"), std::ios_base::out | std::ios_base::trunc);
-		}
+		//auto path = SKSE::log::log_directory();
+		//if (path.has_value()) {
+		//	_stream = new std::ofstream(path.value() / pluginname / (pluginname + "_usage.log"), std::ios_base::out | std::ios_base::trunc);
+		//}
+		_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + "_usage.log"), std::ios_base::out | std::ios_base::trunc);
 		lock.release();
 	}
 
@@ -537,3 +547,73 @@ struct [[maybe_unused]] logusage
 
 template <class... Args>
 logusage(fmt::format_string<Args...>, Args&&...) -> logusage<Args...>;
+
+
+class LogExcl
+{
+	static inline std::ofstream* _stream = nullptr;
+	static inline std::binary_semaphore lock{ 1 };
+
+public:
+	/// <summary>
+	/// Inits item usage log
+	/// </summary>
+	/// <param name="pluginname"></param>
+	static void Init(std::string pluginname)
+	{
+		lock.acquire();
+		//auto path = SKSE::log::log_directory();
+		//if (path.has_value()) {
+		//	_stream = new std::ofstream(path.value() / pluginname / (pluginname + "_excl.log"), std::ios_base::out | std::ios_base::trunc);
+		//}
+		_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + "_excl.log"), std::ios_base::out | std::ios_base::trunc);
+		lock.release();
+	}
+
+	/// <summary>
+	/// Closes item usage log
+	/// </summary>
+	static void Close()
+	{
+		lock.acquire();
+		if (_stream != nullptr) {
+			_stream->flush();
+			_stream->close();
+			delete _stream;
+			_stream = nullptr;
+		}
+		lock.release();
+	}
+
+	/// <summary>
+	/// writes to the item usage log
+	/// </summary>
+	/// <typeparam name="...Args"></typeparam>
+	/// <param name="message"></param>
+	template <class... Args>
+	static void write(std::string message)
+	{
+		lock.acquire();
+		if (_stream) {
+			_stream->write(message.c_str(), message.size());
+			_stream->flush();
+		}
+		lock.release();
+	}
+};
+template <class... Args>
+struct [[maybe_unused]] logexcl
+{
+	logexcl() = delete;
+
+	explicit logexcl(
+		fmt::format_string<Args...> a_fmt,
+		Args&&... a_args)
+	{
+		std::string mes = std::string("[Exclusion] ") + Logging::TimePassed() + " | " + fmt::format(a_fmt, std::forward<Args>(a_args)...) + "\n";
+		LogExcl::write(mes);
+	}
+};
+
+template <class... Args>
+logexcl(fmt::format_string<Args...>, Args&&...) -> logexcl<Args...>;

@@ -15,6 +15,7 @@ public:
 
 	// animated poisons
 	static inline std::string AnimatedPoisons = "AnimatedPoisons.esp";
+	static inline std::string AnimatedPoisons_5 = "Animated Poisons.esp";
 	RE::TESAmmo* AnPois_DaedricArrow = nullptr;
 	RE::TESAmmo* AnPois_DraugrArrow = nullptr;
 	RE::TESAmmo* AnPois_DwarvenArrow = nullptr;
@@ -61,6 +62,10 @@ public:
 
 	std::string AnPois_POiSON_DOSE_LiST_FiLENAME = "PoisonDoseList";
 	std::string AnPois_POiSON_LiST_FiLENAME = "PoisonList";
+
+	RE::TESQuest* AnPois_AnimatedPoisonsMCM = nullptr;
+
+	int AnPois_Version = 50;
 
 	int AnPois_GlobalCooldown = 4000;
 

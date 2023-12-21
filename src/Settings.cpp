@@ -450,7 +450,7 @@ void Settings::LoadDistrConfig()
 
 									// parse the associated objects
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
 
 									// parse the item properties
 									std::vector<std::tuple<AlchemicEffect, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
@@ -528,7 +528,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
 											std::get<0>(items[i]) & Distribution::AssocType::kNPC ||
@@ -553,7 +553,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kActor:
@@ -582,6 +582,7 @@ void Settings::LoadDistrConfig()
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
 												LOGLE1_2("[Settings] [LoadDistrRules] excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
+											EXCL("Exclusion:                {}", Utility::PrintForm(std::get<2>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -598,7 +599,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kFaction:
@@ -616,6 +617,7 @@ void Settings::LoadDistrConfig()
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
 												LOGLE1_2("[Settings] [LoadDistrRules] excluded race {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
+											EXCL("Exclusion Baseline:       {}", Utility::PrintForm(std::get<2>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -637,7 +639,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID,RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kItem:
@@ -686,7 +688,7 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 									bool errorcustom = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> assocobj = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> assocobj = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									
 									// parse items associated
 									assoc = splits->at(splitindex);
@@ -882,6 +884,7 @@ void Settings::LoadDistrConfig()
 										// index is a normal mod
 										Distribution::_excludedPlugins.insert(index);
 										LOGLE2_2("[Settings] [LoadDistrRules] Rule 9 excluded plugin {} with index {}", plugin, Utility::GetHex(index));
+										EXCL("Exclusion Plugin:         {}", plugin);
 									} else {
 										LOGLE1_2("[Settings] [LoadDistrRules] Rule 9 cannot exclude plugin {}. It is either not loaded or not present", plugin);
 									}
@@ -901,7 +904,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									ItemStrength str = ItemStrength::kWeak;
 									// arse item strength
 									try {
@@ -951,7 +954,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									int str = 0;
 									// arse item strength
 									try {
@@ -1027,7 +1030,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++)
 									{
 										switch (std::get<0>(items[i])) {
@@ -1078,7 +1081,7 @@ void Settings::LoadDistrConfig()
 									}
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										if (std::get<0>(items[i]) == Distribution::AssocType::kItem) {
 											Distribution::_dosageItemMap.insert_or_assign(std::get<1>(items[i]), std::tuple<bool, bool, int>{ enforce, setting, dosage });
@@ -1151,6 +1154,7 @@ void Settings::LoadDistrConfig()
 									}
 									if (e != AlchemicEffect::kNone) {
 										Distribution::_excludedEffects.insert(e);
+										EXCL("Exclusion Effect:         {}", e.string());
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1169,6 +1173,7 @@ void Settings::LoadDistrConfig()
 										// valid plugin index
 										Distribution::_excludedPlugins_NPCs.insert(plugindex);
 										LOGLE1_2("[Settings] [LoadDistrRules] Rule 17 excluded plugin {}. It is either not loaded or not present", plugin);
+										EXCL("Exclusion Plugin NPCs:    {}", plugin);
 									} else {
 										LOGLE1_2("[Settings] [LoadDistrRules] Rule 17 cannot exclude plugin {}. It is either not loaded or not present", plugin);
 									}
@@ -1206,7 +1211,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kItem:
@@ -1264,7 +1269,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kEffectSetting:
@@ -1587,7 +1592,7 @@ void Settings::LoadDistrConfig()
 									int total = 0;
 
 									// parse the associated objects
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
 
 									// parse the item properties
 									std::vector<std::tuple<AlchemicEffect, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
@@ -1798,7 +1803,7 @@ void Settings::LoadDistrConfig()
 					// parse the associated objects
 					bool error = false;
 					int total = 0;
-					std::vector<std::tuple<Distribution::AssocType, RE::FormID>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a), total);
+					std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a), total);
 
 					std::pair<int, Distribution::Rule*> tmptuple = { prio, rule };
 					// assign rules to search parameters

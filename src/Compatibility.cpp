@@ -40,133 +40,148 @@ void Compatibility::Load()
 	}
 
 	// animated poisons
-	AnPois_DaedricArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139C0);
-	AnPois_DraugrArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x00034182);
-	AnPois_DwarvenArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BC);
-	AnPois_EbonyArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BF);
-	AnPois_ElvenArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BD);
-	AnPois_FalmerArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x00038341);
-	AnPois_ForswornArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000CEE9E);
-	AnPois_GlassArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BE);
-	AnPois_IronArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x0001397D);
-	AnPois_NordHeroArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000EAFDF);
-	AnPois_OrcishArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BB);
-	AnPois_SteelArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x0001397F);
 
-	AnPois_DaedricArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x84E, "AnimatedPoisons.esp");
-	AnPois_DraugrArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x84F, "AnimatedPoisons.esp");
-	AnPois_DwarvenArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x850, "AnimatedPoisons.esp");
-	AnPois_EbonyArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x851, "AnimatedPoisons.esp");
-	AnPois_ElvenArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x852, "AnimatedPoisons.esp");
-	AnPois_FalmerArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x853, "AnimatedPoisons.esp");
-	AnPois_ForswornArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x854, "AnimatedPoisons.esp");
-	AnPois_GlassArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x855, "AnimatedPoisons.esp");
-	AnPois_IronArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x856, "AnimatedPoisons.esp");
-	AnPois_NordHeroArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x857, "AnimatedPoisons.esp");
-	AnPois_OrcishArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x858, "AnimatedPoisons.esp");
-	AnPois_SteelArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x859, "AnimatedPoisons.esp");
-	
-	AnPois_SlowEffectSP = datahandler->LookupForm<RE::SpellItem>(0x867, "AnimatedPoisons.esp");
+	switch (AnPois_Version) {
+	case 32:
+		{
+			AnPois_DaedricArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139C0);
+			AnPois_DraugrArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x00034182);
+			AnPois_DwarvenArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BC);
+			AnPois_EbonyArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BF);
+			AnPois_ElvenArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BD);
+			AnPois_FalmerArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x00038341);
+			AnPois_ForswornArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000CEE9E);
+			AnPois_GlassArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BE);
+			AnPois_IronArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x0001397D);
+			AnPois_NordHeroArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000EAFDF);
+			AnPois_OrcishArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x000139BB);
+			AnPois_SteelArrow = RE::TESForm::LookupByID<RE::TESAmmo>(0x0001397F);
 
-	AnPois_FakeItem = datahandler->LookupForm<RE::TESObjectARMO>(0xDB8, "AnimatedPoisons.esp");
+			AnPois_DaedricArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x84E, "AnimatedPoisons.esp");
+			AnPois_DraugrArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x84F, "AnimatedPoisons.esp");
+			AnPois_DwarvenArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x850, "AnimatedPoisons.esp");
+			AnPois_EbonyArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x851, "AnimatedPoisons.esp");
+			AnPois_ElvenArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x852, "AnimatedPoisons.esp");
+			AnPois_FalmerArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x853, "AnimatedPoisons.esp");
+			AnPois_ForswornArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x854, "AnimatedPoisons.esp");
+			AnPois_GlassArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x855, "AnimatedPoisons.esp");
+			AnPois_IronArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x856, "AnimatedPoisons.esp");
+			AnPois_NordHeroArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x857, "AnimatedPoisons.esp");
+			AnPois_OrcishArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x858, "AnimatedPoisons.esp");
+			AnPois_SteelArrowAOSP = datahandler->LookupForm<RE::SpellItem>(0x859, "AnimatedPoisons.esp");
 
-	AnPois_ToggleStopSprint = datahandler->LookupForm<RE::TESGlobal>(0xDDD, "AnimatedPoisons.esp");
-	AnPois_ToggleForceThirdPerson = datahandler->LookupForm<RE::TESGlobal>(0xDDe, "AnimatedPoisons.esp");
-	AnPois_ToggleForceCloseMenu = datahandler->LookupForm<RE::TESGlobal>(0xDDF, "AnimatedPoisons.esp");
-	AnPois_TogglePlayerSlowEffect = datahandler->LookupForm<RE::TESGlobal>(0xDE0, "AnimatedPoisons.esp");
-	AnPois_TogglePlayerSound = datahandler->LookupForm<RE::TESGlobal>(0xDE1, "AnimatedPoisons.esp");
-	AnPois_PlayerStaggerToggle = datahandler->LookupForm<RE::TESGlobal>(0xE03, "AnimatedPoisons.esp");
-	AnPois_PlayerStopAnimation = datahandler->LookupForm<RE::TESGlobal>(0xE04, "AnimatedPoisons.esp");
+			AnPois_SlowEffectSP = datahandler->LookupForm<RE::SpellItem>(0x867, "AnimatedPoisons.esp");
 
-	AnPois_SlowEffectItem = datahandler->LookupForm<RE::TESObjectMISC>(0x868, "AnimatedPoisons.esp");
+			AnPois_FakeItem = datahandler->LookupForm<RE::TESObjectARMO>(0xDB8, "AnimatedPoisons.esp");
 
-	//AnPois_List = datahandler->LookupForm<RE::BGSListForm>(, "AnimatedPoisons.esp");
+			AnPois_ToggleStopSprint = datahandler->LookupForm<RE::TESGlobal>(0xDDD, "AnimatedPoisons.esp");
+			AnPois_ToggleForceThirdPerson = datahandler->LookupForm<RE::TESGlobal>(0xDDe, "AnimatedPoisons.esp");
+			AnPois_ToggleForceCloseMenu = datahandler->LookupForm<RE::TESGlobal>(0xDDF, "AnimatedPoisons.esp");
+			AnPois_TogglePlayerSlowEffect = datahandler->LookupForm<RE::TESGlobal>(0xDE0, "AnimatedPoisons.esp");
+			AnPois_TogglePlayerSound = datahandler->LookupForm<RE::TESGlobal>(0xDE1, "AnimatedPoisons.esp");
+			AnPois_PlayerStaggerToggle = datahandler->LookupForm<RE::TESGlobal>(0xE03, "AnimatedPoisons.esp");
+			AnPois_PlayerStopAnimation = datahandler->LookupForm<RE::TESGlobal>(0xE04, "AnimatedPoisons.esp");
 
-	AnPois_PoisonSound = datahandler->LookupForm<RE::BGSSoundDescriptorForm>(0x806, "AnimatedPoisons.esp");
+			AnPois_SlowEffectItem = datahandler->LookupForm<RE::TESObjectMISC>(0x868, "AnimatedPoisons.esp");
 
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DaedricArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DraugrArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_EbonyArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ElvenArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FalmerArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ForswornArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_GlassArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_IronArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_OrcishArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SteelArrow));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DaedricArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DraugrArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_EbonyArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ElvenArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FalmerArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ForswornArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_GlassArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_IronArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_OrcishArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SteelArrowAOSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SlowEffectSP));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FakeItem));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleStopSprint));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleForceThirdPerson));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleForceCloseMenu));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSlowEffect));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSound));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PlayerStaggerToggle));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PlayerStopAnimation));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SlowEffectItem));
-	LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PoisonSound));
+			//AnPois_List = datahandler->LookupForm<RE::BGSListForm>(, "AnimatedPoisons.esp");
 
-	if (AnPois_DaedricArrow &&
-		AnPois_DraugrArrow &&
-		AnPois_DwarvenArrow &&
-		AnPois_EbonyArrow &&
-		AnPois_ElvenArrow &&
-		AnPois_FalmerArrow &&
-		AnPois_ForswornArrow &&
-		AnPois_GlassArrow &&
-		AnPois_IronArrow &&
-		AnPois_NordHeroArrow &&
-		AnPois_OrcishArrow &&
-		AnPois_SteelArrow &&
+			AnPois_PoisonSound = datahandler->LookupForm<RE::BGSSoundDescriptorForm>(0x806, "AnimatedPoisons.esp");
 
-		AnPois_DaedricArrowAOSP &&
-		AnPois_DraugrArrowAOSP &&
-		AnPois_DwarvenArrowAOSP &&
-		AnPois_EbonyArrowAOSP &&
-		AnPois_ElvenArrowAOSP &&
-		AnPois_FalmerArrowAOSP &&
-		AnPois_ForswornArrowAOSP &&
-		AnPois_GlassArrowAOSP &&
-		AnPois_IronArrowAOSP &&
-		AnPois_NordHeroArrowAOSP &&
-		AnPois_OrcishArrowAOSP &&
-		AnPois_SteelArrowAOSP &&
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DaedricArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DraugrArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_EbonyArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ElvenArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FalmerArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ForswornArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_GlassArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_IronArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_OrcishArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SteelArrow));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DaedricArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DraugrArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_EbonyArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ElvenArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FalmerArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ForswornArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_GlassArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_IronArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_OrcishArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SteelArrowAOSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SlowEffectSP));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FakeItem));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleStopSprint));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleForceThirdPerson));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleForceCloseMenu));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSlowEffect));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSound));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PlayerStaggerToggle));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PlayerStopAnimation));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SlowEffectItem));
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PoisonSound));
 
-		AnPois_SlowEffectSP &&
+			if (AnPois_DaedricArrow &&
+				AnPois_DraugrArrow &&
+				AnPois_DwarvenArrow &&
+				AnPois_EbonyArrow &&
+				AnPois_ElvenArrow &&
+				AnPois_FalmerArrow &&
+				AnPois_ForswornArrow &&
+				AnPois_GlassArrow &&
+				AnPois_IronArrow &&
+				AnPois_NordHeroArrow &&
+				AnPois_OrcishArrow &&
+				AnPois_SteelArrow &&
 
-		AnPois_FakeItem &&
+				AnPois_DaedricArrowAOSP &&
+				AnPois_DraugrArrowAOSP &&
+				AnPois_DwarvenArrowAOSP &&
+				AnPois_EbonyArrowAOSP &&
+				AnPois_ElvenArrowAOSP &&
+				AnPois_FalmerArrowAOSP &&
+				AnPois_ForswornArrowAOSP &&
+				AnPois_GlassArrowAOSP &&
+				AnPois_IronArrowAOSP &&
+				AnPois_NordHeroArrowAOSP &&
+				AnPois_OrcishArrowAOSP &&
+				AnPois_SteelArrowAOSP &&
 
-		AnPois_ToggleStopSprint &&
-		AnPois_ToggleForceThirdPerson &&
-		AnPois_ToggleForceCloseMenu &&
-		AnPois_TogglePlayerSlowEffect &&
-		AnPois_TogglePlayerSound &&
-		AnPois_PlayerStaggerToggle &&
-		AnPois_PlayerStopAnimation &&
+				AnPois_SlowEffectSP &&
 
-		AnPois_SlowEffectItem &&
+				AnPois_FakeItem &&
 
-		// AnPois_List &&
+				AnPois_ToggleStopSprint &&
+				AnPois_ToggleForceThirdPerson &&
+				AnPois_ToggleForceCloseMenu &&
+				AnPois_TogglePlayerSlowEffect &&
+				AnPois_TogglePlayerSound &&
+				AnPois_PlayerStaggerToggle &&
+				AnPois_PlayerStopAnimation &&
 
-		AnPois_PoisonSound
-		) {
-		_loadedAnimatedPoisons = true;
-		if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable)
-			RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
+				AnPois_SlowEffectItem &&
+
+				// AnPois_List &&
+
+				AnPois_PoisonSound) {
+				_loadedAnimatedPoisons = true;
+				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable)
+					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
+			}
+		}
+	case 50:
+		{
+			AnPois_AnimatedPoisonsMCM = datahandler->LookupForm<RE::TESQuest>(0xE52, AnimatedPoisons_5);
+			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_AnimatedPoisonsMCM));
+			if (AnPois_AnimatedPoisonsMCM) {
+				_loadedAnimatedPoisons = true;
+				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable)
+					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons 5 compatibility", 0, false);
+			}
+		}
 	}
 
 	// animated potions
