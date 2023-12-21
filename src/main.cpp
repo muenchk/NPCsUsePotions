@@ -203,7 +203,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	Settings::log_directory /= "My Games";
 	if (REL::Module::IsVR())
 		Settings::log_directory /= "Skyrim VR";
-	else if (a_skse->RuntimeVersion() == SKSE::RUNTIME_SSE_1_6_659)
+	else if (a_skse->RuntimeVersion() == REL::Version(1, 6, 659, 1))
 		Settings::log_directory /= "Skyrim Special Edition GOG";
 	else
 		Settings::log_directory /= "Skyrim Special Edition";
@@ -211,6 +211,8 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	Logging::log_directory = Settings::log_directory;
 
 	InitializeLog();
+
+	loginfo("Game Version: {}", a_skse->RuntimeVersion().string());
 
 	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	profile("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
