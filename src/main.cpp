@@ -156,7 +156,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
 	// find logging folder
-	PWSTR ppszPath;
+	/* PWSTR ppszPath;
 	HRESULT hr = SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &ppszPath);
 	std::wstring myPath;
 	if (SUCCEEDED(hr)) {
@@ -173,7 +173,12 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 		Settings::log_directory /= "Skyrim Special Edition GOG";
 	else
 		Settings::log_directory /= "Skyrim Special Edition";
-	Settings::log_directory /= "SKSE";
+	Settings::log_directory /= "SKSE";*/
+	auto path = logger::log_directory();
+	if (!path) {
+		util::report_and_fail("Failed to find standard logging directory"sv);
+	}
+	Settings::log_directory = path.value();
 	Logging::log_directory = Settings::log_directory;
 
 	InitializeLog();

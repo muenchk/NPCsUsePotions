@@ -168,8 +168,10 @@ void Compatibility::Load()
 
 				AnPois_PoisonSound) {
 				_loadedAnimatedPoisons = true;
-				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable)
+				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
+					LOG_1("{}[Compatibility] [Load] Enabled Animated Poisons.");
+				}
 			}
 		}
 	case 50:
@@ -178,8 +180,10 @@ void Compatibility::Load()
 			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_AnimatedPoisonsMCM));
 			if (AnPois_AnimatedPoisonsMCM) {
 				_loadedAnimatedPoisons = true;
-				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable)
+				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons 5 compatibility", 0, false);
+					LOG_1("{}[Compatibility] [Load] Enabled Animated Poisons.");
+				}
 			}
 		}
 	}
@@ -198,8 +202,10 @@ void Compatibility::Load()
 
 	if (AnPoti_TogglePlayerPotionAnimation) {
 		_loadedAnimatedPotions = true;
-		if (Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable)
+		if (Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable) {
 			RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
+			LOG_1("{}[Compatibility] [Load] Enabled Animated Potions.");
+		}
 	}
 	
 
@@ -216,8 +222,10 @@ void Compatibility::Load()
 
 	if (PAF_NPCDrinkingCoolDownEffect && PAF_NPCDrinkingCoolDownSpell) {
 		_loadedPotionAnimatedFx = true;
-		if (Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx)
-			RE::DebugNotification("NPCsUsePotions enabled AnimatedPotionFx compatibility",0, false);
+		if (Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx) {
+			RE::DebugNotification("NPCsUsePotions enabled AnimatedPotionFx compatibility", 0, false);
+			LOG_1("{}[Compatibility] [Load] Enabled AnimatedPotionFx.");
+		}
 	}
 
 	// ZUPA
