@@ -494,7 +494,7 @@ namespace Events
 
 		ProcessDistribution(acinfo);
 		EvalProcessing();
-		if (actor->boolBits & RE::Actor::BOOL_BITS::kDead)
+		if (actor->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead)
 			return;
 
 		LOG_1("{}[Events] [RegisterNPC] finished registering NPC");
