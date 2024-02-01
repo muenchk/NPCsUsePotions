@@ -19,15 +19,13 @@ namespace
 #ifndef NDEBUG
 		auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
 #else
-		/* auto path = SKSE::log::log_directory();
+
+		auto path = logger::log_directory();
 		if (!path) {
 			util::report_and_fail("Failed to find standard logging directory"sv);
 		}
-
-		*path /= Settings::PluginNamePlain;
-		*path /= fmt::format("{}.log"sv, Plugin::NAME);
-		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);*/
-		auto path = Settings::log_directory;
+		Settings::log_directory = path.value();
+		Logging::log_directory = Settings::log_directory;
 		path /= Settings::PluginNamePlain;
 		path /= fmt::format("{}.log"sv, Plugin::NAME);
 		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.string(), true);
@@ -51,60 +49,6 @@ namespace
 		LogExcl::Init(Settings::PluginNamePlain);
 	}
 }
-/*
-#if defined(SKYRIM_SUPPORT_AE353)
-	// AE
-extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
-	SKSE::PluginVersionData v;
-
-	v.PluginVersion(Plugin::VERSION);
-	v.PluginName(Plugin::NAME);
-
-	v.UsesAddressLibrary(true);
-	v.CompatibleVersions({ SKSE::RUNTIME_LATEST });
-
-	return v;
-}();
-
-#elif defined(SKYRIM_SUPPORT_AE)
-
-// AE after to 1.6.353
-extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
-	SKSE::PluginVersionData v;
-
-	v.PluginVersion(Plugin::VERSION);
-	v.PluginName(Plugin::NAME);
-
-	v.UsesAddressLibrary();
-	v.UsesUpdatedStructs();
-	v.CompatibleVersions({ SKSE::RUNTIME_LATEST });
-
-	return v;
-}();
-
-#else
-// SSE
-extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * a_skse, SKSE::PluginInfo * a_info)
-{
-	InitializeLog();
-	a_info->infoVersion = SKSE::PluginInfo::kVersion;
-	a_info->name = Plugin::NAME.data();
-	a_info->version = Plugin::VERSION[0];
-
-	if (a_skse->IsEditor()) {
-		logger::critical("Loaded in editor, marking as incompatible"sv);
-		return false;
-	}
-
-	const auto ver = a_skse->RuntimeVersion();
-	if (ver < SKSE::RUNTIME_1_5_39) {
-		logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
-		return false;
-	}
-	return true;
-} 
-#endif
-*/
 
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
 	SKSE::PluginVersionData v;
@@ -190,30 +134,6 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
 	// find logging folder
-	/* PWSTR ppszPath;
-	HRESULT hr = SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &ppszPath);
-	std::wstring myPath;
-	if (SUCCEEDED(hr)) {
-		myPath = ppszPath;
-	}
-
-	CoTaskMemFree(ppszPath);
-
-	Settings::log_directory = myPath;
-	Settings::log_directory /= "My Games";
-	if (REL::Module::IsVR())
-		Settings::log_directory /= "Skyrim VR";
-	else if (a_skse->RuntimeVersion() == REL::Version(1, 6, 659, 1))
-		Settings::log_directory /= "Skyrim Special Edition GOG";
-	else
-		Settings::log_directory /= "Skyrim Special Edition";
-	Settings::log_directory /= "SKSE";*/
-	auto path = logger::log_directory();
-	if (!path) {
-		util::report_and_fail("Failed to find standard logging directory"sv);
-	}
-	Settings::log_directory = path.value();
-	Logging::log_directory = Settings::log_directory;
 
 	InitializeLog();
 
