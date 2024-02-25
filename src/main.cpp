@@ -26,9 +26,10 @@ namespace
 		}
 		Settings::log_directory = path.value();
 		Logging::log_directory = Settings::log_directory;
-		path /= Settings::PluginNamePlain;
-		path /= fmt::format("{}.log"sv, Plugin::NAME);
-		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.string(), true);
+		auto spath = path.value();
+		spath /= Settings::PluginNamePlain;
+		spath /= fmt::format("{}.log"sv, Plugin::NAME);
+		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(spath.string(), true);
 #endif
 
 #ifndef NDEBUG
