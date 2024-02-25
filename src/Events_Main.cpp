@@ -260,7 +260,7 @@ namespace Events
 		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo));
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
-			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
+			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
 			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, false, false);
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
 				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
