@@ -232,6 +232,16 @@ void Compatibility::Load()
 	if (Utility::Mods::GetPluginIndex("zxlice's ultimate potion animation.esp") != 0x1)
 		_loadedZUPA = true;
 
+	// Sacrosanct
+
+	Sac_MockeryOfLife = datahandler->LookupForm<RE::EffectSetting>(0x0D592E, Sacrosanct);
+	if (Sac_MockeryOfLife != nullptr)
+	{
+		_loadedSacrosanct = true;
+		RE::DebugNotification("NPCsUsePotions enabled Sacrosanct compatibility", 0, false);
+		LOG_1("{}[Compatibility] [Load] Enabled Sacrosanct.");
+	}
+
 	// global
 
 	_globalCooldown = std::max((long)_globalCooldown, Settings::Usage::_globalCooldown);
@@ -336,6 +346,10 @@ void Compatibility::Clear()
 
 	// ZUPA
 	_loadedZUPA = false;
+
+	// sacrosanct
+	Sac_MockeryOfLife = nullptr;
+	_loadedSacrosanct = false;
 
 	// global
 	_globalCooldown = 0;
@@ -518,4 +532,23 @@ void Compatibility::Register()
 	LOG1_1("{}Registered {}", typeid(RevertGameCallback).name());
 	Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000300, SaveGameCallback);
 	LOG1_1("{}Registered {}", typeid(SaveGameCallback).name());
+}
+
+bool Compatibility::CannotRestoreHealth(std::shared_ptr<ActorInfo> acinfo)
+{
+	bool res = false;
+	if (_loadedSacrosanct)
+		res |= acinfo->HasMagicEffect(Sac_MockeryOfLife);
+
+	return res;
+}
+
+bool Compatibility::CannotRestoreMagicka(std::shared_ptr<ActorInfo> acinfo)
+{
+	return false;
+}
+
+bool Compatibility::CannotRestoreStamina(std::shared_ptr<ActorInfo> acinfo)
+{
+	return false;
 }

@@ -68,15 +68,15 @@ namespace Events
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
 			LOG_2("{}[Events] [CheckActors] [HandleActorPotions] usage allowed")
 			// get combined effect for magicka, health, and stamina
-			if (Settings::Potions::_enableHealthRestoration && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold)
+			if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold)
 				alch = AlchemicEffect::kHealth;
 			else
 				alch = 0;
-			if (Settings::Potions::_enableMagickaRestoration && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kMagicka) < Settings::Potions::_magickaThreshold)
+			if (Settings::Potions::_enableMagickaRestoration && !comp->CannotRestoreMagicka(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kMagicka) < Settings::Potions::_magickaThreshold)
 				alch2 = AlchemicEffect::kMagicka;
 			else
 				alch2 = 0;
-			if (Settings::Potions::_enableStaminaRestoration && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kStamina) < Settings::Potions::_staminaThreshold)
+			if (Settings::Potions::_enableStaminaRestoration && !comp->CannotRestoreStamina(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kStamina) < Settings::Potions::_staminaThreshold)
 				alch3 = AlchemicEffect::kStamina;
 			else
 				alch3 = 0;
@@ -259,7 +259,7 @@ namespace Events
 			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo));
 		// we are only checking for health here
-		if (Settings::Potions::_enableHealthRestoration && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
+		if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
 			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
 			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, false, false);
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
