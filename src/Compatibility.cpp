@@ -189,13 +189,13 @@ void Compatibility::Load()
 	}
 
 	// animated potions
-	
+
 	switch (AnPoti_Version) {
-	case 44: // Version 4.4
+	case 44:  // Version 4.4
 		AnPoti_TogglePlayerPotionAnimation = datahandler->LookupForm<RE::TESGlobal>(0x8C8, AnimatedPotions_4_4);
 		LOG1_1("{}[Compatibility] [Load] [AnPoti] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
 		break;
-	case 43: // version 4.3
+	case 43:  // version 4.3
 		AnPoti_TogglePlayerPotionAnimation = datahandler->LookupForm<RE::TESGlobal>(0x8C8, AnimatedPotions_4_3);
 		LOG1_1("{}[Compatibility] [Load] [AnPoti] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
 	}
@@ -207,16 +207,15 @@ void Compatibility::Load()
 			LOG_1("{}[Compatibility] [Load] Enabled Animated Potions.");
 		}
 	}
-	
 
 	// potion animated fx
 	// lookup for non esp version
 	PAF_NPCDrinkingCoolDownEffect = datahandler->LookupForm<RE::EffectSetting>(0x056EAE, PotionAnimatedfx);
-	if (PAF_NPCDrinkingCoolDownEffect == nullptr) // espfe variant
+	if (PAF_NPCDrinkingCoolDownEffect == nullptr)  // espfe variant
 		PAF_NPCDrinkingCoolDownEffect = datahandler->LookupForm<RE::EffectSetting>(0x81F, PotionAnimatedfx);
 	LOG1_1("{}[Compatibility] [Load] [PAF] {}", Utility::PrintForm(PAF_NPCDrinkingCoolDownEffect));
 	PAF_NPCDrinkingCoolDownSpell = datahandler->LookupForm<RE::SpellItem>(0x056EAC, PotionAnimatedfx);
-	if (PAF_NPCDrinkingCoolDownSpell == nullptr) // espfe variant
+	if (PAF_NPCDrinkingCoolDownSpell == nullptr)  // espfe variant
 		PAF_NPCDrinkingCoolDownSpell = datahandler->LookupForm<RE::SpellItem>(0x820, PotionAnimatedfx);
 	LOG1_1("{}[Compatibility] [Load] [PAF] {}", Utility::PrintForm(PAF_NPCDrinkingCoolDownSpell));
 
@@ -235,11 +234,27 @@ void Compatibility::Load()
 	// Sacrosanct
 
 	Sac_MockeryOfLife = datahandler->LookupForm<RE::EffectSetting>(0x0D592E, Sacrosanct);
-	if (Sac_MockeryOfLife != nullptr)
-	{
+	if (Sac_MockeryOfLife != nullptr) {
 		_loadedSacrosanct = true;
 		RE::DebugNotification("NPCsUsePotions enabled Sacrosanct compatibility", 0, false);
 		LOG_1("{}[Compatibility] [Load] Enabled Sacrosanct.");
+	}
+
+	// Ultimate Animated Potions
+
+	auto findPlugin = [](std::string pluginname) {
+		std::wstring wstr = std::wstring(pluginname.begin(), pluginname.end());
+		auto pluginHandle = GetModuleHandle(wstr.c_str());
+		if (pluginHandle)
+			return true;
+		return false;
+	};
+
+	_loadedUltimatePotions = findPlugin("UAPNG.dll");
+	if (_loadedUltimatePotions)
+	{
+		RE::DebugNotification("NPCsUsePotions found UAPNG", 0, false);
+		LOG_1("{}[Compatibility] [Load] Found Ultimate Animted Potions.");
 	}
 
 	// global
@@ -263,9 +278,11 @@ void Compatibility::Load()
 	if (_loadedPotionAnimatedFx) {
 		_disableParalyzedItems = true;
 	}
+	if (_loadedUltimatePotions) {
+		_globalCooldownPotions = std::max(_globalCooldownPotions, Ult_GlobalCooldown);
+	}
 
 	LOG1_1("{}[Compatibility] [Load] GlobalCooldown set to {}ms", std::to_string(_globalCooldown));
-
 
 	sem.release();
 }
@@ -350,6 +367,9 @@ void Compatibility::Clear()
 	// sacrosanct
 	Sac_MockeryOfLife = nullptr;
 	_loadedSacrosanct = false;
+
+	// Ultimate Animated Potions
+	_loadedUltimatePotions = false;
 
 	// global
 	_globalCooldown = 0;

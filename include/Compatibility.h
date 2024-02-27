@@ -93,6 +93,9 @@ public:
 	static inline std::string Sacrosanct = "Sacrosanct - Vampires of Skyrim.esp";
 	RE::EffectSetting* Sac_MockeryOfLife = nullptr;
 
+	// Ultimate Animated Potions
+	int Ult_GlobalCooldown = 2500;
+
 	// general section
 private:
 	/// <summary>
@@ -123,6 +126,10 @@ private:
 	/// Whether Sacrosanct is present in the game
 	/// </summary>
 	bool _loadedSacrosanct = false;
+	/// <summary>
+	/// Whether Ultimate Animated Potions is loaded
+	/// </summary>
+	bool _loadedUltimatePotions = false;
 
 	/// <summary>
 	/// Global cooldown applied
@@ -247,6 +254,15 @@ public:
 	bool LoadedSacrosanct()
 	{
 		return _loadedSacrosanct;
+	}
+
+	/// <summary>
+	/// returns whther Ultimate Animated Potions has been loaded
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedUltimatePotions()
+	{
+		return _loadedUltimatePotions;
 	}
 
 	/// <summary>
