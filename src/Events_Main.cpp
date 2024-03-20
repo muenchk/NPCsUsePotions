@@ -89,7 +89,7 @@ namespace Events
 			// use potions
 			// do the first round
 			if (alch != 0 && (Settings::Potions::_UsePotionChance == 100 || rand100(rand) < Settings::Potions::_UsePotionChance)) {
-				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, alch, false, false);
+				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, alch, false);
 				LOG3_2("{}[Events] [CheckActors] used potion with duration {}, magnitude {} and Alchemy Effect {}", dur, mag, Utility::ToString(eff));
 				// check if we have a valid effect
 				if (eff != AlchemicEffect::kNone) {
@@ -131,7 +131,7 @@ namespace Events
 				}
 
 				LOG1_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] check for fortify potion with effect {}", effects.string());
-				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, effects, false, true);
+				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, effects, true);
 				if (dur != -1) {
 					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 					CalcActorCooldowns(acinfo, eff, dur);
@@ -262,7 +262,7 @@ namespace Events
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
 			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
-			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, false, false);
+			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, false);
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
 				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
 				// update global cooldown

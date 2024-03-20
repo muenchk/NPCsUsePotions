@@ -1261,26 +1261,6 @@ namespace Papyrus
 		namespace Compatibility
 		{
 			/// <summary>
-			/// Returns whether compatibility mode is enabled
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <returns></returns>
-			[[deprecated]] 
-			bool Get_CompatibilityMode(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
-
-			/// <summary>
-			/// Sets whether compatibility mode is enabled
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <param name="enabled"></param>
-			[[deprecated]]
-			void Set_CompatibilityMode(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
-
-			/// <summary>
 			/// Returns whether all npcs that are in the ActorTypeCreature and/or ActorTypeAnimal faction and do not have a dedicated rule are removed from item distribution, item usage, and perk distribution
 			/// </summary>
 			/// <param name="a_vm"></param>

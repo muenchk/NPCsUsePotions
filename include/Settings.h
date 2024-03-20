@@ -460,10 +460,6 @@ public:
 	struct Compatibility
 	{
 		/// <summary>
-		/// [Setting] Whether the general compatibility mode has been activated
-		/// </summary>
-		static inline bool _CompatibilityMode = false;  // Use Items with Papyrus, needs the plugin
-		/// <summary>
 		/// [Settings] Disables all npcs with the ActorTypeCreature or ActorTypeAnimal keywords, if they do not have a dedicated rule. May cause npcs to be disabled, that should not be
 		/// </summary>
 		static inline bool _DisableCreaturesWithoutRules = true;
@@ -829,23 +825,6 @@ public:
 	/// Updates settings that have been changed during runtime and result in changes to classification
 	/// </summary>
 	static void UpdateSettings();
-
-	/// <summary>
-	/// returns whether food items should be used in compatibility mode
-	/// </summary>
-	/// <returns></returns>
-	static bool CompatibilityFoodPapyrus()
-	{
-		return Settings::Compatibility::_CompatibilityMode;
-	}
-	/// <summary>
-	/// returns whether potions whould be used in compatibility mode
-	/// </summary>
-	/// <returns></returns>
-	static bool CompatibilityPotionPapyrus()
-	{
-		return Settings::Compatibility::_CompatibilityMode;
-	}
 
 	/// <summary>
 	/// classifies a single item based on its effects

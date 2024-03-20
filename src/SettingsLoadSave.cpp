@@ -167,8 +167,6 @@ void Settings::Load()
 		Fixes::_ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", Fixes::_ForceFixPotionSounds);
 
 		// compatibility
-		Compatibility::_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode);
-
 		Whitelist::EnabledItems = ini.GetBoolValue("Compatibility", "WhitelistMode", Whitelist::EnabledItems);
 
 		Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
@@ -434,8 +432,6 @@ void Settings::Load()
 		// compatibility
 		Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
 		loginfo("[SETTINGS] {} {}", "Compatibility:     DisableCreaturesWithoutRules", std::to_string(Compatibility::_DisableCreaturesWithoutRules));
-		Compatibility::_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode);
-		loginfo("[SETTINGS] {} {}", "Compatibility:     Compatibility", std::to_string(Compatibility::_CompatibilityMode));
 
 		// compatibility animated poisons
 		Compatibility::AnimatedPoisons::_Enable = ini.GetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable);
@@ -532,14 +528,6 @@ void Settings::Load()
 		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
 	}
 
-	// plugin check
-	if (Compatibility::_CompatibilityMode) {
-		if (const uint32_t index = Utility::Mods::GetPluginIndex(PluginName); index != 0x1) {
-			loginfo("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
-		} else {
-			loginfo("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, all use of potions, poisons and food is effectively disabled, except you have another sink for the papyrus events. Distribution is not affected");
-		}
-	}
 	// Check for CACO
 	{
 		if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::CACO); index != 0x1) {
@@ -748,8 +736,6 @@ void Settings::Save()
 																													"// excluded, due to many NPCs being assigned the creature keyword even \n"
 																													"// though they should not have them.\n"
 																													"// Passiveley disables custom item distribution for those npcs.");
-	ini.SetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode, "// General Compatibility Mode. If set to true, all items will be\n"
-																						  "// equipped using Papyrus workaround. Requires the Skyrim esp plugin.");
 
 
 	// compatibility animated poisons

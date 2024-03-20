@@ -159,8 +159,6 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Fixes_GetForceFixPotionSounds"), script, Fixes::Get_ForceFixPotionSounds);
 			a_vm->RegisterFunction(std::string("Fixes_SetForceFixPotionSounds"), script, Fixes::Set_ForceFixPotionSounds);
 			// compatibility
-			a_vm->RegisterFunction(std::string("Comp_GetCompatibilityMode"), script, Compatibility::Get_CompatibilityMode);
-			a_vm->RegisterFunction(std::string("Comp_SetCompatibilityMode"), script, Compatibility::Set_CompatibilityMode);
 			a_vm->RegisterFunction(std::string("Comp_GetDisableCreaturesWhitoutRules"), script, Compatibility::Get_DisableCreaturesWithoutRules);
 			a_vm->RegisterFunction(std::string("Comp_SetDisableCreaturesWithoutRules"), script, Compatibility::Set_DisableCreaturesWithoutRules);
 			a_vm->RegisterFunction(std::string("Comp_PotionAnimatedFx_GetCompatibility"), script, Compatibility::Get_PotionAnimatedFx_CompatibilityPotionAnimatedFx);
@@ -1067,17 +1065,6 @@ namespace Papyrus
 
 		namespace Compatibility
 		{
-			bool Get_CompatibilityMode(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
-			{
-				return Settings::Compatibility::_CompatibilityMode;
-			}
-
-			void Set_CompatibilityMode(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
-			{
-				Settings::Compatibility::_CompatibilityMode = enabled;
-				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
-				Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kCompatibility;
-			}
 
 			bool Get_DisableCreaturesWithoutRules(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
