@@ -483,7 +483,7 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shar
 	return ret;
 }
 
-std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool compatibility, bool fortify)
+std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool fortify)
 {
 	LOG_2("{}[ActorManipulation] [ActorUsePotion]");
 	if (Utility::VerifyActorInfo(acinfo)) {
@@ -505,26 +505,14 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid() && acinfo->CanUsePot(std::get<2>(tup)->GetFormID()) == false; });
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
-		return ActorUsePotion(acinfo, ls, compatibility);
+		return ActorUsePotion(acinfo, ls);
 	}
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> lstemp;
 	return { 0, 0, 0.0f, lstemp };
 }
 
-std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>& ls, bool compatibility)
+std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>& ls)
 {
-	static auto CompPotAnimFx = [&acinfo]() {
-		if (comp->LoadedAnimatedPotionFx()) {
-			// compatibility mode for PotionAnimatedfx.esp activated, we may only use a potion if it is not on cooldown
-			// if the actor does not have the cooldown effect we may use a potion
-			if (comp->PAF_NPCDrinkingCoolDownEffect == nullptr || !(acinfo->HasMagicEffect(comp->PAF_NPCDrinkingCoolDownEffect))) {
-				return true;
-			} else
-				return false;
-		}
-		return true;
-	};
-
 	LOG_2("{}[ActorManipulation] [ActorUsePotion] list bound");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		if (ls.size() > 0) {
@@ -543,34 +531,7 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 					ev->numArg = 0.0f;
 					ev->sender = acinfo->GetActor();
 					SKSE::GetModCallbackEventSource()->SendEvent(ev);
-
-				} else if (Settings::CompatibilityPotionPapyrus() || compatibility) {
-					LOG_3("{}[ActorManipulation] [ActorUsePotion] Compatibility Mode");
-					if (!CompPotAnimFx()) {
-						LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
-						return { -1, AlchemicEffect::kNone, 0.0f, ls };
-					}
-					// save statistics
-					Statistics::Misc_PotionsAdministered++;
-					// preliminary, has check built in wether it applies
-					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-					ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
-					ev->strArg = RE::BSFixedString("");
-					ev->numArg = 0.0f;
-					ev->sender = acinfo->GetActor();
-					SKSE::GetModCallbackEventSource()->SendEvent(ev);
-					ev = new SKSE::ModCallbackEvent();
-					ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
-					ev->strArg = RE::BSFixedString("");
-					ev->numArg = 0.0f;
-					ev->sender = std::get<2>(val);
-					SKSE::GetModCallbackEventSource()->SendEvent(ev);
 				} else {
-					// apply compatibility stuff before using potion
-					if (!CompPotAnimFx()) {
-						LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
-						return { -1, AlchemicEffect::kNone, 0.0f, ls };
-					}
 					// save statistics
 					Statistics::Misc_PotionsAdministered++;
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
@@ -616,26 +577,9 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 				Statistics::Misc_FoodEaten++;
 				LOG3_2("{}[ActorManipulation] [ActorUseFood] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
 				logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
-				if (Settings::CompatibilityFoodPapyrus()) {
-					LOG_3("{}[ActorManipulation] [ActorUseFood] Compatibility Mode");
-					// use same event as for potions, since it takes a TESForm* and works for anything
-					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-					ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
-					ev->strArg = RE::BSFixedString("");
-					ev->numArg = 0.0f;
-					ev->sender = acinfo->GetActor();
-					SKSE::GetModCallbackEventSource()->SendEvent(ev);
-					ev = new SKSE::ModCallbackEvent();
-					ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
-					ev->strArg = RE::BSFixedString("");
-					ev->numArg = 0.0f;
-					ev->sender = std::get<2>(ls.front());
-					SKSE::GetModCallbackEventSource()->SendEvent(ev);
-				} else {
-					SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
-						RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
-					});
-				}
+				SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
+					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
+				});
 				return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 			}
 		}
@@ -661,26 +605,9 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 			Statistics::Misc_FoodEaten++;
 			LOG3_2("{}[ActorManipulation] [ActorUseFood-Random] Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
 			logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
-			if (Settings::CompatibilityFoodPapyrus()) {
-				LOG_3("{}[ActorManipulation] [ActorUseFood-Random] Compatibility Mode");
-				// use same event as for potions, since it takes a TESForm* and works for anything
-				SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NPCsDrinkPotionActorInfo");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = acinfo->GetActor();
-				SKSE::GetModCallbackEventSource()->SendEvent(ev);
-				ev = new SKSE::ModCallbackEvent();
-				ev->eventName = RE::BSFixedString("NPCsDrinkPotionEvent");
-				ev->strArg = RE::BSFixedString("");
-				ev->numArg = 0.0f;
-				ev->sender = std::get<2>(item);
-				SKSE::GetModCallbackEventSource()->SendEvent(ev);
-			} else {
-				SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
-					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
-				});
-			}
+			SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
+				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
+			});
 			return { std::get<1>(item), std::get<3>(item) };
 		}
 		//LOG_2("{}[ActorManipulation] [ActorUseFood-Random] step3");

@@ -46,8 +46,8 @@ void Settings::FixConsumables()
 		bool soundscomp = false;
 		RE::TESForm* NUP_SOM_verb = nullptr;
 		RE::BGSSoundOutput* NUP_SOMMono01400_verb = nullptr;
-		if (Utility::Mods::GetPluginIndex("NPCsUsePotions_Sounds.esp") != 0x1) {
-			NUP_SOM_verb = Data::GetSingleton()->FindForm(0x800, "NPCsUsePotions_Sounds.esp");
+		if (Utility::Mods::GetPluginIndex("NPCsUsePotions.esp") != 0x1) {
+			NUP_SOM_verb = Data::GetSingleton()->FindForm(0xD63, "NPCsUsePotions.esp");
 			if (NUP_SOM_verb) {
 				NUP_SOMMono01400_verb = NUP_SOM_verb->As<RE::BGSSoundOutput>();
 				if (NUP_SOMMono01400_verb)
@@ -134,122 +134,7 @@ void Settings::Load()
 	ini.SetUnicode();
 	ini.LoadFile(path);
 
-	// old settings order version 2.4.x
-	{
-		// Features
-		Potions::_enableMagickaRestoration = ini.GetBoolValue("Features", "EnableMagickaRestoration", Potions::_enableMagickaRestoration);
-		Potions::_enableStaminaRestoration = ini.GetBoolValue("Features", "EnableStaminaRestoration", Potions::_enableStaminaRestoration);
-		Potions::_enableHealthRestoration = ini.GetBoolValue("Features", "EnableHealthRestoration", Potions::_enableHealthRestoration);
-		Poisons::_enablePoisons = ini.GetBoolValue("Features", "EnablePoisonUsage", Poisons::_enablePoisons);
-		FortifyPotions::_enableFortifyPotions = ini.GetBoolValue("Features", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions);
-		Food::_enableFood = ini.GetBoolValue("Features", "EnableFoodUsage", Food::_enableFood);
-
-		Player::_playerPotions = ini.GetBoolValue("Features", "EnablePlayerRestoration", Player::_playerPotions);
-		Player::_playerPoisons = ini.GetBoolValue("Features", "EnablePlayerPoisonUsage", Player::_playerPoisons);
-		Player::_playerFortifyPotions = ini.GetBoolValue("Features", "EnablePlayerFortifyPotionUsage", Player::_playerFortifyPotions);
-		Player::_playerFood = ini.GetBoolValue("Features", "EnablePlayerFoodUsage", Player::_playerFood);
-
-		Distr::_DistributePotions = ini.GetBoolValue("Features", "DistributePotions", Distr::_DistributePotions);
-		Distr::_DistributePoisons = ini.GetBoolValue("Features", "DistributePoisons", Distr::_DistributePoisons);
-		Distr::_DistributeFood = ini.GetBoolValue("Features", "DistributeFood", Distr::_DistributeFood);
-		Distr::_DistributeFortifyPotions = ini.GetBoolValue("Features", "DistributeFortifyPotions", Distr::_DistributeFortifyPotions);
-		Distr::_DistributeCustomItems = ini.GetBoolValue("Features", "DistributeCustomItems", Distr::_DistributeCustomItems);
-
-		Removal::_RemoveItemsOnDeath = ini.GetBoolValue("Features", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath);
-
-		Usage::_DisableItemUsageWhileStaggered = ini.GetBoolValue("Features", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered);
-
-		Usage::_DisableNonFollowerNPCs = ini.GetBoolValue("Features", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs);
-		Usage::_DisableOutOfCombatProcessing = ini.GetBoolValue("Features", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing);
-
-		// fixes
-		Fixes::_ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", Fixes::_ApplySkillBoostPerks);
-		Fixes::_ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", Fixes::_ForceFixPotionSounds);
-
-		// compatibility
-		Compatibility::_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode);
-
-		Whitelist::EnabledItems = ini.GetBoolValue("Compatibility", "WhitelistMode", Whitelist::EnabledItems);
-
-		Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
-
-		// distribution
-		Distr::_LevelEasy = ini.GetLongValue("Distribution", "LevelEasy", Distr::_LevelEasy);
-		Distr::_LevelNormal = ini.GetLongValue("Distribution", "LevelNormal", Distr::_LevelNormal);
-		Distr::_LevelDifficult = ini.GetLongValue("Distribution", "LevelDifficult", Distr::_LevelDifficult);
-		Distr::_LevelInsane = ini.GetLongValue("Distribution", "LevelInsane", Distr::_LevelInsane);
-
-		Distr::_GameDifficultyScaling = ini.GetBoolValue("Distribution", "GameDifficultyScaling", Distr::_GameDifficultyScaling);
-
-		Distr::_MaxMagnitudeWeak = ini.GetLongValue("Distribution", "MaxMagnitudeWeak", Distr::_MaxMagnitudeWeak);
-		Distr::_MaxMagnitudeStandard = ini.GetLongValue("Distribution", "MaxMagnitudeStandard", Distr::_MaxMagnitudeStandard);
-		Distr::_MaxMagnitudePotent = ini.GetLongValue("Distribution", "MaxMagnitudePotent", Distr::_MaxMagnitudePotent);
-
-		Distr::_StyleScalingPrimary = (float)ini.GetDoubleValue("Distribution", "StyleScalingPrimary", Distr::_StyleScalingPrimary);
-		Distr::_StyleScalingSecondary = (float)ini.GetDoubleValue("Distribution", "StyleScalingSecondary", Distr::_StyleScalingSecondary);
-
-		// Restoration Thresholds
-		Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdPercent", Potions::_healthThreshold));
-		Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "HealthThresholdLowerPercent", Potions::_healthThreshold));
-		if (Potions::_healthThreshold > 0.95f)
-			Potions::_healthThreshold = 0.95f;
-		Potions::_magickaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdPercent", Potions::_magickaThreshold));
-		Potions::_magickaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "MagickaThresholdLowerPercent", Potions::_magickaThreshold));
-		if (Potions::_magickaThreshold > 0.95f)
-			Potions::_magickaThreshold = 0.95f;
-		Potions::_staminaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdPercent", Potions::_staminaThreshold));
-		Potions::_staminaThreshold = static_cast<float>(ini.GetDoubleValue("Restoration", "StaminaThresholdLowerPercent", Potions::_staminaThreshold));
-		if (Potions::_staminaThreshold > 0.95f)
-			Potions::_staminaThreshold = 0.95f;
-		Potions::_UsePotionChance = static_cast<int>(ini.GetLongValue("Restoration", "UsePotionChance", Potions::_UsePotionChance));
-
-		// Poisonusage options
-		Poisons::_EnemyLevelScalePlayerLevel = static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel));
-		Poisons::_EnemyNumberThreshold = ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold);
-		Poisons::_UsePoisonChance = static_cast<int>(ini.GetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance));
-
-		// fortify options
-		FortifyPotions::_EnemyLevelScalePlayerLevelFortify = static_cast<float>(ini.GetDoubleValue("Fortify", "EnemyLevelScalePlayerLevelFortify", FortifyPotions::_EnemyLevelScalePlayerLevelFortify));
-		FortifyPotions::_EnemyNumberThresholdFortify = ini.GetLongValue("Fortify", "FightingNPCsNumberThresholdFortify", FortifyPotions::_EnemyNumberThresholdFortify);
-		FortifyPotions::_UseFortifyPotionChance = static_cast<int>(ini.GetLongValue("Fortify", "UseFortifyPotionChance", FortifyPotions::_UseFortifyPotionChance));
-
-		// removal options
-		Removal::_ChanceToRemoveItem = ini.GetLongValue("Removal", "ChanceToRemoveItem", Removal::_ChanceToRemoveItem);
-		Removal::_MaxItemsLeft = ini.GetLongValue("Removal", "MaxItemsLeftAfterRemoval", Removal::_MaxItemsLeft);
-
-		// general
-		System::_cycletime = ini.GetLongValue("General", "CycleWaitTime", System::_cycletime);
-
-		// Debugging
-		Debug::EnableLog = ini.GetBoolValue("Debug", "EnableLogging", Debug::EnableLog);
-		Logging::EnableLog = Debug::EnableLog;
-		Debug::EnableLoadLog = ini.GetBoolValue("Debug", "EnableLoadLogging", Debug::EnableLoadLog);
-		Logging::EnableLoadLog = Debug::EnableLoadLog;
-		Debug::LogLevel = ini.GetLongValue("Debug", "LogLevel", Debug::LogLevel);
-		Logging::LogLevel = Debug::LogLevel;
-		Debug::EnableProfiling = ini.GetBoolValue("Debug", "EnableProfiling", Debug::EnableProfiling);
-		Logging::EnableProfiling = Debug::EnableProfiling;
-		Debug::ProfileLevel = ini.GetLongValue("Debug", "ProfileLevel", Debug::ProfileLevel);
-		Logging::ProfileLevel = Debug::ProfileLevel;
-
-		Debug::_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", Debug::_CheckActorsWithoutRules);
-
-		Debug::_CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", Debug::_CalculateCellRules);
-		Debug::_Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", Debug::_Test);
-		if (Debug::_CalculateCellRules && Debug::_Test == false) {
-			std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv", std::ofstream::out);
-			out << "CellName;RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
-		}
-
-		Debug::_CompatibilityRemoveItemsBeforeDist = ini.GetBoolValue("Debug", "RemoveItemsBeforeDist", Debug::_CompatibilityRemoveItemsBeforeDist);
-		Debug::_CompatibilityRemoveItemsStartup = ini.GetBoolValue("Debug", "RemoveItemsStartup", Debug::_CompatibilityRemoveItemsStartup);
-		Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded = ini.GetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded);
-
-	}
-
-	
-
-	// new settings order version 3.x+
+	// read settings
 	{
 		// potions
 		Potions::_enableHealthRestoration = ini.GetBoolValue("Potions", "EnableHealthRestoration", Potions::_enableHealthRestoration);
@@ -434,8 +319,6 @@ void Settings::Load()
 		// compatibility
 		Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
 		loginfo("[SETTINGS] {} {}", "Compatibility:     DisableCreaturesWithoutRules", std::to_string(Compatibility::_DisableCreaturesWithoutRules));
-		Compatibility::_CompatibilityMode = ini.GetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode);
-		loginfo("[SETTINGS] {} {}", "Compatibility:     Compatibility", std::to_string(Compatibility::_CompatibilityMode));
 
 		// compatibility animated poisons
 		Compatibility::AnimatedPoisons::_Enable = ini.GetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable);
@@ -492,69 +375,6 @@ void Settings::Load()
 
 	// save user settings, before applying adjustments
 	Save();
-
-	loginfo("[SETTINGS] checking for plugins");
-
-	// search for PotionAnimatedFx.esp for compatibility
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::PotionAnimatedfx); index != 0x1) {
-		// only activate compatibility mode for potion animated fx, if compatibility plugin has been installed.
-		if (const uint32_t idx = Utility::Mods::GetPluginIndex(PluginName); idx != 0x1) {
-			Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx = true;
-			loginfo("[SETTINGS] Found plugin PotionAnimatedfx.esp and activated compatibility mode");
-		} else {
-			loginfo("[SETTINGS] Compatibility mode has not been activated. Compatibility for Potion Animated Fx has not been activated");
-		}
-	} else {
-		// if we cannot find the plugin then we need to disable all related compatibility options, otherwise we WILL get CTDs
-	}
-
-	// search for AnimatedPoisons.esp
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons); index != 0x1) {
-		Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons = true;
-		Comp::GetSingleton()->AnPois_Version = 32;
-		loginfo("[SETTINGS] Found plugin AnimatedPoisons.esp and activated compatibility mode");
-	}
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons_5); index != 0x1) {
-		Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons = true;
-		Comp::GetSingleton()->AnPois_Version = 50;
-		loginfo("[SETTINGS] Found plugin Animated Poisons.esp and activated compatibility mode");
-	}
-
-	// search for AnimatedPotions.esp
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_4); index != 0x1) {
-		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
-		Comp::GetSingleton()->AnPoti_Version = 44;
-		loginfo("[SETTINGS] Found plugin Animated Potions.esp and activated compatibility mode");
-	}
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_3); index != 0x1) {
-		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
-		Comp::GetSingleton()->AnPoti_Version = 43;
-		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
-	}
-
-	// plugin check
-	if (Compatibility::_CompatibilityMode) {
-		if (const uint32_t index = Utility::Mods::GetPluginIndex(PluginName); index != 0x1) {
-			loginfo("[SETTINGS] NPCsUsePotions.esp is loaded, Your good to go!");
-		} else {
-			loginfo("[SETTINGS] [WARNING] NPCsUsePotions.esp was not loaded, all use of potions, poisons and food is effectively disabled, except you have another sink for the papyrus events. Distribution is not affected");
-		}
-	}
-	// Check for CACO
-	{
-		if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::CACO); index != 0x1) {
-			loginfo("[SETTINGS] Complete Alchemy & Cooking Overhaul.esp is loaded, activating compatibility mode!");
-			Compatibility::CACO::_CompatibilityCACO = true;
-		}
-	}
-	// Check for Apothecary
-	{
-		if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::Apothecary); index != 0x1) {
-			loginfo("[SETTINGS] Apothecary.esp is loaded, activating compatibility mode!");
-			Compatibility::Apothecary::_CompatibilityApothecary = true;
-		}
-	}
-	loginfo("[SETTINGS] checking for plugins end");
 
 	FixConsumables();
 }
@@ -747,9 +567,7 @@ void Settings::Save()
 																													"// Be aware that this may also exclude NPCs that should not be \n"
 																													"// excluded, due to many NPCs being assigned the creature keyword even \n"
 																													"// though they should not have them.\n"
-																													"// Passiveley disables custom item distribution for those npcs.");
-	ini.SetBoolValue("Compatibility", "Compatibility", Compatibility::_CompatibilityMode, "// General Compatibility Mode. If set to true, all items will be\n"
-																						  "// equipped using Papyrus workaround. Requires the Skyrim esp plugin.");
+																													"// Passively disables custom item distribution for those npcs.");
 
 
 	// compatibility animated poisons

@@ -1,3 +1,4 @@
+#include "AlchemyEffect.h"
 #include "Hooks.h"
 #include "Events.h"
 #include "Settings.h"
@@ -106,6 +107,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		logger::info("Distribution configuration loaded");
 		// before classifying items make sure compatibility loads everything it can
 		Compatibility::GetSingleton()->Load();
+		// prepare alchemic effect
+		AlchemicEffect::Init();
 		// classify currently loaded game items
 		Settings::ClassifyItems();
 		Settings::CleanAlchemyEffects();

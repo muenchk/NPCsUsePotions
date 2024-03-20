@@ -82,13 +82,6 @@ public:
 	// ZUPA
 	int ZUPA_GlobalCooldown = 2500;
 
-	// potion animated fx
-	static inline std::string PotionAnimatedfx = "PotionAnimatedfx.esp";
-	RE::EffectSetting* PAF_NPCDrinkingCoolDownEffect = nullptr;
-	RE::SpellItem* PAF_NPCDrinkingCoolDownSpell = nullptr;
-	std::string PAF_NPCDrinkingCoolDownEffect_name = "PAF_NPCDrinkingCoolDownEffect";
-	std::string PAF_NPCDrinkingCoolDownSpell_name = "PAF_NPCDrinkingCoolDownSpell";
-
 	// Sacrosanct
 	static inline std::string Sacrosanct = "Sacrosanct - Vampires of Skyrim.esp";
 	RE::EffectSetting* Sac_MockeryOfLife = nullptr;
@@ -114,10 +107,6 @@ private:
 	/// Whether all objects for Animated Potions have been found
 	/// </summary>
 	bool _loadedAnimatedPotions = false;
-	/// <summary>
-	/// Whether all objects for Potion Animated Fx have been found
-	/// </summary>
-	bool _loadedPotionAnimatedFx = false;
 	/// <summary>
 	/// Whether all objects for zxlice's Ultimate Potion Animation have been found
 	/// </summary>
@@ -188,7 +177,7 @@ public:
 	bool CanApplyPoisonToLeftHand()
 	{
 		// all anmiation mods must be false, then we may use left hand
-		return !(!LoadedAnimatedPoisons() && !LoadedAnimatedPotionFx() && !LoadedAnimatedPotions() && !LoadedZUPA());
+		return !(!LoadedAnimatedPoisons() && !LoadedAnimatedPotions() && !LoadedZUPA());
 	}
 
 	/// <summary>
@@ -197,7 +186,7 @@ public:
 	/// <returns></returns>
 	bool LoadedApothecary()
 	{
-		return Settings::Compatibility::Apothecary::_CompatibilityApothecary && _loadedApothecary;
+		return _loadedApothecary;
 	}
 
 	/// <summary>
@@ -206,7 +195,7 @@ public:
 	/// <returns></returns>
 	bool LoadedCACO()
 	{
-		return Settings::Compatibility::CACO::_CompatibilityCACO && _loadedCACO;
+		return _loadedCACO;
 	}
 
 	/// <summary>
@@ -215,7 +204,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPotions()
 	{
-		return Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable &&
+		return Settings::Compatibility::AnimatedPotions::_Enable &&
 		       _loadedAnimatedPotions &&
 		       (AnPoti_TogglePlayerPotionAnimation && AnPoti_TogglePlayerPotionAnimation->value == 1);
 	}
@@ -226,16 +215,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPoisons()
 	{
-		return Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable && _loadedAnimatedPoisons;
-	}
-
-	/// <summary>
-	/// returns whether the compatibility for AnimatedPotionFx is enabled
-	/// </summary>
-	/// <returns></returns>
-	bool LoadedAnimatedPotionFx()
-	{
-		return Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx && _loadedPotionAnimatedFx;
+		return Settings::Compatibility::AnimatedPoisons::_Enable && _loadedAnimatedPoisons;
 	}
 
 	/// <summary>

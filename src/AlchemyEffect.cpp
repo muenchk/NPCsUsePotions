@@ -1,4 +1,5 @@
 #include "AlchemyEffect.h"
+#include "Compatibility.h"
 #include "Settings.h"
 #include "Distribution.h"
 #include "Utility.h"
@@ -56,7 +57,7 @@ AlchemicEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect)
 		if (id == 0xD6947)  // Persuasion
 			eff = AlchemicEffect::kPersuasion;
 		// COMPATIBILITY FOR CACO
-		if (Settings::Compatibility::CACO::_CompatibilityCACO) {
+		if (Compatibility::GetSingleton()->LoadedCACO()) {
 			// DamageStaminaRavage
 			if (id == 0x73F23)
 				eff = AlchemicEffect::kStamina;
@@ -65,7 +66,7 @@ AlchemicEffect ConvertToAlchemyEffectIDs(RE::EffectSetting* effect)
 				eff = AlchemicEffect::kMagicka;
 		}
 		// COMPATIBILITY FOR APOTHECARY
-		if (Settings::Compatibility::Apothecary::_CompatibilityApothecary) {
+		if (Compatibility::GetSingleton()->LoadedApothecary()) {
 			// DamageWeapon
 			if (id == 0x73F26)
 				eff = AlchemicEffect::kAttackDamageMult;
@@ -463,6 +464,12 @@ namespace AlchEff
 	}
 }
 
+static ::Compatibility* comp;
+
+void AlchemicEffect::Init()
+{
+	comp = Compatibility::GetSingleton();
+}
 
 bool AlchemicEffect::operator==(const AlchemicEffect& rhs) const
 {

@@ -460,44 +460,12 @@ public:
 	struct Compatibility
 	{
 		/// <summary>
-		/// [Setting] Whether the general compatibility mode has been activated
-		/// </summary>
-		static inline bool _CompatibilityMode = false;  // Use Items with Papyrus, needs the plugin
-		/// <summary>
 		/// [Settings] Disables all npcs with the ActorTypeCreature or ActorTypeAnimal keywords, if they do not have a dedicated rule. May cause npcs to be disabled, that should not be
 		/// </summary>
 		static inline bool _DisableCreaturesWithoutRules = true;
 
-
-		struct PotionAnimatedFx
-		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for Animated Potion Fx has been activated
-			/// </summary>
-			static inline bool _CompatibilityPotionAnimatedFx = false;
-		};
-		struct CACO
-		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for CACO has been activated
-			/// </summary>
-			static inline bool _CompatibilityCACO = false;
-		};
-
-		struct Apothecary
-		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for Apothecary has been activated
-			/// </summary>
-			static inline bool _CompatibilityApothecary = false;
-		};
-
 		struct AnimatedPoisons
 		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for Animated Poisons has been activated
-			/// </summary>
-			static inline bool _CompatibilityAnimatedPoisons = false;
 			/// <summary>
 			/// [Setting] Whether the usage of Animated Poisons is enabled
 			/// </summary>
@@ -510,10 +478,6 @@ public:
 
 		struct AnimatedPotions
 		{
-			/// <summary>
-			/// [Automatic] whether the compatibility mode for Animated Potions has been activated
-			/// </summary>
-			static inline bool _CompatibilityAnimatedPotions = false; 
 			/// <summary>
 			/// [Setting] Whether the usage of Animated Potions is enabled
 			/// </summary>
@@ -829,23 +793,6 @@ public:
 	/// Updates settings that have been changed during runtime and result in changes to classification
 	/// </summary>
 	static void UpdateSettings();
-
-	/// <summary>
-	/// returns whether food items should be used in compatibility mode
-	/// </summary>
-	/// <returns></returns>
-	static bool CompatibilityFoodPapyrus()
-	{
-		return Settings::Compatibility::_CompatibilityMode;
-	}
-	/// <summary>
-	/// returns whether potions whould be used in compatibility mode
-	/// </summary>
-	/// <returns></returns>
-	static bool CompatibilityPotionPapyrus()
-	{
-		return Settings::Compatibility::_CompatibilityMode;
-	}
 
 	/// <summary>
 	/// classifies a single item based on its effects
