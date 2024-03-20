@@ -208,25 +208,6 @@ void Compatibility::Load()
 		}
 	}
 
-	// potion animated fx
-	// lookup for non esp version
-	PAF_NPCDrinkingCoolDownEffect = datahandler->LookupForm<RE::EffectSetting>(0x056EAE, PotionAnimatedfx);
-	if (PAF_NPCDrinkingCoolDownEffect == nullptr)  // espfe variant
-		PAF_NPCDrinkingCoolDownEffect = datahandler->LookupForm<RE::EffectSetting>(0x81F, PotionAnimatedfx);
-	LOG1_1("{}[Compatibility] [Load] [PAF] {}", Utility::PrintForm(PAF_NPCDrinkingCoolDownEffect));
-	PAF_NPCDrinkingCoolDownSpell = datahandler->LookupForm<RE::SpellItem>(0x056EAC, PotionAnimatedfx);
-	if (PAF_NPCDrinkingCoolDownSpell == nullptr)  // espfe variant
-		PAF_NPCDrinkingCoolDownSpell = datahandler->LookupForm<RE::SpellItem>(0x820, PotionAnimatedfx);
-	LOG1_1("{}[Compatibility] [Load] [PAF] {}", Utility::PrintForm(PAF_NPCDrinkingCoolDownSpell));
-
-	if (PAF_NPCDrinkingCoolDownEffect && PAF_NPCDrinkingCoolDownSpell) {
-		_loadedPotionAnimatedFx = true;
-		if (Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx) {
-			RE::DebugNotification("NPCsUsePotions enabled AnimatedPotionFx compatibility", 0, false);
-			LOG_1("{}[Compatibility] [Load] Enabled AnimatedPotionFx.");
-		}
-	}
-
 	// ZUPA
 	if (Utility::Mods::GetPluginIndex("zxlice's ultimate potion animation.esp") != 0x1)
 		_loadedZUPA = true;
@@ -273,9 +254,6 @@ void Compatibility::Load()
 	}
 	if (_loadedZUPA) {
 		_globalCooldownPotions = std::max(_globalCooldownPotions, ZUPA_GlobalCooldown);
-		_disableParalyzedItems = true;
-	}
-	if (_loadedPotionAnimatedFx) {
 		_disableParalyzedItems = true;
 	}
 	if (_loadedUltimatePotions) {
@@ -354,12 +332,6 @@ void Compatibility::Clear()
 	_loadedAnimatedPotions = false;
 
 	AnPoti_TogglePlayerPotionAnimation = nullptr;
-
-	// potion animated fx
-	_loadedPotionAnimatedFx = false;
-
-	PAF_NPCDrinkingCoolDownEffect = nullptr;
-	PAF_NPCDrinkingCoolDownSpell = nullptr;
 
 	// ZUPA
 	_loadedZUPA = false;

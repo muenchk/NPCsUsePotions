@@ -161,8 +161,6 @@ namespace Papyrus
 			// compatibility
 			a_vm->RegisterFunction(std::string("Comp_GetDisableCreaturesWhitoutRules"), script, Compatibility::Get_DisableCreaturesWithoutRules);
 			a_vm->RegisterFunction(std::string("Comp_SetDisableCreaturesWithoutRules"), script, Compatibility::Set_DisableCreaturesWithoutRules);
-			a_vm->RegisterFunction(std::string("Comp_PotionAnimatedFx_GetCompatibility"), script, Compatibility::Get_PotionAnimatedFx_CompatibilityPotionAnimatedFx);
-			a_vm->RegisterFunction(std::string("Comp_PotionAnimatedFx_SetCompatibility"), script, Compatibility::Set_PotionAnimatedFx_CompatibilityPotionAnimatedFx);
 			a_vm->RegisterFunction(std::string("Comp_CACO_GetCompatibility"), script, Compatibility::Get_CACO_CompatibilityCACO);
 			a_vm->RegisterFunction(std::string("Comp_CACO_SetCompatibility"), script, Compatibility::Set_CACO_CompatibilityCACO);
 			a_vm->RegisterFunction(std::string("Comp_Apothecary_GetCompatibility"), script, Compatibility::Get_Apothecary_CompatibilityApothecary);
@@ -177,7 +175,6 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Comp_AnimatedPotions_SetCompatibility"), script, Compatibility::Set_AnimatedPotions_CompatibilityAnimatedPotions);
 			a_vm->RegisterFunction(std::string("Comp_AnimatedPotions_GetEnabled"), script, Compatibility::Get_AnimatedPotions_Enabled);
 			a_vm->RegisterFunction(std::string("Comp_AnimatedPotions_SetEnabled"), script, Compatibility::Set_AnimatedPotions_Enable);
-			a_vm->RegisterFunction(std::string("Comp_PotionAnimatedFx_Loaded"), script, Compatibility::PotionAnimatedFx_Loaded);
 			a_vm->RegisterFunction(std::string("Comp_CACO_Loaded"), script, Compatibility::CACO_Loaded);
 			a_vm->RegisterFunction(std::string("Comp_Apothecary_Loaded"), script, Compatibility::Apothecary_Loaded);
 			a_vm->RegisterFunction(std::string("Comp_AnimatedPoisons_Loaded"), script, Compatibility::AnimatedPoisons_Loaded);
@@ -1077,18 +1074,6 @@ namespace Papyrus
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
-			bool Get_PotionAnimatedFx_CompatibilityPotionAnimatedFx(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
-			{
-				return Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx;
-			}
-
-			void Set_PotionAnimatedFx_CompatibilityPotionAnimatedFx(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
-			{
-				Settings::Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx = enabled;
-				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
-				Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kCompatibility;
-			}
-
 			bool Get_CACO_CompatibilityCACO(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
 				return Settings::Compatibility::CACO::_CompatibilityCACO;
@@ -1168,11 +1153,6 @@ namespace Papyrus
 			{
 				Settings::Compatibility::AnimatedPotions::_Enable = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
-			}
-
-			bool PotionAnimatedFx_Loaded(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
-			{
-				return ::Compatibility::GetSingleton()->LoadedAnimatedPotionFx();
 			}
 
 			bool CACO_Loaded(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)

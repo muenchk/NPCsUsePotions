@@ -47,7 +47,7 @@ void Settings::FixConsumables()
 		RE::TESForm* NUP_SOM_verb = nullptr;
 		RE::BGSSoundOutput* NUP_SOMMono01400_verb = nullptr;
 		if (Utility::Mods::GetPluginIndex("NPCsUsePotions.esp") != 0x1) {
-			NUP_SOM_verb = Data::GetSingleton()->FindForm(0xD63>, "NPCsUsePotions.esp");
+			NUP_SOM_verb = Data::GetSingleton()->FindForm(0xD63, "NPCsUsePotions.esp");
 			if (NUP_SOM_verb) {
 				NUP_SOMMono01400_verb = NUP_SOM_verb->As<RE::BGSSoundOutput>();
 				if (NUP_SOMMono01400_verb)
@@ -490,19 +490,6 @@ void Settings::Load()
 	Save();
 
 	loginfo("[SETTINGS] checking for plugins");
-
-	// search for PotionAnimatedFx.esp for compatibility
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::PotionAnimatedfx); index != 0x1) {
-		// only activate compatibility mode for potion animated fx, if compatibility plugin has been installed.
-		if (const uint32_t idx = Utility::Mods::GetPluginIndex(PluginName); idx != 0x1) {
-			Compatibility::PotionAnimatedFx::_CompatibilityPotionAnimatedFx = true;
-			loginfo("[SETTINGS] Found plugin PotionAnimatedfx.esp and activated compatibility mode");
-		} else {
-			loginfo("[SETTINGS] Compatibility mode has not been activated. Compatibility for Potion Animated Fx has not been activated");
-		}
-	} else {
-		// if we cannot find the plugin then we need to disable all related compatibility options, otherwise we WILL get CTDs
-	}
 
 	// search for AnimatedPoisons.esp
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons); index != 0x1) {

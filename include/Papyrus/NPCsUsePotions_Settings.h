@@ -1279,25 +1279,6 @@ namespace Papyrus
 			void Set_DisableCreaturesWithoutRules(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
 
 			/// <summary>
-			/// Returns whether PotionAnimatedFx.esp has been found and compatibility has been activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <returns></returns>
-			bool Get_PotionAnimatedFx_CompatibilityPotionAnimatedFx(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
-
-			/// <summary>
-			/// Sets whether compatibility for PotionAnimatedFx is activated [WARNING: This modifies the internal plugin status and may lead to unexpected behaviour]
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <param name="enabled"></param>
-			[[deprecated("Modifies internal values that may lead to unexpected behaviour")]]
-			void Set_PotionAnimatedFx_CompatibilityPotionAnimatedFx(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
-
-			/// <summary>
 			/// Returns whether CACO has been found and compatibility has been activated
 			/// </summary>
 			/// <param name="a_vm"></param>
@@ -1427,15 +1408,6 @@ namespace Papyrus
 			/// <param name="enabled"></param>
 			void Set_AnimatedPotions_Enable(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
 
-			
-			/// <summary>
-			/// Returns whether PotionAnimatedFx is loaded
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <returns></returns>
-			bool PotionAnimatedFx_Loaded(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
 
 			/// <summary>
 			/// Returns whether CACO is loaded

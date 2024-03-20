@@ -464,14 +464,6 @@ public:
 		/// </summary>
 		static inline bool _DisableCreaturesWithoutRules = true;
 
-
-		struct PotionAnimatedFx
-		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for Animated Potion Fx has been activated
-			/// </summary>
-			static inline bool _CompatibilityPotionAnimatedFx = false;
-		};
 		struct CACO
 		{
 			/// <summary>

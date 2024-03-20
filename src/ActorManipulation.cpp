@@ -513,18 +513,6 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 
 std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>& ls)
 {
-	static auto CompPotAnimFx = [&acinfo]() {
-		if (comp->LoadedAnimatedPotionFx()) {
-			// compatibility mode for PotionAnimatedfx.esp activated, we may only use a potion if it is not on cooldown
-			// if the actor does not have the cooldown effect we may use a potion
-			if (comp->PAF_NPCDrinkingCoolDownEffect == nullptr || !(acinfo->HasMagicEffect(comp->PAF_NPCDrinkingCoolDownEffect))) {
-				return true;
-			} else
-				return false;
-		}
-		return true;
-	};
-
 	LOG_2("{}[ActorManipulation] [ActorUsePotion] list bound");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		if (ls.size() > 0) {
@@ -544,11 +532,6 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 					ev->sender = acinfo->GetActor();
 					SKSE::GetModCallbackEventSource()->SendEvent(ev);
 				} else {
-					// apply compatibility stuff before using potion
-					if (!CompPotAnimFx()) {
-						LOG_3("{}[ActorManipulation] [ActorUsePotion] Cannot use potion due to compatibility");
-						return { -1, AlchemicEffect::kNone, 0.0f, ls };
-					}
 					// save statistics
 					Statistics::Misc_PotionsAdministered++;
 					LOG_2("{}[ActorManipulation] [ActorUsePotion] equip potion");
