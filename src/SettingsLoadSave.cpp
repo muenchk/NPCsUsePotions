@@ -46,8 +46,8 @@ void Settings::FixConsumables()
 		bool soundscomp = false;
 		RE::TESForm* NUP_SOM_verb = nullptr;
 		RE::BGSSoundOutput* NUP_SOMMono01400_verb = nullptr;
-		if (Utility::Mods::GetPluginIndex("NPCsUsePotions_Sounds.esp") != 0x1) {
-			NUP_SOM_verb = Data::GetSingleton()->FindForm(0x800, "NPCsUsePotions_Sounds.esp");
+		if (Utility::Mods::GetPluginIndex("NPCsUsePotions.esp") != 0x1) {
+			NUP_SOM_verb = Data::GetSingleton()->FindForm(0xD63>, "NPCsUsePotions.esp");
 			if (NUP_SOM_verb) {
 				NUP_SOMMono01400_verb = NUP_SOM_verb->As<RE::BGSSoundOutput>();
 				if (NUP_SOMMono01400_verb)
