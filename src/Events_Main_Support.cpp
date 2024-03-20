@@ -21,7 +21,13 @@ namespace Events
 		EvalProcessing();
 		// now that the game was loaded we can try to initialize all our variables we conuldn't before
 		if (!initialized) {
-			// if we are in com mode, try to find the needed items. If we cannot find them, deactivate comp mode
+			if (DGIntimidate == nullptr)
+			{
+				DGIntimidate = RE::TESForm::LookupByID<RE::TESQuest>(0x00047AE6);
+				if (DGIntimidate == nullptr)
+					logcritical("Cannot find DGIntimidate quest");
+			}
+
 			initialized = true;
 		}
 	}

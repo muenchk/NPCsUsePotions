@@ -425,6 +425,10 @@ void Settings::Load()
 		// system
 		System::_cycletime = ini.GetLongValue("System", "CycleWaitTime", System::_cycletime);
 		loginfo("[SETTINGS] {} {}", "System:            CycleWaitTime", std::to_string(System::_cycletime));
+		_MaxDuration = ini.GetLongValue("System", "MaxDuration", _MaxDuration);
+		loginfo("[SETTINGS] {} {}", "System:            MaxDuration", std::to_string(_MaxDuration));
+		_MaxFortifyDuration = ini.GetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration);
+		loginfo("[SETTINGS] {} {}", "System:            MaxFortifyDuration", std::to_string(_MaxFortifyDuration));
 
 		
 		// compatibility
@@ -558,6 +562,9 @@ void Settings::Load()
 
 void Settings::Save()
 {
+	// reset change flag
+	Settings::_modifiedSettings = Settings::ChangeFlag::kNone;
+
 	constexpr auto path = L"Data/SKSE/Plugins/NPCsUsePotions.ini";
 
 	CSimpleIniA ini;
@@ -570,13 +577,13 @@ void Settings::Save()
 	ini.SetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration, "// NPCs use stamina potions to restore their missing stamina in combat.");
 	ini.SetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects, "// If this is enabled NPCs will use potions that contain detrimental\n"
 																								"// effects. For instance, impure potions, that restore health and damage magicka.\n"
-																								"// !!!This setting also affects fortify potions");
+																								"// !!!This setting also affects fortify potions.");
 	ini.SetBoolValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Potions::_HandleWeaponSheathedAsOutOfCombat, "// If weapons are not drawn in combat, it will be treated as Out-of-Combat.\n"
 																													"// This currently means only health potions will be used.");
 
-	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold, "// Upon reaching this threshold, NPCs will start to use health potions");
-	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold, "// Upon reaching this threshold, NPCs will start to use magicka potions");
-	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold, "// Upon reaching this threshold, NPCs will start to use stamina potions");
+	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold, "// Upon reaching this threshold, NPCs will start to use health potions.");
+	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold, "// Upon reaching this threshold, NPCs will start to use magicka potions.");
+	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold, "// Upon reaching this threshold, NPCs will start to use stamina potions.");
 	ini.SetLongValue("Potions", "UsePotionChance", Potions::_UsePotionChance, "// Chance that an NPC will use a potion if they can. Set to 100 to always \n"
 																				"// take a potion, when appropiate.\n"
 																				"// An NPC can use a potion if they (1) have a potion in their inventory, \n"
@@ -587,7 +594,7 @@ void Settings::Save()
 	ini.SetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons, "// NPCs use appropiate poisons in combat. Poisons are considered appropiate,\n"
 																				"// if they can harm the enemy. For instance, damaging Magicka of an enemy \n"
 																				"// that does not use spells, is not appropiate.");
-	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, "// This allows NPCs to use poisons that apply positive effects to their opponents");
+	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, "// This allows NPCs to use poisons that apply positive effects to their opponents.");
 	ini.SetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed, "// If the weapons are sheathed, poisons will not be used.");
 	ini.SetBoolValue("Poisons", "DontUseAgainst100PoisonResist", Poisons::_DontUseAgainst100PoisonResist, "// NPCs and the player will not use Poisons against those that have 100% poison resistance anymore.");
 	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, "// If the enemy they are facing has a level greater equal \n"
@@ -649,7 +656,7 @@ void Settings::Save()
 	// usage
 	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered, in mid-air, flying, unconcious, bleeding-out, ragdolling or in a kill-move aren't able to use any potions and poisons.");
 	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs, "// NPCs that are not currently followers of the player won't use potions, etc.");
-	ini.SetBoolValue("Usage", "DisableOutOfCombatUsage", Usage::_DisableOutOfCombatProcessing, "// NPCs are only handled when they are fighting -> Old handling method \n"
+	ini.SetBoolValue("Usage", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing, "// NPCs are only handled when they are fighting -> Old handling method \n"
 																								"// until version 3.\n"
 																								"// If disabled, NPCs will use Health potions outside of combat. \n"
 																								"// For instance, if they run into traps.");
@@ -680,7 +687,7 @@ void Settings::Save()
 	ini.SetLongValue("Distribution", "MaxMagnitudeWeak", Distr::_MaxMagnitudeWeak, "// Items with this or lower magnitude*duration are considered weak.");
 	ini.SetLongValue("Distribution", "MaxMagnitudeStandard", Distr::_MaxMagnitudeStandard, "// Items with this or lower magnitude*duration are considered normal.");
 	ini.SetLongValue("Distribution", "MaxMagnitudePotent", Distr::_MaxMagnitudePotent, "// Items with this or lower magnitude*duration are considered potent. \n"
-																						"// Everything above this is considered Insane tier");
+																						"// Everything above this is considered Insane tier.");
 
 	ini.SetDoubleValue("Distribution", "StyleScalingPrimary", Distr::_StyleScalingPrimary, "// Scaling for the weight of different alchemic effects for the \n"
 																							"// distribution of potions, poison, fortify potions and food \n"
@@ -704,7 +711,7 @@ void Settings::Save()
 	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Whitelist::EnabledNPCs, "// Enables the whitelist mode for NPCs. NPCs that shall be \n"
 																						"// given potions, etc. and shall use potions, etc. MUST be \n"
 																						"// explicitly whitelisted in the rules. This is the opposite \n"
-																						"// of the standard (blacklist) behaviour");
+																						"// of the standard (blacklist) behaviour.");
 
 
 	// fixes
@@ -719,6 +726,8 @@ void Settings::Save()
 	ini.SetLongValue("System", "CycleWaitTime", System::_cycletime, "// Time between two periods in milliseconds.\n"
 																	"// Set to smaller values to increase reactivity. Set to larger \n"
 																	"// values to decrease performance impact.");
+	ini.SetLongValue("System", "MaxDuration", _MaxDuration, "// Maximum duration restoration potions (health, magicka, stamina) are accounted for, idependent from their actual duration.");
+	ini.SetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration, "// Maximum duration fortification potions are accounted for, idependent from their actual duration.");
 
 
 	// compatibility

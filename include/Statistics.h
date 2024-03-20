@@ -70,5 +70,13 @@ public:
 	/// Number of food items eaten during this game session
 	/// </summary>
 	static inline long Misc_FoodEaten = 0;
+	/// <summary>
+	/// Number of Actors handled last cycle
+	/// </summary>
+	static inline long Misc_ActorsHandled = 0;
+	/// <summary>
+	/// Number of Actors handled this game session
+	/// </summary>
+	static inline long Misc_ActorsHandledTotal = 0;
 #pragma endregion
 };

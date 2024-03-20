@@ -43,6 +43,28 @@ public:
 	static inline std::filesystem::path file_directory = "";
 
 	/// <summary>
+	/// Indicates whether something has been modified
+	/// </summary>
+	enum class ChangeFlag
+	{
+		kNone = 1,
+		kChanged = 2,
+	};
+
+	/// <summary>
+	/// flag that specifies updates to run on settings and lists
+	/// </summary>
+	enum class UpdateFlag
+	{
+		kNone = 1,
+		kMagnitude = 2,
+		kCompatibility = 4,
+	};
+
+	static inline ChangeFlag _modifiedSettings = ChangeFlag::kNone;
+	static inline uint32_t _updateSettings = (uint32_t)UpdateFlag::kNone;
+
+	/// <summary>
 	/// Supported types of Items
 	/// </summary>
 	enum class ItemType
@@ -97,10 +119,6 @@ public:
 		/// [Settings] period for actor handling
 		/// </summary>
 		static inline long _cycletime = 1000;
-		/// <summary>
-		/// [Settings] max potions used per Cycle
-		/// </summary>
-		static const long _maxPotionsPerCycle = 1;
 	};
 
 	/// <summary>
@@ -806,6 +824,11 @@ public:
 	/// Saves the plugin configuration
 	/// </summary>
 	static void Save();
+
+	/// <summary>
+	/// Updates settings that have been changed during runtime and result in changes to classification
+	/// </summary>
+	static void UpdateSettings();
 
 	/// <summary>
 	/// returns whether food items should be used in compatibility mode

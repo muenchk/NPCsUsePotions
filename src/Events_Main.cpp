@@ -14,6 +14,7 @@
 #include "Utility.h"
 #include "Tests.h"
 #include "BufferOperations.h"
+#include "Statistics.h"
 
 namespace Events
 {
@@ -68,15 +69,15 @@ namespace Events
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
 			LOG_2("{}[Events] [CheckActors] [HandleActorPotions] usage allowed")
 			// get combined effect for magicka, health, and stamina
-			if (Settings::Potions::_enableHealthRestoration && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold)
+			if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold)
 				alch = AlchemicEffect::kHealth;
 			else
 				alch = 0;
-			if (Settings::Potions::_enableMagickaRestoration && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kMagicka) < Settings::Potions::_magickaThreshold)
+			if (Settings::Potions::_enableMagickaRestoration && !comp->CannotRestoreMagicka(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kMagicka) < Settings::Potions::_magickaThreshold)
 				alch2 = AlchemicEffect::kMagicka;
 			else
 				alch2 = 0;
-			if (Settings::Potions::_enableStaminaRestoration && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kStamina) < Settings::Potions::_staminaThreshold)
+			if (Settings::Potions::_enableStaminaRestoration && !comp->CannotRestoreStamina(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kStamina) < Settings::Potions::_staminaThreshold)
 				alch3 = AlchemicEffect::kStamina;
 			else
 				alch3 = 0;
@@ -259,8 +260,8 @@ namespace Events
 			return;
 		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo));
 		// we are only checking for health here
-		if (Settings::Potions::_enableHealthRestoration && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
-			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold) {
+		if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
+			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
 			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, false, false);
 			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
 				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
@@ -384,6 +385,33 @@ namespace Events
 	}
 
 	/// <summary>
+	/// Finds actors that are temporarily banned from processing
+	/// </summary>
+	void Main::PullForbiddenActors()
+	{
+		// delete old forbiddens
+		forbidden.clear();
+		if (DGIntimidate != nullptr && DGIntimidate->IsRunning())
+		{
+			// find all npcs participating in a brawl and add them to the exceptions
+			for (auto& [id, objectrefhandle] : DGIntimidate->refAliasMap) {
+				LOG1_4("{}[Events] [PullForbiddenActors] Alias with id: {}", id);
+				if (id == 0 || id == 352 || id == 351)
+				{
+					if (objectrefhandle && objectrefhandle.get() && objectrefhandle.get().get()) {
+						if (objectrefhandle.get().get()->formType == RE::FormType::ActorCharacter) {
+							if (RE::Actor* ac = objectrefhandle.get().get()->As<RE::Actor>(); ac != nullptr) {
+								forbidden.insert(ac->GetFormID());
+								LOG1_4("{}[Events] [PullForbiddenActors] Found Brawling actor: {}", Utility::GetHex(ac->GetFormID()));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/// <summary>
 	/// Main routine that periodically checks the actors status, and applies items
 	/// </summary>
 	void Main::CheckActors()
@@ -442,6 +470,9 @@ namespace Events
 				if (!CanProcess())
 					goto CheckActorsSkipIteration;
 
+				// find all actors that are forbidden from handling in this round
+				PullForbiddenActors();
+
 				SKSE::GetTaskInterface()->AddTask([&playerweak]() {
 					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
 						// store position of player character
@@ -490,6 +521,17 @@ namespace Events
 					// calc actors in combat
 					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
 					SKSE::GetTaskInterface()->AddTask([actors, &playerweak]() {
+						// update combat status of player
+						if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+							// the player should always be valid. If they don't the game doesn't work either anyway
+							if (hostileactors > 0) {
+								playerinfo->SetCombatState(CombatState::InCombat);
+								HandleActorRuntimeData(playerinfo);
+							}
+							else
+								playerinfo->SetCombatState(CombatState::OutOfCombat);
+						}
+
 						std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 							if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
 								DecreaseActorCooldown(acinfo);
@@ -503,17 +545,6 @@ namespace Events
 								}
 							}
 						});
-
-						// update combat status of player
-						if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-							// the player should always be valid. If they don't the game doesn't work either anyway
-							if (hostileactors > 0) {
-								playerinfo->SetCombatState(CombatState::InCombat);
-								HandleActorRuntimeData(playerinfo);
-							}
-							else
-								playerinfo->SetCombatState(CombatState::OutOfCombat);
-						}
 					});
 
 					if (!CanProcess() || Game::IsFastTravelling())
@@ -525,6 +556,9 @@ namespace Events
 					SKSE::GetTaskInterface()->AddTask([actors]() {
 						std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 							if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+								// catch forbidden actors
+								if (forbidden.contains(acinfo->GetFormID()))
+									return;
 								// emergency catch
 								if (Game::IsFastTravelling())
 									return;
@@ -550,7 +584,17 @@ namespace Events
 				// write execution time of iteration
 				PROF2_1("{}[Events] [CheckActors] execution time for {} actors: {} µs", actors.size(), std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 				LOG1_1("{}[Events] [CheckActors] checked {} actors", std::to_string(actors.size()));
-				// release lock.
+				Statistics::Misc_ActorsHandled = actors.size();
+				Statistics::Misc_ActorsHandledTotal += actors.size();
+
+				// update settings if changes were made in the MCM menu
+				if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
+					LOG_1("{}[Events] [CheckActors] Applying setting changes.");
+					begin = std::chrono::steady_clock::now();
+					Settings::UpdateSettings();
+					Settings::Save();
+					PROF1_1("{}[Events] [CheckActors] Applying setting changes took {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+				}
 			} else {
 				LOG_1("{}[Events] [CheckActors] Skip round.");
 			}
@@ -602,7 +646,7 @@ CheckActorsSkipIteration:
 				sem.release();
 				LOG_3("{}[Events] [LoadGameCallback] Adding player to the list");
 			}
-			});
+		});
 
 		if (actorhandlerrunning == false) {
 			if (actorhandler != nullptr) {
@@ -733,6 +777,7 @@ CheckActorsSkipIteration:
 		LOG1_1("{}[PlayerDead] {}", playerdied);
 		// reset actor processing list
 		acset.clear();
+		DGIntimidate = nullptr;
 	}
 
 	long Main::SaveDeadActors(SKSE::SerializationInterface* a_intfc)

@@ -89,6 +89,13 @@ public:
 	std::string PAF_NPCDrinkingCoolDownEffect_name = "PAF_NPCDrinkingCoolDownEffect";
 	std::string PAF_NPCDrinkingCoolDownSpell_name = "PAF_NPCDrinkingCoolDownSpell";
 
+	// Sacrosanct
+	static inline std::string Sacrosanct = "Sacrosanct - Vampires of Skyrim.esp";
+	RE::EffectSetting* Sac_MockeryOfLife = nullptr;
+
+	// Ultimate Animated Potions
+	int Ult_GlobalCooldown = 2500;
+
 	// general section
 private:
 	/// <summary>
@@ -115,6 +122,14 @@ private:
 	/// Whether all objects for zxlice's Ultimate Potion Animation have been found
 	/// </summary>
 	bool _loadedZUPA = false;
+	/// <summary>
+	/// Whether Sacrosanct is present in the game
+	/// </summary>
+	bool _loadedSacrosanct = false;
+	/// <summary>
+	/// Whether Ultimate Animated Potions is loaded
+	/// </summary>
+	bool _loadedUltimatePotions = false;
 
 	/// <summary>
 	/// Global cooldown applied
@@ -233,6 +248,24 @@ public:
 	}
 
 	/// <summary>
+	/// returns whether the compatibilty for Sacrosanct is enabled
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedSacrosanct()
+	{
+		return _loadedSacrosanct;
+	}
+
+	/// <summary>
+	/// returns whther Ultimate Animated Potions has been loaded
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedUltimatePotions()
+	{
+		return _loadedUltimatePotions;
+	}
+
+	/// <summary>
 	/// returns whether item usage should be disabled while an actor is paralyzed, considering the settings and the loaded plugins
 	/// </summary>
 	/// <returns></returns>
@@ -276,6 +309,22 @@ public:
 	{
 		return _globalCooldownFood;
 	}
+
+	/// <summary>
+	/// Returns whether usage of health potions is impared
+	/// </summary>
+	/// <returns></returns>
+	bool CannotRestoreHealth(std::shared_ptr<ActorInfo> acinfo);
+	/// <summary>
+	/// Returns whether usage of magicka potions is impared
+	/// </summary>
+	/// <returns></returns>
+	bool CannotRestoreMagicka(std::shared_ptr<ActorInfo> acinfo);
+	/// <summary>
+	/// Returns whether usage of stamina potions is impared
+	/// </summary>
+	/// <returns></returns>
+	bool CannotRestoreStamina(std::shared_ptr<ActorInfo> acinfo);
 
 	/// <summary>
 	/// [AnimatedPoisons] Finds the poison that should be applied to [actor]'s weapons

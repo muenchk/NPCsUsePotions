@@ -2563,6 +2563,22 @@ void Settings::ApplySkillBoostPerks()
 
 }
 
+void Settings::UpdateSettings()
+{
+	LOG_2("{}[Settings] [UpdateSettings] Apply configuration changes");
+	uint32_t flag = Settings::_updateSettings;
+	Settings::_updateSettings = 0;
+	if (flag & (uint32_t)UpdateFlag::kMagnitude)
+	{
+		ClassifyItems();
+	}
+	if (flag & (uint32_t)UpdateFlag::kCompatibility)
+	{
+		::Compatibility::GetSingleton()->Clear();
+		::Compatibility::GetSingleton()->Load();
+	}
+}
+
 void Settings::ClassifyItems()
 {
 	// resetting all items
