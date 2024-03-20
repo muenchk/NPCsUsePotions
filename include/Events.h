@@ -67,6 +67,10 @@ namespace Events
 		/// list of npcs that are currently in combat
 		/// </summary>
 		static inline std::forward_list<std::shared_ptr<ActorInfo>> combatants;
+		/// <summary>
+		/// set of actors temporarily forbidden from processing
+		/// </summary>
+		static inline std::set<RE::FormID> forbidden;
 
 		/// <summary>
 		/// list of npcs that should be registered after fast travel has ended
@@ -118,6 +122,10 @@ namespace Events
 		/// enables all active functions
 		/// </summary>
 		static inline bool enableProcessing = false;
+
+		//--------------------Brawl--------------------------
+
+		static inline RE::TESQuest* DGIntimidate = nullptr;
 
 		//-------------------Support-------------------------
 
@@ -238,6 +246,11 @@ namespace Events
 		/// </summary>
 		/// <param name="acinfo"></param>
 		static void HandleActorRuntimeData(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// Finds actors that are temporarily banned from processing
+		/// </summary>
+		static void PullForbiddenActors();
 
 		/// <summary>
 		/// Main routine that periodically checks the actors status, and applies items

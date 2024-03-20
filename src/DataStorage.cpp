@@ -37,6 +37,7 @@ namespace Storage
 	void SaveGameCallback(SKSE::SerializationInterface* a_intfc)
 	{
 		LOG_1("{}[DataStorage] [SaveGameCallback]");
+		// save settings in case they have been changed
 		WriteData(a_intfc);
 
 		// print statistics to logfile
@@ -83,6 +84,10 @@ namespace Storage
 	void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("{}[DataStorage] [RevertGameCallback]");
+		// save settings in case they have been changed
+		if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
+			Settings::Save();
+		}
 		processing = false;
 		RevertData();
 		LOG_1("{}[DataStorage] [RevertGameCallback] end");

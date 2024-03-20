@@ -14,6 +14,7 @@
 #include "Utility.h"
 #include "Tests.h"
 #include "BufferOperations.h"
+#include "Statistics.h"
 
 namespace Events
 {
@@ -384,6 +385,33 @@ namespace Events
 	}
 
 	/// <summary>
+	/// Finds actors that are temporarily banned from processing
+	/// </summary>
+	void Main::PullForbiddenActors()
+	{
+		// delete old forbiddens
+		forbidden.clear();
+		if (DGIntimidate != nullptr && DGIntimidate->IsRunning())
+		{
+			// find all npcs participating in a brawl and add them to the exceptions
+			for (auto& [id, objectrefhandle] : DGIntimidate->refAliasMap) {
+				LOG1_4("{}[Events] [PullForbiddenActors] Alias with id: {}", id);
+				if (id == 0 || id == 352 || id == 351)
+				{
+					if (objectrefhandle && objectrefhandle.get() && objectrefhandle.get().get()) {
+						if (objectrefhandle.get().get()->formType == RE::FormType::ActorCharacter) {
+							if (RE::Actor* ac = objectrefhandle.get().get()->As<RE::Actor>(); ac != nullptr) {
+								forbidden.insert(ac->GetFormID());
+								LOG1_4("{}[Events] [PullForbiddenActors] Found Brawling actor: {}", Utility::GetHex(ac->GetFormID()));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/// <summary>
 	/// Main routine that periodically checks the actors status, and applies items
 	/// </summary>
 	void Main::CheckActors()
@@ -435,6 +463,9 @@ namespace Events
 
 				if (!CanProcess())
 					goto CheckActorsSkipIteration;
+
+				// find all actors that are forbidden from handling in this round
+				PullForbiddenActors();
 
 				if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
 					if (playerinfo->GetActor()) {
@@ -517,6 +548,9 @@ namespace Events
 					// collect actor runtime data
 					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+							// catch forbidden actors
+							if (forbidden.contains(acinfo->GetFormID()))
+								return;
 							// emergency catch
 							if (Game::IsFastTravelling())
 								return;
@@ -540,7 +574,17 @@ namespace Events
 				// write execution time of iteration
 				PROF2_1("{}[Events] [CheckActors] execution time for {} actors: {} µs", actors.size(), std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 				LOG1_1("{}[Events] [CheckActors] checked {} actors", std::to_string(actors.size()));
-				// release lock.
+				Statistics::Misc_ActorsHandled = actors.size();
+				Statistics::Misc_ActorsHandledTotal += actors.size();
+
+				// update settings if changes were made in the MCM menu
+				if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
+					LOG_1("{}[Events] [CheckActors] Applying setting changes.");
+					begin = std::chrono::steady_clock::now();
+					Settings::UpdateSettings();
+					Settings::Save();
+					PROF1_1("{}[Events] [CheckActors] Applying setting changes took {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+				}
 			} else {
 				LOG_1("{}[Events] [CheckActors] Skip round.");
 			}
@@ -713,6 +757,7 @@ CheckActorsSkipIteration:
 		LOG1_1("{}[PlayerDead] {}", playerdied);
 		// reset actor processing list
 		acset.clear();
+		DGIntimidate = nullptr;
 	}
 
 	long Main::SaveDeadActors(SKSE::SerializationInterface* a_intfc)
