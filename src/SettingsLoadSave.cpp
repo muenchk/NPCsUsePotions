@@ -376,48 +376,6 @@ void Settings::Load()
 	// save user settings, before applying adjustments
 	Save();
 
-	loginfo("[SETTINGS] checking for plugins");
-
-	// search for AnimatedPoisons.esp
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons); index != 0x1) {
-		Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons = true;
-		Comp::GetSingleton()->AnPois_Version = 32;
-		loginfo("[SETTINGS] Found plugin AnimatedPoisons.esp and activated compatibility mode");
-	}
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPoisons_5); index != 0x1) {
-		Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons = true;
-		Comp::GetSingleton()->AnPois_Version = 50;
-		loginfo("[SETTINGS] Found plugin Animated Poisons.esp and activated compatibility mode");
-	}
-
-	// search for AnimatedPotions.esp
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_4); index != 0x1) {
-		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
-		Comp::GetSingleton()->AnPoti_Version = 44;
-		loginfo("[SETTINGS] Found plugin Animated Potions.esp and activated compatibility mode");
-	}
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::AnimatedPotions_4_3); index != 0x1) {
-		Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions = true;
-		Comp::GetSingleton()->AnPoti_Version = 43;
-		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
-	}
-
-	// Check for CACO
-	{
-		if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::CACO); index != 0x1) {
-			loginfo("[SETTINGS] Complete Alchemy & Cooking Overhaul.esp is loaded, activating compatibility mode!");
-			Compatibility::CACO::_CompatibilityCACO = true;
-		}
-	}
-	// Check for Apothecary
-	{
-		if (const uint32_t index = Utility::Mods::GetPluginIndex(Comp::Apothecary); index != 0x1) {
-			loginfo("[SETTINGS] Apothecary.esp is loaded, activating compatibility mode!");
-			Compatibility::Apothecary::_CompatibilityApothecary = true;
-		}
-	}
-	loginfo("[SETTINGS] checking for plugins end");
-
 	FixConsumables();
 }
 

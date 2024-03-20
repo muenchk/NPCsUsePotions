@@ -464,28 +464,8 @@ public:
 		/// </summary>
 		static inline bool _DisableCreaturesWithoutRules = true;
 
-		struct CACO
-		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for CACO has been activated
-			/// </summary>
-			static inline bool _CompatibilityCACO = false;
-		};
-
-		struct Apothecary
-		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for Apothecary has been activated
-			/// </summary>
-			static inline bool _CompatibilityApothecary = false;
-		};
-
 		struct AnimatedPoisons
 		{
-			/// <summary>
-			/// [Automatic] Whether the compatibility mode for Animated Poisons has been activated
-			/// </summary>
-			static inline bool _CompatibilityAnimatedPoisons = false;
 			/// <summary>
 			/// [Setting] Whether the usage of Animated Poisons is enabled
 			/// </summary>
@@ -498,10 +478,6 @@ public:
 
 		struct AnimatedPotions
 		{
-			/// <summary>
-			/// [Automatic] whether the compatibility mode for Animated Potions has been activated
-			/// </summary>
-			static inline bool _CompatibilityAnimatedPotions = false; 
 			/// <summary>
 			/// [Setting] Whether the usage of Animated Potions is enabled
 			/// </summary>

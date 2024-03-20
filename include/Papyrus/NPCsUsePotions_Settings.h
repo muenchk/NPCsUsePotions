@@ -1279,63 +1279,6 @@ namespace Papyrus
 			void Set_DisableCreaturesWithoutRules(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
 
 			/// <summary>
-			/// Returns whether CACO has been found and compatibility has been activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <returns></returns>
-			bool Get_CACO_CompatibilityCACO(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
-
-			/// <summary>
-			/// Sets whether compatiblity for CACO should be activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <param name="enabled"></param>
-			[[deprecated("Use only if CACO changes its plugin name in the future")]]
-			void Set_CACO_CompatibilityCACO(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
-
-			/// <summary>
-			/// Returns whether Apothecary has been found and compatibility has been activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <returns></returns>
-			bool Get_Apothecary_CompatibilityApothecary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
-
-			/// <summary>
-			/// Sets whether compatibility for Apothecary should be activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <param name="enabled"></param>
-			[[deprecated("Use only if Apothecary changes its plugin name in the future")]]
-			void Set_Apothecary_CompatibilityApothecary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
-
-			/// <summary>
-			/// Returns whether compatibility for Animated Poisons has been activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <returns></returns>
-			bool Get_AnimatedPoisons_CompatibilityAnimatedPoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
-
-			/// <summary>
-			/// Sets whether compatibility for Animated Poisons should be activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <param name="enabled"></param>
-			[[deprecated("Usage may lead to unexpected behaviour with poison application")]]
-			void Set_AnimatedPoisons_CompatibilityAnimatedPoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
-
-			/// <summary>
 			/// Returns whether Animated Poisons animations should be used by NPCs
 			/// </summary>
 			/// <param name="a_vm"></param>
@@ -1370,25 +1313,6 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name="enabled"></param>
 			void Set_AnimatedPoisons_UsePoisonDosage(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
-
-			/// <summary>
-			/// Returns whether Animated Potions has been found and compatibility has been activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <returns></returns>
-			bool Get_AnimatedPotions_CompatibilityAnimatedPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
-
-			/// <summary>
-			/// Sets whether compatibility for Animated Potions should be activated
-			/// </summary>
-			/// <param name="a_vm"></param>
-			/// <param name="a_stackID"></param>
-			/// <param name=""></param>
-			/// <param name="enabled"></param>
-			[[deprecated("Usage may lead to unexpected behaviour with poison application and potion usage")]]
-			void Set_AnimatedPotions_CompatibilityAnimatedPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
 
 			/// <summary>
 			/// Returns whether Animated Potions animations should be used by NPCs

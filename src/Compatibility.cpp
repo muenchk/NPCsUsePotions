@@ -21,25 +21,37 @@ void Compatibility::Load()
 	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 
 	// apothecary
-	Apot_SH_AlcoholDrinkKeyword = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01F3DD73);
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Apothecary); index != 0x1) {
+		LOG_1("{}[Compatibility] Found plugin Apothecary.esp.");
+		Apot_SH_AlcoholDrinkKeyword = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01F3DD73);
 
-	LOG1_1("{}[Compatibility] [Load] [Apot] {}", Utility::PrintForm(Apot_SH_AlcoholDrinkKeyword));
+		LOG1_1("{}[Compatibility] [Load] [Apot] {}", Utility::PrintForm(Apot_SH_AlcoholDrinkKeyword));
 
-	if (Apot_SH_AlcoholDrinkKeyword &&
-		Settings::Compatibility::Apothecary::_CompatibilityApothecary)
-		_loadedApothecary = true;
+		if (Apot_SH_AlcoholDrinkKeyword)
+			_loadedApothecary = true;
+	}
 
 	// caco
-	CACO_VendorItemDrinkAlcohol = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01AF101A);
-
-	LOG1_1("{}[Compatibility] [Load] [CACO] {}", Utility::PrintForm(CACO_VendorItemDrinkAlcohol));
-
-	if (CACO_VendorItemDrinkAlcohol &&
-		Settings::Compatibility::CACO::_CompatibilityCACO) {
-		_loadedCACO = true;
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(CACO); index != 0x1) {
+		LOG_1("{}[Compatibility] Found plugin Complete Alchemy & Cooking Overhaul.esp");
+		CACO_VendorItemDrinkAlcohol = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01AF101A);
+		LOG1_1("{}[Compatibility] [Load] [CACO] {}", Utility::PrintForm(CACO_VendorItemDrinkAlcohol));
+		if (CACO_VendorItemDrinkAlcohol) {
+			_loadedCACO = true;
+		}
 	}
 
 	// animated poisons
+
+	// search for AnimatedPoisons.esp
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPoisons); index != 0x1) {
+		AnPois_Version = 32;
+		LOG_1("{}[Compatibility] Found plugin AnimatedPoisons.esp.");
+	}
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPoisons_5); index != 0x1) {
+		AnPois_Version = 50;
+		LOG_1("{}[Compatibility] Found plugin Animated Poisons.esp.");
+	}
 
 	switch (AnPois_Version) {
 	case 32:
@@ -168,7 +180,7 @@ void Compatibility::Load()
 
 				AnPois_PoisonSound) {
 				_loadedAnimatedPoisons = true;
-				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable) {
+				if (Settings::Compatibility::AnimatedPoisons::_Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
 					LOG_1("{}[Compatibility] [Load] Enabled Animated Poisons.");
 				}
@@ -180,7 +192,7 @@ void Compatibility::Load()
 			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_AnimatedPoisonsMCM));
 			if (AnPois_AnimatedPoisonsMCM) {
 				_loadedAnimatedPoisons = true;
-				if (Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable) {
+				if (Settings::Compatibility::AnimatedPoisons::_Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons 5 compatibility", 0, false);
 					LOG_1("{}[Compatibility] [Load] Enabled Animated Poisons.");
 				}
@@ -189,6 +201,16 @@ void Compatibility::Load()
 	}
 
 	// animated potions
+
+	// search for AnimatedPotions.esp
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPotions_4_4); index != 0x1) {
+		AnPoti_Version = 44;
+		loginfo("[SETTINGS] Found plugin Animated Potions.esp and activated compatibility mode");
+	}
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPotions_4_3); index != 0x1) {
+		AnPoti_Version = 43;
+		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
+	}
 
 	switch (AnPoti_Version) {
 	case 44:  // Version 4.4
@@ -202,7 +224,7 @@ void Compatibility::Load()
 
 	if (AnPoti_TogglePlayerPotionAnimation) {
 		_loadedAnimatedPotions = true;
-		if (Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable) {
+		if (Settings::Compatibility::AnimatedPotions::_Enable) {
 			RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
 			LOG_1("{}[Compatibility] [Load] Enabled Animated Potions.");
 		}

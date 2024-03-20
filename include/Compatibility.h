@@ -186,7 +186,7 @@ public:
 	/// <returns></returns>
 	bool LoadedApothecary()
 	{
-		return Settings::Compatibility::Apothecary::_CompatibilityApothecary && _loadedApothecary;
+		return _loadedApothecary;
 	}
 
 	/// <summary>
@@ -195,7 +195,7 @@ public:
 	/// <returns></returns>
 	bool LoadedCACO()
 	{
-		return Settings::Compatibility::CACO::_CompatibilityCACO && _loadedCACO;
+		return _loadedCACO;
 	}
 
 	/// <summary>
@@ -204,7 +204,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPotions()
 	{
-		return Settings::Compatibility::AnimatedPotions::_CompatibilityAnimatedPotions && Settings::Compatibility::AnimatedPotions::_Enable &&
+		return Settings::Compatibility::AnimatedPotions::_Enable &&
 		       _loadedAnimatedPotions &&
 		       (AnPoti_TogglePlayerPotionAnimation && AnPoti_TogglePlayerPotionAnimation->value == 1);
 	}
@@ -215,7 +215,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPoisons()
 	{
-		return Settings::Compatibility::AnimatedPoisons::_CompatibilityAnimatedPoisons && Settings::Compatibility::AnimatedPoisons::_Enable && _loadedAnimatedPoisons;
+		return Settings::Compatibility::AnimatedPoisons::_Enable && _loadedAnimatedPoisons;
 	}
 
 	/// <summary>

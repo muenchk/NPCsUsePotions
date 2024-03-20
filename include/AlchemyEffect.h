@@ -216,7 +216,10 @@ public:
 		}
 	};
 
+	static void Init();
+
 private:
+
 	/// <summary>
 	/// first identifier
 	/// </summary>
