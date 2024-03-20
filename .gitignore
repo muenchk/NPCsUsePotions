@@ -12,6 +12,8 @@ src/Changelog.txt
 startenv.bat
 startenvlaptop.bat
 out/
+cloc_langdef.txt
+countlines.bat
 
 # Prerequisites
 *.d
