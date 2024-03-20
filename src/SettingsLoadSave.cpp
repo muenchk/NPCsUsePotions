@@ -567,7 +567,7 @@ void Settings::Save()
 																													"// Be aware that this may also exclude NPCs that should not be \n"
 																													"// excluded, due to many NPCs being assigned the creature keyword even \n"
 																													"// though they should not have them.\n"
-																													"// Passiveley disables custom item distribution for those npcs.");
+																													"// Passively disables custom item distribution for those npcs.");
 
 
 	// compatibility animated poisons
