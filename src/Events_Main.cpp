@@ -718,6 +718,17 @@ CheckActorsSkipIteration:
 
 		InitializeCompatibilityObjects();
 
+		// get the MCM quest and start it if its not running
+		if (Utility::Mods::GetPluginIndex("NPCsUsePotions.esp") != 0x1) {
+			RE::TESForm* form = Data::GetSingleton()->FindForm(0x800, "NPCsUsePotions.esp");
+			if (form) {
+				RE::TESQuest* q = form->As<RE::TESQuest>();
+				if (q && q->IsRunning() == false) {
+					q->Start();
+				}
+			}
+		}
+
 		LOG_1("{}[Events] [LoadGameSub] end");
 		PROF1_1("{}[Events] [LoadGameSub] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 	}
