@@ -394,8 +394,10 @@ std::vector<std::string> Utility::SplitString(std::string str, char delimiter, b
 	if (removeEmpty) {
 		auto itr = splits.begin();
 		while (itr != splits.end()) {
-			if (*itr == "")
+			if (*itr == "") {
 				splits.erase(itr);
+				continue;
+			}
 			itr++;
 		}
 	}
@@ -450,7 +452,7 @@ uint32_t Utility::GetCombatData(RE::Actor* actor)
 {
 	if (actor == nullptr)
 		return 0;
-	LOG_3("{}[Utility] [GetCombatData]");
+	LOG_3("");
 	uint32_t combatdata = 0;
 
 	RE::TESForm* lefthand = actor->GetEquippedObject(true);
@@ -916,7 +918,7 @@ uint32_t Utility::GetArmorData(RE::Actor* actor)
 {
 	if (actor == nullptr)
 		return 0;
-	LOG_3("{}[Utility] [GetArmorData]");
+	LOG_3("");
 	static std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> armorSlots{
 		RE::BGSBipedObjectForm::BipedObjectSlot::kHead,
 		RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
@@ -1028,7 +1030,7 @@ RE::TESForm* Utility::GetTESForm(RE::TESDataHandler* datahandler, RE::FormID for
 
 std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> Utility::ParseAssocObjects(std::string input, bool& error, std::string file, std::string line, int& totalobjects)
 {
-	LOG_3("{}[Utility] [ParseAssocObjects]");
+	LOG_3("");
 	std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> ret;
 	try {
 		auto datahandler = RE::TESDataHandler::GetSingleton();
@@ -1083,13 +1085,13 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> Utili
 					if (valid) {
 						ret.push_back({ type, tmp->GetFormID() , tmp});
 					} else {
-						logwarn("[Utility] [ParseAssocObjects] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
+						logwarn("Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
 					}
 				} else {
 					if (form) {
-						logwarn("[Utility] [ParseAssocObjects] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+						logwarn("FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
 					} else {
-						logwarn("[Utility] [ParseAssocObjects] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+						logwarn("EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
 					}
 				}
 			} else {
@@ -1108,7 +1110,7 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> Utili
 
 std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> Utility::ParseCustomObjects(std::string input, bool& error, std::string file, std::string line)
 {
-	LOG_3("{}[Utility] [ParseAssocObjectsChance]");
+	LOG_3("");
 	std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> ret;
 	try {
 		auto datahandler = RE::TESDataHandler::GetSingleton();
@@ -1318,8 +1320,8 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 				} else {
 					flag = CustomItemFlag::Object;
 				}
-				LOG1_3("{}[Utility] [ParseAssocObjectsChance] Flag: \t\t{}", flags);
-				LOG1_3("{}[Utility] [ParseAssocObjectsChance] Flag converted: {}", static_cast<uint64_t>(flag));
+				LOG_3("Flag: \t\t{}", flags);
+				LOG_3("Flag converted: {}", static_cast<uint64_t>(flag));
 
 				if (pluginname.size() != 0) {
 					if (form) {
@@ -1341,13 +1343,13 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemF
 					if (valid) {
 						ret.push_back({ type, tmp->GetFormID(), num, flag, (uint8_t)chance, exclude, conditionsall, conditionsany, giveonce });
 					} else {
-						logwarn("[Utility] [ParseAssocObjectsChance] Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
+						logwarn("Form {} has an unsupported FormType. file: \"{}\" Rule: \"{}\"", PrintForm(tmp), file, line);
 					}
 				} else {
 					if (form) {
-						logwarn("[Utility] [ParseAssocObjectsChance] FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+						logwarn("FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
 					} else {
-						logwarn("[Utility] [ParseAssocObjectsChance] EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+						logwarn("EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
 					}
 				}
 			} else {
@@ -1414,7 +1416,7 @@ Distribution::AssocType Utility::MatchValidFormType(RE::FormType type, bool& val
 
 std::vector<std::tuple<AlchemicEffect, float>> Utility::ParseAlchemyEffects(std::string input, bool& error)
 {
-	LOG_3("{}[Utility] [ParseAlchemyEffect]");
+	LOG_3("");
 	std::vector<std::tuple<AlchemicEffect, float>> ret;
 	try {
 		float modifier = 1.0f;
@@ -1457,7 +1459,7 @@ std::vector<std::tuple<AlchemicEffect, float>> Utility::ParseAlchemyEffects(std:
 		error = true;
 		return ret;
 	}
-	LOG1_4("{}[Uility] [ParseAlchemyEffect] found effects: {}", ret.size());
+	LOG_4("found effects: {}", ret.size());
 	return ret;
 }
 
@@ -1555,7 +1557,7 @@ AlchemicEffect Utility::SumAlchemyEffects(std::vector<std::tuple<int, AlchemicEf
 
 bool Utility::CanApplyPoison(std::shared_ptr<ActorInfo> const& actor)
 {
-	LOG_3("{}[Utility] [CanApplyPoison]");
+	LOG_3("");
 	auto ied = actor->GetEquippedEntryData(false);
 	RE::ExtraPoison* pois = nullptr;
 	if (ied) {
@@ -1579,7 +1581,7 @@ bool Utility::CanApplyPoison(std::shared_ptr<ActorInfo> const& actor)
 			}
 		}
 	}
-	LOG3_4("{}[Utility] [CanApplyPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
+	LOG_4("poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
 
 	if (pois && pois->count > 0)
 		return false;
@@ -1588,7 +1590,7 @@ bool Utility::CanApplyPoison(std::shared_ptr<ActorInfo> const& actor)
 
 bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 {
-	LOG_3("{}[Utility] [GetAppliedPoison]");
+	LOG_3("");
 	auto ied = actor->GetEquippedEntryData(false);
 	if (ied) {
 		if (ied->extraLists && ied->IsPoisoned()) {
@@ -1609,7 +1611,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 			}
 		}
 	}
-	LOG3_4("{}[Utility] [GetAppliedPoison] poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
+	LOG_4("poison check. Actor:\t{}\tpoison:\t{}\t count:\t{}", Utility::PrintForm(actor), pois && pois->poison ? pois->poison->GetName() : "not found", std::to_string(pois ? pois->count : -1));
 
 	if (pois && pois->count > 0)
 		return true;
@@ -1619,7 +1621,7 @@ bool Utility::GetAppliedPoison(RE::Actor* actor, RE::ExtraPoison* &pois)
 bool Utility::VerifyActorInfo(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	if (acinfo->IsValid() == false || acinfo->GetActor() == nullptr || acinfo->GetActor()->GetFormID() == 0) {
-		LOG_1("{}[Utility] [VerifyActorInfo] actor info damaged");
+		LOG_1("actor info damaged");
 		return false;
 	}
 	return true;

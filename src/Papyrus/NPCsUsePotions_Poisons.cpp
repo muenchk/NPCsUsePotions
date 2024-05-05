@@ -26,11 +26,11 @@ namespace Papyrus
 				a_vm->TraceStack("Actor not found", a_stackID);
 				return;
 			}
-			LOG1_2("{}[Papyrus] [Poison] [AnimatedPoisons_Callback] called for actor {}", Utility::PrintForm(actor));
+			LOG_2("called for actor {}", Utility::PrintForm(actor));
 
 			RE::AlchemyItem* poison = comp->AnPois_FindActorPoison(actor->GetFormID());
 			if (poison == nullptr) {
-				LOG_4("{}[Papyrus] [Poison] [AnimatedPoisons_Callback] poison not found");
+				LOG_4("poison not found");
 				return;
 			}
 
@@ -43,7 +43,7 @@ namespace Papyrus
 			// save statistics
 			Statistics::Misc_PoisonsUsed++;
 
-			LOG1_2("{}[Papyrus] [Poison] [AnimatedPoisons_Callback] Use Poison {}", Utility::PrintForm(poison));
+			LOG_2("Use Poison {}", Utility::PrintForm(poison));
 			logusage("Actor:\t{}\tItem:\t{}", Utility::PrintForm(actor), Utility::PrintForm(poison));
 			//RE::ExtraDataList* extra = new RE::ExtraDataList();
 			//extra->Add(new RE::ExtraPoison(poison, dosage));
@@ -66,7 +66,7 @@ namespace Papyrus
 				a_vm->TraceStack("Actor not found", a_stackID);
 				return;
 			}
-			LOG1_2("{}[Papyrus] [Poison] [AnimatedPoisons_Abort] called for actor {}", Utility::PrintForm(actor));
+			LOG_2("called for actor {}", Utility::PrintForm(actor));
 
 			comp->AnPois_RemoveActorPoison(actor->GetFormID());
 		}
@@ -77,11 +77,11 @@ namespace Papyrus
 				a_vm->TraceStack("Actor not found", a_stackID);
 				return;
 			}
-			LOG1_2("{}[Papyrus] [Poison] [AnimatedPoisons_PlaySound] called for actor {}", Utility::PrintForm(actor));
+			LOG_2("called for actor {}", Utility::PrintForm(actor));
 
 			RE::AlchemyItem* poison = comp->AnPois_FindActorPoison(actor->GetFormID());
 			if (poison == nullptr) {
-				LOG_4("{}[Papyrus] [Poison] [AnimatedPoisons_PlaySound] poison not found");
+				LOG_4("poison not found");
 				return;
 			}
 

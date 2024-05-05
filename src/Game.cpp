@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "Logging.h"
 
 
 namespace Game
@@ -13,50 +14,50 @@ namespace Game
 
 	void SaveLoad::LoadCallback(SKSE::SerializationInterface* a_intfc)
 	{
-		logger::info("[Game] [LoadCallback] Load game callback");
+		loginfo("Load game callback");
 		auto it = GetSingleton()->callbacks.begin();
 		while (it != GetSingleton()->callbacks.end()) {
 			if (std::get<1>(it->second) == CallbackType::Load)
 				(std::get<0>(it->second))(a_intfc);
 			it++;
 		}
-		logger::info("[Game] [LoadCallback] end");
+		loginfo("end");
 	}
 
 	void SaveLoad::SaveCallback(SKSE::SerializationInterface* a_intfc)
 	{
-		logger::info("[Game] [SaveCallback] Saving game");
+		loginfo("Saving game");
 		auto it = GetSingleton()->callbacks.begin();
 		while (it != GetSingleton()->callbacks.end()) {
 			if (std::get<1>(it->second) == CallbackType::Save)
 				(std::get<0>(it->second))(a_intfc);
 			it++;
 		}
-		logger::info("[Game] [SaveCallback] end");
+		loginfo("end");
 	}
 
 	void SaveLoad::RevertCallback(SKSE::SerializationInterface* a_intfc)
 	{
-		logger::info("[Game] [RevertCallback] Reverting game");
+		loginfo("Reverting game");
 		auto it = GetSingleton()->callbacks.begin();
 		while (it != GetSingleton()->callbacks.end()) {
 			if (std::get<1>(it->second) == CallbackType::Revert)
 				(std::get<0>(it->second))(a_intfc);
 			it++;
 		}
-		logger::info("[Game] [RevertCallback] end");
+		loginfo("end");
 	}
 
 	void SaveLoad::RegisterForLoadCallback(uint32_t id, EventCallback* callback)
 	{
-		logger::info("[Game] [RegisterForLoadCallback]");
+		loginfo("");
 		std::pair<EventCallback*, CallbackType> pa{ callback, CallbackType::Load };
 		callbacks.insert_or_assign(id, pa);
 	}
 
 	void SaveLoad::UnregisterForLoadCallback(uint32_t id)
 	{
-		logger::info("[Game] [UnregisterForLoadCallback]");
+		loginfo("");
 		auto it = callbacks.find(id);
 		if (it != callbacks.end()) {
 			if (std::get<1>(it->second) == CallbackType::Load)
@@ -67,14 +68,14 @@ namespace Game
 
 	void SaveLoad::RegisterForSaveCallback(uint32_t id, EventCallback* callback)
 	{
-		logger::info("[Game] [RegisterForSaveCallback]");
+		loginfo("");
 		std::pair<EventCallback*, CallbackType> pa{ callback, CallbackType::Save };
 		callbacks.insert_or_assign(id, pa);
 	}
 
 	void SaveLoad::UnregisterForSaveCallback(uint32_t id)
 	{
-		logger::info("[Game] [UnregisterForSaveCallback]");
+		loginfo("");
 		auto it = callbacks.find(id);
 		if (it != callbacks.end()) {
 			if (std::get<1>(it->second) == CallbackType::Save)
@@ -85,14 +86,14 @@ namespace Game
 
 	void SaveLoad::RegisterForRevertCallback(uint32_t id, EventCallback* callback)
 	{
-		logger::info("[Game] [RegisterForRevertCallback]");
+		loginfo("");
 		std::pair<EventCallback*, CallbackType> pa{ callback, CallbackType::Revert };
 		callbacks.insert_or_assign(id, pa);
 	}
 
 	void SaveLoad::UnregisterForRevertCallback(uint32_t id)
 	{
-		logger::info("[Game] [UnregisterForRevertCallback]");
+		loginfo("");
 		auto it = callbacks.find(id);
 		if (it != callbacks.end()) {
 			if (std::get<1>(it->second) == CallbackType::Revert)

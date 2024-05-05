@@ -41,23 +41,23 @@ namespace Storage
 		WriteData(a_intfc);
 
 		// print statistics to logfile
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESHitEvents registered               {}", Statistics::Events_TESHitEvent);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESCombatEvents registered            {}", Statistics::Events_TESCombatEvent);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESDeathEvents registered             {}", Statistics::Events_TESDeathEvent);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] BGSActorCellEvents registered         {}", Statistics::Events_BGSActorCellEvent);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESCellAttachDetachEvents registered  {}", Statistics::Events_TESCellAttachDetachEvent);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESEquipEvents registered             {}", Statistics::Events_TESEquipEvent);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESFormDeleteEvent registereds        {}", Statistics::Events_TESHitEvent);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESContainerChangedEvent registereds  {}", Statistics::Events_TESContainerChangedEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESHitEvents registered               {}", Statistics::Events_TESHitEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESCombatEvents registered            {}", Statistics::Events_TESCombatEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESDeathEvents registered             {}", Statistics::Events_TESDeathEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] BGSActorCellEvents registered         {}", Statistics::Events_BGSActorCellEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESCellAttachDetachEvents registered  {}", Statistics::Events_TESCellAttachDetachEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESEquipEvents registered             {}", Statistics::Events_TESEquipEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESFormDeleteEvent registereds        {}", Statistics::Events_TESHitEvent);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] TESContainerChangedEvent registereds  {}", Statistics::Events_TESContainerChangedEvent);
 
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Bytes Written To Last Savegame        {}", Statistics::Storage_BytesWrittenLast);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Bytes Read From Last Savegame         {}", Statistics::Storage_BytesReadLast);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Actors Saved To Last Savegame         {}", Statistics::Storage_ActorsSavedLast);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] Actors Read From Last Savegame        {}", Statistics::Storage_ActorsReadLast);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] Bytes Written To Last Savegame        {}", Statistics::Storage_BytesWrittenLast);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] Bytes Read From Last Savegame         {}", Statistics::Storage_BytesReadLast);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] Actors Saved To Last Savegame         {}", Statistics::Storage_ActorsSavedLast);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] Actors Read From Last Savegame        {}", Statistics::Storage_ActorsReadLast);
 
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] potions administered                  {}", Statistics::Misc_PotionsAdministered);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] poisons used                          {}", Statistics::Misc_PoisonsUsed);
-		LOG1_1("{}[DataStorage] [SaveGameCallback] [Statistics] food eaten                            {}", Statistics::Misc_FoodEaten);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] potions administered                  {}", Statistics::Misc_PotionsAdministered);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] poisons used                          {}", Statistics::Misc_PoisonsUsed);
+		LOG_1("{}[DataStorage] [SaveGameCallback] [Statistics] food eaten                            {}", Statistics::Misc_FoodEaten);
 
 		LOG_1("{}[DataStorage] [SaveGameCallback] end");
 	}
@@ -112,6 +112,7 @@ namespace Storage
 	/// <param name="a_intfc"></param>
 	void ReadData(SKSE::SerializationInterface* a_intfc)
 	{
+		StartProfiling;
 		bool preproc = Events::Main::LockProcessing();
 
 		// total number of bytes read
@@ -130,7 +131,7 @@ namespace Storage
 
 		
 		while (a_intfc->GetNextRecordInfo(type, version, length)) {
-			LOG2_1("{}[DataStorage] [ReadData] found record with type {} and length {}", type, length);
+			LOG_1("{}[DataStorage] [ReadData] found record with type {} and length {}", type, length);
 			size += length;
 			switch (type) {
 			case 'ACIF':  // ActorInfo
@@ -146,9 +147,9 @@ namespace Storage
 		}
 
 		Statistics::Storage_ActorsReadLast = accounter;
-		LOG1_1("{}[Data] [ReadActorInfoMap] Read {} ActorInfos", accounter);
-		LOG1_1("{}[Data] [ReadActorInfoMap] Read {} dead, deleted or invalid ActorInfos", acdcounter);
-		LOG1_1("{}[Data] [ReadActorInfoMap] Failed to read {} ActorInfos", acfcounter);
+		LOG_1("{}[Data] [ReadActorInfoMap] Read {} ActorInfos", accounter);
+		LOG_1("{}[Data] [ReadActorInfoMap] Read {} dead, deleted or invalid ActorInfos", acdcounter);
+		LOG_1("{}[Data] [ReadActorInfoMap] Failed to read {} ActorInfos", acfcounter);
 
 		LOG_1("{}[DataStorage] [ReadData] Finished loading data");
 		if (preproc) {  // if processing was enabled before locking
@@ -156,6 +157,7 @@ namespace Storage
 			LOG_1("{}[DataStorage] [ReadData] Enable processing");
 		}
 		Statistics::Storage_BytesReadLast = size;
+		PROF_1(TimeProfiling, "function execution time.");
 	}
 
 	/// <summary>
@@ -164,6 +166,7 @@ namespace Storage
 	/// <param name="a_intfc"></param>
 	void WriteData(SKSE::SerializationInterface* a_intfc)
 	{
+		StartProfiling;
 		bool preproc = Events::Main::LockProcessing();
 
 		// total number of bytes written
@@ -183,6 +186,7 @@ namespace Storage
 			LOG_1("{}[DataStorage] [WriteData] Enable processing");
 		}
 		Statistics::Storage_BytesWrittenLast = size;
+		PROF_1(TimeProfiling, "function execution time.");
 	}
 
 	/// <summary>

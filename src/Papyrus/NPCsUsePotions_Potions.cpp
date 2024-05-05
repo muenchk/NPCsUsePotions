@@ -26,11 +26,11 @@ namespace Papyrus
 				a_vm->TraceStack("Actor not found", a_stackID);
 				return;
 			}
-			LOG1_2("{}[Papyrus] [Potion] [AnimatedPotions_Callback] called for actor {}", Utility::PrintForm(actor));
+			LOG_2("called for actor {}", Utility::PrintForm(actor));
 
 			RE::AlchemyItem* potion = comp->AnPoti_FindActorPotion(actor->GetFormID());
 			if (potion == nullptr) {
-				LOG_4("{}[Papyrus] [Potion] [AnimatedPotions_Callback] potion not found");
+				LOG_4("potion not found");
 				return;
 			}
 
@@ -48,7 +48,7 @@ namespace Papyrus
 			actor->DrinkPotion(potion, nullptr);
 			//RE::ActorEquipManager::GetSingleton()->EquipObject(actor, potion, extra, 1, nullptr, true, false, false);
 
-			LOG1_2("{}[Papyrus] [Potion] [AnimatedPotions_Callback] Use Potion {}", Utility::PrintForm(potion));
+			LOG_2("Use Potion {}", Utility::PrintForm(potion));
 			
 		}
 
@@ -58,7 +58,7 @@ namespace Papyrus
 				a_vm->TraceStack("Actor not found", a_stackID);
 				return;
 			}
-			LOG1_2("{}[Papyrus] [Potion] [AnimatedPotions_Abort] called for actor {}", Utility::PrintForm(actor));
+			LOG_2("called for actor {}", Utility::PrintForm(actor));
 
 			comp->AnPoti_RemoveActorPotion(actor->GetFormID());
 		}
@@ -69,17 +69,17 @@ namespace Papyrus
 				a_vm->TraceStack("Actor not found", a_stackID);
 				return;
 			}
-			LOG1_2("{}[Papyrus] [Potion] [AnimatedPotions_RestorePoison] called for actor {}", Utility::PrintForm(actor));
+			LOG_2("called for actor {}", Utility::PrintForm(actor));
 
 			auto [poison, count] = comp->AnPoti_FindActorPoison(actor->GetFormID());
 			if (poison == nullptr || count == 0) {
-				LOG_4("{}[Papyrus] [Poison] [AnimatedPotions_RestorePoison] no poison to be applied");
+				LOG_4("no poison to be applied");
 				return;
 			}
 
 			comp->AnPoti_RemoveActorPoison(actor->GetFormID());
 
-			LOG1_2("{}[Papyrus] [Poison] [AnimatedPotions_RestorePoison] Restore Poison {}", Utility::PrintForm(poison));
+			LOG_2("Restore Poison {}", Utility::PrintForm(poison));
 			//RE::ExtraDataList* extra = new RE::ExtraDataList();
 			//extra->Add(new RE::ExtraPoison(poison, count));
 			auto ied = actor->GetEquippedEntryData(false);

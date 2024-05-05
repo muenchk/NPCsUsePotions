@@ -30,6 +30,79 @@ namespace Events
 		}
 	}
 
+	void Main::ValidateActorSets(std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>>& actors)
+	{
+		std::lock_guard<std::mutex> lock(sem);
+		auto itr = acset.begin();
+		while (itr != acset.end()) {
+			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
+				if (!data->UpdateActorInfo(acinfo)) {
+					LOG_1("Removed invalid actor");
+					acset.erase(itr);
+				} else {
+					actors.insert(*itr);
+				}
+			} else {
+				LOG_1("Removed expired actor");
+				acset.erase(itr);
+			}
+			itr++;
+		}
+	}
+
+	void Main::ACSetRegisterAndReset(std::shared_ptr<ActorInfo> acinfo, RE::Actor* actor)
+	{
+		{
+			std::lock_guard<std::mutex> lock(sem);
+			if (acset.contains(acinfo)) {
+				LOG_1("Actor already registered");
+				return;
+			}
+		}
+		acinfo->Reset(actor);
+		if (acinfo->IsValid() == false) {
+			LOG_1("Actor reset failed");
+			return;
+		}
+		std::lock_guard<std::mutex> lock(sem);
+		if (!acset.contains(acinfo)) {
+			acset.insert(acinfo);
+		} else {
+			LOG_1("Actor already registered");
+		}
+	}
+
+	void Main::ACSetRegister(std::shared_ptr<ActorInfo> acinfo)
+	{
+		std::lock_guard<std::mutex> lock(sem);
+		acset.insert(acinfo);
+	}
+
+	void Main::ACSetUnregister(std::shared_ptr<ActorInfo> acinfo)
+	{
+		std::lock_guard<std::mutex> lock(sem);
+		acset.erase(acinfo);
+	}
+
+	void Main::ACSetUnregister(RE::FormID formid)
+	{
+		std::lock_guard<std::mutex> lock(sem);
+		auto itr = acset.begin();
+		while (itr != acset.end()) {
+			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
+				if (acinfo->GetFormIDBlank() == formid) {
+					acset.erase(itr);
+					break;
+				}
+			} else {
+				// weak pointer is expired, so remove it while we are on it
+				acset.erase(itr);
+			}
+			itr++;
+		}
+	}
+
+
 	/// <summary>
 	/// Calculates the cooldowns of an actor for a specific effect
 	/// </summary>
@@ -62,7 +135,7 @@ namespace Events
 	/// <returns>valid poison effects</returns>
 	AlchemicEffect Main::CalcPoisonEffects(uint32_t combatdata, RE::Actor* target, uint32_t tcombatdata)
 	{
-		LOG_4("{}[Events] [CalcPoisonEffects]");
+		LOG_4("");
 		AlchemicEffect effects = 0;
 		effects |= AlchemicEffect::kDamageResist |
 		           AlchemicEffect::kResistMagic |
@@ -218,7 +291,7 @@ namespace Events
 	/// <returns></returns>
 	AlchemicEffect Main::CalcFortifyEffects(std::shared_ptr<ActorInfo> acinfo, uint32_t combatdata, uint32_t tcombatdata)
 	{
-		LOG_4("{}[Events] [CalcFortifyEffects]");
+		LOG_4("");
 		AlchemicEffect effects = 0;
 		effects |= AlchemicEffect::kDamageResist |
 		           AlchemicEffect::kResistMagic |
@@ -358,7 +431,7 @@ namespace Events
 	/// <returns>valid regeneration effects</returns>
 	AlchemicEffect Main::CalcRegenEffects(uint32_t combatdata)
 	{
-		LOG_4("{}[Events] [CalcRegenEffects]");
+		LOG_4("");
 		AlchemicEffect effects = 0;
 		effects |= AlchemicEffect::kHealRate |
 		           AlchemicEffect::kHealRateMult;
@@ -415,21 +488,21 @@ namespace Events
 					auto it = items.begin();
 					while (it != items.end()) {
 						acinfo->RemoveItem(*it, 1);
-						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
+						LOG_1("Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllPoisons(acinfo);
 					it = items.begin();
 					while (it != items.end()) {
 						acinfo->RemoveItem(*it, 1);
-						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
+						LOG_1("Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 					items = ACM::GetAllFood(acinfo);
 					it = items.begin();
 					while (it != items.end()) {
 						acinfo->RemoveItem(*it, 1);
-						LOG1_1("{}[Events] [ProcessDistribution] Removed item {}", Utility::PrintForm(*it));
+						LOG_1("Removed item {}", Utility::PrintForm(*it));
 						it++;
 					}
 				}
@@ -446,7 +519,7 @@ namespace Events
 							continue;
 						}
 						acinfo->AddItem(items[i], 1);
-						LOG2_4("{}[Events] [ProcessDistribution] added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo));
+						LOG_4("added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo));
 					}
 					acinfo->SetLastDistrTime(RE::Calendar::GetSingleton()->GetDaysPassed());
 				}
@@ -466,42 +539,36 @@ namespace Events
 			return;
 		// if currently fasttraveling, save actor to register later
 		if (Game::IsFastTravelling()) {
-			LOG1_1("{}[Events] [RegisterNPC] Saving for later: {}", Utility::PrintForm(actor));
+			LOG_1("Saving for later: {}", Utility::PrintForm(actor));
 			toregister.push_back(actor->GetHandle());
-			LOG_1("{}[Events] [RegisterNPC] Saved");
+			LOG_1("Saved");
 			return;
 		}
-		LOG1_1("{}[Events] [RegisterNPC] Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
+		LOG_1("Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
-		LOG1_1("{}[Events] [RegisterNPC] Found: {}", Utility::PrintForm(acinfo));
+		LOG_1("Found: {}", Utility::PrintForm(acinfo));
 		// if actor was dead, exit
 		if (acinfo->GetDead()) {
-			LOG_1("{}[Events] [RegisterNPC] Actor already dead");
+			LOG_1("Actor already dead");
 			return;
 		}
-		// reset object to account for changes to underlying objects
-		acinfo->Reset(actor);
-		if (acinfo->IsValid() == false) {
-			LOG_1("{}[Events] [RegisterNPC] Actor reset failed");
-			return;
-		}
-		// find out whether to insert the actor, if yes insert him into the temp insert list
-		sem.acquire();
-		if (!acset.contains(acinfo)) {
-			acset.insert(acinfo);
-		} else {
-			sem.release();
-			LOG_1("{}[Events] [RegisterNPC] Actor already registered");
-			return;
-		}
-		sem.release();
+		// insert actor
+		ACSetRegisterAndReset(acinfo, actor);
 
 		ProcessDistribution(acinfo);
 		EvalProcessing();
 		if (actor->IsDead())
 			return;
 
-		LOG_1("{}[Events] [RegisterNPC] finished registering NPC");
+		LOG_1("finished registering NPC");
+	}
+
+	void Main::RegisterNPCAlternate(RE::Actor* actor)
+	{
+		if (Utility::ValidateActor(actor) == false)
+			return;
+		std::unique_lock<std::mutex> lock(lockalternateregistration);
+		alternateregistration.push(actor->GetHandle());
 	}
 
 	/// <summary>
@@ -514,7 +581,7 @@ namespace Events
 		while (!toregister.empty()) {
 			reg = toregister.front().get().get();
 			toregister.pop_front();
-			RegisterNPC(reg);
+			Settings::System::_alternateNPCRegistration ? RegisterNPCAlternate(reg) : RegisterNPC(reg);
 		}
 		
 	}
@@ -529,17 +596,15 @@ namespace Events
 		// exit if actor is unsafe / not valid
 		if (Utility::ValidateActor(actor) == false)
 			return;
-		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", Utility::PrintForm(actor));
+		LOG_1("Unregister NPC from potion tracking: {}", Utility::PrintForm(actor));
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
-		sem.acquire();
-		acset.erase(acinfo);
+		ACSetUnregister(acinfo);
 		acinfo->SetDurHealth(0);
 		acinfo->SetDurMagicka(0);
 		acinfo->SetDurStamina(0);
 		acinfo->SetDurFortify(0);
 		acinfo->SetDurRegeneration(0);
-		sem.release();
-		LOG_1("{}[Events] [UnregisterNPC] Unregistered NPC");
+		LOG_1("Unregistered NPC");
 	}
 
 	/// <summary>
@@ -549,15 +614,13 @@ namespace Events
 	void Main::UnregisterNPC(std::shared_ptr<ActorInfo> acinfo)
 	{
 		EvalProcessing();
-		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", acinfo->GetName());
-		sem.acquire();
-		acset.erase(acinfo);
+		LOG_1("Unregister NPC from potion tracking: {}", acinfo->GetName());
+		ACSetUnregister(acinfo);
 		acinfo->SetDurHealth(0);
 		acinfo->SetDurMagicka(0);
 		acinfo->SetDurStamina(0);
 		acinfo->SetDurFortify(0);
 		acinfo->SetDurRegeneration(0);
-		sem.release();
 	}
 
 	/// <summary>
@@ -567,22 +630,16 @@ namespace Events
 	void Main::UnregisterNPC(RE::FormID formid)
 	{
 		EvalProcessing();
-		LOG1_1("{}[Events] [UnregisterNPC] Unregister NPC from potion tracking: {}", Utility::GetHex(formid));
-		sem.acquire();
-		auto itr = acset.begin();
-		while (itr != acset.end()) {
-			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
-				if (acinfo->GetFormIDBlank() == formid) {
-					acset.erase(itr);
-					break;
-				}
-			} else {
-				// weak pointer is expired, so remove it while we are on it
-				acset.erase(itr);
-			}
-			itr++;
-		}
-		sem.release();
+		LOG_1("Unregister NPC from potion tracking: {}", Utility::GetHex(formid));
+		ACSetUnregister(formid);
+	}
+
+	void Main::UnregisterNPCAlternate(RE::Actor* actor)
+	{
+		if (Utility::ValidateActor(actor) == false)
+			return;
+		std::unique_lock<std::mutex> lock(lockalternateregistration);
+		alternateunregistration.push(actor->GetHandle());
 	}
 
 	bool Main::IsDead(RE::Actor* actor)
@@ -672,7 +729,7 @@ namespace Events
 									continue;
 								}
 								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
+								LOG_1("Removed item {}", Utility::PrintForm(*it));
 								it++;
 							}
 							items = ACM::GetAllPoisons(acinfo);
@@ -683,7 +740,7 @@ namespace Events
 									continue;
 								}
 								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
+								LOG_1("Removed item {}", Utility::PrintForm(*it));
 								it++;
 							}
 							items = ACM::GetAllFood(acinfo);
@@ -694,7 +751,7 @@ namespace Events
 									continue;
 								}
 								actor->RemoveItem(*it, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-								LOG1_1("{}[Events] [RemoveItemsOnStartup] Removed item {}", Utility::PrintForm(*it));
+								LOG_1("Removed item {}", Utility::PrintForm(*it));
 								it++;
 							}
 						}
@@ -704,7 +761,7 @@ namespace Events
 		}
 		LogConsole("Finished Thread RemoveItemsOnStartup");
 
-		PROF1_1("{}[Events] [RemoveItemsOnStartup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		PROF_1(TimeProfiling, "execution time.");
 	}
 
 }

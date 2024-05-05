@@ -7,30 +7,30 @@
 
 bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&)
 {
-	LOG_3("{}[Console] [CalcRule] [Process]");
+	LOG_3("[CalcRule] [Process]");
 	auto console = RE::ConsoleLog::GetSingleton();
-	//logger::info("console 1");
+	//loginfo("console 1");
 	if (a_thisObj == nullptr) {
 		console->Print("No target selected");
 		return false;
 	}
-	//logger::info("console 2");
+	//loginfo("console 2");
 	RE::Actor* actor = a_thisObj->As<RE::Actor>();
 	if (actor == nullptr) {
 		console->Print("No valid target selected");
 		return false;
 	}
-	//logger::info("console 3");
+	//loginfo("console 3");
 	std::shared_ptr<ActorInfo> acinfo = Data::GetSingleton()->FindActor(actor);
 	if (actor->IsPlayerRef())
 		acinfo = Data::GetSingleton()->FindActor(RE::PlayerCharacter::GetSingleton());
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
 	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
-	//logger::info("console 4");
+	//loginfo("console 4");
 
 	std::string tmp = "Displaying stats for Actor:\t\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::PrintForm(actor) + "\tOriginalID:\t" + Utility::GetHex(acinfo->GetFormIDOriginal());
-	//logger::info("console 5");
+	//loginfo("console 5");
 	console->Print(tmp.c_str());
 	tmp = "Templates:\t\t\t\t\t|";
 	for (auto& id : acinfo->GetTemplateIDs())
@@ -64,34 +64,34 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 	console->Print(tmp.c_str());
 	tmp = "Combat data:\t\t\t\t\t" + Utility::ToStringCombatStyle(Utility::GetCombatData(actor));
 	console->Print(tmp.c_str());
-	//logger::info("console 10");
+	//loginfo("console 10");
 	tmp = "Applied Rule:\t\t\t\t\t" + (std::get<1>(rls[0]) ? std::string(std::get<1>(rls[0])->ruleName) : "");
-	//logger::info("console 11");
+	//loginfo("console 11");
 	console->Print(tmp.c_str());
-	//logger::info("console 12");
+	//loginfo("console 12");
 	tmp = "Number Of Rules considered:\t\t" + std::to_string((rls.size() - 1));
-	//logger::info("console 12-1");
+	//loginfo("console 12-1");
 	console->Print(tmp.c_str());
 	for (int i = 1; i < rls.size(); i++) {
-		//logger::info("console 13");
+		//loginfo("console 13");
 		if (std::get<1>(rls[i])) {
-			//logger::info("console 14.0");
+			//loginfo("console 14.0");
 			tmp = "Found Rule:\t\t\t\t\t" + (std::get<1>(rls[i]) ? std::get<1>(rls[i])->ruleName : "") 
 				+ "\tPrio:\t" 
 				+ std::to_string(std::get<0>(rls[i])) 
 				+ "\tInfo:\t" 
 				+ std::get<2>(rls[i]);
 		} else {
-			//logger::info("console 14.1");
+			//loginfo("console 14.1");
 			tmp = "ERROR";
 		}
-		//logger::info("console 14.2");
+		//loginfo("console 14.2");
 		console->Print(tmp.c_str());
-		//logger::info("console 14.3");
+		//loginfo("console 14.3");
 	}
-	//logger::info("console 15");
+	//loginfo("console 15");
 	console->Print("");
-	//logger::info("console 16");
+	//loginfo("console 16");
 
 	console->Print("");
 	console->Print("Current Actor Info");
@@ -186,7 +186,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 
 bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR*, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&) 
 {
-	LOG_3("{}[Console] [ReloadDist] [Process]");
+	LOG_3("[ReloadDist] [Process]");
 	auto console = RE::ConsoleLog::GetSingleton();
 	console->Print("Resetting information about actors...");
 	bool preproc = Events::Main::LockProcessing();

@@ -11,7 +11,7 @@ namespace Papyrus
 	bool Register(RE::BSScript::Internal::VirtualMachine* a_vm)
 	{
 		if (!a_vm) {
-			logwarn("[Papyrus] [Register] VM not available");
+			logwarn("VM not available");
 			return false;
 		}
 

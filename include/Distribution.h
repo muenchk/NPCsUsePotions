@@ -525,6 +525,10 @@ private:
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedItems;
 	/// <summary>
+	/// set that contains items that may not be distributed
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _excludedItemsBackup;
+	/// <summary>
 	/// set that contains item IDs that are excluded for the player only
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedItemsPlayer;
@@ -836,6 +840,7 @@ public:
 	friend void Settings::LoadDistrConfig();
 	friend void Settings::ApplySkillBoostPerks();
 	friend void Settings::ClassifyItems();
+	friend void Settings::UpdateSettings();
 
 private:
 	/// <summary>

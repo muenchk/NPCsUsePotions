@@ -3,6 +3,7 @@
 #include "Settings.h"
 #include "Distribution.h"
 #include "Utility.h"
+#include <string.h>
 
 AlchemicEffect ConvertToAlchemyEffect(RE::EffectSetting* effect)
 {
@@ -26,10 +27,6 @@ AlchemicEffect ConvertToAlchemyEffectSecondary(RE::EffectSetting* effect)
 {
 	if (effect) {
 		AlchemicEffect eff = ConvertToAlchemyEffect(effect->data.secondaryAV);
-		//auto eff2 = ConvertToAlchemyEffectIDs(effect);
-		//if (eff2 != AlchemyEffect::kNone)
-		//	return eff2;
-		//else
 		return eff;
 	}
 	return AlchemicEffect::kNone;
@@ -607,14 +604,14 @@ AlchemicEffect::AlchemicEffect(const std::string& rhs)
 			first = std::stoull(rhs.substr(0, length), nullptr, 16);
 			second = std::stoull(rhs.substr(length, 16), nullptr, 16);
 		} catch (std::exception& e) {
-			throw(InitializationError("Cannot convert string to AlchemicEffect", e.what()));
+			//throw(InitializationError("Cannot convert string to AlchemicEffect", e.what()));
 		}
 	} else {
 		first = 0;
 		try {
 			second = std::stoull(rhs, nullptr, 16);
 		} catch (std::exception& e) {
-			throw(InitializationError("Cannot convert string to AlchemicEffect", e.what()));
+			//throw(InitializationError("Cannot convert string to AlchemicEffect", e.what()));
 		}
 	}
 }
@@ -689,6 +686,36 @@ AlchemyBaseEffectFirst AlchemicEffect::AlchemyBaseEffectFirst()
 		return static_cast<::AlchemyBaseEffectFirst>(first);
 }
 
+unsigned long AlchemicEffect::GetBaseValue()
+{
+	// if this is not a single effect, return 0
+	if (!IsEffect())
+		return 0;
+	static const int MultiplyDeBruijnBitPosition[32] = { // #stackoverflow #Tykhyy
+		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+	};
+	unsigned long index = 0;
+	if (first != 0) {
+		_BitScanForward64(&index, first);
+		return index + 64;
+	} else {
+		_BitScanForward64(&index, second);
+		return index + 1;
+	}
+}
+
+AlchemicEffect AlchemicEffect::GetFromBaseValue(unsigned long basevalue)
+{
+	if (basevalue == 0 || basevalue > 128)
+		return {};
+	basevalue -= 1;
+	if (basevalue >= 64) {
+		return AlchemicEffect(1 << (basevalue - 64), 0);
+	} else
+		return AlchemicEffect(0, 1 << basevalue);
+}
+
 bool AlchemicEffect::IsEffect()
 {
 	// we only need to check one of the values. 
@@ -707,6 +734,17 @@ bool AlchemicEffect::IsEffect()
 bool AlchemicEffect::IsEffectMap()
 {
 	return !IsEffect();
+}
+
+bool AlchemicEffect::HasEffect(unsigned long basevalue)
+{
+	if (basevalue == 0 || basevalue > 128)
+		return false;
+	basevalue -= 1;
+	if (basevalue >= 64)
+		return ((first & (1 << (basevalue - 64))) != 0);
+	else
+		return ((second & (1 << basevalue)) != 0);
 }
 
 bool AlchemicEffect::HasRestorativeEffect()

@@ -88,7 +88,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
-	auto begin = std::chrono::steady_clock::now();
+	StartProfiling;
 	switch (a_msg->type) {
 	case SKSE::MessagingInterface::kDataLoaded:
 		// init ActorInfo's statics
@@ -99,12 +99,12 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Settings::InitGameStuff();
 		// load settings
 		Settings::Load();  // also resaves the file
-		logger::info("Settings loaded");
+		loginfo("Settings loaded");
 		// init ACM data access
 		ACM::Init();
 		// load distribution settings
 		Settings::LoadDistrConfig();
-		logger::info("Distribution configuration loaded");
+		loginfo("Distribution configuration loaded");
 		// Debug stuff
 		if (Settings::Debug::_CheckActorsWithoutRules)
 			Settings::CheckActorsForRules();
@@ -115,7 +115,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// classify currently loaded game items
 		Settings::ClassifyItems();
 		Settings::CleanAlchemyEffects();
-		logger::info("Items classified");
+		loginfo("Items classified");
 		// register data storage
 		// datastorage must always register game callbacks before events, to ensure read data is present
 		Storage::Register();
@@ -123,11 +123,11 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Compatibility::Register();
 		// register eventhandlers
 		Events::RegisterAllEventHandlers();
-		logger::info("Registered Events");
+		loginfo("Registered Events");
 		// register console commands
 		Console::RegisterConsoleCommands();
-		logger::info("Registered Console Commands");
-		PROF1_1("{}[main] [Startup] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		loginfo("Registered Console Commands");
+		PROF_1(TimeProfiling, "DataLoad execution time.");
 		break;
 	case SKSE::MessagingInterface::kPostLoad:
 		Settings::Interfaces::RequestAPIs();
@@ -143,8 +143,8 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	loginfo("Game Version: {}", a_skse->RuntimeVersion().string());
 
-	loginfo("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
-	profile("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
+	loginfo("{} v{}", Plugin::NAME, Plugin::VERSION.string());
+	profile(__func__, std::chrono::steady_clock::now(), "{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	logusage("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
@@ -178,7 +178,7 @@ extern "C" DLLEXPORT void* SKSEAPI RequestPluginAPI()
 {
 	auto api = NPCsUsePotions::NUPInterface::GetSingleton();
 
-	logger::info("[API] NUP API requested and returned");
+	loginfo("[API] NUP API requested and returned");
 
 	return static_cast<void*>(api);
 }
