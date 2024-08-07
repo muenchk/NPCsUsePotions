@@ -62,12 +62,12 @@ namespace Events
 			return;
 		if (Settings::Potions::_HandleWeaponSheathedAsOutOfCombat && !acinfo->IsWeaponDrawn())
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorPotions] {}", Utility::PrintForm(acinfo));
+		LOG_1("{}", Utility::PrintForm(acinfo));
 		AlchemicEffect alch = 0;
 		AlchemicEffect alch2 = 0;
 		AlchemicEffect alch3 = 0;
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
-			LOG_2("{}[Events] [CheckActors] [HandleActorPotions] usage allowed")
+			LOG_2("usage allowed")
 			// get combined effect for magicka, health, and stamina
 			if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold)
 				alch = AlchemicEffect::kHealth;
@@ -85,12 +85,12 @@ namespace Events
 			if (alch && acinfo->IsVampire())
 				alch |= AlchemicEffect::kBlood;
 			alch |= alch2 | alch3;
-			LOG4_4("{}[Events] [CheckActors] [HandleActorPotions] check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch.string(), acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina());
+			LOG_4("check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch.string(), acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina());
 			// use potions
 			// do the first round
 			if (alch != 0 && (Settings::Potions::_UsePotionChance == 100 || rand100(rand) < Settings::Potions::_UsePotionChance)) {
 				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, alch, false);
-				LOG3_2("{}[Events] [CheckActors] used potion with duration {}, magnitude {} and Alchemy Effect {}", dur, mag, Utility::ToString(eff));
+				LOG_2("used potion with duration {}, magnitude {} and Alchemy Effect {}", dur, mag, Utility::ToString(eff));
 				// check if we have a valid effect
 				if (eff != AlchemicEffect::kNone) {
 					CalcActorCooldowns(acinfo, eff, dur);
@@ -108,7 +108,7 @@ namespace Events
 			return;
 		if (Settings::FortifyPotions::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorFortifyPotions] {}", Utility::PrintForm(acinfo));
+		LOG_1("{}", Utility::PrintForm(acinfo));
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance &&
 			Settings::FortifyPotions::_enableFortifyPotions &&
 			(!(acinfo->IsPlayer()) || Settings::Player::_playerFortifyPotions)) {
@@ -130,12 +130,12 @@ namespace Events
 					effects |= CalcFortifyEffects(acinfo, acinfo->GetCombatData(), acinfo->GetCombatDataTarget());
 				}
 
-				LOG1_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] check for fortify potion with effect {}", effects.string());
+				LOG_4("check for fortify potion with effect {}", effects.string());
 				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, effects, true);
 				if (dur != -1) {
 					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 					CalcActorCooldowns(acinfo, eff, dur);
-					LOG3_4("{}[Events] [CheckActors] [HandleActorFortifyPotions] used potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), dur * 1000, Utility::ToString(eff));
+					LOG_4("used potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), dur * 1000, Utility::ToString(eff));
 				}
 			}
 		}
@@ -149,13 +149,13 @@ namespace Events
 			return;
 		if (Settings::Poisons::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorPoisons] {}", Utility::PrintForm(acinfo));
+		LOG_1("{}", Utility::PrintForm(acinfo));
 		if (acinfo->GetDurCombat() > 1000 &&
 			acinfo->GetGlobalCooldownTimer() <= tolerance &&
 			Settings::Poisons::_enablePoisons &&
 			(Settings::Poisons::_UsePoisonChance == 100 || rand100(rand) < Settings::Poisons::_UsePoisonChance) &&
 			(!acinfo->IsPlayer() || Settings::Player::_playerPoisons)) {
-			LOG_2("{}[Events] [CheckActors] [HandleActorPoisons] usage allowed");
+			LOG_2("usage allowed");
 			// handle poisons
 			auto combatdata = acinfo->GetCombatData();
 			if (combatdata != 0 && (combatdata & static_cast<uint32_t>(Utility::CurrentCombatStyle::Mage)) == 0 &&
@@ -202,14 +202,14 @@ namespace Events
 						// we dont have a target so just use any poison
 						effects |= AlchemicEffect::kAnyPoison;
 					}
-					LOG1_4("{}[Events] [CheckActors] check for poison with effect {}", effects.string());
+					LOG_4("check for poison with effect {}", effects.string());
 					auto const& [dur, eff] = ACM::ActorUsePoison(acinfo, effects);
 					if (eff != 0)  // check whether an effect was applied
 						acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPoisons());
 				}
 			}
 			if (combatdata == 0)
-				LOG1_2("{}[Events] [CheckActors] [HandleActorPoisons] couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo));
+				LOG_2("couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo));
 			// else Mage or Hand to Hand which cannot use poisons
 		}
 	}
@@ -224,7 +224,7 @@ namespace Events
 			return;
 		if (Settings::Food::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorFood] {}", Utility::PrintForm(acinfo));
+		LOG_1("{}", Utility::PrintForm(acinfo));
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance &&
 			Settings::Food::_enableFood &&
 			RE::Calendar::GetSingleton()->GetDaysPassed() >= acinfo->GetNextFoodTime() &&
@@ -245,7 +245,7 @@ namespace Events
 				acinfo->SetNextFoodTime(Main::CalcFoodDuration(dur));
 				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownFood());
 			}
-			LOG2_2("{}[Events] [CheckActors] [HandleActorFood] current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
+			LOG_2("current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
 		}
 	}
 
@@ -258,7 +258,7 @@ namespace Events
 					Settings::Potions::_HandleWeaponSheathedAsOutOfCombat == true && acinfo->IsWeaponDrawn() == true /*if weapons are drawn we use the combat handler*/) ||
 			acinfo->GetHandleActor() == false)
 			return;
-		LOG1_1("{}[Events] [CheckActors] [HandleActorOOCPotions] {}", Utility::PrintForm(acinfo));
+		LOG_1("{}", Utility::PrintForm(acinfo));
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
 			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
@@ -267,7 +267,7 @@ namespace Events
 				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
 				// update global cooldown
 				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
-				LOG2_4("{}[Events] [CheckActors] [HandleActorOOCPotions] use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
+				LOG_4("use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
 			}
 		}
 	}
@@ -288,12 +288,12 @@ namespace Events
 		// if npc 3d isn't loaded, skip them
 		if (acinfo->Is3DLoaded() == false)
 		{
-			LOG1_5("{}[Events] [CheckActors] [HandleActorRuntimeData] 3d not loaded {}", Utility::PrintForm(acinfo));
+			LOG_5("3d not loaded {}", Utility::PrintForm(acinfo));
 			acinfo->SetHandleActor(false);
 			return;
 		}
-		LOG1_1("{}[Events] [CheckActors] [HandleActorRuntimeData] {}", Utility::PrintForm(acinfo));
-		LOG5_2("{}[Events] [CheckActors] [HandleActorRuntimeData] cooldowns: durHealth:{}\tdurMagicka:{}\tdurStamina:{}\tdurFortify:{}\tdurRegen:{}", acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina(), acinfo->GetDurFortify(), acinfo->GetDurRegeneration());
+		LOG_1("{}", Utility::PrintForm(acinfo));
+		LOG_2("cooldowns: durHealth:{}\tdurMagicka:{}\tdurStamina:{}\tdurFortify:{}\tdurRegen:{}", acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina(), acinfo->GetDurFortify(), acinfo->GetDurRegeneration());
 		// check for staggered option
 		// check for paralyzed
 		if (comp->DisableItemUsageWhileParalyzed()) {
@@ -305,14 +305,14 @@ namespace Events
 				acinfo->IsUnconscious() ||
 				acinfo->IsStaggered() ||
 				acinfo->IsBleedingOut()) {
-				LOG_1("{}[Events] [CheckActors] [HandleActorRuntimeData] Actor is unable to use items");
+				LOG_1("Actor is unable to use items");
 				acinfo->SetHandleActor(false);
 				return;
 			}
 		}
 		// check for non-follower option
 		if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->IsPlayer() == false) {
-			LOG_2("{}[Events] [CheckActors] [HandleActorRuntimeData] Actor is not a follower, and non-follower processing has been disabled");
+			LOG_2("Actor is not a follower, and non-follower processing has been disabled");
 			acinfo->SetHandleActor(false);
 			return;
 		}
@@ -332,7 +332,7 @@ namespace Events
 		if (acinfo->IsInCombat()) {
 			// get combatdata of current actor
 			acinfo->SetCombatData(Utility::GetCombatData(acinfo->GetActor()));
-			LOG1_2("{}[Events] [CheckActors] [HandleActorRuntimeData] CombatData: {}", Utility::GetHex(acinfo->GetCombatData()));
+			LOG_2("CombatData: {}", Utility::GetHex(acinfo->GetCombatData()));
 			RE::ActorHandle handle;
 			if (acinfo->IsPlayer() == false && acinfo->GetActor() != nullptr) {
 				// retrieve target of current actor if present
@@ -395,14 +395,14 @@ namespace Events
 		{
 			// find all npcs participating in a brawl and add them to the exceptions
 			for (auto& [id, objectrefhandle] : DGIntimidate->refAliasMap) {
-				LOG1_4("{}[Events] [PullForbiddenActors] Alias with id: {}", id);
+				LOG_4("Alias with id: {}", id);
 				if (id == 0 || id == 352 || id == 351)
 				{
 					if (objectrefhandle && objectrefhandle.get() && objectrefhandle.get().get()) {
 						if (objectrefhandle.get().get()->formType == RE::FormType::ActorCharacter) {
 							if (RE::Actor* ac = objectrefhandle.get().get()->As<RE::Actor>(); ac != nullptr) {
 								forbidden.insert(ac->GetFormID());
-								LOG1_4("{}[Events] [PullForbiddenActors] Found Brawling actor: {}", Utility::GetHex(ac->GetFormID()));
+								LOG_4("Found Brawling actor: {}", Utility::GetHex(ac->GetFormID()));
 							}
 						}
 					}
@@ -420,7 +420,7 @@ namespace Events
 		while (!CanProcess() && stopactorhandler == false)
 			std::this_thread::sleep_for(10ms);
 
-		LOG_1("{}[Events] [CheckActors]");
+		LOG_1("begin");
 		actorhandlerrunning = true;
 		/// static section
 		RE::UI* ui = RE::UI::GetSingleton();
@@ -449,7 +449,7 @@ namespace Events
 				goto CheckActorsSkipIteration;
 			if (Game::IsFastTravelling())
 			{
-				LOG_2("{}[Events] [CheckActors] Skip iteration due to Fast Travel");
+				LOG_2("Skip iteration due to Fast Travel");
 				goto CheckActorsSkipIteration;
 			}
 			// update active actors
@@ -465,7 +465,7 @@ namespace Events
 				// get starttime of iteration
 				begin = std::chrono::steady_clock::now();
 
-				LOG1_1("{}[Events] [CheckActors] Handling {} registered Actors", std::to_string(acset.size()));
+				LOG_1("Handling {} registered Actors", std::to_string(acset.size()));
 
 				if (!CanProcess())
 					goto CheckActorsSkipIteration;
@@ -482,29 +482,41 @@ namespace Events
 					}
 				});
 
-				LOG1_1("{}[Events] [CheckActors] Validate Actors {}", acset.size());
+				// handle alternate npc registration
+				if (Settings::System::_alternateNPCRegistration) {
+					LOG_1("Register {} NPCs and Unregister {} NPCs", alternateregistration.size(), alternateunregistration.size());
+					while (alternateregistration.size() > 0) {
+						RE::ActorHandle handle;
+						{
+							std::unique_lock<std::mutex> lock(lockalternateregistration);
+							handle = alternateregistration.front();
+							alternateregistration.pop();
+						}
+						if (handle && handle.get() && handle.get().get()) {
+							Main::RegisterNPC(handle.get().get());
+						}
+					}
+					while (alternateunregistration.size() > 0) {
+						RE::ActorHandle handle;
+						{
+							std::unique_lock<std::mutex> lock(lockalternateregistration);
+							handle = alternateunregistration.front();
+							alternateunregistration.pop();
+						}
+						if (handle && handle.get() && handle.get().get()) {
+							Main::UnregisterNPC(handle.get().get());
+						}
+					}
+				}
+
+
+				LOG_1("Validate Actors {}", acset.size());
 
 				// validate actorsets
-				sem.acquire();
 				std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>> actors;
-				auto itr = acset.begin();
-				while (itr != acset.end()) {
-					if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
-						if (!data->UpdateActorInfo(acinfo)) {
-							LOG_1("{}[Events] [CheckActors] Removed invalid actor");
-							acset.erase(itr);
-						} else {
-							actors.insert(*itr);
-						}
-					} else {
-						LOG_1("{}[Events] [CheckActors] Removed expired actor");
-						acset.erase(itr);
-					}
-					itr++;
-				}
-				sem.release();
+				ValidateActorSets(actors);
 
-				LOG1_1("{}[Events] [CheckActors] Validated {} Actors", std::to_string(actors.size()));
+				LOG_1("Validated {} Actors", std::to_string(actors.size()));
 
 				if (!CanProcess() || Game::IsFastTravelling())
 					goto CheckActorsSkipIteration;
@@ -579,24 +591,24 @@ namespace Events
 					});
 				}
 				catch (std::bad_alloc& e) {
-					logcritical("[Events] [CheckActors] Failed to execute due to memory allocation issues: {}", std::string(e.what()));
+					logcritical("Failed to execute due to memory allocation issues: {}", std::string(e.what()));
 				}
 				// write execution time of iteration
-				PROF2_1("{}[Events] [CheckActors] execution time for {} actors: {} µs", actors.size(), std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
-				LOG1_1("{}[Events] [CheckActors] checked {} actors", std::to_string(actors.size()));
+				PROF_1(TimeProfiling, "execution time for {} actors", actors.size());
+				LOG_1("checked {} actors", std::to_string(actors.size()));
 				Statistics::Misc_ActorsHandled = actors.size();
 				Statistics::Misc_ActorsHandledTotal += actors.size();
 
 				// update settings if changes were made in the MCM menu
 				if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
-					LOG_1("{}[Events] [CheckActors] Applying setting changes.");
+					LOG_1("Applying setting changes.");
 					begin = std::chrono::steady_clock::now();
 					Settings::UpdateSettings();
 					Settings::Save();
-					PROF1_1("{}[Events] [CheckActors] Applying setting changes took {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+					PROF_1(TimeProfiling, "Applying setting changes.");
 				}
 			} else {
-				LOG_1("{}[Events] [CheckActors] Skip round.");
+				LOG_1("Skip round.");
 			}
 CheckActorsSkipIteration:
 			// reset combatants
@@ -605,7 +617,7 @@ CheckActorsSkipIteration:
 			if (!stopactorhandler)
 				std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::System::_cycletime));
 		}
-		LOG_1("{}[Events] [CheckActors] Exit.");
+		LOG_1("Exit.");
 		stopactorhandler = false;
 		actorhandlerrunning = false;
 	}
@@ -617,7 +629,7 @@ CheckActorsSkipIteration:
 	/// <param name=""></param>
 	void Main::SaveGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
-		LOG_1("{}[Events] [SaveGameCallback]");
+		LOG_1("");
 	}
 
 	/// <summary>
@@ -626,9 +638,8 @@ CheckActorsSkipIteration:
 	/// <param name=""></param>
 	void Main::LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
-		LOG_1("{}[Events] [LoadGameCallback]");
+		LOG_1("");
 		auto begin = std::chrono::steady_clock::now();
-		LOG_1("{}[Events] [LoadGameSub]");
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
 		initialized = false;
@@ -640,13 +651,10 @@ CheckActorsSkipIteration:
 				Settings::Player::_playerFortifyPotions ||
 				Settings::Player::_playerPoisons ||
 				Settings::Player::_playerFood)) {
-				// inject player into the list and remove him later
-				sem.acquire();
-				acset.insert(data->FindActor(RE::PlayerCharacter::GetSingleton()));
-				sem.release();
-				LOG_3("{}[Events] [LoadGameCallback] Adding player to the list");
-			}
-		});
+			// inject player into the list and remove him later
+				ACSetRegister(data->FindActor(RE::PlayerCharacter::GetSingleton()));
+				LOG_3("Adding player to the list");
+		}
 
 		if (actorhandlerrunning == false) {
 			if (actorhandler != nullptr) {
@@ -659,7 +667,7 @@ CheckActorsSkipIteration:
 			}
 			actorhandler = new std::thread(CheckActors);
 			actorhandler->detach();
-			LOG_1("{}[Events] [LoadGameSub] Started CheckActors");
+			LOG_1("Started CheckActors");
 		}
 		// reset the list of actors that died
 		deads.clear();
@@ -673,7 +681,7 @@ CheckActorsSkipIteration:
 
 		enableProcessing = true;
 
-		LOG_1("{}[Events] [LoadGameSub] Checking for special tasks");
+		LOG_1("Checking for special tasks");
 
 		/// <summary>
 		/// thread which executes varying test functions
@@ -685,7 +693,7 @@ CheckActorsSkipIteration:
 			if (testhandler == nullptr) {
 				testhandler = new std::thread(Tests::TestAllCells);
 				testhandler->detach();
-				LOG_1("{}[Events] [LoadGameSub] Started TestHandler");
+				LOG_1("Started TestHandler");
 			}
 		}
 
@@ -693,11 +701,11 @@ CheckActorsSkipIteration:
 			if (removeitemshandler == nullptr) {
 				removeitemshandler = new std::thread(RemoveItemsOnStartup);
 				removeitemshandler->detach();
-				LOG_1("{}[Events] [LoadGameSub] Started RemoveItemsHandler");
+				LOG_1("Started RemoveItemsHandler");
 			}
 		}
-		/*
-		LOG_1("{}[Events] [LoadGameSub] Finding loaded actors");
+
+		LOG_1("Finding loaded actors");
 
 		SKSE::GetTaskInterface()->AddTask([]() {
 			// when loading the game, the attach detach events for actors aren't fired until cells have been changed
@@ -748,8 +756,8 @@ CheckActorsSkipIteration:
 			}
 		}
 
-		LOG_1("{}[Events] [LoadGameSub] end");
-		PROF1_1("{}[Events] [LoadGameSub] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		LOG_1("end");
+		PROF_1(TimeProfiling, "function execution time");
 	}
 
 	void Main::KillThreads()
@@ -781,11 +789,10 @@ CheckActorsSkipIteration:
 	/// <param name=""></param>
 	void Main::RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
-		LOG_1("{}[Events] [RevertGameCallback]");
-		loaded = false;
+		LOG_1("");
 		enableProcessing = false;
 		KillThreads();
-		LOG1_1("{}[PlayerDead] {}", playerdied);
+		LOG_1("{}", playerdied);
 		// reset actor processing list
 		acset.clear();
 		DGIntimidate = nullptr;
@@ -793,9 +800,9 @@ CheckActorsSkipIteration:
 
 	long Main::SaveDeadActors(SKSE::SerializationInterface* a_intfc)
 	{
-		LOG_1("{}[Events] [SaveDeadActors] Writing dead actors");
-		LOG1_1("{}[Events] [SaveDeadActors] {} dead actors to write", deads.size());
-
+		LOG_1("Writing dead actors");
+		LOG_1("{} dead actors to write", deads.size());
+		
 		long size = 0;
 		long successfulwritten = 0;
 
@@ -813,7 +820,7 @@ CheckActorsSkipIteration:
 					// create buffer
 					unsigned char* buffer = new unsigned char[length + 1];
 					if (buffer == nullptr) {
-						logwarn("[Events] [SaveDeadActors] failed to write Dead Actor record: buffer null");
+						logwarn("failed to write Dead Actor record: buffer null");
 						continue;
 					}
 					// fill buffer
@@ -828,7 +835,7 @@ CheckActorsSkipIteration:
 			}
 		}
 
-		LOG_1("{}[Events] [SaveDeadActors] Writing dead actors finished");
+		LOG_1("Writing dead actors finished");
 
 		return size;
 	}
@@ -837,7 +844,7 @@ CheckActorsSkipIteration:
 	{
 		long size = 0;
 
-		LOG_1("{}[Events] [ReadDeadActors] Reading Dead Actor...");
+		LOG_1("Reading Dead Actor...");
 		unsigned char* buffer = new unsigned char[length];
 		a_intfc->ReadRecordData(buffer, length);
 		if (length >= 12) {

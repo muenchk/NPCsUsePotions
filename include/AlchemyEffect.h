@@ -287,6 +287,18 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	AlchemyBaseEffectFirst AlchemyBaseEffectFirst();
+	/// <summary>
+	/// Returns the basevalue for an effect
+	/// </summary>
+	/// <returns></returns>
+	unsigned long GetBaseValue();
+
+	/// <summary>
+	/// Returns an AlchemicEffect from the given base value
+	/// </summary>
+	/// <param name="basevalue"></param>
+	/// <returns></returns>
+	static AlchemicEffect GetFromBaseValue(unsigned long basevalue);
 
 	// functions
 	
@@ -300,6 +312,12 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsEffectMap();
+	/// <summary>
+	/// Returns whether the AlchemicEffect represented by [basevalue] is contained in this AlchemicEffect
+	/// </summary>
+	/// <param name="basevalue"></param>
+	/// <returns></returns>
+	bool HasEffect(unsigned long basevalue);
 
 	/// <summary>
 	/// Whether the effect contains attribute restoring effects, e.g. kHealth

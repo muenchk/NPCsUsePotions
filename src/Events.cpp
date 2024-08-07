@@ -74,22 +74,22 @@ namespace Events
 		Statistics::Events_TESDeathEvent++;
 		LOG_1("{}[Events] [TESDeathEvent]");
 		EvalProcessingEvent();
-		auto begin = std::chrono::steady_clock::now();
-		LOG_1("{}[Events] [TESDeathEvent]");
+		StartProfiling;
+		LOG_1("[TESDeathEvent]");
 		Main::InitializeCompatibilityObjects();
 		RE::Actor* actor = nullptr;
 		if (a_event == nullptr || a_event->actorDying == nullptr) {
-			LOG_4("{}[Events] [TESDeathEvent] Died due to invalid event");
+			LOG_4("[TESDeathEvent] Died due to invalid event");
 			goto TESDeathEventEnd;
 		}
 		actor = a_event->actorDying->As<RE::Actor>();
 		if (!Utility::ValidateActor(actor)) {
-			LOG_4("{}[Events] [TESDeathEvent] Died due to actor validation fail");
+			LOG_4("[TESDeathEvent] Died due to actor validation fail");
 			goto TESDeathEventEnd;
 		}
 		if (Utility::ValidateActor(actor)) {
 			if (actor->IsPlayerRef()) {
-				LOG_4("{}[Events] [TESDeathEvent] player died");
+				LOG_4("[TESDeathEvent] player died");
 				Main::PlayerDied(true);
 			} else {
 				// if not already dead, do stuff
@@ -109,14 +109,14 @@ namespace Events
 					if (!excluded) {
 						// create and insert new event
 						if (Settings::Removal::_RemoveItemsOnDeath) {
-							LOG1_1("{}[Events] [TESDeathEvent] Removing items from actor {}", std::to_string(acinfo->GetFormID()));
+							LOG_1("[TESDeathEvent] Removing items from actor {}", std::to_string(acinfo->GetFormID()));
 							auto items = Distribution::GetAllInventoryItems(acinfo);
-							LOG1_1("{}[Events] [TESDeathEvent] found {} items", items.size());
+							LOG_1("[TESDeathEvent] found {} items", items.size());
 							if (items.size() > 0) {
 								// remove items that are too much
 								while (items.size() > Settings::Removal::_MaxItemsLeft) {
 									acinfo->RemoveItem(items.back(), 1);
-									LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items.back()));
+									LOG_1("[TESDeathEvent] Removed item {}", Utility::PrintForm(items.back()));
 									items.pop_back();
 								}
 								//loginfo("[Events] [TESDeathEvent] 3");
@@ -125,9 +125,9 @@ namespace Events
 									for (int i = (int)items.size() - 1; i >= 0; i--) {
 										if (rand100(rand) <= Settings::Removal::_ChanceToRemoveItem) {
 											acinfo->RemoveItem(items[i], 100 /*remove all there are*/);
-											LOG1_1("{}[Events] [TESDeathEvent] Removed item {}", Utility::PrintForm(items[i]));
+											LOG_1("[TESDeathEvent] Removed item {}", Utility::PrintForm(items[i]));
 										} else {
-											LOG1_1("{}[Events] [TESDeathEvent] Did not remove item {}", Utility::PrintForm(items[i]));
+											LOG_1("[TESDeathEvent] Did not remove item {}", Utility::PrintForm(items[i]));
 										}
 									}
 								}
@@ -135,7 +135,7 @@ namespace Events
 						}
 
 					} else {
-						LOG1_4("{}[Events] [TESDeathEvent] actor {} is excluded or already dead", Utility::PrintForm(actor));
+						LOG_4("[TESDeathEvent] actor {} is excluded or already dead", Utility::PrintForm(actor));
 					}
 					// distribute death items, independently of whether the npc is excluded
 					auto ditems = acinfo->FilterCustomConditionsDistrItems(acinfo->citems.death);
@@ -157,7 +157,7 @@ namespace Events
 			}
 		}
 	TESDeathEventEnd:
-		PROF1_1("{}[Events] [TESDeathEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+	PROF_1(TimeProfiling, "[TESDeathEvent] event execution time.");
 		return EventResult::kContinue;
 	}
 
@@ -214,10 +214,8 @@ namespace Events
 		LOG_1("{}[Events] [TESCombatEvent]");
 		Main::InitializeCompatibilityObjects();
 		EvalProcessingEvent();
-		//if (!Settings::_featDisableOutOfCombatProcessing)
-		//	return EventResult::kContinue;
-		auto begin = std::chrono::steady_clock::now();
-		LOG_1("{}[Events] [TESCombatEvent]");
+		StartProfiling;
+		LOG_1("[TESCombatEvent]");
 		Main::InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
 		if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && actor->IsPlayerRef() == false && actor->IsChild() == false) {
@@ -225,10 +223,10 @@ namespace Events
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				// register for tracking
 				if (Distribution::ExcludedNPCFromHandling(actor) == false)
-					Main::RegisterNPC(actor);
+					Settings::System::_alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
 			} else {
 				if (Settings::Usage::_DisableOutOfCombatProcessing)
-					Main::UnregisterNPC(actor);
+					Settings::System::_alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
 			}
 
 			// save combat state of npc
@@ -241,7 +239,7 @@ namespace Events
 				acinfo->SetCombatState(CombatState::OutOfCombat);
 
 		}
-		PROF1_2("{}[Events] [TESCombatEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
+		PROF_2(TimeProfiling, "[TESCombatEvent] event execution time");
 		return EventResult::kContinue;
 	}
 
@@ -255,6 +253,7 @@ namespace Events
 	{
 		Statistics::Events_TESCellAttachDetachEvent;
 		EvalProcessingEvent();
+		StartProfiling;
 		// return if feature disabled
 		if (Settings::Usage::_DisableOutOfCombatProcessing)
 			return EventResult::kContinue;
@@ -267,15 +266,15 @@ namespace Events
 		if (a_event && a_event->reference) {
 			RE::Actor* actor = a_event->reference->As<RE::Actor>();
 			if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && !actor->IsPlayerRef()) {
-				LOG_1("{}[Events] [TESCellAttachDetachEvent]");
+				LOG_1("[TESCellAttachDetachEvent]");
 				if (a_event->attached) {
 					if (Distribution::ExcludedNPCFromHandling(actor) == false)
-						Main::RegisterNPC(actor);
+						Settings::System::_alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
 				} else {
-					Main::UnregisterNPC(actor);
+					Settings::System::_alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
 				}
+				PROF_2(TimeProfiling, "[TESCellAttachDetachEvent] event execution time.");
 			}
-			//PROF1_2("{}[Events] [CellAttachDetachEvent] execution time: {} µs", std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count()));
 		}
 		return EventResult::kContinue;
 	}
@@ -291,7 +290,7 @@ namespace Events
 	{
 		Statistics::Events_BGSActorCellEvent++;
 		EvalProcessingEvent();
-		//LOG_1("{}[Events] [BGSActorCellEvent]");
+		//LOG_1("[BGSActorCellEvent]");
 		if (cells.contains(a_event->cellID) == false) {
 			cells.insert(a_event->cellID);
 			Settings::CheckCellForActors(a_event->cellID);
@@ -309,6 +308,7 @@ namespace Events
 	{
 		Statistics::Events_TESEquipEvent++;
 		EvalProcessingEvent();
+		StartProfiling;
 		if (a_event->actor.get()) {
 			if (a_event->actor->IsPlayerRef()) {
 				auto audiomanager = RE::BSAudioManager::GetSingleton();
@@ -323,6 +323,7 @@ namespace Events
 						handle.Play();
 					}
 				}
+				PROF_2(TimeProfiling, "[TESEquipEvent] event execution time.");
 			}
 		}
 
@@ -339,7 +340,7 @@ namespace Events
 	/// <param name="a_event">The event information</param>
 	void EventHandler::OnItemRemoved(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* /*destinationContainer*/, const RE::TESContainerChangedEvent* /*a_event*/)
 	{
-		LOG2_1("{}[Events] [OnItemRemovedEvent] {} removed from {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
+		LOG_1("[OnItemRemovedEvent] {} removed from {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
 		RE::Actor* actor = container->As<RE::Actor>();
 		if (actor) {
 			// handle event for an actor
@@ -348,7 +349,7 @@ namespace Events
 				// handle removed poison
 				RE::AlchemyItem* alch = baseObj->As<RE::AlchemyItem>();
 				if (alch && alch->IsPoison()) {
-					LOG_1("{}[Events] [OnItemRemovedEvent] AnimatedPoison animation");
+					LOG_1("[OnItemRemovedEvent] AnimatedPoison animation");
 
 					//ACM::AnimatedPoison_ApplyPoison(acinfo, alch);
 
@@ -378,7 +379,7 @@ namespace Events
 	/// <param name="a_event">The event information</param>
 	void EventHandler::OnItemAdded(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* /*sourceContainer*/, const RE::TESContainerChangedEvent* /*a_event*/)
 	{
-		LOG2_1("{}[Events] [OnItemAddedEvent] {} added to {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
+		LOG_1("[OnItemAddedEvent] {} added to {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
 		RE::Actor* actor = container->As<RE::Actor>();
 		if (actor) {
 			// handle event for an actor
@@ -443,7 +444,7 @@ namespace Events
 	{
 		// very important event. Allows to catch actors and other stuff that gets deleted, without dying, which could cause CTDs otherwise
 		
-		LOG_1("{}[Events] [TESFastTravelEndEvent]");
+		LOG_1("[TESFastTravelEndEvent]");
 
 		Game::SetFastTraveling(false);
 		Main::InitThreads();
@@ -459,17 +460,17 @@ namespace Events
 
 		if (a_event && a_event->actionRef.get() && a_event->objectActivated.get()) {
 			if (a_event->actionRef->IsPlayerRef())
-				LOG1_1("{}[Events] [TESActivateEvent] Activated {}", Utility::PrintForm(a_event->objectActivated.get()));
+				LOG_1("[TESActivateEvent] Activated {}", Utility::PrintForm(a_event->objectActivated.get()));
 			// objects valid
 			static RE::TESQuest* DialogueCarriageSystem = RE::TESForm::LookupByID<RE::TESQuest>(0x17F01);
 			if (a_event->actionRef->IsPlayerRef() && a_event->objectActivated.get()->GetBaseObject()->GetFormID() == 0x103445) {
-				LOG_1("{}[Events] [TESActivateEvent] Activated Carriage Marker");
+				LOG_1("[TESActivateEvent] Activated Carriage Marker");
 				auto scriptobj = ScriptObject::FromForm(DialogueCarriageSystem, "CarriageSystemScript");
 				if (scriptobj.get()) {
 					auto currentDestination = scriptobj->GetProperty("currentDestination");
 					if (currentDestination) {
 						if (currentDestination->GetSInt() != 0 && currentDestination->GetSInt() != -1) {
-							LOG_1("{}[Events] [TESActivateEvent] Recognized player fasttraveling via carriage");
+							LOG_1("[TESActivateEvent] Recognized player fasttraveling via carriage");
 							Game::SetFastTraveling(true);
 						}
 					}
@@ -498,27 +499,27 @@ namespace Events
 	{
 		auto scriptEventSourceHolder = RE::ScriptEventSourceHolder::GetSingleton();
 		scriptEventSourceHolder->GetEventSource<RE::TESHitEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESHitEvent).name());
+		LOG_1("Registered {}", typeid(RE::TESHitEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESCombatEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESCombatEvent).name());
+		LOG_1("Registered {}", typeid(RE::TESCombatEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESEquipEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESEquipEvent).name());
+		LOG_1("Registered {}", typeid(RE::TESEquipEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESCellAttachDetachEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESCellAttachDetachEvent).name());
+		LOG_1("Registered {}", typeid(RE::TESCellAttachDetachEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESFormDeleteEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESFormDeleteEvent).name())
+		LOG_1("Registered {}", typeid(RE::TESFormDeleteEvent).name())
 		scriptEventSourceHolder->GetEventSource<RE::TESContainerChangedEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG1_1("{}Registered {}", typeid(RE::TESContainerChangedEvent).name())
 		//scriptEventSourceHolder->GetEventSource<RE::TESActivateEvent>()->AddEventSink(EventHandler::GetSingleton());
-		//LOG1_1("{}Registered {}", typeid(RE::TESActivateEvent).name())
+		//LOG1_1("Registered {}", typeid(RE::TESActivateEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);
-		LOG1_1("{}Registered {}", typeid(Main::LoadGameCallback).name());
+		LOG_1("Registered {}", typeid(Main::LoadGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000002, Main::RevertGameCallback);
-		LOG1_1("{}Registered {}", typeid(Main::RevertGameCallback).name());
+		LOG_1("Registered {}", typeid(Main::RevertGameCallback).name());
 		Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000003, Main::SaveGameCallback);
-		LOG1_1("{}Registered {}", typeid(Main::SaveGameCallback).name());
+		LOG_1("Registered {}", typeid(Main::SaveGameCallback).name());
 		Main::data = Data::GetSingleton();
 		Main::comp = Compatibility::GetSingleton();
 	}
@@ -529,6 +530,6 @@ namespace Events
 	void RegisterAllEventHandlers()
 	{
 		EventHandler::Register();
-		LOG_1("{}Registered all event handlers"sv);
+		LOG_1("Registered all event handlers"sv);
 	}
 }

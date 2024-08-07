@@ -38,7 +38,7 @@ namespace Console
 		/// </summary>
 		static void Register()
 		{
-			LOG_3("{}[Console] [CalcRule] [Register]");
+			LOG_3("Register");
 			auto info = RE::SCRIPT_FUNCTION::LocateConsoleCommand("AcceptLegalDoc");  // unused
 			if (info) {
 				info->functionName = LONG_NAME;
@@ -53,9 +53,9 @@ namespace Console
 				info->executeFunction = &Process;
 				info->conditionFunction = nullptr;
 
-				logger::info("[Console] [Register] Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
+				loginfo("Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
 			} else {
-				logger::critical("[Console] [Register] Failed to register console command: {} ({})", LONG_NAME, SHORT_NAME);
+				logcritical("Failed to register console command: {} ({})", LONG_NAME, SHORT_NAME);
 			}
 		}
 	};
@@ -93,7 +93,7 @@ namespace Console
 		/// </summary>
 		static void Register()
 		{
-			LOG_3("{}[Console] [ReloadDist] [Register]");
+			LOG_3("Register");
 			auto info = RE::SCRIPT_FUNCTION::LocateConsoleCommand("GetLegalDocs");  // unused
 			if (info) {
 				info->functionName = LONG_NAME;
@@ -105,9 +105,9 @@ namespace Console
 				info->executeFunction = &Process;
 				info->conditionFunction = nullptr;
 
-				logger::info("[Console] [Register] Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
+				loginfo("Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
 			} else {
-				logger::critical("[Console] [Register] Failed to register console command: {} ({})", LONG_NAME, SHORT_NAME);
+				logcritical("Failed to register console command: {} ({})", LONG_NAME, SHORT_NAME);
 			}
 		}
 	};

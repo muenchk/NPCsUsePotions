@@ -18,7 +18,7 @@ void ActorInfo::Init()
 
 ActorInfo::ActorInfo(RE::Actor* _actor)
 {
-	LOG_3("{}[ActorInfo] [ActorInfo]");
+	LOG_3("");
 	actor = _actor->GetHandle();
 	if (_actor) {
 		formid.SetID(_actor->GetFormID());
@@ -62,9 +62,9 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 
 void ActorInfo::Reset(RE::Actor* _actor)
 {
-	LOG_1("{}[ActorInfo] [Reset]");
+	LOG_1("");
 	if (blockReset) {
-		LOG_1("{}[ActorInfo] [Reset] Reset has been blocked.");
+		LOG_1("Reset has been blocked.");
 		return;
 	}
 	aclock;
@@ -278,7 +278,7 @@ void ActorInfo::UpdateMetrics(RE::Actor* reac)
 
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
-	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
+	LOG_3("");
 	aclock;
 	std::vector<CustomItemAlch*> dist;
 	if (!valid)
@@ -295,7 +295,7 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<
 
 bool ActorInfo::CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 {
-	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistr]");
+	LOG_3("");
 	aclock;
 	if (!valid)
 		return false;
@@ -312,14 +312,14 @@ bool ActorInfo::CheckCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
 
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<CustomItemAlch*> itms)
 {
-	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr]");
+	LOG_3("");
 	aclock;
 	std::vector<CustomItemAlch*> dist;
 	if (!valid)
 		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
-			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistr] error");
+			LOG_3("error");
 			continue;
 		}
 		bool val = CalcUsageConditionsIntern(itms[i]);
@@ -331,14 +331,14 @@ std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsUsage(std::vector<
 
 std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 {
-	LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems]");
+	LOG_3("");
 	aclock;
 	std::vector<CustomItem*> dist;
 	if (!valid)
 		return dist;
 	for (int i = 0; i < itms.size(); i++) {
 		if (itms[i]->object == nullptr || itms[i]->object->GetFormID() == 0) {
-			LOG_3("{}[ActorInfo] [FilterCustomConditionsDistrItems] error");
+			LOG_3("error");
 			continue;
 		}
 		bool val = CalcDistrConditionsIntern(itms[i]);
@@ -350,7 +350,7 @@ std::vector<CustomItem*> ActorInfo::FilterCustomConditionsDistrItems(std::vector
 
 bool ActorInfo::CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 {
-	LOG_3("{}[ActorInfo] [CheckCustomConditionsDistrItems]");
+	LOG_3("");
 	aclock;
 	if (!valid)
 		return false;
@@ -368,17 +368,17 @@ bool ActorInfo::CheckCustomConditionsDistrItems(std::vector<CustomItem*> itms)
 
 bool ActorInfo::CanUseItem(RE::FormID item)
 {
-	LOG_3("{}[ActorInfo] [CanUseItem]");
+	LOG_3("");
 	return CanUsePotion(item) | CanUsePoison(item) | CanUseFortify(item) | CanUseFood(item);
 }
 bool ActorInfo::CanUsePot(RE::FormID item)
 {
-	LOG_3("{}[ActorInfo] [CanUsePot]");
+	LOG_3("");
 	return CanUsePotion(item) | CanUseFortify(item);
 }
 bool ActorInfo::CanUsePotion(RE::FormID item)
 {
-	LOG_3("{}[ActorInfo] [CanUsePotion]");
+	LOG_3("");
 	aclock;
 	if (!valid)
 		return false;
@@ -389,7 +389,7 @@ bool ActorInfo::CanUsePotion(RE::FormID item)
 }
 bool ActorInfo::CanUsePoison(RE::FormID item) 
 {
-	LOG_3("{}[ActorInfo] [CanUsePoison]");
+	LOG_3("");
 	aclock;
 	if (!valid)
 		return false;
@@ -400,7 +400,7 @@ bool ActorInfo::CanUsePoison(RE::FormID item)
 }
 bool ActorInfo::CanUseFortify(RE::FormID item)
 {
-	LOG_3("{}[ActorInfo] [CanUseFortify]");
+	LOG_3("");
 	aclock;
 	if (!valid)
 		return false;
@@ -411,7 +411,7 @@ bool ActorInfo::CanUseFortify(RE::FormID item)
 }
 bool ActorInfo::CanUseFood(RE::FormID item)
 {
-	LOG_3("{}[ActorInfo] [CanUseFood]");
+	LOG_3("");
 	aclock;
 	if (!valid)
 		return false;
@@ -423,7 +423,7 @@ bool ActorInfo::CanUseFood(RE::FormID item)
 
 bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
 {
-	LOG_3("{}[ActorInfo] [IsCustomAlchItem]");
+	LOG_3("");
 	auto itr = citems.potionsset.find(item->GetFormID());
 	if (itr != citems.potionsset.end())
 		return true;
@@ -440,7 +440,7 @@ bool ActorInfo::IsCustomAlchItem(RE::AlchemyItem* item)
 }
 bool ActorInfo::IsCustomPotion(RE::AlchemyItem* item)
 {
-	LOG_3("{}[ActorInfo] [IsCustomPotion]");
+	LOG_3("");
 	auto itr = citems.potionsset.find(item->GetFormID());
 	if (itr != citems.potionsset.end())
 		return true;
@@ -451,7 +451,7 @@ bool ActorInfo::IsCustomPotion(RE::AlchemyItem* item)
 }
 bool ActorInfo::IsCustomPoison(RE::AlchemyItem* item)
 {
-	LOG_3("{}[ActorInfo] [IsCustomPoison]");
+	LOG_3("");
 	auto itr = citems.poisonsset.find(item->GetFormID());
 	if (itr != citems.poisonsset.end())
 		return true;
@@ -459,7 +459,7 @@ bool ActorInfo::IsCustomPoison(RE::AlchemyItem* item)
 }
 bool ActorInfo::IsCustomFood(RE::AlchemyItem* item)
 {
-	LOG_3("{}[ActorInfo] [IsCustomFood]");
+	LOG_3("");
 	auto itr = citems.foodset.find(item->GetFormID());
 	if (itr != citems.foodset.end())
 		return true;
@@ -467,7 +467,7 @@ bool ActorInfo::IsCustomFood(RE::AlchemyItem* item)
 }
 bool ActorInfo::IsCustomItem(RE::TESBoundObject* item)
 {
-	LOG_3("{}[ActorInfo] [IsCustomItem]");
+	LOG_3("");
 	auto itr = citems.itemsset.find(item->GetFormID());
 	if (itr != citems.itemsset.end())
 		return true;
@@ -484,7 +484,7 @@ bool ActorInfo::CalcUsageConditions(CustomItem* item)
 
 bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 {
-	LOG_3("{}[ActorInfo] [CalcUsageConditions]");
+	LOG_3("");
 	if (actor.get() && actor.get().get()) {
 		RE::Actor* reac = actor.get().get();
 		// obligatory conditions (all must be fulfilled)
@@ -605,7 +605,7 @@ bool ActorInfo::CalcDistrConditions(CustomItem* item)
 
 bool ActorInfo::CalcDistrConditionsIntern(CustomItem* item)
 {
-	LOG_3("{}[ActorInfo] [CalcDistrConditions]");
+	LOG_3("");
 	if (actor.get() && actor.get().get()) {
 		RE::Actor* reac = actor.get().get();
 		// only check these if there are conditions
@@ -791,7 +791,7 @@ bool ActorInfo::IsWeaponDrawn()
 
 void ActorInfo::CustomItems::CreateMaps()
 {
-	LOG_3("{}[ActorInfo] [CreatMaps]");
+	LOG_3("");
 	// items map
 	itemsset.clear();
 	for (int i = 0; i < items.size(); i++) {
@@ -826,7 +826,7 @@ void ActorInfo::CustomItems::CreateMaps()
 
 void ActorInfo::CustomItems::Reset()
 {
-	LOG_3("{}[ActorInfo] [Reset]");
+	LOG_3("");
 	items.clear();
 	itemsset.clear();
 	death.clear();

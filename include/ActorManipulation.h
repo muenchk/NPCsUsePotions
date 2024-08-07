@@ -70,7 +70,7 @@ public:
 			return 1;
 		return _actor->AsActorValueOwner()->GetActorValue(av) / (_actor->AsActorValueOwner()->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 		/*float tmp = _actor->GetActorValue(av) / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
-		logger::info("[GetAVPercentage] {}", tmp);
+		loginfo("[GetAVPercentage] {}", tmp);
 		return tmp;*/
 	}
 	/// <summary>
@@ -87,7 +87,7 @@ public:
 			return 1;
 		return curr / (_actor->AsActorValueOwner()->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
 		/*float tmp = curr / (_actor->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
-		logger::info("[GetAVPercentageFromValue] {}", tmp);
+		loginfo("[GetAVPercentageFromValue] {}", tmp);
 		return tmp;*/
 	}
 	#pragma endregion

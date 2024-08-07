@@ -6,6 +6,7 @@
 
 #include "Compatibility.h"
 #include "Data.h"
+#include "Utility.h"
 
 
 /// <summary>
@@ -62,7 +63,8 @@ namespace Events
 		/// <summary>
 		/// semaphore used to sync access to actor handling, to prevent list changes while operations are done
 		/// </summary>
-		static inline std::binary_semaphore sem{1};
+		static inline std::mutex sem;
+		//static inline std::binary_semaphore sem{1};
 		/// <summary>
 		/// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
 		/// </summary>
@@ -80,6 +82,20 @@ namespace Events
 		/// list of npcs that should be registered after fast travel has ended
 		/// </summary>
 		static inline std::list<RE::ActorHandle> toregister;
+
+		/// <summary>
+		/// queue of npcs to register on next cycle
+		/// </summary>
+		static inline std::queue<RE::ActorHandle> alternateregistration;
+		/// <summary>
+		/// queue of npcs to unregister on next cycle
+		/// </summary>
+		static inline std::queue<RE::ActorHandle> alternateunregistration;
+		/// <summary>
+		/// mutex to restrict access to alternateregistration and alternateunregistration
+		/// </summary>
+		static inline std::mutex lockalternateregistration;
+
 
 		//-------------------Handler-------------------------
 
@@ -130,6 +146,46 @@ namespace Events
 		//--------------------Brawl--------------------------
 
 		static inline RE::TESQuest* DGIntimidate = nullptr;
+
+		//---------------Access Functions--------------------
+
+		/// <summary>
+		/// Validates all registered actors and returns them
+		/// </summary>
+		/// <param name="actors"></param>
+		static void ValidateActorSets(std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>>& actors);
+
+		/// <summary>
+		/// Registers the actor to acset and resets them
+		/// </summary>
+		/// <param name="acinfo"></param>
+		/// <param name="actor"></param>
+		static void ACSetRegisterAndReset(std::shared_ptr<ActorInfo> acinfo, RE::Actor* actor);
+
+		/// <summary>
+		/// registeres the actor from acset
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void ACSetRegister(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// unregisteres the actor from acset
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void ACSetUnregister(std::shared_ptr<ActorInfo> acinfo);
+
+		/// <summary>
+		/// unregisteres actors with the [formid] from acset
+		/// </summary>
+		/// <param name="formid"></param>
+		static void ACSetUnregister(RE::FormID formid);
+
+		/// <summary>
+		/// checks whether acset contains the actor
+		/// </summary>
+		/// <param name="acinfo"></param>
+		static void ACSetContains(std::shared_ptr<ActorInfo> acinfo);
+
 
 		//-------------------Support-------------------------
 
@@ -274,6 +330,12 @@ namespace Events
 		static void RegisterNPC(RE::Actor* actor);
 
 		/// <summary>
+		/// Registers an NPC on next cycle
+		/// </summary>
+		/// <param name="actor"></param>
+		static void RegisterNPCAlternate(RE::Actor* actor);
+
+		/// <summary>
 		/// Registers NPCs that could not be registered during fast travel
 		/// </summary>
 		static void RegisterFastTravelNPCs();
@@ -295,6 +357,12 @@ namespace Events
 		/// </summary>
 		/// <param name="acinfo"></param>
 		static void UnregisterNPC(RE::FormID formid);
+
+		/// <summary>
+		/// Unregisters NPC on next cycle
+		/// </summary>
+		/// <param name="actor"></param>
+		static void UnregisterNPCAlternate(RE::Actor* actor);
 
 		//----------------------Processing--------------------------
 

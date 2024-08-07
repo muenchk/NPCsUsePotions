@@ -1,6 +1,6 @@
 Scriptname NPCsUsePotions_MCM extends SKI_ConfigBase
 
-Function InitPages()
+Event OnConfigInit()
     Pages = new string[11]
     Pages[0] = "General" ; general, system, removal, fixes
     Pages[1] = "Potions"
@@ -13,15 +13,11 @@ Function InitPages()
     Pages[8] = "Compatbility"
     Pages[9] = "Debug"
     Pages[10] = "Statistics"
-EndFunction
-
-Event OnConfigInit()
-    InitPages()
 EndEvent
 
-event OnGameReload()
-    InitPages()
-endEvent
+;event OnGameReload()
+;    InitPages()
+;endEvent
 
 ; ----------- MCM Properties -----------
 ; general
@@ -94,6 +90,11 @@ int D_MagStandard
 int D_MagPotent
 int D_StylePrimary
 int D_StyleSecondary
+int D_Prohib_Menu
+int D_Prohib_Menu_Selection = 0 ; [0] = Potions, [1] = Poisons, [2] = Food
+string[] D_Prohib_Menu_Options
+int[] D_Prohib_options
+int D_ProbScaling
 ; whitelist
 int W_EnableItems
 int W_EnableNPCs
@@ -123,6 +124,19 @@ int S_ActorsHandledTotal
 int S_ActorsHandled
 
 Event OnPageReset(string page)
+    Pages = new string[11]
+    Pages[0] = "General" ; general, system, removal, fixes
+    Pages[1] = "Potions"
+    Pages[2] = "Poisons"
+    Pages[3] = "Fortify Potions"
+    Pages[4] = "Food"
+    Pages[5] = "Player"
+    Pages[6] = "Distribution"
+    Pages[7] = "Whitelist"
+    Pages[8] = "Compatbility"
+    Pages[9] = "Debug"
+    Pages[10] = "Statistics"
+
     if (page == Pages[0]) ; general
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
@@ -218,8 +232,6 @@ Event OnPageReset(string page)
         D_LevelNormal = AddSliderOption("Level Normal", Distr_GetLevelNormal())
         D_LevelDifficult = AddSliderOption("Level Difficult", Distr_GetLevelDifficult())
         D_Levelnsane = AddSliderOption("Level Insane", Distr_GetLevelInsane())
-
-        SetCursorPosition(1)
         AddHeaderOption("Item magnitude options")
         D_MagWeak = AddSliderOption("Max magnitude for weak items", Distr_GetMaxMagnitudeWeak())
         D_MagStandard = AddSliderOption("Max magnitude for standard items", Distr_GetMaxMagnitudeStandard())
@@ -227,6 +239,23 @@ Event OnPageReset(string page)
         AddHeaderOption("Style Scaling")
         D_StylePrimary = AddSliderOption("Primary", Distr_GetStyleScalingPrimary(), "{2}")
         D_StyleSecondary = AddSliderOption("Secondary", Distr_GetStyleScalingSecondary(), "{2}")
+        AddHeaderOption("Probability Modifiers")
+        D_ProbScaling = AddSliderOption("Item Chance Multiplier", Distr_GetProbabilityScaling(), "{2}")
+
+        SetCursorPosition(1)
+        AddHeaderOption("Prohibited Effects")
+        D_Prohib_Menu_Options = new string[3]
+        D_Prohib_Menu_Options[0] = "Potions"
+        D_Prohib_Menu_Options[1] = "Poisons"
+        D_Prohib_Menu_Options[2] = "Food"
+        D_Prohib_Menu = AddMenuOption("ItemType", D_Prohib_Menu_Options[D_Prohib_Menu_Selection])
+        AddTextOption("Effects that can be prohibited", "")
+        int i = 1
+        D_prohib_options = new int[65]
+        while (i < 65)
+            D_Prohib_options[i] = AddToggleOption(ToStringAlchemicEffect(i), IsEffectProhibited(i))
+            i = i + 1
+        endwhile
     elseif (page == Pages[7]) ; whitelist
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
@@ -279,7 +308,6 @@ Event OnPageReset(string page)
         S_ActorsHandledTotal = AddTextOption("Total Actors Handled", Stats_ActorsHandledTotal())
     endif
 EndEvent
-
 
 Event OnOptionSelect(int option)
     if (option == 0)
@@ -374,6 +402,13 @@ Event OnOptionSelect(int option)
     elseif (option == D_EnableProfiling)
         Debug_SetEnableProfiling(!Debug_GetEnableProfiling())
     endif
+    int i = 1
+    while (i < 65)
+        if (option == D_Prohib_options[i])
+            InvertEffectProhibited(i)
+        endif
+        i = i + 1
+    endwhile
     ForcePageReset()
 EndEvent
 
@@ -433,6 +468,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogDefaultValue(0)
         SetSliderDialogStartValue(Distr_GetStyleScalingSecondary())
         SetSliderDialogRange(0.05, 20.0)
+        SetSliderDialogInterval(0.05)
+    elseif (option == D_ProbScaling)
+        SetSliderDialogDefaultValue(1.0)
+        SetSliderDialogStartValue(Distr_GetProbabilityScaling())
+        SetSliderDialogRange(0.1, 3.0)
         SetSliderDialogInterval(0.05)
     elseif (option == FO_LevelScale)
         SetSliderDialogDefaultValue(0)
@@ -547,6 +587,8 @@ Event OnOptionSliderAccept(int option, float value)
         Distr_SetStyleScalingPrimary(value)
     elseif (option == D_StyleSecondary)
         Distr_SetStyleScalingSecondary(value)
+    elseif (option == D_ProbScaling)
+        Distr_SetProbabilityScaling(value)
     elseif (option == FO_LevelScale)
         Fortify_SetEnemyLevelScalePlayerLevelFortify(value)
     elseif (option == FO_NumberThreshold)
@@ -581,6 +623,26 @@ Event OnOptionSliderAccept(int option, float value)
         Debug_SetLogLevel(valueint)
     elseif (option == D_ProfileLevel)
         Debug_SetProfileLevel(valueint)
+    endif
+    ForcePageReset()
+EndEvent
+
+Event OnOptionMenuOpen(int option)
+    if (option == 0)
+
+    elseif (option == D_Prohib_Menu)
+        SetMenuDialogStartIndex(D_Prohib_Menu_Selection)
+        SetMenuDialogDefaultIndex(0)
+        SetMenuDialogOptions(D_Prohib_Menu_Options)
+    endif
+EndEvent
+
+Event OnOptionMenuAccept(int option, int index)
+    if (option == 0)
+
+    elseif (option == D_Prohib_Menu)
+        D_Prohib_Menu_Selection = index
+        SetMenuOptionValue(D_Prohib_Menu, D_Prohib_Menu_Options[D_Prohib_Menu_Selection], true)
     endif
     ForcePageReset()
 EndEvent
@@ -639,6 +701,8 @@ Event OnOptionDefault(int option)
         Distr_SetStyleScalingPrimary(1.2)
     elseif (option == D_StyleSecondary)
         Distr_SetStyleScalingSecondary(1.1)
+    elseif (option == D_ProbScaling)
+        Distr_SetProbabilityScaling(1.0)
     elseif (option == F_EnableFood)
         Food_SetEnableFood(true)
     elseif (option == F_AllowDetrimental)
@@ -736,6 +800,15 @@ Event OnOptionDefault(int option)
     elseif (option == D_ProfileLevel)
         Debug_SetProfileLevel(0)
     endif
+    int i = 1
+    while (i < 65)
+        if (option == D_Prohib_options[i])
+            if (IsEffectProhibited(i))
+                InvertEffectProhibited(i)
+            endif
+        endif
+        i = i + 1
+    endwhile
     ForcePageReset()
 EndEvent
 
@@ -807,6 +880,8 @@ Event OnOptionHighlight(int option)
         SetInfoText("Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the primary combat type of an npc.")
     elseif (option == D_StyleSecondary)
         SetInfoText("Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the secondary combat type of an npc.")
+    elseif (option == D_ProbScaling)
+        SetInfoText("Modifies the chances for all items distributed to npcs. This does not really affect the number of item (potions) distributed, just the chances for the frst 4 potions and first 3 poisons. Even though an overall increase in items is possible, it is incredibly unlikely due to the small base-probabilities. Anything value around 2.0 might guarantee 3 or 4 potions and poisons for most npcs.")
     elseif (option == F_EnableFood)
         SetInfoText("Allows NPCs to use food items, to gain beneficial effects.")
     elseif (option == F_AllowDetrimental)
@@ -918,7 +993,25 @@ EndEvent
 
 
 
+bool Function IsEffectProhibited(int value)
+    if (D_Prohib_Menu_Selection == 0)
+        return Potions_IsEffectProhibited(value)
+    elseif (D_Prohib_Menu_Selection == 1)
+        return Poisons_IsEffectProhibited(value)
+    elseif (D_Prohib_Menu_Selection == 2)
+        return Food_IsEffectProhibited(value)
+    endif
+EndFunction
 
+Function InvertEffectProhibited(int value)
+    if (D_Prohib_Menu_Selection == 0)
+        Potions_InvertEffectProhibited(value)
+    elseif (D_Prohib_Menu_Selection == 1)
+        Poisons_InvertEffectProhibited(value)
+    elseif (D_Prohib_Menu_Selection == 2)
+        Food_InvertEffectProhibited(value)
+    endif
+endfunction
 
 
 ; ------------------ GLOBAL ------------------
@@ -934,6 +1027,8 @@ Function SetMaxDuration(int milliseconds) global native
 int Function GetMaxFortifyDuration() global native
 ; sets the max duration accounted for for fortification potions
 Function SetMaxFortifyDuration(int milliseconds) global native
+
+string Function ToStringAlchemicEffect(int value) global native
 
 ; --------- System ---------
 
@@ -1022,6 +1117,11 @@ int Function Potions_GetUsePotionChance() global native
 ; Sets the chance that an NPC will use a potion if they are able to
 Function Potions_SetUsePotionChance(int value) global native
 
+; Returns whether the given AlchemicEffect has been prohibited
+bool Function Potions_IsEffectProhibited(int value) global native
+; Inverts the current prohibition status of the given alchemic effect
+Function Potions_InvertEffectProhibited(int value) global native
+
 ; --------- Poisons ---------
 
 ; Returns whether the usage of poison is enabled
@@ -1063,6 +1163,11 @@ Function Poisons_SetUsePoisonChance(int value) global native
 int Function Poisons_GetDosage() global native
 ; Sets the base dosage applied to all poisons
 Function Poisons_SetDosage(int value) global native
+
+; Returns whether the given AlchemicEffect has been prohibited
+bool Function Poisons_IsEffectProhibited(int value) global native
+; Inverts the current prohibition status of the given alchemic effect
+Function Poisons_InvertEffectProhibited(int value) global native
 
 ; --------- Fortification Potions ---------
 
@@ -1117,6 +1222,11 @@ Function Food_SetDisableFollowers(bool disabled) global native
 bool Function Food_GetDontUseWithWeaponsSheathed() global native
 ; Sets whether food should not be used while weapons are sheathed
 Function Food_SetDontUseWithWeaponsSheathed(bool disabled) global native
+
+; Returns whether the given AlchemicEffect has been prohibited
+bool Function Food_IsEffectProhibited(int value) global native
+; Inverts the current prohibition status of the given alchemic effect
+Function Food_InvertEffectProhibited(int value) global native
 
 ; --------- Player ---------
 
@@ -1232,10 +1342,15 @@ float Function Distr_GetStyleScalingPrimary() global native
 ; Sets the scale of the distribution probability for items matching the combat styles primary combat modifiers
 Function Distr_SetStyleScalingPrimary(float value) global native
 
-; Retruns the scale of the distribution probability for items matching the combat styles secondary combat modifiers
+; Returns the scale of the distribution probability for items matching the combat styles secondary combat modifiers
 float Function Distr_GetStyleScalingSecondary() global native
 ; Sets the scale of the distribution probability for items matching the combat styles secondary combat modifiers
 Function Distr_SetStyleScalingSecondary(float value) global native
+
+; Returns the general probability scaling
+float Function Distr_GetProbabilityScaling() global native
+; Sets the general probability scaling
+Function Distr_SetProbabilityScaling(float value) global native
 
 ; --------- Removal ---------
 

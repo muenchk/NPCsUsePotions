@@ -56,9 +56,10 @@ public:
 	/// </summary>
 	enum class UpdateFlag
 	{
-		kNone = 1,
-		kMagnitude = 2,
-		kCompatibility = 4,
+		kNone = 0x1,
+		kMagnitude = 0x1 << 1,
+		kCompatibility = 0x1 << 2,
+		kProhibitedEffects = 0x1 << 3,
 	};
 
 	static inline ChangeFlag _modifiedSettings = ChangeFlag::kNone;
@@ -119,6 +120,11 @@ public:
 		/// [Settings] period for actor handling
 		/// </summary>
 		static inline long _cycletime = 1000;
+
+		/// <summary>
+		/// [Settings] switches NPC registration from direct registration, to registration on next cycle
+		/// </summary>
+		static inline bool _alternateNPCRegistration = false;
 	};
 
 	/// <summary>
@@ -190,6 +196,11 @@ public:
 		/// [Settings] Chance that a NPC will use a health, magicka, or stamina potions if they can
 		/// </summary>
 		static inline int _UsePotionChance = 100;  // Chance that a potion will be used when appropiate
+
+		/// <summary>
+		/// [Settings] effects that are forbidden from being distributed
+		/// </summary>
+		static inline AlchemicEffect _prohibitedEffects;
 	};
 
 	/// <summary>
@@ -235,6 +246,11 @@ public:
 		/// [Settings] Base dosage all poisons should have
 		/// </summary>
 		static inline int _Dosage = _BaseDosage;  //  dosage applied to poisons
+
+		/// <summary>
+		/// [Settings] effects that are forbidden from being distributed
+		/// </summary>
+		static inline AlchemicEffect _prohibitedEffects;
 	};
 
 	/// <summary>
@@ -290,6 +306,11 @@ public:
 		/// [Settings] Disallows the usage of fortify potions, while the weapons are sheathed
 		/// </summary>
 		static inline bool _DontUseWithWeaponsSheathed = false;
+
+		/// <summary>
+		/// [Settings] effects that are forbidden from being distributed
+		/// </summary>
+		static inline AlchemicEffect _prohibitedEffects;
 	};
 
 	/// <summary>
@@ -401,6 +422,11 @@ public:
 		/// [Settings] Scaling factor for Alchemy Effects matching secondary combat style of an NPC
 		/// </summary>
 		static inline float _StyleScalingSecondary = 1.10f;  // base scaling factor applied to potions etc. that are considered useful for the secondary combattype of an actor
+
+		/// <summary>
+		/// [Settings] general probability scaling
+		/// </summary>
+		static inline float _ProbabilityScaling = 1.0f;
 	};
 
 	/// <summary>

@@ -62,6 +62,16 @@ namespace Papyrus
 		/// <param name="milliseconds">the maximum duration that is accounted for for restoration potions</param>
 		void Set_MaxFortifyDuration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int milliseconds);
 
+		/// <summary>
+		/// Returns the name of the given alchemic effects base value
+		/// </summary>
+		/// <param name="a_vm"></param>
+		/// <param name="a_stackID"></param>
+		/// <param name=""></param>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		RE::BSFixedString ToStringAlchemicEffect(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
+
 		// System
 		namespace System
 		{
@@ -368,6 +378,25 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name="value"></param>
 			void Set_UsePotionChance(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
+
+			/// <summary>
+			/// Returns whether the given AlchemicEffect has been prohibited
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="value"></param>
+			/// <returns></returns>
+			bool IsEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
+
+			/// <summary>
+			/// Inverts the current prohibition status of the given alchemic effect
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="value"></param>
+			void InvertEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
 		}
 
 		namespace Poisons
@@ -515,6 +544,25 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name="value"></param>
 			void Set_Dosage(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
+
+			/// <summary>
+			/// Returns whether the given AlchemicEffect has been prohibited
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="value"></param>
+			/// <returns></returns>
+			bool IsEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
+
+			/// <summary>
+			/// Inverts the current prohibition status of the given alchemic effect
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="value"></param>
+			void InvertEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
 		}
 
 		namespace FortifyPotions
@@ -701,6 +749,25 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name="disabled"></param>
 			void Set_DontUseWithWeaponsSheathed(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled);
+
+			/// <summary>
+			/// Returns whether the given AlchemicEffect has been prohibited
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="value"></param>
+			/// <returns></returns>
+			bool IsEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
+
+			/// <summary>
+			/// Inverts the current prohibition status of the given alchemic effect
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="value"></param>
+			void InvertEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value);
 		}
 
 		namespace Player
@@ -1121,6 +1188,24 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name="value"></param>
 			void Set_StyleScalingSecondary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value);
+
+			/// <summary>
+			/// Returns the general probability scaling
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <returns></returns>
+			float Get_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			/// <summary>
+			/// Sets the general probability scaling
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name=""></param>
+			void Set_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value);
 		}
 
 		namespace Removal

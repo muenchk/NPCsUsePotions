@@ -3,6 +3,7 @@
 #include "Papyrus/NPCsUsePotions_Settings.h"
 #include "Settings.h"
 #include "Statistics.h"
+#include "Utility.h"
 
 
 namespace Papyrus
@@ -18,6 +19,7 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("SetMaxDuration"), script, Set_MaxDuration);
 			a_vm->RegisterFunction(std::string("GetMaxFortifyDuration"), script, Get_MaxFortifyDuration);
 			a_vm->RegisterFunction(std::string("SetMaxFortifyDuration"), script, Set_MaxFortifyDuration);
+			a_vm->RegisterFunction(std::string("ToStringAlchemicEffect"), script, ToStringAlchemicEffect);
 			// system
 			a_vm->RegisterFunction(std::string("GetCycleTime"), script, System::Get_CycleTime);
 			a_vm->RegisterFunction(std::string("SetCycleTime"), script, System::Set_CycleTime);
@@ -54,6 +56,8 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Potions_SetStaminaThreshold"), script, Potions::Set_StaminaThreshold);
 			a_vm->RegisterFunction(std::string("Potions_GetUsePotionChance"), script, Potions::Get_UsePotionChance);
 			a_vm->RegisterFunction(std::string("Potions_SetUsePotionChance"), script, Potions::Set_UsePotionChance);
+			a_vm->RegisterFunction(std::string("Potions_IsEffectProhibited"), script, Potions::IsEffectProhibited);
+			a_vm->RegisterFunction(std::string("Potions_InvertEffectProhibited"), script, Potions::InvertEffectProhibited);
 			// poisons
 			a_vm->RegisterFunction(std::string("Poisons_GetEnablePoisons"), script, Poisons::Get_EnablePoisons);
 			a_vm->RegisterFunction(std::string("Poisons_SetEnablePoison"), script, Poisons::Set_EnablePoisons);
@@ -71,6 +75,8 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Poisons_SetUsePoisonChance"), script, Poisons::Set_UsePoisonChance);
 			a_vm->RegisterFunction(std::string("Poisons_GetDosage"), script, Poisons::Get_Dosage);
 			a_vm->RegisterFunction(std::string("Poisons_SetDosage"), script, Poisons::Set_Dosage);
+			a_vm->RegisterFunction(std::string("Poisons_IsEffectProhibited"), script, Poisons::IsEffectProhibited);
+			a_vm->RegisterFunction(std::string("Poisons_InvertEffectProhibited"), script, Poisons::InvertEffectProhibited);
 			// fortify potions
 			a_vm->RegisterFunction(std::string("Fortify_GetEnableFortifyPotions"), script, FortifyPotions::Get_EnableFortifyPotions);
 			a_vm->RegisterFunction(std::string("Fortify_SetEnableFortifyPotions"), script, FortifyPotions::Set_EnableFortifyPotions);
@@ -93,6 +99,8 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Food_SetDisableFollowers"), script, Food::Set_DisableFollowers);
 			a_vm->RegisterFunction(std::string("Food_GetDontUseWithWeaponsSheathed"), script, Food::Get_DontUseWithWeaponsSheathed);
 			a_vm->RegisterFunction(std::string("Food_SetDontUseWithWeaponsSheathed"), script, Food::Set_DontUseWithWeaponsSheathed);
+			a_vm->RegisterFunction(std::string("Food_IsEffectProhibited"), script, Food::IsEffectProhibited);
+			a_vm->RegisterFunction(std::string("Food_InvertEffectProhibited"), script, Food::InvertEffectProhibited);
 			// player
 			a_vm->RegisterFunction(std::string("Player_GetPlayerPotions"), script, Player::Get_PlayerPotions);
 			a_vm->RegisterFunction(std::string("Player_SetPlayerPotions"), script, Player::Set_PlayerPotions);
@@ -141,6 +149,8 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Distr_SetStyleScalingPrimary"), script, Distribution::Set_StyleScalingPrimary);
 			a_vm->RegisterFunction(std::string("Distr_GetStyleScalingSecondary"), script, Distribution::Get_StyleScalingSecondary);
 			a_vm->RegisterFunction(std::string("Distr_SetStyleScalingSecondary"), script, Distribution::Set_StyleScalingSecondary);
+			a_vm->RegisterFunction(std::string("Distr_GetProbabilityScaling"), script, Distribution::Get_ProbabilityScaling);
+			a_vm->RegisterFunction(std::string("Distr_SetProbabilityScaling"), script, Distribution::Set_ProbabilityScaling);
 			// removal
 			a_vm->RegisterFunction(std::string("Removal_GetRemoveItemsOnDeath"), script, Removal::Get_RemoveItemsOnDeath);
 			a_vm->RegisterFunction(std::string("Removal_SetRemoveItemsOnDeath"), script, Removal::Set_RemoveItemsOnDeath);
@@ -196,6 +206,67 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Stats_ActorsHandled"), script, Papyrus::SettingsAPI::Statistics::Get_ActorsHandled);
 		}
 
+		bool IsEffectProhibited(Settings::ItemType type, int value)
+		{
+			switch (type)
+			{
+			case Settings::ItemType::kPotion:
+			case Settings::ItemType::kFortifyPotion:
+				return (AlchemicEffect::GetFromBaseValue(value) & Settings::Potions::_prohibitedEffects).IsValid();
+			case Settings::ItemType::kPoison:
+				return (AlchemicEffect::GetFromBaseValue(value) & Settings::Poisons::_prohibitedEffects).IsValid();
+			case Settings::ItemType::kFood:
+				return (AlchemicEffect::GetFromBaseValue(value) & Settings::Food::_prohibitedEffects).IsValid();
+			}
+			return false;
+		}
+
+		void InvertEffectProhibited(Settings::ItemType type, int value)
+		{
+			LOG_4("begin {}", value);
+			switch (type) {
+			case Settings::ItemType::kPotion:
+			case Settings::ItemType::kFortifyPotion:
+				{
+					LOG_4("potion");
+					if (!Settings::Potions::_prohibitedEffects.HasEffect(value)) {
+						Settings::Potions::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Added effect");
+					} else {
+						Settings::Potions::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Removed Effect");
+					}
+				}
+				break;
+			case Settings::ItemType::kPoison:
+				{
+					LOG_4("poison");
+					if (!Settings::Poisons::_prohibitedEffects.HasEffect(value)) {
+						Settings::Poisons::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Added effect");
+					} else {
+						Settings::Poisons::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Removed Effect");
+					}
+				}
+				break;
+			case Settings::ItemType::kFood:
+				{
+					LOG_4("food");
+					if (!Settings::Food::_prohibitedEffects.HasEffect(value)) {
+						Settings::Food::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Added effect");
+					} else {
+						Settings::Food::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Removed Effect");
+					}
+				}
+				break;
+			}
+			Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kProhibitedEffects;
+		}
+
 		int Get_MaxDuration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 		{
 			return Settings::_MaxDuration;
@@ -220,6 +291,11 @@ namespace Papyrus
 				milliseconds = 0;
 			Settings::_MaxFortifyDuration = milliseconds;
 			Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+		}
+
+		RE::BSFixedString ToStringAlchemicEffect(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
+		{
+			return Utility::ToString(AlchemicEffect::GetFromBaseValue(value));
 		}
 
 		namespace System
@@ -429,6 +505,16 @@ namespace Papyrus
 				Settings::Potions::_UsePotionChance = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
+
+			bool IsEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
+			{
+				return SettingsAPI::IsEffectProhibited(Settings::ItemType::kPotion, value);
+			}
+
+			void InvertEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
+			{
+				SettingsAPI::InvertEffectProhibited(Settings::ItemType::kPotion, value);
+			}
 		}
 
 		namespace Poisons
@@ -533,6 +619,16 @@ namespace Papyrus
 					value = 1000;
 				Settings::Poisons::_Dosage = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			bool IsEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
+			{
+				return SettingsAPI::IsEffectProhibited(Settings::ItemType::kPoison, value);
+			}
+
+			void InvertEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
+			{
+				SettingsAPI::InvertEffectProhibited(Settings::ItemType::kPoison, value);
 			}
 		}
 
@@ -657,6 +753,16 @@ namespace Papyrus
 			{
 				Settings::Food::_DontUseWithWeaponsSheathed = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			bool IsEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
+			{
+				return SettingsAPI::IsEffectProhibited(Settings::ItemType::kFood, value);
+			}
+
+			void InvertEffectProhibited(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
+			{
+				SettingsAPI::InvertEffectProhibited(Settings::ItemType::kFood, value);
 			}
 		}
 
@@ -954,6 +1060,17 @@ namespace Papyrus
 				if (value > 20.0f)
 					value = 20.0f;
 				Settings::Distr::_StyleScalingSecondary = value;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			float Get_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::Distr::_ProbabilityScaling;
+			}
+
+			void Set_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
+			{
+				Settings::Distr::_ProbabilityScaling = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}

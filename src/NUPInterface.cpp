@@ -21,7 +21,7 @@ namespace NPCsUsePotions
 
 	void NUPInterface::EnableCureDiseasePotionUsage(bool enable)
 	{
-		logger::info("[NUPInterface] [EnableCureDiseasePotionUsage]");
+		loginfo("[NUPInterface] [EnableCureDiseasePotionUsage]");
 		Settings::Internal::_useCureDiseaseEffect = enable;
 	}
 

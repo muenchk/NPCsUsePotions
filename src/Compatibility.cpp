@@ -22,10 +22,10 @@ void Compatibility::Load()
 
 	// apothecary
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Apothecary); index != 0x1) {
-		LOG_1("{}[Compatibility] Found plugin Apothecary.esp.");
+		LOG_1("Found plugin Apothecary.esp.");
 		Apot_SH_AlcoholDrinkKeyword = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01F3DD73);
 
-		LOG1_1("{}[Compatibility] [Load] [Apot] {}", Utility::PrintForm(Apot_SH_AlcoholDrinkKeyword));
+		LOG_1("[Apot] {}", Utility::PrintForm(Apot_SH_AlcoholDrinkKeyword));
 
 		if (Apot_SH_AlcoholDrinkKeyword)
 			_loadedApothecary = true;
@@ -33,9 +33,9 @@ void Compatibility::Load()
 
 	// caco
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(CACO); index != 0x1) {
-		LOG_1("{}[Compatibility] Found plugin Complete Alchemy & Cooking Overhaul.esp");
+		LOG_1("Found plugin Complete Alchemy & Cooking Overhaul.esp");
 		CACO_VendorItemDrinkAlcohol = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01AF101A);
-		LOG1_1("{}[Compatibility] [Load] [CACO] {}", Utility::PrintForm(CACO_VendorItemDrinkAlcohol));
+		LOG_1("[CACO] {}", Utility::PrintForm(CACO_VendorItemDrinkAlcohol));
 		if (CACO_VendorItemDrinkAlcohol) {
 			_loadedCACO = true;
 		}
@@ -46,11 +46,11 @@ void Compatibility::Load()
 	// search for AnimatedPoisons.esp
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPoisons); index != 0x1) {
 		AnPois_Version = 32;
-		LOG_1("{}[Compatibility] Found plugin AnimatedPoisons.esp.");
+		LOG_1("Found plugin AnimatedPoisons.esp.");
 	}
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPoisons_5); index != 0x1) {
 		AnPois_Version = 50;
-		LOG_1("{}[Compatibility] Found plugin Animated Poisons.esp.");
+		LOG_1("Found plugin Animated Poisons.esp.");
 	}
 
 	switch (AnPois_Version) {
@@ -100,41 +100,41 @@ void Compatibility::Load()
 
 			AnPois_PoisonSound = datahandler->LookupForm<RE::BGSSoundDescriptorForm>(0x806, "AnimatedPoisons.esp");
 
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DaedricArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DraugrArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_EbonyArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ElvenArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FalmerArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ForswornArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_GlassArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_IronArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_OrcishArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SteelArrow));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DaedricArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DraugrArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_EbonyArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ElvenArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FalmerArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ForswornArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_GlassArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_IronArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_OrcishArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SteelArrowAOSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SlowEffectSP));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_FakeItem));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleStopSprint));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleForceThirdPerson));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_ToggleForceCloseMenu));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSlowEffect));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSound));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PlayerStaggerToggle));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PlayerStopAnimation));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_SlowEffectItem));
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_PoisonSound));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_DaedricArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_DraugrArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_EbonyArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_ElvenArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_FalmerArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_ForswornArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_GlassArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_IronArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_OrcishArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_SteelArrow));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_DaedricArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_DraugrArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_DwarvenArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_EbonyArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_ElvenArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_FalmerArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_ForswornArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_GlassArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_IronArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_NordHeroArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_OrcishArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_SteelArrowAOSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_SlowEffectSP));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_FakeItem));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_ToggleStopSprint));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_ToggleForceThirdPerson));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_ToggleForceCloseMenu));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSlowEffect));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_TogglePlayerSound));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_PlayerStaggerToggle));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_PlayerStopAnimation));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_SlowEffectItem));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_PoisonSound));
 
 			if (AnPois_DaedricArrow &&
 				AnPois_DraugrArrow &&
@@ -182,19 +182,19 @@ void Compatibility::Load()
 				_loadedAnimatedPoisons = true;
 				if (Settings::Compatibility::AnimatedPoisons::_Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
-					LOG_1("{}[Compatibility] [Load] Enabled Animated Poisons.");
+					LOG_1("Enabled Animated Poisons.");
 				}
 			}
 		}
 	case 50:
 		{
 			AnPois_AnimatedPoisonsMCM = datahandler->LookupForm<RE::TESQuest>(0xE52, AnimatedPoisons_5);
-			LOG1_1("{}[Compatibility] [Load] [AnPois] {}", Utility::PrintForm(AnPois_AnimatedPoisonsMCM));
+			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_AnimatedPoisonsMCM));
 			if (AnPois_AnimatedPoisonsMCM) {
 				_loadedAnimatedPoisons = true;
 				if (Settings::Compatibility::AnimatedPoisons::_Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons 5 compatibility", 0, false);
-					LOG_1("{}[Compatibility] [Load] Enabled Animated Poisons.");
+					LOG_1("Enabled Animated Poisons.");
 				}
 			}
 		}
@@ -205,28 +205,28 @@ void Compatibility::Load()
 	// search for AnimatedPotions.esp
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPotions_4_4); index != 0x1) {
 		AnPoti_Version = 44;
-		loginfo("[SETTINGS] Found plugin Animated Potions.esp and activated compatibility mode");
+		loginfo("Found plugin Animated Potions.esp and activated compatibility mode");
 	}
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPotions_4_3); index != 0x1) {
 		AnPoti_Version = 43;
-		loginfo("[SETTINGS] Found plugin AnimatedPotions.esp and activated compatibility mode");
+		loginfo("Found plugin AnimatedPotions.esp and activated compatibility mode");
 	}
 
 	switch (AnPoti_Version) {
 	case 44:  // Version 4.4
 		AnPoti_TogglePlayerPotionAnimation = datahandler->LookupForm<RE::TESGlobal>(0x8C8, AnimatedPotions_4_4);
-		LOG1_1("{}[Compatibility] [Load] [AnPoti] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
+		LOG_1("[AnPoti] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
 		break;
 	case 43:  // version 4.3
 		AnPoti_TogglePlayerPotionAnimation = datahandler->LookupForm<RE::TESGlobal>(0x8C8, AnimatedPotions_4_3);
-		LOG1_1("{}[Compatibility] [Load] [AnPoti] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
+		LOG_1("[AnPoti] {}", Utility::PrintForm(AnPoti_TogglePlayerPotionAnimation));
 	}
 
 	if (AnPoti_TogglePlayerPotionAnimation) {
 		_loadedAnimatedPotions = true;
 		if (Settings::Compatibility::AnimatedPotions::_Enable) {
 			RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
-			LOG_1("{}[Compatibility] [Load] Enabled Animated Potions.");
+			LOG_1("Enabled Animated Potions.");
 		}
 	}
 
@@ -240,7 +240,7 @@ void Compatibility::Load()
 	if (Sac_MockeryOfLife != nullptr) {
 		_loadedSacrosanct = true;
 		RE::DebugNotification("NPCsUsePotions enabled Sacrosanct compatibility", 0, false);
-		LOG_1("{}[Compatibility] [Load] Enabled Sacrosanct.");
+		LOG_1("Enabled Sacrosanct.");
 	}
 
 	// Ultimate Animated Potions
@@ -257,7 +257,7 @@ void Compatibility::Load()
 	if (_loadedUltimatePotions)
 	{
 		RE::DebugNotification("NPCsUsePotions found UAPNG", 0, false);
-		LOG_1("{}[Compatibility] [Load] Found Ultimate Animted Potions.");
+		LOG_1("Found Ultimate Animted Potions.");
 	}
 
 	// global
@@ -282,7 +282,7 @@ void Compatibility::Load()
 		_globalCooldownPotions = std::max(_globalCooldownPotions, Ult_GlobalCooldown);
 	}
 
-	LOG1_1("{}[Compatibility] [Load] GlobalCooldown set to {}ms", std::to_string(_globalCooldown));
+	LOG_1("GlobalCooldown set to {}ms", std::to_string(_globalCooldown));
 
 	sem.release();
 }
@@ -528,24 +528,24 @@ void SaveGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 
 void LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 {
-	LOG_1("{}[Compatibility] [LoadGameCallback]");
+	LOG_1("");
 	Compatibility::GetSingleton()->Load();
 }
 
 void RevertGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 {
-	LOG_1("{}[Compatibility] [RevertGameCallback]");
+	LOG_1("");
 	Compatibility::GetSingleton()->Clear();
 }
 
 void Compatibility::Register()
 {
 	Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000100, LoadGameCallback);
-	LOG1_1("{}Registered {}", typeid(LoadGameCallback).name());
+	LOG_1("Registered {}", typeid(LoadGameCallback).name());
 	Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000200, RevertGameCallback);
-	LOG1_1("{}Registered {}", typeid(RevertGameCallback).name());
+	LOG_1("Registered {}", typeid(RevertGameCallback).name());
 	Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000300, SaveGameCallback);
-	LOG1_1("{}Registered {}", typeid(SaveGameCallback).name());
+	LOG_1("Registered {}", typeid(SaveGameCallback).name());
 }
 
 bool Compatibility::CannotRestoreHealth(std::shared_ptr<ActorInfo> acinfo)

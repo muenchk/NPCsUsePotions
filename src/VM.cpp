@@ -7,7 +7,7 @@ namespace ScriptObject
 		ScriptObjectPtr object;
 
 		if (!a_form) {
-			logger::warn("Cannot retrieve script object from a None form."sv);
+			logwarn("Cannot retrieve script object from a None form."sv);
 
 			return object;
 		}
@@ -26,7 +26,7 @@ namespace ScriptObject
 			vm->FindBoundObject(handle, a_scriptName.c_str(), object);
 
 			if (!object) {
-				LOG2_1("{}[ScriptObject] [FromForm] Script {} is not attached to form. {}"sv, a_scriptName, Utility::GetHex(a_form->GetFormID()));
+				LOG_1("Script {} is not attached to form. {}"sv, a_scriptName, Utility::GetHex(a_form->GetFormID()));
 			}
 		} else {
 			// Script name wasn't specified, so look for one in the internal structure
@@ -37,10 +37,10 @@ namespace ScriptObject
 				if (size == 1) {
 					object = ScriptObjectPtr(scriptArray[0].get());
 				} else if (size == 0) {
-					LOG1_1("{}[ScriptObject] [FromForm] No scripts attached to. {}"sv, Utility::GetHex(a_form->GetFormID()));
+					LOG_1("No scripts attached to. {}"sv, Utility::GetHex(a_form->GetFormID()));
 					return nullptr;
 				} else {
-					LOG1_1("{}[ScriptObject] [FromForm] Multiple scripts are attached to. {}"sv, Utility::GetHex(a_form->GetFormID()));
+					LOG_1("Multiple scripts are attached to. {}"sv, Utility::GetHex(a_form->GetFormID()));
 					return nullptr;
 				}
 			}
