@@ -1,221 +1,204 @@
 Scriptname AnimatedPotionsScript extends ReferenceAlias
 
+;Changelog:
+; 5.0.0
+; - Cleaned code for better readability and using better practices for more stable code.
+; - Force close menu removed, because its implementation may interfere with other mods using the same function.
+; - refactored some code to use local variables instead of always getting the value again and again by calling the function each time.
+; this should free up computing time.
+; - Fixed remote cast not casting Actor as ObjectReference, which lead to stack errors.
+; - Fixed debug.sendanimationevent not casting Actor as ObjectReference. (This hasn't printed any errors but is good to change.)
+; - Implemented some checks to functions that prevent getting stuck in a loop etc.
+; - Added ReverBackToFPS that will revert camera back to first person if person was in 1st person before applying poison and ToggleForceThirdPerson was on.
+; - Removed left hand item handling. It was pretty janky, so I'm currenty researching for skse plugin alternative for this. This also removes the use of temp ite.
+; - Fixed nesting in main function by swapping it with a function call so I can use returns. ( Can't return in events )
+; - Fixed ToggleSound not being checked, which lead to sound always firing.
+; - Fixed sprint stop not checking if sprinting was already prevented, so that we don't interfere with some other mechanic that implemented that.
+; - Added 'as ObjectReference' conversions to animation variable getters.
+; - Added GetAnimationVariablebool("bIsSynced ") == false to check whether target is not mounting a horse or trying to sit in/get off a chair
+; - Added wait for menu close function.
+; - Added potion splashing effect
+; - Added spawning empty bottles to the ground after potion use.
+; - Update PlaySound() function.
+
 Import po3_SKSEFunctions
 Import po3_Events_Alias
 
-Actor property PlayerRef auto
-Armor property FakeItem auto
 Sound property PotionSM auto
 Sound property FastPotionSM auto
+Sound property potionDropSound auto
 FormList property CorkFormList auto
 FormList property CorkHandFormList auto
 FormList property BlackListedPotions auto
 GlobalVariable property ToggleStopSprint auto
 GlobalVariable property ToggleForceThirdPerson auto
-GlobalVariable property ToggleForceCloseMenu auto
 GlobalVariable property TogglePlayerSlowEffect auto
 GlobalVariable property TogglePlayerStagger auto
 GlobalVariable property TogglePlayerStopAnimation auto
 GlobalVariable property ToggleDisableDuringCombat auto
 GlobalVariable property ToggleWaitForMenuClose auto
-GlobalVariable property ToggleFallbackFunction auto
-GlobalVariable property ToggleSheathingDrinking auto
 GlobalVariable property ToggleRequireKeyword auto
+GlobalVariable property toggleSpawnEmptyBottles auto
+GlobalVariable property togglePotionSplash auto
+GlobalVariable property ToggleReverBackToFPS auto
+GlobalVariable property TogglePlayerSound auto
 Spell property SlowEffectSP auto
-form LeftItem
-Spell LeftSpell
-bool Busy
-bool LeftHand
-int PotionsUsed
-int InstanceID
-string AnimationEventstring
-
-Event OnInit()
-    if PlayerRef.GetItemCount(FakeItem) == 0
-        PlayerRef.AddItem(FakeItem, 1, true)
-    endif
-EndEvent
+Spell property FastPotionSplashSP auto
+Spell property SlowPotionSplashSP auto
+bool bBusy
+int iPotionsUsed
+int iPotionSoundInstance
+Actor akPlayer
+MiscObject property emptybottle auto
 
 
 Event OnPLayerLoadGame()
-    if PlayerRef.GetItemCount(FakeItem) == 0
-        PlayerRef.AddItem(FakeItem, 1, true)
-    endif
-    Busy = false
-    LeftItem = none
-    LeftSpell = none
-    PotionsUsed = Game.QueryStat("Potions Used")
+    bBusy = false
+    iPotionsUsed = Game.QueryStat("Potions Used")
     RegisterForModEvent("NPCsUsePotions_AnimatedPotionsEvent", "NPCSUsePotions_ItemRemoved")
     RegisterForModEvent("NPCsUsePotions_AnimatedPotionsHitEvent", "NPCsUsePotions_PotionsOnHit")
 EndEvent
 
 Event NPCSUsePotions_ItemRemoved(string eventName, string strArg, float numArg, Form sender)
+    if (akPlayer == None)
+        akPlayer = Game.GetPlayer()
+    endif
     if (eventName == "NPCsUsePotions_AnimatedPotionsEvent" && strArg != "" && sender != None)
-        Actor act = sender as Actor
-        if (act && act != PlayerRef)
+        Actor akTarget = sender as Actor
+        if (akTarget && akTarget != akPlayer)
             form akBaseItem = Game.GetForm(strArg as Int)
 
             if BlackListedPotions.Find(akBaseItem) != -1
-                NPCsUsePotions_Potions.AnimatedPotions_Abort(act)
+                NPCsUsePotions_Potions.AnimatedPotions_Abort(akTarget)
                 return
             endif
-            if TargetConditionCheck(act) == false
-                NPCsUsePotions_Potions.AnimatedPotions_Abort(act)
+            if ToggleDisableDuringCombat.GetValueInt() == 1 && akTarget.IsInCombat() == true
+                NPCsUsePotions_Potions.AnimatedPotions_Abort(akTarget)
                 return
             endif
-            if ToggleDisableDuringCombat.GetValueInt() == 1 && act.IsInCombat() == true
-                NPCsUsePotions_Potions.AnimatedPotions_Abort(act)
+            if TargetConditionCheck(akTarget, akBaseItem) == false
+                NPCsUsePotions_Potions.AnimatedPotions_Abort(akTarget)
                 return
             endif
             if akBaseItem.HasKeywordString("vendoritempotion") == false && ToggleRequireKeyword.GetValueInt() == 1
-                NPCsUsePotions_Potions.AnimatedPotions_Abort(act)
+                NPCsUsePotions_Potions.AnimatedPotions_Abort(akTarget)
                 return
             endif
 
-            string Animationstring = ""
-
-            Animationstring = GetFormEditorID(akBaseItem)
-            if StringUtil.Find(Animationstring, "mag_", 0) >= 0
-                Animationstring = StringUtil.Substring(Animationstring, 4)
-            endif
-            if StringUtil.Find(Animationstring, "CACO_", 0) >= 0
-                Animationstring = StringUtil.Substring(Animationstring, 5)
-            endif
-            if StringUtil.Find(Animationstring, "_KRY", 0) >= 0
-                int Lenght = StringUtil.GetLength(Animationstring)
-                int Cut_Length = Lenght - 4
-                Animationstring = StringUtil.Substring(Animationstring, 0, Cut_Length)
-            endif
-            if ToggleFallbackFunction.GetValueInt() == 1
-                if JsonUtil.StringListHas("potionlist", "potions", Animationstring) == false
-                    Animationstring = "restorehealth01"
-                endif
-            endif
-            if StringUtil.Find(Animationstring, "FortifySkill", 0) >= 0 \
-            || StringUtil.Find(Animationstring, "TGPotion", 0) >= 0
-                Animationstring = "fortifyskill01"
+            if WaitForMenuClose(60.0) == false; Wait for menu to be closed. Returning if we exceed the 60 second time limit that prevents getting stuck here.
+                NPCsUsePotions_Potions.AnimatedPotions_Abort(akTarget)
+                return
             endif
 
-            if StringUtil.Find(Animationstring, "MS12", 0) >= 0
-                Animationstring = "ms12whitephialrepaired"
+            bool bDrawSuccess = false
+            bool bSheatheSuccess = false
+            bool bFastDrinking = false
+
+            if akTarget.IsInCombat() == true || akTarget.IsWeaponDrawn() == true
+                bFastDrinking = true
             endif
 
-            if AnimationString == ""
-                AnimationString = "restorehealth01"
-            endif
-
-            act.SetAnimationVariablebool("bSprintOK", false)
-            ;ForceCloseMenu(act)
-            ;WaitForMenuClose()
-            ;StopSprinting(act)
-            Spell Lefts = None
-            Form Lefti = None
-            bool left = false
-            if act.GetEquippeditemType(0) == 9; Left hand magic spell
-                Lefts = act.GetEquippedSpell(0)
-                act.UnequipSpell(Lefts, 0)
-                left = true
-            elseif HasLefthandeditem(act) == true
-                Lefti = act.GetEquippedObject(0) as Form
-                act.Unequipitem(Lefti, false, true)
-                left = true
-            elseif act.GetEquippeditemType(0) == 7; Has Bow
-                if act.IsWeaponDrawn() == true
-                    act.SheatheWeapon()
-                    While act.GetAnimationVariablebool("IsUnEquipping") == true
-                        Utility.wait(0.1)
-                    endWhile
-                endif
-                left = false
+            if bFastDrinking == true
+                bDrawSuccess = DrawWeaponAndWait(akTarget,6)
             else
-                left = false
+                bSheatheSuccess = SheatheWeaponAndWait(akTarget,6)
             endif
-            bool slow = false
-            if TogglePlayerSlowEffect.GetValueint() == 1
-                SlowEffectSP.RemoteCast(act, none)
-                slow = true
-            else
-                slow = false
-            endif
-            RegisterForHitEventEx(self)
 
-            if act.IsInCombat() || act.IsWeaponDrawn() == true ; Plays fast potion drink if player is in combat or weapon drawn
-                if ToggleSheathingDrinking.GetValueInt() == 1
-                    if act.IsWeaponDrawn() == true
-                        act.SheatheWeapon()
-                        While act.GetAnimationVariablebool("IsUnEquipping") == true
-                            Utility.wait(0.1)
-                        endWhile
-                    endif
-                    ;SlowDrinking()
-                    NPCsUsePotions_Potions.AnimatedPotions_Callback(act)
-                    Debug.SendAnimationEvent(act, Animationstring)
-                    NPCsUsePotions_SlowPotionFunctions(act)
-                    if left == true
-                        if Lefti != none
-                            act.equipItemEx(Lefti, 2)
-                        elseif LeftSpell != none
-                            act.EquipSpell(Lefts, 0)
-                        endif
-                    endif
-                    if act.IsWeaponDrawn() == false
-                        act.DrawWeapon()
-                        While act.GetAnimationVariablebool("IsEquipping") == true
-                            Utility.wait(0.01)
-                        EndWhile
-                    endif
-                else
-                    ;FastDrinking()
-                    Animationstring = "Fast"+Animationstring
-                    NPCsUsePotions_Potions.AnimatedPotions_Callback(act)
-                    Debug.SendAnimationEvent(act, Animationstring)
-                    Utility.Wait(2.4)
-                    if Lefti != none
-                        act.equipitemEx(Lefti, 2)
-                    elseif LeftSpell != none
-                        act.EquipSpell(Lefts, 0)
-                    elseif HasTwoHandedMelee(act) == true
-                        act.SheatheWeapon()
-                        act.DrawWeapon()
-                    elseif act.GetEquippeditemType(0) == 7; Has bow
-                        act.DrawWeapon()
-                    elseif HasRightOneHandedMelee(act) == true
-                        act.equipitem(Fakeitem, false, true) ;Equip and unequip invisible shield to skip one handed redrawing
-                        Utility.wait(0.05)
-                        act.Unequipitem(Fakeitem, false, true)
-                    else ;precaution
-                        act.SheatheWeapon()
-                        act.DrawWeapon()
-                    endif
+            if bDrawSuccess == false && bSheatheSuccess == false; Failing to draw or sheathe in 6s fails the poison apply. For example target gets staggered or yeeted to Oblivion.
+                NPCsUsePotions_Potions.AnimatedPotions_Abort(akTarget)
+                return
+            endif
+
+            bool bSlowEffect = CastSlowEffectSP(akTarget); Running helper functions
+            bool bStopSprint = StopSprint(akTarget)
+
+            string AnimationEventstring
+            AnimationEventstring = GetFormEditorID(akBaseItem)
+            AnimationEventstring = ModPrefixRevert(AnimationEventstring)
+            AnimationEventstring = StringManipulation(AnimationEventstring)
+
+            string path = akBaseitem.GetWorldModelPath(); update empty bottle mesh
+            emptybottle.SetWorldModelPath(path)
+
+            if bFastDrinking == true
+                NPCsUsePotions_Potions.AnimatedPotions_Callback(aktarget)
+                Debug.SendAnimationEvent(akTarget as ObjectReference, "Fast"+AnimationEventstring)
+                if togglePotionSplash.GetValue() == 1
+                    FastPotionSplashSP.Cast(akTarget as ObjectReference, none)
                 endif
+                Utility.Wait(2.4)
             else
-                ;SlowDrinking()
-                NPCsUsePotions_Potions.AnimatedPotions_Callback(act)
-                Debug.SendAnimationEvent(act, Animationstring)
-                NPCsUsePotions_SlowPotionFunctions(act)
-                if left == true
-                    if Lefti != none
-                        act.equipItemEx(Lefti, 2)
-                    elseif LeftSpell != none
-                        act.EquipSpell(Lefts, 0)
-                    endif
+                NPCsUsePotions_Potions.AnimatedPotions_Callback(aktarget)
+                Debug.SendAnimationEvent(akTarget as ObjectReference, AnimationEventstring)
+                int CorkSpellIndex = 0
+                if StringUtil.Find(AnimationEventstring, "01", 0) >= 0
+                    CorkSpellIndex = 0
+                ElseIf StringUtil.Find(AnimationEventstring, "03", 0) >= 0
+                    CorkSpellIndex = 1
+                ElseIf StringUtil.Find(AnimationEventstring, "02", 0) >= 0
+                    CorkSpellIndex = 2
+                ElseIf StringUtil.Find(AnimationEventstring, "04", 0) >= 0
+                    CorkSpellIndex = 3
+                elseif StringUtil.Find(AnimationEventstring, "FortifySkill", 0) >= 0
+                    CorkSpellIndex = 4
+                elseif StringUtil.Find(AnimationEventstring, "blood", 0) >= 0
+                    CorkSpellIndex = 4
+                elseif StringUtil.Find(AnimationEventstring, "25", 0) >= 0 \
+                || StringUtil.Find(AnimationEventstring, "50", 0) >= 0 \
+                || StringUtil.Find(AnimationEventstring, "75", 0) >= 0
+                    CorkSpellIndex = 4
+                elseif StringUtil.Find(AnimationEventstring, "100", 0) >= 0
+                    CorkSpellIndex = 4
+                elseif StringUtil.Find(AnimationEventstring, "sleepingtreesap", 0) >= 0
+                    CorkSpellIndex = 4
+                elseif StringUtil.Find(AnimationEventstring, "ms12", 0) >= 0
+                    CorkSpellIndex = 4
                 endif
+                Spell CorkSpell = CorkFormList.GetAt(CorkSpellIndex) as Spell
+                Spell CorkHandSpell = CorkHandFormList.GetAt(CorkSpellIndex) as Spell
+                ;Cork in bottle
+                (CorkSpell).RemoteCast(akTarget as ObjectReference, none)
+                ;Cork from bottle to hand
+                Utility.Wait(0.56)
+                (CorkHandSpell).RemoteCast(akTarget as ObjectReference, none)
+                akTarget.DispelSpell(CorkSpell)
+                ;Cork from hand to bottle
+                if togglePotionSplash.GetValue() == 1
+                    SlowPotionSplashSP.Cast(akTarget as ObjectReference, none)
+                endif
+                Utility.Wait(2.26)
+                (CorkSpell).RemoteCast(akTarget as ObjectReference, none)
+                akTarget.DispelSpell(CorkHandSpell)
+                ;Bottle disappear with cork
+                Utility.Wait(0.52)
+                akTarget.DispelSpell(CorkSpell)
             endif
 
-            Lefti = act.GetEquippedWeapon(false)
-            Lefts = act.GetEquippedSpell(1)
-            if (Lefti)
-                act.UnequipItemEx(Lefti, 1)
-                act.EquipItemEx(Lefti, 1)
-            elseif (Lefts)
-                act.UnequipSpell(Lefts, 1)
-                act.EquipSpell(Lefts, 1)
+            if toggleSpawnEmptyBottles.GetValue() == 1 && bFastDrinking == true; Spawn empty bottle at calculated distance from target and play sound effect of bottle hitting the ground
+                float distance = 100.0
+                float zAngle = akTarget.GetAngleZ()
+                float markerX = distance * math.sin(zAngle+300)
+                float markerY = distance * math.cos(zAngle)
+                float markerZ = 15
+                ObjectReference bottleref = akTarget.PlaceAtMe(emptybottle as Form)
+                bottleref.MoveTo(akTarget, markerX, markerY, markerZ)
+                PlaySound(potionDropSound, akTarget)
             endif
 
-            NPCsUsePotions_Potions.AnimatedPotions_RestorePoison(act)
+            if toggleSpawnEmptyBottles.GetValue() == 1 && bFastDrinking == false
+                akTarget.AddItem(emptybottle as Form, 1)
+            endif
 
-            act.SetAnimationVariablebool("bSprintOK", true)
-            UnregisterForHitEventEx(self)
+            if bStopSprint == true; Allow sprinting again
+                (akTarget as ObjectReference).SetAnimationVariablebool("bSprintOK", true)
+            endif
+
+            if bDrawSuccess == true; if we were fast drinking, draw weapon
+                Form formItem = akTarget.GetEquippedObject(1); This is to fix the animation state getting stuck in non-drawn state while target thinks he's in drawn state
+                akTarget.UnequipItem(formItem, false, true)
+                akTarget.EquipItem(formItem, false, true)
+                NPCsUsePotions_Potions.AnimatedPotions_RestorePoison(akTarget)
+            endif
         endif
     endif
 EndEvent
@@ -225,380 +208,143 @@ Event NPCsUsePotions_PotionsOnHit(string eventName, string strArg, float numArg,
     if (act)
         if TogglePlayerStopAnimation.GetValueint() == 1
             NPCsUsePotions_Potions.AnimatedPotions_Abort(act)
-            Debug.SendAnimationEvent(act, "offsetstop")
-            Debug.SendAnimationEvent(act, "AnimObjectUnequip")
+            Debug.SendAnimationEvent(akPlayer as ObjectReference, "offsetstop")
+            Debug.SendAnimationEvent(akPlayer as ObjectReference, "AnimObjectUnequip")
         endif
         if TogglePlayerStagger.GetValueint() == 1
-            Debug.SendAnimationEvent(act, "StaggerStart")
+            Debug.SendAnimationEvent(act as ObjectReference, "StaggerStart")
         endif
     endif
 EndEvent
-
-; Timed cork art object spell casting. Cork spell is picked by AnimationEventString suffix or prefix.
-;Cork numbers:
-; 0 for lesser potion corks
-; 1 for extra potion corks
-; 2 for great potion corks
-; 3 for extreme potion corks
-; 4 for skill potion corks
-; 5 for blood potion corks
-; 6 for resist 50 corks
-; 7 for resist 100 corks
-; 8 for SleepingTreeSap cork
-; 9 for whitephial cork
-; Some potions are in different order, meaning extra is after great or vice versa, so this is not ideal.
-Function NPCsUsePotions_SlowPotionFunctions(Actor akTarget)
-    int CorkSpellIndex = 0
-    if StringUtil.Find(AnimationEventString, "01", 0) >= 0
-        CorkSpellIndex = 0
-    ElseIf StringUtil.Find(AnimationEventString, "03", 0) >= 0
-        CorkSpellIndex = 1
-    ElseIf StringUtil.Find(AnimationEventString, "02", 0) >= 0
-        CorkSpellIndex = 2
-    ElseIf StringUtil.Find(AnimationEventString, "04", 0) >= 0
-        CorkSpellIndex = 3
-    elseif StringUtil.Find(AnimationEventString, "FortifySkill", 0) >= 0
-        CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "blood", 0) >= 0
-        CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "25", 0) >= 0 \
-    || StringUtil.Find(AnimationEventString, "50", 0) >= 0 \
-    || StringUtil.Find(AnimationEventString, "75", 0) >= 0
-        CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "100", 0) >= 0
-        CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "sleepingtreesap", 0) >= 0
-        CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "ms12", 0) >= 0
-        CorkSpellIndex = 4
-    endif
-    Spell CorkSpell = CorkFormList.GetAt(CorkSpellIndex) as Spell
-    Spell CorkHandSpell = CorkHandFormList.GetAt(CorkSpellIndex) as Spell
-    ;Cork in bottle
-    (CorkSpell).RemoteCast(akTarget, none)
-    ;Cork from bottle to hand
-    Utility.Wait(0.56)
-    (CorkHandSpell).RemoteCast(akTarget, none)
-    akTarget.DispelSpell(CorkSpell)
-    ;Cork from hand to bottle
-    Utility.Wait(2.26)
-    (CorkSpell).RemoteCast(akTarget, none)
-    akTarget.DispelSpell(CorkHandSpell)
-    ;Bottle disappear with cork
-    Utility.Wait(0.52)
-    akTarget.DispelSpell(CorkSpell)
-endFunction
 
 Event OnItemRemoved(Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akDestContainer)
     int EventPotionCount = Game.QueryStat("Potions Used")
-    if EventPotionCount <= PotionsUsed
-        return
+    if EventPotionCount > iPotionsUsed
+        iPotionsUsed = EventPotionCount
+        akPlayer = Game.GetPlayer()
+        PotionDrinking(akBaseitem, akPlayer)
     endif
+EndEvent
 
-    PotionsUsed = EventPotionCount
-
+bool Function PotionDrinking(Form akBaseitem, Actor akTarget)
     if BlackListedPotions.Find(akBaseItem) != -1
-        return
+        return false
     endif
 
-    if TargetConditionCheck(PlayerRef) == false
-        return
+    if ToggleDisableDuringCombat.GetValueInt() == 1 && akTarget.IsInCombat() == true
+        return false
     endif
 
-    if ToggleDisableDuringCombat.GetValueInt() == 1 && PlayerRef.IsInCombat() == true
-        return
+    if TargetConditionCheck(akTarget, akBaseitem) == false
+        return false
     endif
 
     if akBaseItem.HasKeywordString("vendoritempotion") == false && ToggleRequireKeyword.GetValueInt() == 1
-        return
+        return false
     endif
 
-    AnimationEventstring = ""
-    InstanceID = 0
+    bBusy = true; Keeps track whether we are already drinking potion
 
-    AnimationEventstring = GetFormEditorID(akBaseItem)
-    ModPrefixRevert()
-    FallBackFunction()
-    StringManipulation()
+    if WaitForMenuClose(60) == false; if for some reason we exited the menu but the script didn't notice, we don't get stuck here.
+        bBusy = false
+        return false
+    endif
 
-    Busy = true
-    PlayerRef.SetAnimationVariablebool("bSprintOK", false)
-    ForceCloseMenu(PlayerRef)
-    WaitForMenuClose()
-    StopSprinting(PlayerRef)
-    bool FirstPerson = ForceThirdPerson(PlayerRef)
-    LeftHand = LeftHandCheck(PlayerRef)
-    CastSlowEffectSP(PlayerRef)
-    RegisterForHitEventEx(self)
+    bool bDrawSuccess = false
+    bool bSheatheSuccess = false
+    bool bFastDrinking = false
+    if akTarget.IsInCombat() == true || akTarget.IsWeaponDrawn() == true
+        bFastDrinking = true
+    endif
 
-    if PlayerRef.IsInCombat() || PlayerRef.IsWeaponDrawn() == true ; Plays fast potion drink if player is in combat or weapon drawn
-        if ToggleSheathingDrinking.GetValueInt() == 1
-            SheatheWeaponAndWait(PlayerRef)
-            SlowDrinking()
-            DrawWeaponAndWait(PlayerRef)
-        else
-            FastDrinking()
-        endif
+    if bFastDrinking == true
+        bDrawSuccess = DrawWeaponAndWait(akTarget,6)
     else
-        SlowDrinking()
+        bSheatheSuccess = SheatheWeaponAndWait(akTarget,6)
     endif
 
-    if FirstPerson == true
+    if bDrawSuccess == false && bSheatheSuccess == false; Failing to draw or sheathe in 6s fails the poison apply. For example target gets staggered or yeeted to Oblivion.
+        bBusy = false
+        return false
+    endif
+
+    bool bSlowEffect = CastSlowEffectSP(akTarget); Running helper functions
+    bool bStopSprint = StopSprint(akTarget)
+    bool bFirstPerson = ForceThirdPerson(akTarget)
+
+    string AnimationEventstring
+    AnimationEventstring = GetFormEditorID(akBaseItem)
+    AnimationEventstring = ModPrefixRevert(AnimationEventstring)
+    AnimationEventstring = StringManipulation(AnimationEventstring)
+
+    string path = akBaseitem.GetWorldModelPath(); update empty bottle mesh
+    emptybottle.SetWorldModelPath(path)
+
+    if bFastDrinking == true
+        FastDrinking(AnimationEventstring ,akTarget)
+    else
+        SlowDrinking(AnimationEventstring, akTarget)
+    endif
+
+
+
+    if toggleSpawnEmptyBottles.GetValue() == 1 && bFastDrinking == true; Spawn empty bottle at calculated distance from target and play sound effect of bottle hitting the ground
+        float distance = 100.0
+        float zAngle = akTarget.GetAngleZ()
+        float markerX = distance * math.sin(zAngle+300)
+        float markerY = distance * math.cos(zAngle)
+        float markerZ = 15
+        ObjectReference bottleref = akTarget.PlaceAtMe(emptybottle as Form)
+        bottleref.MoveTo(akTarget, markerX, markerY, markerZ)
+        PlaySound(potionDropSound, akTarget)
+    endif
+
+    if toggleSpawnEmptyBottles.GetValue() == 1 && bFastDrinking == false
+        akTarget.AddItem(emptybottle as Form, 1)
+    endif
+
+    if bFirstPerson == true && ToggleReverBackToFPS.GetValue() == 1; Bring target back to 1st person
         Game.ForceFirstPerson()
     endif
 
-    LeftItem = none
-    LeftSpell = none
-    Busy = false
-    LeftHand = false
-    PlayerRef.SetAnimationVariablebool("bSprintOK", true)
-    UnregisterForHitEventEx(self)
-EndEvent
-
-
-Event OnHitEx(ObjectReference akAggressor, Form akSource, Projectile akProjectile, bool abPowerAttack, bool abSneakAttack, bool abBashAttack, bool abHitBlocked)
-    if TogglePlayerStopAnimation.GetValueint() == 1
-        Sound.StopInstance(InstanceID)
-        Debug.SendAnimationEvent(PlayerRef, "offsetstop")
-        Debug.SendAnimationEvent(PlayerRef, "AnimObjectUnequip")
+    if bStopSprint == true; Allow sprinting again
+        (akTarget as ObjectReference).SetAnimationVariablebool("bSprintOK", true)
     endif
-    if TogglePlayerStagger.GetValueint() == 1
-        Debug.SendAnimationEvent(PlayerRef, "StaggerStart")
+
+    if bDrawSuccess == true; if we were fast drinking, draw weapon
+        Form formItem = akTarget.GetEquippedObject(1); This is to fix the animation state getting stuck in non-drawn state while target thinks he's in drawn state
+        akTarget.UnequipItem(formItem, false, true)
+        akTarget.EquipItem(formItem, false, true)
+    endif
+
+    bBusy = false
+    return true
+EndFunction
+
+
+Event OnHit(ObjectReference akAggressor, Form akSource, Projectile akProjectile, bool abPowerAttack, bool abSneakAttack, bool abBashAttack, bool abHitBlocked)
+    if bBusy == true
+        if TogglePlayerStopAnimation.GetValueint() == 1
+            Sound.StopInstance(iPotionSoundInstance)
+            Debug.SendAnimationEvent(akPlayer as ObjectReference, "offsetstop")
+            Debug.SendAnimationEvent(akPlayer as ObjectReference, "AnimObjectUnequip")
+        endif
+        if TogglePlayerStagger.GetValueint() == 1
+            Debug.SendAnimationEvent(akPlayer as ObjectReference, "StaggerStart")
+        endif
     endif
 EndEvent
 
 
 ;Functions
-Function FastDrinking()
-    InstanceID = FastPotionSM.Play(PlayerRef)
-    AnimationEventstring = "Fast"+AnimationEventstring
-    Debug.SendAnimationEvent(PlayerRef, AnimationEventstring)
+Function FastDrinking(string eventstring, Actor akTarget)
+    iPotionSoundInstance = PlaySound(FastPotionSM, akTarget)
+    Debug.SendAnimationEvent(akTarget as ObjectReference, "Fast"+eventstring)
+    if togglePotionSplash.GetValue() == 1
+        FastPotionSplashSP.Cast(akTarget as ObjectReference, none)
+    endif
     Utility.Wait(2.4)
-    EquipLeftItemAndWeapon(PlayerRef)
 EndFunction
-
-
-Function SlowDrinking()
-    InstanceID = PotionSM.Play(PlayerRef)
-    Debug.SendAnimationEvent(PlayerRef, AnimationEventstring)
-    SlowPotionFunctions(PlayerRef)
-    if LeftHand == true
-        EquipLeftHand(PlayerRef)
-    endif
-EndFunction
-
-
-Function StringManipulation()
-    if StringUtil.Find(AnimationEventString, "FortifySkill", 0) >= 0 \
-    || StringUtil.Find(AnimationEventString, "TGPotion", 0) >= 0
-        AnimationEventString = "fortifyskill01"
-    endif
-
-    if StringUtil.Find(AnimationEventString, "MS12", 0) >= 0
-        AnimationEventString = "ms12whitephialrepaired"
-    endif
-EndFunction
-
-
-Function ModPrefixRevert()
-    if StringUtil.Find(AnimationEventString, "mag_", 0) >= 0
-        AnimationEventString = StringUtil.Substring(AnimationEventString, 4)
-    endif
-    if StringUtil.Find(AnimationEventString, "CACO_", 0) >= 0
-        AnimationEventString = StringUtil.Substring(AnimationEventString, 5)
-    endif
-    if StringUtil.Find(AnimationEventString, "_KRY", 0) >= 0
-        int Lenght = StringUtil.GetLength(AnimationEventString)
-        int Cut_Length = Lenght - 4
-        AnimationEventString = StringUtil.Substring(AnimationEventString, 0, Cut_Length)
-    endif
-EndFunction
-
-
-Function FallBackFunction()
-    if ToggleFallbackFunction.GetValueInt() == 1
-        if JsonUtil.StringListHas("potionlist", "potions", AnimationEventstring) == false
-            AnimationEventstring = "restorehealth01"
-        endif
-    endif
-EndFunction
-
-
-Function WaitForMenuClose()
-    if ToggleWaitForMenuClose.GetValueInt() == 1
-        While Utility.IsInMenuMode()
-            Utility.wait(0.1)
-        endwhile
-    endif
-EndFunction
-
-
-bool Function CastSlowEffectSP(Actor akTarget)
-    if TogglePlayerSlowEffect.GetValueint() == 1
-        SlowEffectSP.RemoteCast(akTarget, none)
-        Return true
-    else
-        Return false
-    endif
-EndFunction
-
-
-bool Function ForceThirdPerson(Actor akTarget)
-    if akTarget.GetAnimationVariableint("i1stPerson") == 1 && ToggleForceThirdPerson.GetValueint() == 1
-        Game.ForceThirdPerson()
-        Return true
-    else
-        Return false
-    endif
-EndFunction
-
-
-Function ForceCloseMenu(Actor akTarget)
-    if Ui.isMenuOpen("inventoryMenu") == true && ToggleForceCloseMenu.GetValueint() == 1
-        Game.DisablePlayerControls(false, false, false, false, false, true, false)
-        utility.wait(0.05)
-        Game.EnablePlayerControls(false, false, false, false, false, true, false)
-    endif
-EndFunction
-
-
-Function StopSprinting(Actor akTarget)
-    if ToggleStopSprint.GetValueint() == 1 && akTarget.IsSprinting()
-        Game.DisablePlayerControls(false, false, false, false, false, true, false)
-        utility.wait(0.05)
-        Game.EnablePlayerControls(false, false, false, false, false, true, false)
-    endif
-EndFunction
-
-
-Function EquipLeftHand(Actor akTarget)
-    if LeftItem != none
-        akTarget.equipItemEx(LeftItem, 2)
-    elseif LeftSpell != none
-        akTarget.EquipSpell(LeftSpell, 0)
-    endif
-EndFunction
-
-
-Function EquipLeftitemAndWeapon(Actor akTarget)
-    if Leftitem != none
-        akTarget.equipitemEx(Leftitem, 2)
-    elseif LeftSpell != none
-        akTarget.EquipSpell(LeftSpell, 0)
-    elseif HasTwoHandedMelee(akTarget) == true
-        akTarget.SheatheWeapon()
-        akTarget.DrawWeapon()
-    elseif akTarget.GetEquippeditemType(0) == 7; Has bow
-        akTarget.DrawWeapon()
-    elseif HasRightOneHandedMelee(akTarget) == true
-        akTarget.equipitem(Fakeitem, false, true) ;Equip and unequip invisible shield to skip one handed redrawing
-        Utility.wait(0.05)
-        akTarget.Unequipitem(Fakeitem, false, true)
-    else ;precaution
-        akTarget.SheatheWeapon()
-        akTarget.DrawWeapon()
-    endif
-EndFunction
-
-
-bool Function HasRightOneHandedMelee(Actor akTarget)
-    if akTarget.GetEquippedItemType(1) == 1 \
-    || akTarget.GetEquippedItemType(1) == 2 \
-    || akTarget.GetEquippedItemType(1) == 3 \
-    || akTarget.GetEquippedItemType(1) == 4 \
-    || akTarget.GetEquippedItemType(1) == 8
-        Return true
-    else
-        Return false
-    endif
-EndFunction
-
-
-bool Function HasTwoHandedMelee(Actor akTarget)
-    if akTarget.GetEquippedItemType(1) == 5 \
-    || akTarget.GetEquippedItemType(1) == 6 \
-    || akTarget.GetEquippedItemType(0) == 5 \
-    || akTarget.GetEquippedItemType(0) == 6
-        Return true
-    else
-        Return false
-    endif
-EndFunction
-
-
-bool Function LeftHandCheck(Actor akTarget)
-    if akTarget.GetEquippeditemType(0) == 9; Left hand magic spell
-        LeftSpell = akTarget.GetEquippedSpell(0)
-        akTarget.UnequipSpell(LeftSpell, 0)
-        Return true
-    elseif HasLefthandeditem(akTarget) == true
-        Leftitem = akTarget.GetEquippedObject(0) as Form
-        akTarget.Unequipitem(Leftitem, false, true)
-        Return true
-    elseif akTarget.GetEquippeditemType(0) == 7; Has Bow
-        SheatheWeaponAndWait(akTarget)
-    endif
-    Return false
-EndFunction
-
-
-bool Function TargetConditionCheck(Actor akTarget)
-    if Busy == false \
-    && akTarget.GetAnimationVariablebool("bIsRiding") == false \
-    && akTarget.IsSwimming() == false \
-    && akTarget.GetAnimationVariablebool("isStaggering") == false \
-    && akTarget.GetAnimationVariablebool("bAnimationDriven") == false \
-    && akTarget.IsInKillMove() == false \
-    && akTarget.GetAnimationVariablebool("IsBleedingOut") == false \
-    && GetActorKnockState(akTarget) == 0
-        if UI.IsMenuOpen("InventoryMenu") == true \
-        || UI.IsMenuOpen("FavoritesMenu") == true \
-        || UI.IsMenuOpen("HUD Menu") == true
-            Return true
-        endif
-        Return false
-    else
-        Return false
-    endif
-EndFunction
-
-
-bool Function HasLefthandedItem(Actor akTarget)
-    if akTarget.GetEquippedItemType(0) == 1 || akTarget.GetEquippedItemType(0) == 2 \
-    || akTarget.GetEquippedItemType(0) == 3 || akTarget.GetEquippedItemType(0) == 4 \
-    || akTarget.GetEquippedItemType(0) == 8 || akTarget.GetEquippedItemType(0) == 10 \
-    || akTarget.GetEquippedItemType(0) == 11
-        Return true
-    else
-        Return false
-    endif
-EndFunction
-
-
-bool Function DrawWeaponAndWait(Actor akTarget)
-    if akTarget.IsWeaponDrawn() == false
-        akTarget.DrawWeapon()
-        While akTarget.GetAnimationVariablebool("IsEquipping") == true
-            Utility.wait(0.01)
-        EndWhile
-        Return true
-    else
-        Return false
-    endif
-EndFunction
-
-
-bool Function SheatheWeaponAndWait(Actor akTarget)
-    if akTarget.IsWeaponDrawn() == true
-        akTarget.SheatheWeapon()
-        While akTarget.GetAnimationVariablebool("IsUnEquipping") == true
-            Utility.wait(0.1)
-        endWhile
-        Return true
-    else
-        Return false
-    endif
-endFunction
 
 
 ; Timed cork art object spell casting. Cork spell is picked by AnimationEventString suffix or prefix.
@@ -614,44 +360,268 @@ endFunction
 ; 8 for SleepingTreeSap cork
 ; 9 for whitephial cork
 ; Some potions are in different order, meaning extra is after great or vice versa, so this is not ideal.
-Function SlowPotionFunctions(Actor akTarget)
+Function SlowDrinking(string eventstring, Actor akTarget)
+    iPotionSoundInstance = PotionSM.Play(akTarget)
+    Debug.SendAnimationEvent(akTarget as ObjectReference, eventstring)
     int CorkSpellIndex = 0
-    if StringUtil.Find(AnimationEventString, "01", 0) >= 0
+    if StringUtil.Find(eventstring, "01", 0) >= 0
         CorkSpellIndex = 0
-    ElseIf StringUtil.Find(AnimationEventString, "03", 0) >= 0
+    ElseIf StringUtil.Find(eventstring, "03", 0) >= 0
         CorkSpellIndex = 1
-    ElseIf StringUtil.Find(AnimationEventString, "02", 0) >= 0
+    ElseIf StringUtil.Find(eventstring, "02", 0) >= 0
         CorkSpellIndex = 2
-    ElseIf StringUtil.Find(AnimationEventString, "04", 0) >= 0
+    ElseIf StringUtil.Find(eventstring, "04", 0) >= 0
         CorkSpellIndex = 3
-    elseif StringUtil.Find(AnimationEventString, "FortifySkill", 0) >= 0
+    elseif StringUtil.Find(eventstring, "FortifySkill", 0) >= 0
         CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "blood", 0) >= 0
+    elseif StringUtil.Find(eventstring, "blood", 0) >= 0
         CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "25", 0) >= 0 \
-    || StringUtil.Find(AnimationEventString, "50", 0) >= 0 \
-    || StringUtil.Find(AnimationEventString, "75", 0) >= 0
+    elseif StringUtil.Find(eventstring, "25", 0) >= 0 \
+    || StringUtil.Find(eventstring, "50", 0) >= 0 \
+    || StringUtil.Find(eventstring, "75", 0) >= 0
         CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "100", 0) >= 0
+    elseif StringUtil.Find(eventstring, "100", 0) >= 0
         CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "sleepingtreesap", 0) >= 0
+    elseif StringUtil.Find(eventstring, "sleepingtreesap", 0) >= 0
         CorkSpellIndex = 4
-    elseif StringUtil.Find(AnimationEventString, "ms12", 0) >= 0
+    elseif StringUtil.Find(eventstring, "ms12", 0) >= 0
         CorkSpellIndex = 4
     endif
     Spell CorkSpell = CorkFormList.GetAt(CorkSpellIndex) as Spell
     Spell CorkHandSpell = CorkHandFormList.GetAt(CorkSpellIndex) as Spell
     ;Cork in bottle
-    (CorkSpell).RemoteCast(akTarget, none)
+    (CorkSpell).RemoteCast(akTarget as ObjectReference, none)
     ;Cork from bottle to hand
     Utility.Wait(0.56)
-    (CorkHandSpell).RemoteCast(akTarget, none)
+    (CorkHandSpell).RemoteCast(akTarget as ObjectReference, none)
     akTarget.DispelSpell(CorkSpell)
     ;Cork from hand to bottle
+    if togglePotionSplash.GetValue() == 1
+        SlowPotionSplashSP.Cast(akTarget as ObjectReference, none)
+    endif
     Utility.Wait(2.26)
-    (CorkSpell).RemoteCast(akTarget, none)
+    (CorkSpell).RemoteCast(akTarget as ObjectReference, none)
     akTarget.DispelSpell(CorkHandSpell)
     ;Bottle disappear with cork
     Utility.Wait(0.52)
     akTarget.DispelSpell(CorkSpell)
-endFunction
+EndFunction
+
+
+; For some specific mods returns a specific string. Returns unchanged parameter string if nothing done.
+string Function StringManipulation(string eventstring)
+    if StringUtil.Find(eventstring, "FortifySkill", 0) >= 0 \
+    || StringUtil.Find(eventstring, "TGPotion", 0) >= 0
+        return "fortifyskill01"
+    endif
+
+    if StringUtil.Find(eventstring, "MS12", 0) >= 0
+        return "ms12whitephialrepaired"
+    endif
+    return eventstring
+EndFunction
+
+
+
+; Removes any formID changes mods have made and returns it. Returns unchanged parameter string if nothing done.
+string Function ModPrefixRevert(string eventstring)
+    if StringUtil.Find(eventstring, "mag_", 0) >= 0
+        return StringUtil.Substring(eventstring, 4)
+    endif
+    if StringUtil.Find(eventstring, "CACO_", 0) >= 0
+        return StringUtil.Substring(eventstring, 5)
+    endif
+    if StringUtil.Find(eventstring, "_KRY", 0) >= 0
+        int Lenght = StringUtil.GetLength(eventstring)
+        int Cut_Length = Lenght - 4
+        return StringUtil.Substring(eventstring, 0, Cut_Length)
+    endif
+    return eventstring
+EndFunction
+
+
+; Plays sound at target if TogglePlayerSound is enabled.
+;
+; Parameters:
+; - TypeActor: The actor to play sound at.
+;
+; Return Value:
+; - TypeBool: Returns true if the TogglePlayerSound was enabled; otherwise, false.
+int Function PlaySound(Sound sfx, Actor akTarget)
+    if TogglePlayerSound.GetValue() == 1
+        return sfx.Play(akTarget as ObjectReference)
+    endif
+    return -1
+EndFunction
+
+
+; Checks if the target has enabled stop sprinting and if so, will stop and prevent sprinting for
+; the duration of applying poison. Also checks if sprinting was allowed before applying poison to
+; not unintentionally release target from some other sprint lock.
+;
+; Parameters:
+; - TypeActor: The actor to stop and prevent sprinting.
+;
+; Return Value:
+; - TypeBool: Returns true if the ToggleStopSprint was enabled; otherwise, false.
+bool Function stopSprint(Actor akTarget)
+    if ToggleStopSprint.GetValue() == 1 && (akTarget as ObjectReference).GetAnimationVariablebool("bSprintOK") == true
+        (akTarget as ObjectReference).SetAnimationVariablebool("bSprintOK", false)
+        if akTarget.IsSprinting()
+            akTarget.SetDontMove(true)
+            utility.wait(0.5)
+            akTarget.SetDontMove(false)
+        endif
+        return true
+    endif
+
+    return false
+EndFunction
+
+
+; Waits for a menu to close, up to a specified maximum wait time.
+;
+; Parameters:
+; - TypeFloat: maxWaitTime - The maximum amount of time (in seconds) to wait for the menu to close.
+;
+; Return Value:
+; - TypeBool: True if the menu closes within the specified time, false otherwise.
+bool Function WaitForMenuClose(float maxWaitTime)
+    float waitTime = 0
+    if toggleWaitForMenuClose.GetValue() == 0
+        return true
+    endif
+    while Utility.isinMenuMode() && waitTime < maxWaitTime
+        Utility.wait(0.1)
+        waitTime += 0.1
+    endwhile
+    if waitTime >= maxWaitTime
+        return false
+    endif
+
+    return true
+EndFunction
+
+
+; Casts a slow effect on the specified target actor if ToggleSlowEffect is enabled.
+;
+; Parameters:
+; - akTarget: Actor - The target actor on which to cast the slow effect.
+;
+; Return Value:
+; - Bool: True if ToggleSlowEffect was enabled; otherwise, false.
+bool Function CastSlowEffectSP(Actor akTarget)
+    if TogglePlayerSlowEffect.GetValueint() == 1
+        SlowEffectSP.RemoteCast(akTarget as ObjectReference,none)
+        return true
+    endif
+
+    return false
+EndFunction
+
+
+; Forces the player into third-person view if is in 1st person and has ToggleForceThirdPerson enabled.
+;
+; Parameters:
+; - TypeActor: Actor - The target actor for which to force third-person view.
+;
+; Return Value:
+; - TypeBool: True if the conditions are met and third-person view is forced, false otherwise.
+bool Function ForceThirdPerson(Actor akTarget)
+    if (akTarget as ObjectReference).GetAnimationVariableint("i1stPerson") == 1 && ToggleForceThirdPerson.GetValueint() == 1
+        Game.ForceThirdPerson()
+        return true
+    endif
+
+    return false
+EndFunction
+
+
+; Checks whether the target is not:
+; - Already applying poison
+; - Riding a horse
+; - Swimming
+; - Staggered
+; - in bAnimationDriven state
+; - in a killmove
+; - Bleeding out
+; - Ragdolling
+; - Not mounting or standing on/off chairs
+; - Additional check for knockstate from PO3's functions (maybe unnescessary?)
+;
+; Additionally checks that target is in any of the following menus:
+; - Favorite
+; - Inventory
+; - HUD menu
+;
+; Parameters:
+; - TypeActor: The actor to be checked.
+;
+; Return Value:
+; - TypeBool: Returns true if the target passes the checks; otherwise, returns false.
+bool Function TargetConditionCheck(Actor akTarget, Form consumedPoison)
+    if bBusy == false && (akTarget as ObjectReference).GetAnimationVariablebool("bIsRiding") == false && akTarget.IsSwimming() == false \
+    && (akTarget as ObjectReference).GetAnimationVariablebool("isStaggering") == false && (akTarget as ObjectReference).GetAnimationVariablebool("bAnimationDriven") == false \
+    && akTarget.IsInKillMove() == false && (akTarget as ObjectReference).GetAnimationVariablebool("IsBleedingOut") == false && (akTarget as ObjectReference).GetAnimationVariablebool("bIsSynced") == false \
+    && GetActorKnockState(akTarget) == 0 && akTarget.GetMass() == 0
+    ; For GetMass: "The object has to be controlled by Havok ("ragdolling") or this function will always return 0" which is how we get ragdoll state of target.
+    ; While sitting on a chair bAnimationDriven is true
+    ; While getting on a horse bIsSynced is true;/  && consumedPoison.HasKeywordString("VendorItemPoison") == true /; ;Things like frostbite venom don't have this tag so we don't use it.
+        if UI.IsMenuOpen("InventoryMenu") == true || UI.IsMenuOpen("FavoritesMenu") == true || UI.IsMenuOpen("HUD Menu") == true
+            Return true
+        endif
+    endif
+    Return false
+EndFunction
+
+
+; Draws the target's weapon and waits until the target has finished equipping.
+; Waits for a certain of maximum of seconds.
+;
+; Parameters:
+; - TypeActor: The actor to draw their weapon.
+; - TypeFloat: Maximun time in seconds that the function will wait.
+;
+; Return Value:
+; - TypeBool: True if the target successfully drawed their weapon on time; otherwise, false.
+bool Function DrawWeaponAndWait(Actor akTarget, float fMaxWaitTime)
+    if akTarget.IsWeaponDrawn() == false
+        akTarget.DrawWeapon()
+        float fWaitTime = 0.0
+        while (akTarget as ObjectReference).GetAnimationVariablebool("IsEquipping") == true && fWaitTime < fMaxWaitTime
+            Utility.wait(0.1)
+            fWaitTime += 0.1
+        endWhile
+
+        if fWaitTime >= fMaxWaitTime
+            return false
+        endif
+    endif
+    return true
+EndFunction
+
+
+; Sheathes the target's weapon and waits until the target has finished unequipping.
+; Waits for a certain of maximum of seconds.
+;
+; Parameters:
+; - TypeActor: The actor to sheathe their weapon.
+; - TypeFloat: Maximun time in seconds that the function will wait.
+;
+; Return Value:
+; - TypeBool: True if the target successfully sheathed their weapon on time; otherwise, false.
+bool Function SheatheWeaponAndWait(Actor akTarget, float fMaxWaitTime)
+    if akTarget.isWeaponDrawn() == true
+        akTarget.SheatheWeapon()
+        float fWaitTime = 0.0
+        while (akTarget as ObjectReference).GetAnimationVariablebool("isUnEquipping") == true && fWaitTime < fMaxWaitTime
+            Utility.wait(0.1)
+            fWaitTime += 0.1
+        endwhile
+
+        if fWaitTime >= fMaxWaitTime
+            return false
+        endif
+    endif
+    return true
+EndFunction

@@ -94,6 +94,7 @@ int D_Prohib_Menu
 int D_Prohib_Menu_Selection = 0 ; [0] = Potions, [1] = Poisons, [2] = Food
 string[] D_Prohib_Menu_Options
 int[] D_Prohib_options
+int D_ProbScaling
 ; whitelist
 int W_EnableItems
 int W_EnableNPCs
@@ -238,6 +239,8 @@ Event OnPageReset(string page)
         AddHeaderOption("Style Scaling")
         D_StylePrimary = AddSliderOption("Primary", Distr_GetStyleScalingPrimary(), "{2}")
         D_StyleSecondary = AddSliderOption("Secondary", Distr_GetStyleScalingSecondary(), "{2}")
+        AddHeaderOption("Probability Modifiers")
+        D_ProbScaling = AddSliderOption("Item Chance Multiplier", Distr_GetProbabilityScaling(), "{2}")
 
         SetCursorPosition(1)
         AddHeaderOption("Prohibited Effects")
@@ -245,7 +248,7 @@ Event OnPageReset(string page)
         D_Prohib_Menu_Options[0] = "Potions"
         D_Prohib_Menu_Options[1] = "Poisons"
         D_Prohib_Menu_Options[2] = "Food"
-        D_Prohib_Menu = AddMenuOption("ItemType", "Potions")
+        D_Prohib_Menu = AddMenuOption("ItemType", D_Prohib_Menu_Options[D_Prohib_Menu_Selection])
         AddTextOption("Effects that can be prohibited", "")
         int i = 1
         D_prohib_options = new int[65]
@@ -466,6 +469,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogStartValue(Distr_GetStyleScalingSecondary())
         SetSliderDialogRange(0.05, 20.0)
         SetSliderDialogInterval(0.05)
+    elseif (option == D_ProbScaling)
+        SetSliderDialogDefaultValue(1.0)
+        SetSliderDialogStartValue(Distr_GetProbabilityScaling())
+        SetSliderDialogRange(0.1, 3.0)
+        SetSliderDialogInterval(0.05)
     elseif (option == FO_LevelScale)
         SetSliderDialogDefaultValue(0)
         SetSliderDialogStartValue(Fortify_GetEnemyLevelScalePlayerLevelFortify())
@@ -579,6 +587,8 @@ Event OnOptionSliderAccept(int option, float value)
         Distr_SetStyleScalingPrimary(value)
     elseif (option == D_StyleSecondary)
         Distr_SetStyleScalingSecondary(value)
+    elseif (option == D_ProbScaling)
+        Distr_SetProbabilityScaling(value)
     elseif (option == FO_LevelScale)
         Fortify_SetEnemyLevelScalePlayerLevelFortify(value)
     elseif (option == FO_NumberThreshold)
@@ -632,7 +642,9 @@ Event OnOptionMenuAccept(int option, int index)
 
     elseif (option == D_Prohib_Menu)
         D_Prohib_Menu_Selection = index
+        SetMenuOptionValue(D_Prohib_Menu, D_Prohib_Menu_Options[D_Prohib_Menu_Selection], true)
     endif
+    ForcePageReset()
 EndEvent
 
 Event OnOptionDefault(int option)
@@ -689,6 +701,8 @@ Event OnOptionDefault(int option)
         Distr_SetStyleScalingPrimary(1.2)
     elseif (option == D_StyleSecondary)
         Distr_SetStyleScalingSecondary(1.1)
+    elseif (option == D_ProbScaling)
+        Distr_SetProbabilityScaling(1.0)
     elseif (option == F_EnableFood)
         Food_SetEnableFood(true)
     elseif (option == F_AllowDetrimental)
@@ -866,6 +880,8 @@ Event OnOptionHighlight(int option)
         SetInfoText("Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the primary combat type of an npc.")
     elseif (option == D_StyleSecondary)
         SetInfoText("Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the secondary combat type of an npc.")
+    elseif (option == D_ProbScaling)
+        SetInfoText("Modifies the chances for all items distributed to npcs. This does not really affect the number of item (potions) distributed, just the chances for the frst 4 potions and first 3 poisons. Even though an overall increase in items is possible, it is incredibly unlikely due to the small base-probabilities. Anything value around 2.0 might guarantee 3 or 4 potions and poisons for most npcs.")
     elseif (option == F_EnableFood)
         SetInfoText("Allows NPCs to use food items, to gain beneficial effects.")
     elseif (option == F_AllowDetrimental)
@@ -1326,10 +1342,15 @@ float Function Distr_GetStyleScalingPrimary() global native
 ; Sets the scale of the distribution probability for items matching the combat styles primary combat modifiers
 Function Distr_SetStyleScalingPrimary(float value) global native
 
-; Retruns the scale of the distribution probability for items matching the combat styles secondary combat modifiers
+; Returns the scale of the distribution probability for items matching the combat styles secondary combat modifiers
 float Function Distr_GetStyleScalingSecondary() global native
 ; Sets the scale of the distribution probability for items matching the combat styles secondary combat modifiers
 Function Distr_SetStyleScalingSecondary(float value) global native
+
+; Returns the general probability scaling
+float Function Distr_GetProbabilityScaling() global native
+; Sets the general probability scaling
+Function Distr_SetProbabilityScaling(float value) global native
 
 ; --------- Removal ---------
 
