@@ -639,7 +639,7 @@ CheckActorsSkipIteration:
 	void Main::LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("");
-		auto begin = std::chrono::steady_clock::now();
+		StartProfiling;
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
 		initialized = false;
@@ -648,13 +648,14 @@ CheckActorsSkipIteration:
 		SKSE::GetTaskInterface()->AddTask([]() {
 			// checking if player should be handled
 			if ((Settings::Player::_playerPotions ||
-				Settings::Player::_playerFortifyPotions ||
-				Settings::Player::_playerPoisons ||
-				Settings::Player::_playerFood)) {
-			// inject player into the list and remove him later
+					Settings::Player::_playerFortifyPotions ||
+					Settings::Player::_playerPoisons ||
+					Settings::Player::_playerFood)) {
+				// inject player into the list and remove him later
 				ACSetRegister(data->FindActor(RE::PlayerCharacter::GetSingleton()));
 				LOG_3("Adding player to the list");
-		}
+			}
+		});
 
 		if (actorhandlerrunning == false) {
 			if (actorhandler != nullptr) {
@@ -705,8 +706,8 @@ CheckActorsSkipIteration:
 			}
 		}
 
+		/*
 		LOG_1("Finding loaded actors");
-
 		SKSE::GetTaskInterface()->AddTask([]() {
 			// when loading the game, the attach detach events for actors aren't fired until cells have been changed
 			// thus we need to get all currently loaded npcs manually
@@ -726,7 +727,7 @@ CheckActorsSkipIteration:
 					}
 				}
 			}
-			LOG1_1("{}[Events] [LoadGameSub] found {} cells", std::to_string(gamecells.size()));
+			LOG_1("[Events] [LoadGameSub] found {} cells", std::to_string(gamecells.size()));
 			for (int i = 0; i < (int)gamecells.size(); i++) {
 				if (gamecells[i]->IsAttached()) {
 					for (auto& ptr : gamecells[i]->GetRuntimeData().references)

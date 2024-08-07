@@ -1402,7 +1402,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	if (!acinfo->IsValid() || acinfo->GetActor() == nullptr)
 		return true;
-	LOG_1("{}[Events] [ExcludedNPC] 1");
+	//LOG_1("1");
 	if (Settings::Whitelist::EnabledNPCs) {
 		if (acinfo->IsWhitelistCalculated()) {
 			if (!acinfo->IsWhitelisted())
@@ -1425,7 +1425,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 		Distribution::ForceExcludeNPC(acinfo->GetFormID());
 		return true;
 	}
-	LOG1_1("{}[Events] [ExcludedNPC] 4 {}", ret);
+	//LOG_1("4 {}", ret);
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
 	if (!Distribution::npcMap()->contains(acinfo->GetFormID()) && !Distribution::npcMap()->contains(acinfo->GetFormIDOriginal()) && ret == false) {
 		auto base = acinfo->GetActorBase();
@@ -1433,7 +1433,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 			if (base->keywords[i])
 				ret |= Distribution::excludedAssoc()->contains(base->keywords[i]->GetFormID());
 		}
-		LOG1_1("{}[Events] [ExcludedNPC] 5 {}", ret);
+		//LOG1_1("5 {}", ret);
 		for (uint32_t i = 0; i < base->factions.size(); i++) {
 			if (base->factions[i].faction)
 				ret |= Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID());
@@ -1446,7 +1446,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 			}
 		}
 	}
-	LOG1_1("{}[Events] [ExcludedNPC] 7 {}", ret);
+	//LOG1_1("7 {}", ret);
 	return ret;
 }
 

@@ -505,13 +505,13 @@ namespace Events
 		scriptEventSourceHolder->GetEventSource<RE::TESEquipEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG_1("Registered {}", typeid(RE::TESEquipEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESDeathEvent).name());
+		LOG_1("Registered {}", typeid(RE::TESDeathEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESCellAttachDetachEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG_1("Registered {}", typeid(RE::TESCellAttachDetachEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESFormDeleteEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG_1("Registered {}", typeid(RE::TESFormDeleteEvent).name())
 		scriptEventSourceHolder->GetEventSource<RE::TESContainerChangedEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG1_1("{}Registered {}", typeid(RE::TESContainerChangedEvent).name())
+		LOG_1("Registered {}", typeid(RE::TESContainerChangedEvent).name());
 		//scriptEventSourceHolder->GetEventSource<RE::TESActivateEvent>()->AddEventSink(EventHandler::GetSingleton());
 		//LOG1_1("Registered {}", typeid(RE::TESActivateEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);
