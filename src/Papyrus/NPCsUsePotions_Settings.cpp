@@ -221,32 +221,45 @@ namespace Papyrus
 
 		void InvertEffectProhibited(Settings::ItemType type, int value)
 		{
-			LOG_4("begin");
-			AlchemicEffect* effect = nullptr;
+			LOG_4("begin {}", value);
 			switch (type) {
 			case Settings::ItemType::kPotion:
 			case Settings::ItemType::kFortifyPotion:
 				{
-					effect = &Settings::Potions::_prohibitedEffects;
 					LOG_4("potion");
+					if (!Settings::Potions::_prohibitedEffects.HasEffect(value)) {
+						Settings::Potions::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Added effect");
+					} else {
+						Settings::Potions::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Removed Effect");
+					}
 				}
+				break;
 			case Settings::ItemType::kPoison:
 				{
-					effect = &Settings::Poisons::_prohibitedEffects;
 					LOG_4("poison");
+					if (!Settings::Poisons::_prohibitedEffects.HasEffect(value)) {
+						Settings::Poisons::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Added effect");
+					} else {
+						Settings::Poisons::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Removed Effect");
+					}
 				}
+				break;
 			case Settings::ItemType::kFood:
 				{
-					effect = &Settings::Food::_prohibitedEffects;
 					LOG_4("food");
+					if (!Settings::Food::_prohibitedEffects.HasEffect(value)) {
+						Settings::Food::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Added effect");
+					} else {
+						Settings::Food::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						LOG_4("Removed Effect");
+					}
 				}
-			}
-			if (effect->HasEffect(value)) {
-				(*effect) |= AlchemicEffect::GetFromBaseValue(value);
-				LOG_4("Added effect");
-			} else {
-				(*effect) &= ~AlchemicEffect::GetFromBaseValue(value);
-				LOG_4("Removed Effect");
+				break;
 			}
 			Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kProhibitedEffects;
