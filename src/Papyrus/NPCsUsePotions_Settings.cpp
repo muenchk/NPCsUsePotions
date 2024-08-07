@@ -221,20 +221,33 @@ namespace Papyrus
 
 		void InvertEffectProhibited(Settings::ItemType type, int value)
 		{
+			LOG_4("begin");
 			AlchemicEffect* effect = nullptr;
 			switch (type) {
 			case Settings::ItemType::kPotion:
 			case Settings::ItemType::kFortifyPotion:
-				effect = &Settings::Potions::_prohibitedEffects;
+				{
+					effect = &Settings::Potions::_prohibitedEffects;
+					LOG_4("potion");
+				}
 			case Settings::ItemType::kPoison:
-				effect = &Settings::Poisons::_prohibitedEffects;
+				{
+					effect = &Settings::Poisons::_prohibitedEffects;
+					LOG_4("poison");
+				}
 			case Settings::ItemType::kFood:
-				effect = &Settings::Food::_prohibitedEffects;
+				{
+					effect = &Settings::Food::_prohibitedEffects;
+					LOG_4("food");
+				}
 			}
-			if (effect->HasEffect(value))
+			if (effect->HasEffect(value)) {
 				(*effect) |= AlchemicEffect::GetFromBaseValue(value);
-			else
+				LOG_4("Added effect");
+			} else {
 				(*effect) &= ~AlchemicEffect::GetFromBaseValue(value);
+				LOG_4("Removed Effect");
+			}
 			Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kProhibitedEffects;
 		}

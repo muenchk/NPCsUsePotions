@@ -11,6 +11,7 @@
 #include <random>
 #include <tuple>
 #include <vector>
+#include <unordered_map>
 #include "ActorManipulation.h"
 #include "Distribution.h"
 #include "AlchemyEffect.h"
@@ -1168,7 +1169,7 @@ void Settings::LoadDistrConfig()
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_excludedPlugins_NPCs.insert(plugindex);
-										LOGL_2("Rule 17 excluded plugin {}. It is either not loaded or not present", plugin);
+										LOGL_2("Rule 17 excluded plugin {}.", plugin);
 										EXCL("Exclusion Plugin NPCs:    {}", plugin);
 									} else {
 										LOGL_2("Rule 17 cannot exclude plugin {}. It is either not loaded or not present", plugin);
@@ -1189,7 +1190,7 @@ void Settings::LoadDistrConfig()
 									if (plugindex != 0x1) {
 										// valid plugin index
 										Distribution::_whitelistNPCsPlugin.insert(plugindex);
-										LOGL_2("Rule 18 whitelisted plugin {}. It is either not loaded or not present", plugin);
+										LOGL_2("Rule 18 whitelisted plugin {}.", plugin);
 									} else {
 										LOGL_2("Rule 18 cannot whitelist plugin {}. It is either not loaded or not present", plugin);
 									}
@@ -2584,6 +2585,7 @@ void Settings::UpdateSettings()
 
 void Settings::ClassifyItems()
 {
+	LOG_2("enter function");
 	// resetting all items
 	_itemsInit = false;
 
@@ -2601,6 +2603,24 @@ void Settings::ClassifyItems()
 	_poisonsPotent.clear();
 	_poisonsInsane.clear();
 	_foodall.clear();
+
+	// set that holds the formids of all items that were excluded in earlier executions of this function
+	// all items that have been excluded this way need to be removed from Distribution::_excludedItems since they
+	// may depend on runtime values thaqt can be changed in the MCM
+	static std::unordered_set<RE::FormID> priorexcluded;
+	static std::unordered_set<RE::FormID> priorexcludedplayer;
+	LOG_2("found {} prior excluded items and {} excluded for player only", priorexcluded.size(), priorexcludedplayer.size());
+	// remove pror excluded items from global exclusion list
+	for (auto id : priorexcluded)
+	{
+		Distribution::_excludedItems.erase(id);
+	}
+	for (auto id : priorexcludedplayer)
+	{
+		Distribution::_excludedItemsPlayer.erase(id);
+	}
+	priorexcluded.clear();
+	priorexcludedplayer.clear();
 
 	Data* data = Data::GetSingleton();
 	data->ResetAlchItemEffects();
@@ -2677,7 +2697,9 @@ void Settings::ClassifyItems()
 						while (itr != Distribution::excludedEffects()->end()) {
 							if ((effects & *itr).IsValid()) {
 								Distribution::_excludedItems.insert(item->GetFormID());
+								priorexcluded.insert(item->GetFormID());
 								excluded = true;
+								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							itr++;
 						}
@@ -2694,21 +2716,27 @@ void Settings::ClassifyItems()
 							{
 								// found effect that has been marked as excluded
 								Distribution::_excludedItems.insert(item->GetFormID());
+								priorexcluded.insert(item->GetFormID());
 								excluded = true;
+								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							break;
 						case ItemType::kPoison:
 							if ((effects & Poisons::_prohibitedEffects).IsValid()) {
 								// found effect that has been marked as excluded
 								Distribution::_excludedItems.insert(item->GetFormID());
+								priorexcluded.insert(item->GetFormID());
 								excluded = true;
+								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							break;
 						case ItemType::kFood:
 							if ((effects & Food::_prohibitedEffects).IsValid()) {
 								// found effect that has been marked as excluded
 								Distribution::_excludedItems.insert(item->GetFormID());
+								priorexcluded.insert(item->GetFormID());
 								excluded = true;
+								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							break;
 						}
@@ -2723,7 +2751,9 @@ void Settings::ClassifyItems()
 										(item->effects[i]->baseEffect->data.archetype == RE::EffectArchetypes::ArchetypeID::kDualValueModifier && (ConvertToAlchemyEffectSecondary(item->effects[i]->baseEffect) == AlchemicEffect::kReflectDamage)))) {
 									if (item->effects[i]->effectItem.magnitude > 50) {
 										Distribution::_excludedItems.insert(item->GetFormID());
+										priorexcluded.insert(item->GetFormID());
 										LOGL_1("Excluded {} due to strong ReflectDamage effect", Utility::PrintForm(item));
+										EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 										continue;
 									}
 								}
@@ -2740,6 +2770,8 @@ void Settings::ClassifyItems()
 							if (item->effects[i]->baseEffect && Distribution::excludedItemsPlayer()->contains(item->effects[i]->baseEffect->GetFormID())) {
 								LOGL_1("Excluded {} for player due to effect", Utility::PrintForm(item));
 								Distribution::_excludedItemsPlayer.insert(item->GetFormID());
+								priorexcludedplayer.insert(item->GetFormID());
+								EXCL("Item Player:              {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 						}
 
@@ -2848,6 +2880,8 @@ void Settings::ClassifyItems()
 		auto itr = Distribution::_alcohol.begin();
 		while (itr != Distribution::_alcohol.end()) {
 			Distribution::_excludedItemsPlayer.insert(*itr);
+			priorexcludedplayer.insert(*itr);
+			EXCL("Item Player:              {}", Utility::PrintForm<RE::AlchemyItem>(RE::TESForm::LookupByID<RE::AlchemyItem>(*itr)));
 			itr++;
 		}
 	}
@@ -2980,6 +3014,7 @@ void Settings::ClassifyItems()
 			outing << std::get<0>(ingredienteffectmap[i]) << ";" << std::get<1>(ingredienteffectmap[i]) << "\n";
 		}
 	}
+	LOG_2("exit function");
 }
 
 std::tuple<AlchemicEffect, ItemStrength, ItemType, int, float, bool> Settings::ClassifyItem(RE::AlchemyItem* item)
