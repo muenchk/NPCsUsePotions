@@ -393,7 +393,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion1(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= potion1Chance[astr]) {
+	if (rand100(randi) <= potion1Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -407,7 +407,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion2(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= potion2Chance[astr]) {
+	if (rand100(randi) <= potion2Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -421,7 +421,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion3(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= potion3Chance[astr]) {
+	if (rand100(randi) <= potion3Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -435,7 +435,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion4(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= potion4Chance[astr]) {
+	if (rand100(randi) <= potion4Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -449,7 +449,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotionAdditional(std::shared_ptr<A
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= potionAdditionalChance[astr]) {
+	if (rand100(randi) <= potionAdditionalChance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -520,7 +520,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison1(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= poison1Chance[astr]) {
+	if (rand100(randi) <= poison1Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -534,7 +534,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison2(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= poison2Chance[astr]) {
+	if (rand100(randi) <= poison2Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -548,7 +548,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison3(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= poison3Chance[astr]) {
+	if (rand100(randi) <= poison3Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -562,7 +562,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoison4(std::shared_ptr<ActorInfo>
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= poison4Chance[astr]) {
+	if (rand100(randi) <= poison4Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -576,7 +576,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPoisonAdditional(std::shared_ptr<A
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= poisonAdditionalChance[astr]) {
+	if (rand100(randi) <= poisonAdditionalChance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -648,7 +648,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion1(std::shared_ptr<Act
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= fortify1Chance[astr]) {
+	if (rand100(randi) <= fortify1Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -662,7 +662,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion2(std::shared_ptr<Act
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= fortify2Chance[astr]) {
+	if (rand100(randi) <= fortify2Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -676,7 +676,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion3(std::shared_ptr<Act
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= fortify3Chance[astr]) {
+	if (rand100(randi) <= fortify3Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -690,7 +690,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion4(std::shared_ptr<Act
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= fortify4Chance[astr]) {
+	if (rand100(randi) <= fortify4Chance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -704,7 +704,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotionAdditional(std::share
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
 	int str = static_cast<int>(acinfo->GetItemStrength());
-	if (rand100(randi) <= fortifyAdditionalChance[astr]) {
+	if (rand100(randi) <= fortifyAdditionalChance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else {
 		return nullptr;
@@ -767,7 +767,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomFood_intern(std::shared_ptr<ActorI
 	if (valid == false)
 		return nullptr;
 	int astr = static_cast<int>(acinfo->GetActorStrength());
-	if (rand100(randi) <= foodChance[astr]) {
+	if (rand100(randi) <= foodChance[astr] * Settings::Distr::_ProbabilityScaling) {
 		// we rolled successfully
 	} else
 		return nullptr;
@@ -951,7 +951,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 				if (acinfo->CalcDistrConditions(item) == false)
 					continue;
 				for (int x = 0; x < item->num; x++) {
-					if (rand100(randi) < item->chance) {
+					if (rand100(randi) < item->chance * Settings::Distr::_ProbabilityScaling) {
 						vec.push_back(item->object);
 					}
 				}
@@ -971,7 +971,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 				if (acinfo->CalcDistrConditions(item) == false)
 					continue;
 				for (int x = 0; x < item->num; x++) {
-					if (rand100(randi) < item->chance) {
+					if (rand100(randi) < item->chance * Settings::Distr::_ProbabilityScaling) {
 						vec.push_back(item->object);
 					}
 				}
@@ -991,7 +991,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 				if (acinfo->CalcDistrConditions(item) == false)
 					continue;
 				for (int x = 0; x < item->num; x++) {
-					if (rand100(randi) < item->chance) {
+					if (rand100(randi) < item->chance * Settings::Distr::_ProbabilityScaling) {
 						vec.push_back(item->object);
 					}
 				}
@@ -1011,7 +1011,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 				if (acinfo->CalcDistrConditions(item) == false)
 					continue;
 				for (int x = 0; x < item->num; x++) {
-					if (rand100(randi) < item->chance) {
+					if (rand100(randi) < item->chance * Settings::Distr::_ProbabilityScaling) {
 						vec.push_back(item->object);
 					}
 				}
@@ -1126,13 +1126,13 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 			if (itr == items.end()) {
 				// run for number of items to give
 				for (int x = 0; x < item->num; x++) {
-					if (rand100(randi) < item->chance) {
+					if (rand100(randi) < item->chance * Settings::Distr::_ProbabilityScaling) {
 						ret.push_back(item->object);
 					}
 				}
 			} else {
 				for (int x = itr->second; x < item->num; x++) {
-					if (rand100(randi) < item->chance) {
+					if (rand100(randi) < item->chance * Settings::Distr::_ProbabilityScaling) {
 						ret.push_back(item->object);
 					}
 				}

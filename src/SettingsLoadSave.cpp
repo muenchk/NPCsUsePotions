@@ -297,6 +297,9 @@ void Settings::Load()
 		Distr::_StyleScalingSecondary = (float)ini.GetDoubleValue("Distribution", "StyleScalingSecondary", Distr::_StyleScalingSecondary);
 		loginfo("Setting: {} {}", "Distribution:      StyleScalingSecondary", std::to_string(Distr::_StyleScalingSecondary));
 
+		Distr::_ProbabilityScaling = (float)ini.GetDoubleValue("Distribution", "ProbabilityScaling", Distr::_ProbabilityScaling);
+		loginfo("Setting: {} {}", "Distribution:      ProbabilityScaling", std::to_string(Distr::_ProbabilityScaling));
+
 		// removal
 		Removal::_RemoveItemsOnDeath = ini.GetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath);
 		loginfo("Setting: {} {}", "Removal:           RemoveItemsOnDeath", std::to_string(Removal::_RemoveItemsOnDeath));
@@ -524,7 +527,13 @@ void Settings::Save()
 	ini.SetDoubleValue("Distribution", "StyleScalingSecondary", Distr::_StyleScalingSecondary, "// Scaling for the weight of different alchemic effects for the \n"
 																								"// distribution of potions, poison, fortify potions and food \n"
 																								"// according to the secondary combat type of an npc.");
-
+	ini.SetDoubleValue("Distribution", "ProbabilityScaling", Distr::_ProbabilityScaling,
+		"// Modifies the chances for all items distributed to npcs.\n"
+		"// This does not really affect the number of item (potions) distributed,\n"
+		"// just the chances for the first 4 potions, poisons and fortify potions. \n"
+		"// Even though an overall increase in items is possible, it is incredibly \n"
+		"// unlikely due to the small base-probabilities for anything beyond 4 items.\n"
+		"// Anything value around 2.0 might guarantee 3 or 4 potions and poisons for most npcs.");
 
 	// removal
 	ini.SetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath, "// Remove items from NPCs after they died.");

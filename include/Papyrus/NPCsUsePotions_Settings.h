@@ -1188,6 +1188,24 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name="value"></param>
 			void Set_StyleScalingSecondary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value);
+
+			/// <summary>
+			/// Returns the general probability scaling
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <returns></returns>
+			float Get_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			/// <summary>
+			/// Sets the general probability scaling
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name=""></param>
+			void Set_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value);
 		}
 
 		namespace Removal

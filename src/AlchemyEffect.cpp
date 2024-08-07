@@ -711,9 +711,9 @@ AlchemicEffect AlchemicEffect::GetFromBaseValue(unsigned long basevalue)
 		return {};
 	basevalue -= 1;
 	if (basevalue >= 64) {
-		return AlchemicEffect(1 << (basevalue - 64), 0);
+		return AlchemicEffect((uint64_t)1 << (basevalue - 64), 0);
 	} else
-		return AlchemicEffect(0, 1 << basevalue);
+		return AlchemicEffect(0, (uint64_t)1 << basevalue);
 }
 
 bool AlchemicEffect::IsEffect()
@@ -742,9 +742,9 @@ bool AlchemicEffect::HasEffect(unsigned long basevalue)
 		return false;
 	basevalue -= 1;
 	if (basevalue >= 64)
-		return ((first & (1 << (basevalue - 64))) != 0);
+		return ((first & ((uint64_t)1 << (basevalue - 64))) != 0);
 	else
-		return ((second & (1 << basevalue)) != 0);
+		return ((second & ((uint64_t)1 << basevalue)) != 0);
 }
 
 bool AlchemicEffect::HasRestorativeEffect()

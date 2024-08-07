@@ -422,6 +422,11 @@ public:
 		/// [Settings] Scaling factor for Alchemy Effects matching secondary combat style of an NPC
 		/// </summary>
 		static inline float _StyleScalingSecondary = 1.10f;  // base scaling factor applied to potions etc. that are considered useful for the secondary combattype of an actor
+
+		/// <summary>
+		/// [Settings] general probability scaling
+		/// </summary>
+		static inline float _ProbabilityScaling = 1.0f;
 	};
 
 	/// <summary>

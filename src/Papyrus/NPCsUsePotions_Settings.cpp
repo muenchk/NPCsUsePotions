@@ -149,6 +149,8 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Distr_SetStyleScalingPrimary"), script, Distribution::Set_StyleScalingPrimary);
 			a_vm->RegisterFunction(std::string("Distr_GetStyleScalingSecondary"), script, Distribution::Get_StyleScalingSecondary);
 			a_vm->RegisterFunction(std::string("Distr_SetStyleScalingSecondary"), script, Distribution::Set_StyleScalingSecondary);
+			a_vm->RegisterFunction(std::string("Distr_GetProbabilityScaling"), script, Distribution::Get_ProbabilityScaling);
+			a_vm->RegisterFunction(std::string("Distr_SetProbabilityScaling"), script, Distribution::Set_ProbabilityScaling);
 			// removal
 			a_vm->RegisterFunction(std::string("Removal_GetRemoveItemsOnDeath"), script, Removal::Get_RemoveItemsOnDeath);
 			a_vm->RegisterFunction(std::string("Removal_SetRemoveItemsOnDeath"), script, Removal::Set_RemoveItemsOnDeath);
@@ -1058,6 +1060,17 @@ namespace Papyrus
 				if (value > 20.0f)
 					value = 20.0f;
 				Settings::Distr::_StyleScalingSecondary = value;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			float Get_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::Distr::_ProbabilityScaling;
+			}
+
+			void Set_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
+			{
+				Settings::Distr::_ProbabilityScaling = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
