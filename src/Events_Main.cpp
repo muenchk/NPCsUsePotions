@@ -644,6 +644,9 @@ CheckActorsSkipIteration:
 			LOG_3("Adding player to the list");
 		}
 
+		// reset event time_map
+		EventHandler::GetSingleton()->time_map.clear();
+
 		if (actorhandlerrunning == false) {
 			if (actorhandler != nullptr) {
 				// if the thread is there, then destroy and delete it

@@ -33,10 +33,18 @@ namespace Hooks
 		Game::SetFastTraveling(false);
 	}
 
+	bool PlayerUsePotionHook::PlayerUsePotion(uint64_t self, RE::AlchemyItem* alch, uint64_t extralist)
+	{
+		LOG_1("PlayerUsePotionHook");
+		Events::Main::AdjustPlayerCooldowns(alch);
+		return _PlayerUsePotion(self, alch, extralist);
+	}
+
 	void InstallHooks()
 	{
 		FastTravelConfirmHook::InstallHook();
 		Papyrus_FastTravelHook::InstallHook();
 		//FadeThenFastTravelHook::InstallHook();
+		PlayerUsePotionHook::InstallHook();
 	}
 }

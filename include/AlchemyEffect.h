@@ -185,6 +185,52 @@ enum class AlchemyBaseEffectSecond : AlchemyBaseEffect
 	           static_cast<uint64_t>(kAnyRegen) |
 	           static_cast<uint64_t>(kAnyFortify),
 
+					 
+	kAllPotions = static_cast<uint64_t>(kHealth) |
+	              static_cast<uint64_t>(kMagicka) |
+	              static_cast<uint64_t>(kStamina) |
+	              static_cast<uint64_t>(kInvisibility) |
+				  static_cast<uint64_t>(kOneHanded) |
+	              static_cast<uint64_t>(kTwoHanded) |
+	              static_cast<uint64_t>(kArchery) |
+	              static_cast<uint64_t>(kBlock) |
+	              static_cast<uint64_t>(kHeavyArmor) |
+	              static_cast<uint64_t>(kLightArmor) |
+	              static_cast<uint64_t>(kAlteration) |
+	              static_cast<uint64_t>(kConjuration) |
+	              static_cast<uint64_t>(kDestruction) |
+	              static_cast<uint64_t>(kIllusion) |
+	              static_cast<uint64_t>(kRestoration) |
+	              static_cast<uint64_t>(kSpeedMult) |
+	              static_cast<uint64_t>(kCriticalChance) |
+	              static_cast<uint64_t>(kMeleeDamage) |
+	              static_cast<uint64_t>(kUnarmedDamage) |
+	              static_cast<uint64_t>(kDamageResist) |
+	              static_cast<uint64_t>(kPoisonResist) |
+	              static_cast<uint64_t>(kResistFire) |
+	              static_cast<uint64_t>(kResistShock) |
+	              static_cast<uint64_t>(kResistFrost) |
+	              static_cast<uint64_t>(kResistMagic) |
+	              static_cast<uint64_t>(kResistDisease) |
+	              static_cast<uint64_t>(kWeaponSpeedMult) |
+	              static_cast<uint64_t>(kAttackDamageMult) |
+	              static_cast<uint64_t>(kPickpocket) |
+	              static_cast<uint64_t>(kLockpicking) |
+	              static_cast<uint64_t>(kSneak) |
+	              static_cast<uint64_t>(kBowSpeed) |
+	              static_cast<uint64_t>(kReflectDamage) |
+	              static_cast<uint64_t>(kEnchanting) |
+	              static_cast<uint64_t>(kWaterbreathing) |
+	              static_cast<uint64_t>(kSmithing) |
+	              static_cast<uint64_t>(kSpeech) |
+	              static_cast<uint64_t>(kCarryWeight) |
+	              static_cast<uint64_t>(kPersuasion) |
+	              static_cast<uint64_t>(kAlchemy) |
+	              static_cast<uint64_t>(kFortifyHealth) |
+	              static_cast<uint64_t>(kFortifyMagicka) |
+	              static_cast<uint64_t>(kFortifyStamina) |
+	              static_cast<uint64_t>(kShield),
+
 };
 
 class AlchemicEffect;
@@ -406,6 +452,7 @@ public:
 	static const AlchemicEffect kAnyRegen;
 	static const AlchemicEffect kAnyFortify;
 	static const AlchemicEffect kAnyFood;
+	static const AlchemicEffect kAllPotions;
 };
 
 //AlchemicEffect operator|(const AlchemicEffect& lhs, const AlchemicEffect& rhs);
