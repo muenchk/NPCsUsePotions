@@ -95,6 +95,7 @@ int D_Prohib_Menu_Selection = 0 ; [0] = Potions, [1] = Poisons, [2] = Food
 string[] D_Prohib_Menu_Options
 int[] D_Prohib_options
 int D_ProbScaling
+int D_DoNotMixed
 ; whitelist
 int W_EnableItems
 int W_EnableNPCs
@@ -155,8 +156,6 @@ Event OnPageReset(string page)
         G_DisableOutOfCombatProcessing = AddToggleOption("Disable Out-Of-Combat Health potion usage", Usage_GetDisableOutOfCombatProcessing())
         G_DisableItemUsageWhileStaggered = AddToggleOption("Disable item usage while staggered", Usage_GetDisableItemUsageWhileStaggered())
         G_DisableItemUsageForExcludedNPCs = AddToggleOption("Disable item usage for excluded npcs", Usage_GetDisableItemUsageForExcludedNPCs())
-
-        SetCursorPosition(1)
         AddHeaderOption("Removal Options")
         G_Remove = AddToggleOption("Remove Items on Death", Removal_GetRemoveItemsOnDeath())
         G_RemoveChance = AddSliderOption("Chance to Remove Item",Removal_GetChanceToRemoveItem())
@@ -241,6 +240,8 @@ Event OnPageReset(string page)
         D_StyleSecondary = AddSliderOption("Secondary", Distr_GetStyleScalingSecondary(), "{2}")
         AddHeaderOption("Probability Modifiers")
         D_ProbScaling = AddSliderOption("Item Chance Multiplier", Distr_GetProbabilityScaling(), "{2}")
+        AddHeaderOption("Misc Settings")
+        D_DoNotMixed = AddToggleOption("Do Not Distribute Mixed Invis Potions",Distr_GetDoNotDistributeMixedInvisPotions())
 
         SetCursorPosition(1)
         AddHeaderOption("Prohibited Effects")
@@ -335,6 +336,8 @@ Event OnOptionSelect(int option)
         Distr_SetDistributeFortify(!Distr_GetDistributeFortify())
     elseif (option == D_Food)
         Distr_SetDistributeFood(!Distr_GetDistributeFood())
+    elseif (option == D_DoNotMixed)
+        Distr_SetDoNotDistributeMixedInvisPotions(!Distr_GetDoNotDistributeMixedInvisPotions())
     elseif (option == D_CustomItems)
         Distr_SetDistributeCustomItems(!Distr_GetDistributeCustomItems())
     elseif (option == D_GameDifficulty)
@@ -703,6 +706,8 @@ Event OnOptionDefault(int option)
         Distr_SetStyleScalingSecondary(1.1)
     elseif (option == D_ProbScaling)
         Distr_SetProbabilityScaling(1.0)
+    elseif (option == D_DoNotMixed)
+        Distr_SetDoNotDistributeMixedInvisPotions(false)
     elseif (option == F_EnableFood)
         Food_SetEnableFood(true)
     elseif (option == F_AllowDetrimental)
@@ -882,6 +887,8 @@ Event OnOptionHighlight(int option)
         SetInfoText("Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the secondary combat type of an npc.")
     elseif (option == D_ProbScaling)
         SetInfoText("Modifies the chances for all items distributed to npcs. This does not really affect the number of item (potions) distributed, just the chances for the frst 4 potions and first 3 poisons. Even though an overall increase in items is possible, it is incredibly unlikely due to the small base-probabilities. Anything value around 2.0 might guarantee 3 or 4 potions and poisons for most npcs.")
+    elseif (option == D_DoNotMixed)
+        SetInfoText("Potions with Invisibility as one of their effects may not be distributed when they are chosen for one of their other effects. Example: [Setting: false] An NPC will be given a health potion. A health potion with the secondary effect Invisibility might be chosen and given to the player. [Setting: true] An NPC will be given a health potion. A health potion with with arbitrary secondary effects except Invisibility might be chosen.")
     elseif (option == F_EnableFood)
         SetInfoText("Allows NPCs to use food items, to gain beneficial effects.")
     elseif (option == F_AllowDetrimental)
@@ -1351,6 +1358,11 @@ Function Distr_SetStyleScalingSecondary(float value) global native
 float Function Distr_GetProbabilityScaling() global native
 ; Sets the general probability scaling
 Function Distr_SetProbabilityScaling(float value) global native
+
+; Returns wether potions mixed with invisibility are allowed
+bool Function Distr_GetDoNotDistributeMixedInvisPotions() global native
+; Sets wether potions mixed with invisibility are allowed
+Function Distr_SetDoNotDistributeMixedInvisPotions(bool value) global native
 
 ; --------- Removal ---------
 

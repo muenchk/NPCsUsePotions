@@ -492,7 +492,7 @@ public:
 
 	struct StringLess
 	{
-		bool operator()(const Rule*& lhs, const Rule*& rhs) const
+		bool operator()(const Rule* lhs, const Rule* rhs) const
 		{
 			return lhs->ruleName < rhs->ruleName;
 		}
@@ -507,7 +507,7 @@ private:
 	/// <summary>
 	/// internal vector holding all distribution rules
 	/// </summary>
-	static inline std::set<Rule*> _rules;
+	static inline std::set<Rule*, StringLess> _rules;
 	/// <summary>
 	/// internal map which maps npc -> Rules
 	/// </summary>
@@ -604,7 +604,7 @@ private:
 	
 public:
 
-	static inline std::set<Rule*> _dummyVecR;
+	static inline std::set<Rule*, StringLess> _dummyVecR;
 	static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
 	static inline std::unordered_map<uint32_t, std::vector<CustomItemStorage*>> _dummyMapC;
 	static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
@@ -623,7 +623,7 @@ public:
 	/// Returns the vector containing all rules
 	/// </summary>
 	/// <returns></returns>
-	static const std::set<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
+	static const std::set<Rule*, StringLess>* rules() { return initialised ? &_rules : &_dummyVecR; }
 	/// <summary>
 	/// Returns the map mapping npcs -> Rules
 	/// </summary>

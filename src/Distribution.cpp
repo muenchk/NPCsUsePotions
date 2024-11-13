@@ -343,7 +343,9 @@ AlchemicEffect Distribution::Rule::GetRandomEffect(std::vector<std::tuple<int, A
 {
 	int random = randRR(randi);
 	for (int i = 0; i < distribution.size(); i++) {
+		//logusage("Checking Effect: {}", std::get<1>(distribution[i]).string());
 		if (random <= std::get<0>(distribution[i])) {
+			//logusage("Choosing Effect: {}, val {}", std::get<1>(distribution[i]).string(), random);
 			return std::get<1>(distribution[i]);
 		}
 	}
@@ -509,8 +511,13 @@ RetryPotion:
 	}
 	// return random item
 	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
-		return items[r(randi)];
+	if (items.size() > 0) {
+		auto item = items[r(randi)];
+		//logusage("Looking for effect {}, gave {}", eff.string(), Utility::PrintForm(item));
+
+	} else {
+		//logusage("Looking for effect {}, item size 0", eff.string());
+	}
 	return nullptr;
 }
 RE::AlchemyItem* Distribution::Rule::GetRandomPoison1(std::shared_ptr<ActorInfo> const& acinfo)

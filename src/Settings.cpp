@@ -244,7 +244,18 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// next entry is the rulename, so we just set it
-									Distribution::Rule* rule = new Distribution::Rule();
+									Distribution::Rule* rule = nullptr;
+									bool existing = false;
+									for (auto rl : Distribution::_rules) {
+										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
+											loginfo("Overriding rule: {}", rl->ruleName);
+											rule = rl;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+										rule = new Distribution::Rule();
 									rule->ruleVersion = ruleVersion;
 									rule->ruleType = ruleType;
 									rule->ruleName = splits->at(splitindex);
@@ -507,7 +518,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									// add rule to the list of rules and we are finished! probably.
-									if (Distribution::_rules.contains(rule))
+									/* if (Distribution::_rules.contains(rule))
 									{
 										auto ritr = Distribution::_rules.find(rule);
 										if (ritr != Distribution::_rules.end()) {
@@ -525,7 +536,7 @@ void Settings::LoadDistrConfig()
 											delete splits;
 											continue;
 										}
-									} else
+									} else*/
 										Distribution::_rules.insert(rule);
 
 									if (rule->ruleName == DefaultRuleName && (Distribution::defaultRule == nullptr ||
@@ -1351,7 +1362,19 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// next entry is the rulename, so we just set it
-									Distribution::Rule* rule = new Distribution::Rule();
+									Distribution::Rule* rule = nullptr;
+									bool existing = false;
+									for (auto rl : Distribution::_rules) {
+										loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length())
+										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
+											loginfo("Overriding rule: {}", rl->ruleName);
+											rule = rl;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+										rule = new Distribution::Rule();
 									rule->ruleVersion = ruleVersion;
 									rule->ruleType = ruleType;
 									rule->ruleName = splits->at(splitindex);
@@ -1708,7 +1731,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									// add rule to the list of rules and we are finished! probably.
-									if (Distribution::_rules.contains(rule)) {
+									/* if (Distribution::_rules.contains(rule)) {
 										auto ritr = Distribution::_rules.find(rule);
 										if (ritr != Distribution::_rules.end()) {
 											// get old rule
@@ -1725,7 +1748,7 @@ void Settings::LoadDistrConfig()
 											delete splits;
 											continue;
 										}
-									} else
+									} else*/
 										Distribution::_rules.insert(rule);
 
 									if (rule->ruleName == DefaultRuleName && (Distribution::defaultRule == nullptr ||
@@ -1807,7 +1830,17 @@ void Settings::LoadDistrConfig()
 				delete splits;
 				continue;
 			}
-			Distribution::Rule* newrule = rule->Clone();
+			Distribution::Rule* newrule = nullptr;
+			bool existing = false;
+			for (auto rl : Distribution::_rules)
+				if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(newname)) != std::string::npos && rl->ruleName.length() == newname.length()) {
+					loginfo("Overriding rule: {}", rl->ruleName);
+					newrule = rl;
+					existing = true;
+					break;
+				}
+			if (existing == false)
+				newrule = rule->Clone();
 			newrule->ruleName = newname;
 			int prio = INT_MIN;
 			try {
@@ -1822,7 +1855,7 @@ void Settings::LoadDistrConfig()
 			if (prio != INT_MIN)
 				newrule->rulePriority = prio;
 
-			if (Distribution::_rules.contains(newrule)) {
+			/* if (Distribution::_rules.contains(newrule)) {
 				auto ritr = Distribution::_rules.find(newrule);
 				if (ritr != Distribution::_rules.end()) {
 					// get old newrule
@@ -1839,7 +1872,7 @@ void Settings::LoadDistrConfig()
 					delete splits;
 					continue;
 				}
-			} else
+			} else*/
 				Distribution::_rules.insert(newrule);
 
 			if (newname == DefaultRuleName && (Distribution::defaultRule == nullptr ||
@@ -2920,7 +2953,9 @@ void Settings::ClassifyItems()
 									_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
 								else if ((std::get<0>(clas) & AlchemicEffect::kHealth) > 0 ||
 										 (std::get<0>(clas) & AlchemicEffect::kMagicka) > 0 ||
-										 (std::get<0>(clas) & AlchemicEffect::kStamina) > 0) {
+										 (std::get<0>(clas) & AlchemicEffect::kStamina) > 0 ||
+										 (std::get<0>(clas) & AlchemicEffect::kInvisibility) > 0)
+									{
 									switch (std::get<1>(clas)) {
 									case ItemStrength::kWeak:
 										_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });

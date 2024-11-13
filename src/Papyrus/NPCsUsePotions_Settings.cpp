@@ -151,6 +151,8 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Distr_SetStyleScalingSecondary"), script, Distribution::Set_StyleScalingSecondary);
 			a_vm->RegisterFunction(std::string("Distr_GetProbabilityScaling"), script, Distribution::Get_ProbabilityScaling);
 			a_vm->RegisterFunction(std::string("Distr_SetProbabilityScaling"), script, Distribution::Set_ProbabilityScaling);
+			a_vm->RegisterFunction(std::string("Distr_GetDoNotDistributeMixedInvisPotions"), script, Distribution::Get_DoNotDistributeMixedInvisPotions);
+			a_vm->RegisterFunction(std::string("Distr_SetDoNotDistributeMixedInvisPotions"), script, Distribution::Set_DoNotDistributeMixedInvisPotions);
 			// removal
 			a_vm->RegisterFunction(std::string("Removal_GetRemoveItemsOnDeath"), script, Removal::Get_RemoveItemsOnDeath);
 			a_vm->RegisterFunction(std::string("Removal_SetRemoveItemsOnDeath"), script, Removal::Set_RemoveItemsOnDeath);
@@ -1071,6 +1073,16 @@ namespace Papyrus
 			void Set_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
 			{
 				Settings::Distr::_ProbabilityScaling = value;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			bool Get_DoNotDistributeMixedInvisPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::Distr::_DoNotDistributeMixedInvisPotions;
+			}
+			void Set_DoNotDistributeMixedInvisPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool value)
+			{
+				Settings::Distr::_DoNotDistributeMixedInvisPotions = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}

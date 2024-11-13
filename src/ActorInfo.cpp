@@ -47,13 +47,13 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 			if (slot->GetFormID() == 0x13F43) // LeftHand
 				_haslefthand = true;
 		}
-		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
 		// update poison resistance
 		UpdatePermanentPoisonResist();
 		// set to valid
 		valid = true;
+		_formstring = Utility::PrintForm(this);
 		timestamp_invalid = 0;
 		dead = false;
 	}
@@ -119,13 +119,13 @@ void ActorInfo::Reset(RE::Actor* _actor)
 			if (slot->GetFormID() == 0x13F43)  // LeftHand
 				_haslefthand = true;
 		}
-		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
 		// update poison resistance
 		UpdatePermanentPoisonResist();
 		// set to valid
 		valid = true;
+		_formstring = Utility::PrintForm(this);
 		timestamp_invalid = 0;
 		dead = false;
 	}
