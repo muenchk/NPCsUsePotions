@@ -20,15 +20,36 @@ void Compatibility::Load()
 	Data* data = Data::GetSingleton();
 	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 
+	// NPCsUsePotions
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(NPCsUsePotions); index != 0x1) {
+		LOG_1("Found plugin NPCsUsePotions.esp.");
+		_loadedNPCsUsePotions = true;
+
+		NUP_IgnoreItem = datahandler->LookupForm<RE::BGSKeyword>(0xD64, NPCsUsePotions);
+		NUP_ExcludeItem = datahandler->LookupForm<RE::BGSKeyword>(0xD65, NPCsUsePotions);
+	}
+
 	// apothecary
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Apothecary); index != 0x1) {
 		LOG_1("Found plugin Apothecary.esp.");
-		Apot_SH_AlcoholDrinkKeyword = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01F3DD73);
+		_loadedApothecary = true;
+	}
 
-		LOG_1("[Apot] {}", Utility::PrintForm(Apot_SH_AlcoholDrinkKeyword));
+	// gourmet
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Gourmet); index != 0x1) {
+		LOG_1("Found plugin Gourmet.esp.");
+		Gour_FoodTypeAle = datahandler->LookupForm<RE::BGSKeyword>(0xA4B, Gourmet);
+		Gour_FoodTypeWine = datahandler->LookupForm<RE::BGSKeyword>(0xA4C, Gourmet);
+		Gour_FoodTypeDrugs = datahandler->LookupForm<RE::BGSKeyword>(0xA4D, Gourmet);
 
-		if (Apot_SH_AlcoholDrinkKeyword)
-			_loadedApothecary = true;
+		LOG_1("[Gour] {}", Utility::PrintForm(Gour_FoodTypeAle));
+		LOG_1("[Gour] {}", Utility::PrintForm(Gour_FoodTypeWine));
+		LOG_1("[Gour] {}", Utility::PrintForm(Gour_FoodTypeDrugs));
+
+		if (Gour_FoodTypeAle &&
+			Gour_FoodTypeDrugs &&
+			Gour_FoodTypeWine)
+			_loadedGourmet = true;
 	}
 
 	// caco
@@ -260,6 +281,24 @@ void Compatibility::Load()
 		LOG_1("Found Ultimate Animted Potions.");
 	}
 
+	// ordinator
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Ordinator); index != 0x1) {
+		LOG_1("Found plugin Ordinator - Perks of Skyrim.esp.");
+		_loadedApothecary = true;
+	}
+
+	// vokrii
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Vokrii); index != 0x1) {
+		LOG_1("Found plugin Vokrii - Minimalistic Perks of Skyrim.esp.");
+		_loadedApothecary = true;
+	}
+
+	// adamant
+	if (const uint32_t index = Utility::Mods::GetPluginIndex(Adamant); index != 0x1) {
+		LOG_1("Found plugin Adamant.esp.");
+		_loadedApothecary = true;
+	}
+
 	// global
 
 	_globalCooldown = std::max((long)_globalCooldown, Settings::Usage::_globalCooldown);
@@ -295,10 +334,17 @@ void Compatibility::Clear()
 	// get lock to avoid deadlocks (should not occur, since the functions should not be called simultaneously
 	sem.acquire();
 
+	// NPCsUsePotions
+	_loadedNPCsUsePotions = false;
+
 	// apothecary
 	_loadedApothecary = false;
 
-	Apot_SH_AlcoholDrinkKeyword = nullptr;
+	// gourmet
+	_loadedGourmet = false;
+	Gour_FoodTypeAle = nullptr;
+	Gour_FoodTypeDrugs = nullptr;
+	Gour_FoodTypeWine = nullptr;
 
 	// caco
 	_loadedCACO = false;
@@ -364,6 +410,15 @@ void Compatibility::Clear()
 
 	// Ultimate Animated Potions
 	_loadedUltimatePotions = false;
+
+	// ordinator
+	_loadedOrdinator = false;
+
+	// vokrii
+	_loadedVokrii = false;
+
+	// adamant
+	_loadedAdamant = false;
 
 	// global
 	_globalCooldown = 0;

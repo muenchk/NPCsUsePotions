@@ -5,9 +5,28 @@
 class Compatibility
 {
 public:
+	// NPCsUsePotions
+	std::string NPCsUsePotions = "NPCsUsePotions.esp";
+	RE::BGSKeyword* NUP_IgnoreItem = nullptr;
+	RE::BGSKeyword* NUP_ExcludeItem = nullptr;
+
+	// ordinator
+	static inline std::string Ordinator = "Ordinator - Perks of Skyrim.esp";
+
+	// Vokrii
+	static inline std::string Vokrii = "Vokrii - Minimalistic Perks of Skyrim.esp";
+
+	// Adamant
+	static inline std::string Adamant = "Adamant.esp";
+
 	// apothecary
 	static inline std::string Apothecary = "Apothecary.esp";
-	RE::BGSKeyword* Apot_SH_AlcoholDrinkKeyword = nullptr;
+
+	// gourmet
+	static inline std::string Gourmet = "Gourmet.esp";
+	RE::BGSKeyword* Gour_FoodTypeAle = nullptr;
+	RE::BGSKeyword* Gour_FoodTypeWine = nullptr;
+	RE::BGSKeyword* Gour_FoodTypeDrugs = nullptr;
 
 	// caco
 	static inline std::string CACO = "Complete Alchemy & Cooking Overhaul.esp";
@@ -119,6 +138,26 @@ private:
 	/// Whether Ultimate Animated Potions is loaded
 	/// </summary>
 	bool _loadedUltimatePotions = false;
+	/// <summary>
+	/// Whether Gourmet is loaded
+	/// </summary>
+	bool _loadedGourmet = false;
+	/// <summary>
+	/// Whether NPCsUsePotions plugin is loaded
+	/// </summary>
+	bool _loadedNPCsUsePotions = false;
+	/// <summary>
+	/// Whether Ordinator plugin is loaded
+	/// </summary>
+	bool _loadedOrdinator = false;
+	/// <summary>
+	/// Whether Vokrii plugin is loaded
+	/// </summary>
+	bool _loadedVokrii = false;
+	/// <summary>
+	/// Whether Adamant plugin is loaded
+	/// </summary>
+	bool _loadedAdamant = false;
 
 	/// <summary>
 	/// Global cooldown applied
@@ -237,12 +276,57 @@ public:
 	}
 
 	/// <summary>
-	/// returns whther Ultimate Animated Potions has been loaded
+	/// returns whether Ultimate Animated Potions has been loaded
 	/// </summary>
 	/// <returns></returns>
 	bool LoadedUltimatePotions()
 	{
 		return _loadedUltimatePotions;
+	}
+
+	/// <summary>
+	/// Returns whether compatibility for gourmet is enabled
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedGourmet()
+	{
+		return _loadedGourmet;
+	}
+
+	/// <summary>
+	/// Returns whether NPCsUsePotions plugin is loaded
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedNPCsUsePotions()
+	{
+		return _loadedNPCsUsePotions;
+	}
+
+	/// <summary>
+	/// Returns whether compatibility for Ordinator is enabled
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedOrdinator()
+	{
+		return _loadedOrdinator;
+	}
+
+	/// <summary>
+	/// Returns whether compatibility for Vokrii is enabled
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedVokrii()
+	{
+		return _loadedVokrii;
+	}
+
+	/// <summary>
+	/// Returns whether compatibility for Adamant is enabled
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedAdamant()
+	{
+		return _loadedAdamant;
 	}
 
 	/// <summary>

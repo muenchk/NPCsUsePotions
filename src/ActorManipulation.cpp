@@ -128,7 +128,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 	while (iter != itemmap.end() && alchemyEffect != 0) {
 		if (Utility::ValidateForm(iter->first) &&
 			std::get<1>(iter->second).get() &&
-			std::get<1>(iter->second).get()->IsQuestObject() == false &&
+			std::get<1>(iter->second).get()->IsQuestObject() == false && 
 			(acinfo->IsPlayer() == false ||
 				acinfo->IsPlayer() &&
 					(Settings::Player::_UseFavoritedItemsOnly == false ||
@@ -137,7 +137,8 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
-			if (item && iter->second.first > 0) {
+			// check whether the item has excluding keywords
+			if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && iter->second.first > 0) {
 				LOG_5("checking item {}", Utility::PrintForm(item));
 				if (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion)) {
 					LOG_4("found medicine");
@@ -170,7 +171,8 @@ std::list<RE::AlchemyItem*> ACM::GetAllPotions(std::shared_ptr<ActorInfo> const&
 		if (iter->first && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("checking item");
-			if (item && iter->second.first > 0 && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion))) {
+			// check whether the item has excluding keywords
+			if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && iter->second.first > 0 && (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion)) && Distribution::excludedItems()->contains(item->GetFormID()) == false) {
 				LOG_4("found potion {}", Utility::PrintForm(item));
 				ret.insert(ret.begin(), item);
 			}
@@ -200,7 +202,8 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
-			if (item && iter->second.first > 0) {
+			// check whether the item has excluding keywords
+			if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && iter->second.first > 0) {
 				LOG_5("checking item {}", Utility::PrintForm(item));
 				if (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison)) {
 					LOG_4("found poison");
@@ -232,7 +235,8 @@ std::list<RE::AlchemyItem*> ACM::GetAllPoisons(std::shared_ptr<ActorInfo> const&
 		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("checking item");
-			if (item && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison))) {
+			// check whether the item has excluding keywords
+			if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison)) && Distribution::excludedItems()->contains(item->GetFormID()) == false) {
 				LOG_4("found poison {}", Utility::PrintForm(item));
 				ret.insert(ret.begin(), item);
 			}
@@ -264,7 +268,8 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("checking item");
 
-			if (item && iter->second.first > 0 &&
+			// check whether the item has excluding keywords
+			if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && iter->second.first > 0 &&
 				(item->IsFood() ||
 					item->HasKeyword(Settings::VendorItemFood) ||
 					(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
@@ -297,7 +302,8 @@ std::list<RE::AlchemyItem*> ACM::GetAllFood(std::shared_ptr<ActorInfo> const& ac
 		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() && std::get<1>(iter->second).get()->IsQuestObject() == false) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("checking item");
-			if (item && (item->IsFood() || item->HasKeyword(Settings::VendorItemFoodRaw) || item->HasKeyword(Settings::VendorItemFood))) {
+			// check whether the item has excluding keywords
+			if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && (item->IsFood() || item->HasKeyword(Settings::VendorItemFoodRaw) || item->HasKeyword(Settings::VendorItemFood)) && Distribution::excludedItems()->contains(item->GetFormID()) == false) {
 				LOG_4("found food {}", Utility::PrintForm(item));
 				ret.insert(ret.begin(), item);
 			}
@@ -333,8 +339,8 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> ACM::GetRandomFood(std:
 						std::get<1>(iter->second).get()->IsFavorited() == false))) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("checking item");
-
-			if (item && iter->second.first > 0 &&
+			// check whether the item has excluding keywords
+			if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && iter->second.first > 0 &&
 				(item->IsFood() ||
 					item->HasKeyword(Settings::VendorItemFood) ||
 					(item->HasKeyword(Settings::VendorItemFoodRaw))) &&
@@ -455,6 +461,7 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shar
 		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() &&
 			std::get<1>(iter->second).get()->IsQuestObject() == false &&
 			(alch = iter->first->As<RE::AlchemyItem>()) != nullptr &&
+			alch->HasKeyword(comp->NUP_IgnoreItem) == false && 
 			acinfo->IsCustomAlchItem(alch)) {
 			// check whether it a medicine and in the custom potion list
 			if (alch->IsMedicine() && acinfo->citems.potionsset.contains(alch->GetFormID())) {
@@ -661,7 +668,12 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 					if (!audiomanager)
 						audiomanager = RE::BSAudioManager::GetSingleton();
 					//RE::ExtraDataList* extra = new RE::ExtraDataList();
-					int dosage = data->GetPoisonDosage(poison);
+					int dosage = Distribution::GetPoisonDosage(poison, 0xFFFFFFFFFFFFFFFF, true);
+					if (dosage == 0)
+						dosage = acinfo->GetBasePoisonDosage(comp);
+					if (dosage == 0)  // if the actor doesn't have the perk
+						dosage = data->GetPoisonDosage(poison);
+					LOG_2("Set poison dosage to {} for item {}.", dosage, Utility::PrintForm(poison));
 					auto ied = acinfo->GetEquippedEntryData(false);
 					if (ied) {
 						ied->PoisonObject(poison, dosage);

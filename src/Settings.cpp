@@ -75,6 +75,8 @@ void Settings::InitGameStuff()
 		} else
 			pluginnames[256 + i] = "";
 	}
+	for (auto& [name, id] : pluginNameMap)
+		loginfo("ID: {:3}, Name:{}", Utility::GetHex(id), name);
 
 	Settings::Equip_LeftHand = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x13F43);
 	Settings::Equip_RightHand = RE::TESForm::LookupByID<RE::BGSEquipSlot>(0x13F42);
@@ -159,6 +161,7 @@ void Settings::LoadDistrConfig()
 	std::vector<std::tuple<std::vector<std::string>*, std::string, std::string>> copyrules;
 
 	const int chancearraysize = 5;
+	char buffer[1024];
 
 	// extract the rules from all files
 	for (std::string file : files) {
@@ -167,7 +170,10 @@ void Settings::LoadDistrConfig()
 			if (infile.is_open()) {
 				std::string line;
 				while (std::getline(infile, line)) {
-					std::string tmp = line;
+					//std::string tmp = line.substr(0, line.length());
+					line.copy(buffer, line.length() > 1023 ? 1023 : line.length(), 0);
+					line.length() > 1023 ? buffer[1023] = 0 : buffer[line.length()] = 0;
+					std::string tmp = std::string(buffer);
 					// we read another line
 					// check if its empty or with a comment
 					if (line.empty())
@@ -501,7 +507,27 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									// add rule to the list of rules and we are finished! probably.
-									Distribution::_rules.push_back(rule);
+									if (Distribution::_rules.contains(rule))
+									{
+										auto ritr = Distribution::_rules.find(rule);
+										if (ritr != Distribution::_rules.end()) {
+											// get old rule
+											auto rtmp = *ritr;
+											// erase old rule
+											Distribution::_rules.erase(rule);
+											// delete old rule
+											delete rtmp;
+											// insert new rule
+											Distribution::_rules.insert(rule);
+										} else {
+											logcritical("Critical error in code, please report to author. file: {}, rule:\"{}\"", file, tmp);
+											delete rule;
+											delete splits;
+											continue;
+										}
+									} else
+										Distribution::_rules.insert(rule);
+
 									if (rule->ruleName == DefaultRuleName && (Distribution::defaultRule == nullptr ||
 																				 rule->rulePriority > Distribution::defaultRule->rulePriority))
 										Distribution::defaultRule = rule;
@@ -534,6 +560,8 @@ void Settings::LoadDistrConfig()
 											std::get<0>(items[i]) & Distribution::AssocType::kRace) {
 											Distribution::_bosses.insert(std::get<1>(items[i]));
 											LOGL_2("declared {} as boss.", Utility::GetHex(std::get<1>(items[i])));
+										} else {
+											LOGL_2("{} has the wrong FormType to be declared as a boss.", Utility::GetHex(std::get<1>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -579,6 +607,10 @@ void Settings::LoadDistrConfig()
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
 												LOGL_2("excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
+											else
+											{
+												LOGL_2("{} has the wrong FormType to be excluded from distribution. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+											}
 											EXCL("Exclusion:                {}", Utility::PrintForm(std::get<2>(items[i])));
 										}
 									}
@@ -613,6 +645,10 @@ void Settings::LoadDistrConfig()
 												LOGL_2("excluded keyword {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
 												LOGL_2("excluded race {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
+											}
+											else
+											{
+												LOGL_2("{} has the wrong FormType for exclusion from base line distribution. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])),file, tmp);
 											}
 											EXCL("Exclusion Baseline:       {}", Utility::PrintForm(std::get<2>(items[i])));
 										}
@@ -655,7 +691,7 @@ void Settings::LoadDistrConfig()
 											}
 											break;
 										default:
-											LOGL_2("cannot whitelist object {}.", Utility::GetHex(std::get<1>(items[i])));
+											LOGL_2("{} has the wrong FormType for whitelisting. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
 											break;
 										}
 										if (Logging::EnableLoadLog) {
@@ -924,14 +960,11 @@ void Settings::LoadDistrConfig()
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kItem:
 											Distribution::_itemStrengthMap.insert_or_assign(std::get<1>(items[i]), str);
+											LOGL_2("set item strength {}.", Utility::GetHex(std::get<1>(items[i])));
 											break;
-										}
-										if (Logging::EnableLoadLog) {
-											if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
-												LOGL_2("set item strength {}.", Utility::GetHex(std::get<1>(items[i])));
-											} else {
-												logwarn("rule 10 is not applicable to object {}.", Utility::GetHex(std::get<1>(items[i])));
-											}
+										default:
+											LOGL_2("rule 10 is not applicable to object {}. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+											break;
 										}
 									}
 
@@ -978,18 +1011,11 @@ void Settings::LoadDistrConfig()
 											case Distribution::AssocType::kKeyword:
 											case Distribution::AssocType::kRace:
 												Distribution::_actorStrengthMap.insert_or_assign(std::get<1>(items[i]), str);
+												LOGL_2("set relative actor strength {}.", Utility::GetHex(std::get<1>(items[i])));
 												break;
-											}
-											if (Logging::EnableLoadLog) {
-												if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
-													std::get<0>(items[i]) & Distribution::AssocType::kNPC ||
-													std::get<0>(items[i]) & Distribution::AssocType::kFaction ||
-													std::get<0>(items[i]) & Distribution::AssocType::kKeyword ||
-													std::get<0>(items[i]) & Distribution::AssocType::kRace) {
-													LOGL_2("set relative actor strength {}.", Utility::GetHex(std::get<1>(items[i])));
-												} else {
-													logwarn("rule 11 is not applicable to object {}.", Utility::GetHex(std::get<1>(items[i])));
-												}
+											default:
+												LOGL_2("rule 11 is not applicable to object {}. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+												break;
 											}
 										}
 									}
@@ -1010,8 +1036,10 @@ void Settings::LoadDistrConfig()
 									auto forms = Utility::Mods::GetFormsInPlugin<RE::AlchemyItem>(pluginname);
 									for (int i = 0; i < forms.size(); i++) {
 										Distribution::_whitelistItems.insert(forms[i]->GetFormID());
-										if (Logging::EnableLoadLog)
-											LOGL_2("whitelisted item. id: {}, name: {}, plugin: {}.", Utility::GetHex(forms[i]->GetFormID()), forms[i]->GetName(), pluginname);
+										LOGL_2("whitelisted item. id: {}, name: {}, plugin: {}.", Utility::GetHex(forms[i]->GetFormID()), forms[i]->GetName(), pluginname);
+									}
+									if (forms.size()) {
+										LOGL_2("Plugin {} has no forms to whitelist.", pluginname);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1033,7 +1061,10 @@ void Settings::LoadDistrConfig()
 										switch (std::get<0>(items[i])) {
 										case Distribution::AssocType::kFaction:
 											Distribution::_followerFactions.insert(std::get<1>(items[i]));
+											LOGL_2("Whitelisted follower faction {}", std::get<1>(items[i]));
 											break;
+										default:
+											LOGL_2("{} has the wrong FormType to be whitelisted as follower faction. file: {}, rule: \"{}\"", std::get<1>(items[i]), file, tmp);
 										}
 									}
 									delete splits;
@@ -1082,6 +1113,11 @@ void Settings::LoadDistrConfig()
 									for (int i = 0; i < items.size(); i++) {
 										if (std::get<0>(items[i]) == Distribution::AssocType::kItem) {
 											Distribution::_dosageItemMap.insert_or_assign(std::get<1>(items[i]), std::tuple<bool, bool, int>{ enforce, setting, dosage });
+											LOGL_2("Set dosage for item: {}.", std::get<1>(items[i]));
+										}
+										else
+										{
+											LOGL_2("{} has the wrong FormType to set a dosage. file: {}, rule: \"{}\"", std::get<1>(items[i]), file, tmp);
 										}
 									}
 									delete splits;
@@ -1128,6 +1164,11 @@ void Settings::LoadDistrConfig()
 										AlchemicEffect effect = std::get<0>(effects[i]);
 										if (effect != AlchemicEffect::kNone) {
 											Distribution::_dosageEffectMap.insert_or_assign(effect, std::tuple<bool, bool, int>{ enforce, setting, dosage });
+											LOGL_2("Set dosage for effect: {}.", effect.string());
+										}
+										else
+										{
+											LOGL_2("Effect {} is empty. file: {}, rule: \"{}\"", effect.string(), file, tmp);
 										}
 									}
 									delete splits;
@@ -1152,6 +1193,9 @@ void Settings::LoadDistrConfig()
 									if (e != AlchemicEffect::kNone) {
 										Distribution::_excludedEffects.insert(e);
 										EXCL("Exclusion Effect:         {}", e.string());
+										LOGL_2("Exluded Effect:	{}.", e.string());
+									} else {
+										LOGL_2("Effect {} is empty. file: {}, rule: \"{}\"", e.string(), file, tmp);
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1215,6 +1259,9 @@ void Settings::LoadDistrConfig()
 											Distribution::_alcohol.insert(std::get<1>(items[i]));
 											LOGL_2("marked {} as alcoholic", Utility::GetHex(std::get<1>(items[i])));
 											break;
+										default:
+											LOGL_2("{} has the wrong FormType to be marked alcoholic. file: {}, rule: \"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+											break;
 										}
 									}
 									// since we are done delete splits
@@ -1249,6 +1296,9 @@ void Settings::LoadDistrConfig()
 												Distribution::_magicEffectAlchMap.insert_or_assign(std::get<1>(items[i]), e);
 												LOGL_2("fixed {} to effect {}", Utility::GetHex(std::get<1>(items[i])), Utility::ToString(e));
 												break;
+											default:
+												LOGL_2("cannot fix {} to effect {}: Wrong FormType. file: {}, rule: \"{}\"", Utility::GetHex(std::get<1>(items[i])), Utility::ToString(e), file, tmp);
+												break;
 											}
 										}
 									}
@@ -1273,6 +1323,9 @@ void Settings::LoadDistrConfig()
 										case Distribution::AssocType::kItem:
 											Distribution::_excludedItemsPlayer.insert(std::get<1>(items[i]));
 											LOGL_2("excluded {} for the player", Utility::GetHex(std::get<1>(items[i])));
+											break;
+										default:
+											LOGL_2("cannot exclude {} for the player: Wrong FormType. file: {}, rule: \"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
 											break;
 										}
 									}
@@ -1655,7 +1708,26 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									// add rule to the list of rules and we are finished! probably.
-									Distribution::_rules.push_back(rule);
+									if (Distribution::_rules.contains(rule)) {
+										auto ritr = Distribution::_rules.find(rule);
+										if (ritr != Distribution::_rules.end()) {
+											// get old rule
+											auto rtmp = *ritr;
+											// erase old rule
+											Distribution::_rules.erase(rule);
+											// delete old rule
+											delete rtmp;
+											// insert new rule
+											Distribution::_rules.insert(rule);
+										} else {
+											logcritical("Critical error in code, please report to author. file: {}, rule:\"{}\"", file, tmp);
+											delete rule;
+											delete splits;
+											continue;
+										}
+									} else
+										Distribution::_rules.insert(rule);
+
 									if (rule->ruleName == DefaultRuleName && (Distribution::defaultRule == nullptr ||
 																				 rule->rulePriority > Distribution::defaultRule->rulePriority))
 										Distribution::defaultRule = rule;
@@ -1749,7 +1821,27 @@ void Settings::LoadDistrConfig()
 			}
 			if (prio != INT_MIN)
 				newrule->rulePriority = prio;
-			Distribution::_rules.push_back(newrule);
+
+			if (Distribution::_rules.contains(newrule)) {
+				auto ritr = Distribution::_rules.find(newrule);
+				if (ritr != Distribution::_rules.end()) {
+					// get old newrule
+					auto rtmp = *ritr;
+					// erase old newrule
+					Distribution::_rules.erase(newrule);
+					// delete old newrule
+					delete rtmp;
+					// insert new newrule
+					Distribution::_rules.insert(newrule);
+				} else {
+					logcritical("Critical error in code, please report to author. file: {}, rule:\"{}\"", std::get<1>(cpy), std::get<2>(cpy));
+					delete newrule;
+					delete splits;
+					continue;
+				}
+			} else
+				Distribution::_rules.insert(newrule);
+
 			if (newname == DefaultRuleName && (Distribution::defaultRule == nullptr ||
 												  newrule->rulePriority > Distribution::defaultRule->rulePriority))
 				Distribution::defaultRule = newrule;
@@ -1875,6 +1967,8 @@ void Settings::LoadDistrConfig()
 								} else
 									LOGL_2("updated Actor {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, prio, oldprio, std::get<1>(a));
 								break;
+							default:
+								LOGL_2("{} has the wrong FormType for rule attachment. file: {}, rule: \"{}\"", Utility::GetHex(std::get<1>(objects[i])), std::get<1>(a), std::get<2>(a));
 							}
 						}
 
@@ -1949,6 +2043,9 @@ void Settings::LoadDistrConfig()
 	if (Settings::PerkSkillBoosts == nullptr)
 		loginfo("[INIT] Couldn't find PerkSkillBoosts Perk in game.");
 
+	Settings::ConcPoison = RE::TESForm::LookupByID<RE::BGSPerk>(0x105F2F);
+	if (Settings::ConcPoison == nullptr)
+		loginfo("[INIT] Couldn't find ConcPoison Perk in game.");
 
 
 
@@ -2642,10 +2739,20 @@ void Settings::ClassifyItems()
 					item = form->As<RE::AlchemyItem>();
 					if (item) {
 						LOGL_4("Found AlchemyItem {}", Utility::PrintForm(item));
+						// check for exclusion based on keywords
+						if (item->HasKeyword(comp->NUP_ExcludeItem))
+						{
+							EXCL("[Keyword Excl] Item:      {}", Utility::PrintForm<RE::AlchemyItem>(item));
+							Distribution::_excludedItems.insert(item->GetFormID());
+							continue;
+						}
+
 						// unnamed items cannot appear in anyones inventory normally so son't add them to our lists
 						if (item->GetName() == nullptr || item->GetName() == (const char*)"" || strlen(item->GetName()) == 0 ||
 							std::string(item->GetName()).find(std::string("Dummy")) != std::string::npos ||
 							std::string(item->GetName()).find(std::string("dummy")) != std::string::npos) {
+							EXCL("[Dummy Item] Item:        {}", Utility::PrintForm<RE::AlchemyItem>(item));
+							Distribution::_excludedItems.insert(item->GetFormID());
 							continue;
 						}
 						// check whether item is excluded, or whether it is not whitelisted when in whitelist mode
@@ -2653,10 +2760,13 @@ void Settings::ClassifyItems()
 						if (Distribution::excludedItems()->contains(item->GetFormID()) ||
 							Settings::Whitelist::EnabledItems &&
 								!Distribution::whitelistItems()->contains(item->GetFormID())) {
+							EXCL("[Excluded Item] Item:     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							continue;
 						}
 						// check whether the plugin is excluded
 						if (Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(item)) == true) {
+							EXCL("[Excluded Plugin] Item:   {}", Utility::PrintForm<RE::AlchemyItem>(item));
+							Distribution::_excludedItems.insert(item->GetFormID());
 							continue;
 						}
 
@@ -2699,7 +2809,7 @@ void Settings::ClassifyItems()
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
 								excluded = true;
-								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
+								EXCL("[Magic Effects] Item:     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							itr++;
 						}
@@ -2718,7 +2828,7 @@ void Settings::ClassifyItems()
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
 								excluded = true;
-								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
+								EXCL("[Alchemic Effects] Item:  {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							break;
 						case ItemType::kPoison:
@@ -2727,7 +2837,7 @@ void Settings::ClassifyItems()
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
 								excluded = true;
-								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
+								EXCL("[Alchemic Effects] Item:  {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							break;
 						case ItemType::kFood:
@@ -2736,7 +2846,7 @@ void Settings::ClassifyItems()
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
 								excluded = true;
-								EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
+								EXCL("[Alchemic Effects] Item:  {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 							break;
 						}
@@ -2752,8 +2862,7 @@ void Settings::ClassifyItems()
 									if (item->effects[i]->effectItem.magnitude > 50) {
 										Distribution::_excludedItems.insert(item->GetFormID());
 										priorexcluded.insert(item->GetFormID());
-										LOGL_1("Excluded {} due to strong ReflectDamage effect", Utility::PrintForm(item));
-										EXCL("Item:                     {}", Utility::PrintForm<RE::AlchemyItem>(item));
+										EXCL("[Reflect Damage] Item:    {}", Utility::PrintForm<RE::AlchemyItem>(item));
 										continue;
 									}
 								}
@@ -2761,7 +2870,7 @@ void Settings::ClassifyItems()
 						}
 
 						// check if item has known alcohol keywords and add it to list of alcohol
-						if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol) || comp->LoadedApothecary() && item->HasKeyword(comp->Apot_SH_AlcoholDrinkKeyword)) {
+						if (comp->LoadedCACO() && item->HasKeyword(comp->CACO_VendorItemDrinkAlcohol) || comp->LoadedApothecary() && (item->HasKeyword(comp->Gour_FoodTypeAle) || item->HasKeyword(comp->Gour_FoodTypeDrugs) || item->HasKeyword(comp->Gour_FoodTypeWine))) {
 							Distribution::_alcohol.insert(item->GetFormID());
 						}
 
@@ -2771,7 +2880,7 @@ void Settings::ClassifyItems()
 								LOGL_1("Excluded {} for player due to effect", Utility::PrintForm(item));
 								Distribution::_excludedItemsPlayer.insert(item->GetFormID());
 								priorexcludedplayer.insert(item->GetFormID());
-								EXCL("Item Player:              {}", Utility::PrintForm<RE::AlchemyItem>(item));
+								EXCL("[Player Magic Eff] Item:  {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							}
 						}
 
@@ -2881,7 +2990,7 @@ void Settings::ClassifyItems()
 		while (itr != Distribution::_alcohol.end()) {
 			Distribution::_excludedItemsPlayer.insert(*itr);
 			priorexcludedplayer.insert(*itr);
-			EXCL("Item Player:              {}", Utility::PrintForm<RE::AlchemyItem>(RE::TESForm::LookupByID<RE::AlchemyItem>(*itr)));
+			EXCL("[Player Alcoholic] Item:  {}", Utility::PrintForm<RE::AlchemyItem>(RE::TESForm::LookupByID<RE::AlchemyItem>(*itr)));
 			itr++;
 		}
 	}

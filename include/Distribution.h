@@ -490,6 +490,14 @@ public:
 		std::vector<CustomItemAlch*> food;
 	};
 
+	struct StringLess
+	{
+		bool operator()(const Rule*& lhs, const Rule*& rhs) const
+		{
+			return lhs->ruleName < rhs->ruleName;
+		}
+	};
+
 private:
 	/// <summary>
 	/// Wether the distribution rules are loaded
@@ -499,7 +507,7 @@ private:
 	/// <summary>
 	/// internal vector holding all distribution rules
 	/// </summary>
-	static inline std::vector<Rule*> _rules;
+	static inline std::set<Rule*> _rules;
 	/// <summary>
 	/// internal map which maps npc -> Rules
 	/// </summary>
@@ -595,7 +603,8 @@ private:
 
 	
 public:
-	static inline std::vector<Rule*> _dummyVecR;
+
+	static inline std::set<Rule*> _dummyVecR;
 	static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
 	static inline std::unordered_map<uint32_t, std::vector<CustomItemStorage*>> _dummyMapC;
 	static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
@@ -614,7 +623,7 @@ public:
 	/// Returns the vector containing all rules
 	/// </summary>
 	/// <returns></returns>
-	static const std::vector<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
+	static const std::set<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
 	/// <summary>
 	/// Returns the map mapping npcs -> Rules
 	/// </summary>
@@ -796,8 +805,9 @@ public:
 	/// </summary>
 	/// <param name="poison"></param>
 	/// <param name="effects"></param>
+	/// <param name="force">force the dosage above 0</param>
 	/// <returns></returns>
-	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects);
+	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects, bool force = false);
 
 	/// <summary>
 	/// Returns whether an actor has been excluded from distribution

@@ -1352,17 +1352,17 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 	return ret;
 }
 
-int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects)
+int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects, bool forcenonzero)
 {
 	int dosage = 0;
 	auto itr = dosageItemMap()->find(poison->GetFormID());
 	if (itr != dosageItemMap()->end()) {
 		auto [force, setting, dos] = itr->second;
-		if (force && setting)
+		if (force && setting && forcenonzero == false)
 			dosage = Settings::Poisons::_Dosage;
 		else if (force)
 			dosage = dos;
-		else if (setting)
+		else if (setting && forcenonzero == false)
 			dosage = Settings::Poisons::_Dosage;
 		else if (Settings::Poisons::_BaseDosage == Settings::Poisons::_Dosage)
 			dosage = dos;
@@ -1377,11 +1377,11 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effect
 			auto itra = dosageEffectMap()->find(effvec[i]);
 			if (itra != dosageEffectMap()->end()) {
 				auto [force, setting, dos] = itr->second;
-				if (force && setting)
+				if (force && setting && forcenonzero == false)
 					dos = Settings::Poisons::_Dosage;
 				else if (force)
 					dos = dos;
-				else if (setting)
+				else if (setting && forcenonzero == false)
 					dos = Settings::Poisons::_Dosage;
 				else if (Settings::Poisons::_BaseDosage == Settings::Poisons::_Dosage)
 					dos = dos;
@@ -1393,7 +1393,7 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effect
 			dosage = min;
 	}
 	// if we did not find anything at all, assign the setting
-	if (dosage <= 0)
+	if (dosage <= 0 && forcenonzero == false)
 		dosage = Settings::Poisons::_Dosage;
 	return dosage;
 }
