@@ -350,7 +350,7 @@ private:
 	/// Updates certain actor metrics
 	/// [Should only be called, directly after updating the actor value]
 	/// </summary>
-	void UpdateMetrics(RE::Actor* reac);
+	void UpdateMetrics(RE::ActorHandle handle);
 
 	/// <summary>
 	/// Returns whether the given custom item can be used by the actor

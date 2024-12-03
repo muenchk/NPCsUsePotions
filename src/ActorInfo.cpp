@@ -20,8 +20,8 @@ void ActorInfo::Init()
 ActorInfo::ActorInfo(RE::Actor* _actor)
 {
 	LOG_3("");
-	actor = _actor->GetHandle();
 	if (_actor) {
+		actor = _actor->GetHandle();
 		formid.SetID(_actor->GetFormID());
 		// get original id
 		if (const auto extraLvlCreature = _actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
@@ -50,7 +50,7 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 				_haslefthand = true;
 		}
 		// Run since [actor] is valid
-		UpdateMetrics(_actor);
+		UpdateMetrics(actor);
 		// update poison resistance
 		UpdatePermanentPoisonResist();
 		// set to valid
@@ -69,7 +69,6 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		return;
 	}
 	aclock;
-	actor = _actor->GetHandle();
 	durHealth = 0;
 	durMagicka = 0;
 	durStamina = 0;
@@ -96,6 +95,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	target = std::weak_ptr<ActorInfo>{};
 	handleactor = false;
 	if (_actor) {
+		actor = _actor->GetHandle();
 		formid.SetID(_actor->GetFormID());
 		// get original id
 		if (const auto extraLvlCreature = _actor->extraList.GetByType<RE::ExtraLeveledCreature>()) {
@@ -122,7 +122,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 				_haslefthand = true;
 		}
 		// Run since [actor] is valid
-		UpdateMetrics(_actor);
+		UpdateMetrics(actor);
 		// update poison resistance
 		UpdatePermanentPoisonResist();
 		// set to valid
@@ -271,10 +271,12 @@ std::string ActorInfo::ToString()
 	return "actor addr: " + Utility::GetHex(reinterpret_cast<std::uintptr_t>(actor.get().get())) + "\tactor:" + Utility::PrintForm(actor.get().get());
 }
 
-void ActorInfo::UpdateMetrics(RE::Actor* reac)
+void ActorInfo::UpdateMetrics(RE::ActorHandle handle)
 {
-	playerDistance = reac->GetPosition().GetSquaredDistance(playerPosition);
-	playerHostile = reac->IsHostileToActor(playerRef);
+	if (RE::Actor* reac = actor.get().get(); reac != nullptr) {
+		playerDistance = reac->GetPosition().GetSquaredDistance(playerPosition);
+		playerHostile = reac->IsHostileToActor(playerRef);
+	}
 }
 
 std::vector<CustomItemAlch*> ActorInfo::FilterCustomConditionsDistr(std::vector<CustomItemAlch*> itms)
@@ -1226,7 +1228,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				} else {
 					formid.SetOriginalID(reac->GetActorBase()->GetFormID());
 				}
-				UpdateMetrics(reac);
+				UpdateMetrics(actor);
 				timestamp_invalid = 0;
 				// update poison resitance
 				UpdatePermanentPoisonResist();
@@ -1252,7 +1254,7 @@ void ActorInfo::Update()
 			_vampire = true;
 		// update the metrics, since we are sure our object is valid
 		SKSE::GetTaskInterface()->AddTask([this, reac]() {
-			this->UpdateMetrics(reac);
+			this->UpdateMetrics(actor);
 		});
 	}
 	else
