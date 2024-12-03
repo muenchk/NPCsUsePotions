@@ -765,11 +765,6 @@ public:
 	/// </summary>
 	static inline RE::BGSPerk* PerkSkillBoosts;
 	/// <summary>
-	/// Game perk "Concentrated Poison" to modify poison dosage
-	/// </summary>
-	static inline RE::BGSPerk* ConcPoison;
-
-	/// <summary>
 	/// Game equip slot for the left hand
 	/// </summary>
 	static inline RE::BGSEquipSlot* Equip_LeftHand;

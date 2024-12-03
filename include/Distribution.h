@@ -529,9 +529,13 @@ private:
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedAssoc;
 	/// <summary>
-	/// set that contains items that may not be distributed
+	/// set that contains items that may not be distributed or used
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedItems;
+	/// <summary>
+	/// set that contains items that may not be distributed
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _excludedDistrItems;
 	/// <summary>
 	/// set that contains items that may not be distributed
 	/// </summary>
@@ -650,10 +654,15 @@ public:
 	/// <returns></returns>
 	static const std::unordered_set<RE::FormID>* excludedAssoc() { return initialised ? &_excludedAssoc : &_dummySet1; }
 	/// <summary>
-	/// returns the set of items excluded from distribution
+	/// returns the set of items excluded from distribution and usage
 	/// </summary>
 	/// <returns></returns>
 	static const std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
+	/// <summary>
+	/// returns the set of items excluded from distribution
+	/// </summary>
+	/// <returns></returns>
+	static const std::unordered_set<RE::FormID>* excludedDistrItems() { return initialised ? &_excludedDistrItems : &_dummySet1; }
 	/// <summary>
 	/// returns the set that contains item IDs that are excluded for the player only
 	/// </summary>
@@ -800,6 +809,12 @@ public:
 	/// <param name="actor"></param>
 	/// <returns></returns>
 	static std::vector<RE::AlchemyItem*> GetAllInventoryItems(std::shared_ptr<ActorInfo> const& acinfo);
+	/// <summary>
+	/// Removes all items from the given list that are excluded from distribution only
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static void FilterDistributionExcludedItems(std::vector<RE::AlchemyItem*>& items);
 	/// <summary>
 	/// Returns the dosage of a poison
 	/// </summary>

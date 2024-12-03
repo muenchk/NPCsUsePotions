@@ -125,6 +125,7 @@ namespace Events
 						if (Settings::Removal::_RemoveItemsOnDeath) {
 							LOG_1("[TESDeathEvent] Removing items from actor {}", std::to_string(acinfo->GetFormID()));
 							auto items = Distribution::GetAllInventoryItems(acinfo);
+							Distribution::FilterDistributionExcludedItems(items);
 							LOG_1("[TESDeathEvent] found {} items", items.size());
 							if (items.size() > 0) {
 								// remove items that are too much
@@ -392,6 +393,7 @@ namespace Events
 			// handle event for an actor
 			//std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 			
+			// if actor is the player character
 			
 		}
 		

@@ -5,6 +5,10 @@
 class Compatibility
 {
 public:
+	// Base Game
+	static inline RE::BGSPerk* ConcPoison;
+
+
 	// NPCsUsePotions
 	std::string NPCsUsePotions = "NPCsUsePotions.esp";
 	RE::BGSKeyword* NUP_IgnoreItem = nullptr;
@@ -15,6 +19,8 @@ public:
 
 	// Vokrii
 	static inline std::string Vokrii = "Vokrii - Minimalistic Perks of Skyrim.esp";
+	static inline RE::BGSPerk* ConcPoison2;
+	static inline RE::BGSPerk* ConcPoison3;
 
 	// Adamant
 	static inline std::string Adamant = "Adamant.esp";

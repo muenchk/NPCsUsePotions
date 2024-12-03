@@ -1359,6 +1359,17 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 	return ret;
 }
 
+void Distribution::FilterDistributionExcludedItems(std::vector<RE::AlchemyItem*>& items)
+{
+	auto ritr = items.begin();
+	while (ritr != items.end()) {
+		if (_excludedDistrItems.contains((*ritr)->GetFormID()))
+			ritr == items.erase(ritr);
+		else
+			ritr++;
+	}
+}
+
 int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects, bool forcenonzero)
 {
 	int dosage = 0;
@@ -1421,6 +1432,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 	}
 	bool ret = Distribution::excludedNPCs()->contains(acinfo->GetFormID());
 	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetPluginID());
+	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetRaceFormID());
 	ret |= acinfo->IsFollower();
 	ret |= (Distribution::excludedNPCs()->contains(acinfo->GetFormIDOriginal()));
 	for (auto& id : acinfo->GetTemplateIDs())
@@ -1474,6 +1486,7 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 		if (ret == false && !Distribution::npcMap()->contains(id) && !Distribution::npcMap()->contains(id.GetOriginalID())) {
 			auto race = actor->GetRace();
 			if (race) {
+				ret |= Distribution::excludedPlugins_NPCs()->contains(race->GetFormID());
 				ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
 				for (uint32_t i = 0; i < race->numKeywords; i++) {
 					ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());

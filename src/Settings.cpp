@@ -1344,6 +1344,32 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
+							case 22: // exclude item from distribution only
+								{
+									if (splits->size() != 3) {
+										logwarn("rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kItem:
+											Distribution::_excludedDistrItems.insert(std::get<1>(items[i]));
+											LOGL_2("excluded {} fro distribution only", Utility::GetHex(std::get<1>(items[i])));
+											break;
+										default:
+											LOGL_2("cannot exclude {} from distribution: Wrong FormType. file: {}, rule: \"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+											break;
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
 							default:
 								logwarn("Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;
@@ -2076,10 +2102,6 @@ void Settings::LoadDistrConfig()
 	if (Settings::PerkSkillBoosts == nullptr)
 		loginfo("[INIT] Couldn't find PerkSkillBoosts Perk in game.");
 
-	Settings::ConcPoison = RE::TESForm::LookupByID<RE::BGSPerk>(0x105F2F);
-	if (Settings::ConcPoison == nullptr)
-		loginfo("[INIT] Couldn't find ConcPoison Perk in game.");
-
 
 
 
@@ -2800,6 +2822,12 @@ void Settings::ClassifyItems()
 						if (Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(item)) == true) {
 							EXCL("[Excluded Plugin] Item:   {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							Distribution::_excludedItems.insert(item->GetFormID());
+							continue;
+						}
+						// check whether the item is excluded from distrubtion only
+						if (Distribution::excludedDistrItems()->contains(item->GetFormID()))
+						{
+							EXCL("Excluded Distr] Item:     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							continue;
 						}
 

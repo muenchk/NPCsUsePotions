@@ -281,22 +281,29 @@ void Compatibility::Load()
 		LOG_1("Found Ultimate Animted Potions.");
 	}
 
+	// base game
+	ConcPoison = RE::TESForm::LookupByID<RE::BGSPerk>(0x105F2F);
+	if (ConcPoison == nullptr)
+		loginfo("[INIT] Couldn't find ConcPoison Perk in game.");
+
 	// ordinator
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Ordinator); index != 0x1) {
 		LOG_1("Found plugin Ordinator - Perks of Skyrim.esp.");
-		_loadedApothecary = true;
+		_loadedOrdinator = true;
 	}
 
 	// vokrii
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Vokrii); index != 0x1) {
 		LOG_1("Found plugin Vokrii - Minimalistic Perks of Skyrim.esp.");
-		_loadedApothecary = true;
+		_loadedVokrii = true;
+		ConcPoison2 = datahandler->LookupForm<RE::BGSPerk>(0x3120F8, Vokrii);
+		ConcPoison3 = datahandler->LookupForm<RE::BGSPerk>(0x3120F9, Vokrii);
 	}
 
 	// adamant
 	if (const uint32_t index = Utility::Mods::GetPluginIndex(Adamant); index != 0x1) {
 		LOG_1("Found plugin Adamant.esp.");
-		_loadedApothecary = true;
+		_loadedAdamant = true;
 	}
 
 	// global

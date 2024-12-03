@@ -1831,28 +1831,38 @@ int32_t ActorInfo::GetBasePoisonDosage(Compatibility* comp)
 
 		//} else
 		//	return 1;
-		if (act->HasPerk(Settings::ConcPoison))
-		{
-			if (comp->LoadedOrdinator())
-			{
+		if (comp->LoadedOrdinator()) {
+			if (act->HasPerk(comp->ConcPoison)) {
 				// apply ordinator values
 				// Function: Add Actor Value Mult, Data: 0.1 * Alchemy
 				float alchemy = ACM::GetAV(act, RE::ActorValue::kAlchemy);
 				return 1 /*base value*/ + (int32_t)(0.1 * alchemy);
 			}
-			else if (comp->LoadedVokrii())
+		} else if (comp->LoadedVokrii()) {
+			if (act->HasPerk(comp->ConcPoison3)) {
+				// apply vokrii values
+				// Function: Add Value, Data: 6
+				return 7;
+			}
+			else if (act->HasPerk(comp->ConcPoison2))
+			{
+				// apply vokrii values
+				// Function: Add Value, Data: 4
+				return 5;
+			}
+			else if (act->HasPerk(comp->ConcPoison))
 			{
 				// apply vokrii values
 				// Function: Add Value, Data: 2
 				return 3;
 			}
-			else if (comp->LoadedAdamant())
-			{
+		} else if (comp->LoadedAdamant()) {
+			if (act->HasPerk(comp->ConcPoison)) {
 				// admant removes this functionality
 				return 1;
 			}
-			else
-			{
+		} else {
+			if (act->HasPerk(comp->ConcPoison)) {
 				// apply base skyrim values
 				// Function: Set Value, Data: 2
 				return 2;
