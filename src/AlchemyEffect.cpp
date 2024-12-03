@@ -836,3 +836,4 @@ const AlchemicEffect AlchemicEffect::kAnyPoison = AlchemicEffect(0, static_cast<
 const AlchemicEffect AlchemicEffect::kAnyRegen = AlchemicEffect(0, static_cast<uint64_t>(AlchemyBaseEffectSecond::kAnyRegen));
 const AlchemicEffect AlchemicEffect::kAnyFortify = AlchemicEffect(0, static_cast<uint64_t>(AlchemyBaseEffectSecond::kAnyFortify));
 const AlchemicEffect AlchemicEffect::kAnyFood = AlchemicEffect(0, static_cast<uint64_t>(AlchemyBaseEffectSecond::kAnyFood));
+const AlchemicEffect AlchemicEffect::kAllPotions = AlchemicEffect(0, static_cast<uint64_t>(AlchemyBaseEffectSecond::kAllPotions));

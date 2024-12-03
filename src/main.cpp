@@ -90,6 +90,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
 	StartProfiling;
 	switch (a_msg->type) {
+	case SKSE::MessagingInterface::kPreLoadGame:
+		Settings::InitGameStuff();
+		break;
 	case SKSE::MessagingInterface::kDataLoaded:
 		// init ActorInfo's statics
 		ActorInfo::Init();

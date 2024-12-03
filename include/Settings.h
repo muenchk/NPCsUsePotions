@@ -427,6 +427,11 @@ public:
 		/// [Settings] general probability scaling
 		/// </summary>
 		static inline float _ProbabilityScaling = 1.0f;
+
+		/// <summary>
+		/// [Settings] potions that have invisibility as one of their effects may not be distributed as other kinds of potions
+		/// </summary>
+		static inline bool _DoNotDistributeMixedInvisPotions = false;
 	};
 
 	/// <summary>
@@ -759,7 +764,6 @@ public:
 	/// Game perk for Skill Boosts
 	/// </summary>
 	static inline RE::BGSPerk* PerkSkillBoosts;
-
 	/// <summary>
 	/// Game equip slot for the left hand
 	/// </summary>
@@ -842,8 +846,12 @@ public:
 	{
 		std::vector<RE::AlchemyItem*> ret;
 		for (auto entry : list) {
-			if ((std::get<0>(entry) & effect) > 0)
+			//if ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid()) {
+			//	logusage("Has InvisibilityEffect, DoNot {}, haseff {}", Settings::Distr::_DoNotDistributeMixedInvisPotions, (std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid());
+			//}
+			if ((std::get<0>(entry) & effect) > 0 && (Settings::Distr::_DoNotDistributeMixedInvisPotions == false || Settings::Distr::_DoNotDistributeMixedInvisPotions && ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid() == false || (effect & AlchemicEffect::kInvisibility).IsValid()))) {
 				ret.push_back(std::get<1>(entry));
+			}
 		}
 		return ret;
 	}

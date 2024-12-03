@@ -490,6 +490,14 @@ public:
 		std::vector<CustomItemAlch*> food;
 	};
 
+	struct StringLess
+	{
+		bool operator()(const Rule* lhs, const Rule* rhs) const
+		{
+			return lhs->ruleName < rhs->ruleName;
+		}
+	};
+
 private:
 	/// <summary>
 	/// Wether the distribution rules are loaded
@@ -499,7 +507,7 @@ private:
 	/// <summary>
 	/// internal vector holding all distribution rules
 	/// </summary>
-	static inline std::vector<Rule*> _rules;
+	static inline std::set<Rule*, StringLess> _rules;
 	/// <summary>
 	/// internal map which maps npc -> Rules
 	/// </summary>
@@ -521,9 +529,13 @@ private:
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedAssoc;
 	/// <summary>
-	/// set that contains items that may not be distributed
+	/// set that contains items that may not be distributed or used
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _excludedItems;
+	/// <summary>
+	/// set that contains items that may not be distributed
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _excludedDistrItems;
 	/// <summary>
 	/// set that contains items that may not be distributed
 	/// </summary>
@@ -595,7 +607,8 @@ private:
 
 	
 public:
-	static inline std::vector<Rule*> _dummyVecR;
+
+	static inline std::set<Rule*, StringLess> _dummyVecR;
 	static inline std::unordered_map<RE::FormID, Rule*> _dummyMapN;
 	static inline std::unordered_map<uint32_t, std::vector<CustomItemStorage*>> _dummyMapC;
 	static inline std::unordered_map<RE::FormID, std::pair<int, Rule*>> _dummyMap2;
@@ -614,7 +627,7 @@ public:
 	/// Returns the vector containing all rules
 	/// </summary>
 	/// <returns></returns>
-	static const std::vector<Rule*>* rules() { return initialised ? &_rules : &_dummyVecR; }
+	static const std::set<Rule*, StringLess>* rules() { return initialised ? &_rules : &_dummyVecR; }
 	/// <summary>
 	/// Returns the map mapping npcs -> Rules
 	/// </summary>
@@ -641,10 +654,15 @@ public:
 	/// <returns></returns>
 	static const std::unordered_set<RE::FormID>* excludedAssoc() { return initialised ? &_excludedAssoc : &_dummySet1; }
 	/// <summary>
-	/// returns the set of items excluded from distribution
+	/// returns the set of items excluded from distribution and usage
 	/// </summary>
 	/// <returns></returns>
 	static const std::unordered_set<RE::FormID>* excludedItems() { return initialised ? &_excludedItems : &_dummySet1; }
+	/// <summary>
+	/// returns the set of items excluded from distribution
+	/// </summary>
+	/// <returns></returns>
+	static const std::unordered_set<RE::FormID>* excludedDistrItems() { return initialised ? &_excludedDistrItems : &_dummySet1; }
 	/// <summary>
 	/// returns the set that contains item IDs that are excluded for the player only
 	/// </summary>
@@ -792,12 +810,19 @@ public:
 	/// <returns></returns>
 	static std::vector<RE::AlchemyItem*> GetAllInventoryItems(std::shared_ptr<ActorInfo> const& acinfo);
 	/// <summary>
+	/// Removes all items from the given list that are excluded from distribution only
+	/// </summary>
+	/// <param name="actor"></param>
+	/// <returns></returns>
+	static void FilterDistributionExcludedItems(std::vector<RE::AlchemyItem*>& items);
+	/// <summary>
 	/// Returns the dosage of a poison
 	/// </summary>
 	/// <param name="poison"></param>
 	/// <param name="effects"></param>
+	/// <param name="force">force the dosage above 0</param>
 	/// <returns></returns>
-	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects);
+	static int GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects, bool force = false);
 
 	/// <summary>
 	/// Returns whether an actor has been excluded from distribution

@@ -300,6 +300,9 @@ void Settings::Load()
 		Distr::_ProbabilityScaling = (float)ini.GetDoubleValue("Distribution", "ProbabilityScaling", Distr::_ProbabilityScaling);
 		loginfo("Setting: {} {}", "Distribution:      ProbabilityScaling", std::to_string(Distr::_ProbabilityScaling));
 
+		Distr::_DoNotDistributeMixedInvisPotions = ini.GetBoolValue("Distribution", "DoNotDistributeMixedInvisPotions", Distr::_DoNotDistributeMixedInvisPotions);
+		loginfo("Setting: {} {}", "Distribution:      DoNotDistributeMixedInvisPotions", std::to_string(Distr::_DoNotDistributeMixedInvisPotions));
+
 		// removal
 		Removal::_RemoveItemsOnDeath = ini.GetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath);
 		loginfo("Setting: {} {}", "Removal:           RemoveItemsOnDeath", std::to_string(Removal::_RemoveItemsOnDeath));
@@ -534,6 +537,14 @@ void Settings::Save()
 		"// Even though an overall increase in items is possible, it is incredibly \n"
 		"// unlikely due to the small base-probabilities for anything beyond 4 items.\n"
 		"// Anything value around 2.0 might guarantee 3 or 4 potions and poisons for most npcs.");
+
+	ini.SetBoolValue("Distribution", "DoNotDistributeMixedInvisPotions", Distr::_DoNotDistributeMixedInvisPotions,
+		"// Potions with Invisibility as one of their effects may not be distributed\n"
+		"// when they are chosen for one of their other effects.\n"
+		"// Example: [Setting: false] An NPC will be given a health potion. A health potion with\n"
+		"// the secondary effect Invisibility might be chosen and given to the player.\n"
+		"// [Setting: true] An NPC will be given a health potion. A health potion with\n"
+		"// with arbitrary secondary effects except Invisibility might be chosen.");
 
 	// removal
 	ini.SetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath, "// Remove items from NPCs after they died.");

@@ -766,4 +766,33 @@ namespace Events
 		PROF_1(TimeProfiling, "execution time.");
 	}
 
+	void Main::AdjustPlayerCooldowns(RE::AlchemyItem* alch)
+	{
+		auto player = data->FindActorExisting(RE::PlayerCharacter::GetSingleton());
+		if (alch->IsPoison())
+		{
+			std::tuple<bool, float, int, AlchemicEffect, bool> val = ACM::HasAlchemyEffect(alch, AlchemicEffect::kAnyPoison);
+			if (std::get<3>(val).IsValid()) {  // check whether an effect was applied
+				player->SetGlobalCooldownTimer(comp->GetGlobalCooldownPoisons());
+				LOG_1("Adjusted for Poison");
+			} else
+				LOG_1("Adjustment for Poison failed");
+		}
+		else if (alch->IsFood()) {
+			std::tuple<bool, float, int, AlchemicEffect, bool> val = ACM::HasAlchemyEffect(alch, AlchemicEffect::kAnyFood);
+
+			player->SetNextFoodTime(Main::CalcFoodDuration(std::get<2>(val)));
+			player->SetGlobalCooldownTimer(comp->GetGlobalCooldownFood());
+			LOG_1("Adjusted for Food");
+
+		} else { // potion
+
+			std::tuple<bool, float, int, AlchemicEffect, bool> val = ACM::HasAlchemyEffect(alch, AlchemicEffect::kAllPotions);
+			
+			CalcActorCooldowns(player, std::get<3>(val), std::get<2>(val));
+			player->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
+			LOG_1("Adjusted for Potion");
+		}
+	}
+
 }

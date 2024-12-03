@@ -429,6 +429,12 @@ namespace Events
 		/// <param name="died"></param>
 		static void PlayerDied(bool died) { playerdied = died; }
 
+		/// <summary>
+		/// Adjusts the players cooldowns based on the alchemyitem they used
+		/// </summary>
+		/// <param name="alch"></param>
+		static void AdjustPlayerCooldowns(RE::AlchemyItem* alch);
+
 		//-------------------GameFunctions-------------------------
 
 		/// <summary>
@@ -493,6 +499,8 @@ namespace Events
 		public RE::BSTEventSink<RE::TESActivateEvent>
 	{
 	public:
+		std::unordered_map<RE::FormID, std::chrono::steady_clock::time_point> time_map;
+
 		/// <summary>
 		/// returns singleton to the EventHandler
 		/// </summary>

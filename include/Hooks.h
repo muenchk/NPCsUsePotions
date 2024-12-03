@@ -2,6 +2,25 @@
 namespace Hooks
 {
 	/// <summary>
+	/// executed when the player uses a potion
+	/// </summary>
+	class PlayerUsePotionHook
+	{
+	public:
+		static void InstallHook()
+		{
+			REL::Relocation<uintptr_t> target{ REL::VariantID(39604, 40690, 0x6d7b00), REL::VariantOffset(0x15, 0x15, 0x15) };
+			auto& trampoline = SKSE::GetTrampoline();
+
+			_PlayerUsePotion = trampoline.write_call<5>(target.address(), PlayerUsePotion);
+		}
+
+	private:
+		static bool PlayerUsePotion(uint64_t self, RE::AlchemyItem* alch, uint64_t extralist);
+		static inline REL::Relocation<decltype(PlayerUsePotion)> _PlayerUsePotion;
+	};
+
+	/// <summary>
 	/// executed when confirming fast travel message box on world map
 	/// </summary>
 	class FastTravelConfirmHook

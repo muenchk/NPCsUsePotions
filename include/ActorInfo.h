@@ -8,6 +8,8 @@
 
 #define aclock ((void)0);  //std::lock_guard<std::mutex> guard(mutex);
 
+class Compatibility;
+
 #pragma once
 /// <summary>
 /// Determines the strength of an Item
@@ -1065,6 +1067,12 @@ public:
 	/// Returns whether the actor is bleeding out
 	/// </summary>
 	bool IsBleedingOut();
+
+	/// <summary>
+	/// Returns the basic poison dosage as the result of perks
+	/// </summary>
+	/// <returns></returns>
+	int32_t GetBasePoisonDosage(Compatibility* comp);
 
 #pragma endregion
 };

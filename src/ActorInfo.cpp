@@ -7,6 +7,7 @@
 #include "BufferOperations.h"
 #include "ActorManipulation.h"
 #include "Data.h"
+#include "Compatibility.h"
 
 
 void ActorInfo::Init()
@@ -48,13 +49,13 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 			if (slot->GetFormID() == 0x13F43) // LeftHand
 				_haslefthand = true;
 		}
-		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
 		// update poison resistance
 		UpdatePermanentPoisonResist();
 		// set to valid
 		valid = true;
+		_formstring = Utility::PrintForm(this);
 		timestamp_invalid = 0;
 		dead = false;
 	}
@@ -120,13 +121,13 @@ void ActorInfo::Reset(RE::Actor* _actor)
 			if (slot->GetFormID() == 0x13F43)  // LeftHand
 				_haslefthand = true;
 		}
-		_formstring = Utility::PrintForm(this);
 		// Run since [actor] is valid
 		UpdateMetrics(_actor);
 		// update poison resistance
 		UpdatePermanentPoisonResist();
 		// set to valid
 		valid = true;
+		_formstring = Utility::PrintForm(this);
 		timestamp_invalid = 0;
 		dead = false;
 	}
@@ -1789,6 +1790,90 @@ bool ActorInfo::IsBleedingOut()
 	if (actor.get() && actor.get().get())
 		return actor.get().get()->AsActorState()->IsBleedingOut();
 	return false;
+}
+
+/*
+class PerkEntryVisitorActor : public RE::PerkEntryVisitor
+{
+public:
+	std::list<RE::BGSPerkEntry*> entries;
+
+	int32_t GetDosage()
+	{
+		entries.sort([](RE::BGSPerkEntry* first, RE::BGSPerkEntry* second) {
+			return first->GetPriority() > second->GetPriority();
+		});
+		auto itr = entries.begin();
+		while (itr != entries.end())
+		{
+			switch ((*itr)->GetFunction() == RE::BGSPerkEntry::EntryPoint::kModPoisonDoseCount)
+				(*itr)->GetFunctionData()
+			itr++;
+		}
+	}
+
+	RE::BSContainer::ForEachResult Visit(RE::BGSPerkEntry* a_perkEntry) override
+	{
+		if (a_perkEntry)
+			entries.push_back(a_perkEntry);
+		return RE::BSContainer::ForEachResult::kContinue;
+	}
+};
+*/
+int32_t ActorInfo::GetBasePoisonDosage(Compatibility* comp)
+{
+	aclock;
+	if (!valid || dead)
+		return 0;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		int32_t dosage = 0;
+		//PerkEntryVisitorActor visit;
+		//if (act->HasPerkEntries(RE::Actor::EntryPoint::kModPoisonDoseCount)) {
+		//	act->ForEachPerkEntry(RE::Actor::EntryPoint::kModPoisonDoseCount, visit);
+
+		//} else
+		//	return 1;
+		if (comp->LoadedOrdinator()) {
+			if (act->HasPerk(comp->ConcPoison)) {
+				// apply ordinator values
+				// Function: Add Actor Value Mult, Data: 0.1 * Alchemy
+				float alchemy = ACM::GetAV(act, RE::ActorValue::kAlchemy);
+				return 1 /*base value*/ + (int32_t)(0.1 * alchemy);
+			}
+		} else if (comp->LoadedVokrii()) {
+			if (act->HasPerk(comp->ConcPoison3)) {
+				// apply vokrii values
+				// Function: Add Value, Data: 6
+				return 7;
+			}
+			else if (act->HasPerk(comp->ConcPoison2))
+			{
+				// apply vokrii values
+				// Function: Add Value, Data: 4
+				return 5;
+			}
+			else if (act->HasPerk(comp->ConcPoison))
+			{
+				// apply vokrii values
+				// Function: Add Value, Data: 2
+				return 3;
+			}
+		} else if (comp->LoadedAdamant()) {
+			if (act->HasPerk(comp->ConcPoison)) {
+				// admant removes this functionality
+				return 1;
+			}
+		} else {
+			if (act->HasPerk(comp->ConcPoison)) {
+				// apply base skyrim values
+				// Function: Set Value, Data: 2
+				return 2;
+			}
+		}
+	}
+	return 0;
 }
 
 #pragma endregion

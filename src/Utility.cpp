@@ -1089,9 +1089,9 @@ std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> Utili
 					}
 				} else {
 					if (form) {
-						logwarn("FormID {} couldn't be found. file: \"{}\" Rule: \"\"", GetHex(formid), file, line);
+						logwarn("FormID {} couldn't be found. file: \"{}\" Rule: \"{}\"", GetHex(formid), file, line);
 					} else {
-						logwarn("EditorID {} couldn't be found. file: \"{}\" Rule: \"\"", editorid, file, line);
+						logwarn("EditorID {} couldn't be found. file: \"{}\" Rule: \"{}\"", editorid, file, line);
 					}
 				}
 			} else {

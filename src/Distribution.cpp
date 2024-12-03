@@ -343,7 +343,9 @@ AlchemicEffect Distribution::Rule::GetRandomEffect(std::vector<std::tuple<int, A
 {
 	int random = randRR(randi);
 	for (int i = 0; i < distribution.size(); i++) {
+		//logusage("Checking Effect: {}", std::get<1>(distribution[i]).string());
 		if (random <= std::get<0>(distribution[i])) {
+			//logusage("Choosing Effect: {}, val {}", std::get<1>(distribution[i]).string(), random);
 			return std::get<1>(distribution[i]);
 		}
 	}
@@ -509,8 +511,13 @@ RetryPotion:
 	}
 	// return random item
 	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
-		return items[r(randi)];
+	if (items.size() > 0) {
+		auto item = items[r(randi)];
+		//logusage("Looking for effect {}, gave {}", eff.string(), Utility::PrintForm(item));
+
+	} else {
+		//logusage("Looking for effect {}, item size 0", eff.string());
+	}
 	return nullptr;
 }
 RE::AlchemyItem* Distribution::Rule::GetRandomPoison1(std::shared_ptr<ActorInfo> const& acinfo)
@@ -1352,17 +1359,28 @@ std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr
 	return ret;
 }
 
-int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects)
+void Distribution::FilterDistributionExcludedItems(std::vector<RE::AlchemyItem*>& items)
+{
+	auto ritr = items.begin();
+	while (ritr != items.end()) {
+		if (_excludedDistrItems.contains((*ritr)->GetFormID()))
+			ritr == items.erase(ritr);
+		else
+			ritr++;
+	}
+}
+
+int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effects, bool forcenonzero)
 {
 	int dosage = 0;
 	auto itr = dosageItemMap()->find(poison->GetFormID());
 	if (itr != dosageItemMap()->end()) {
 		auto [force, setting, dos] = itr->second;
-		if (force && setting)
+		if (force && setting && forcenonzero == false)
 			dosage = Settings::Poisons::_Dosage;
 		else if (force)
 			dosage = dos;
-		else if (setting)
+		else if (setting && forcenonzero == false)
 			dosage = Settings::Poisons::_Dosage;
 		else if (Settings::Poisons::_BaseDosage == Settings::Poisons::_Dosage)
 			dosage = dos;
@@ -1377,11 +1395,11 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effect
 			auto itra = dosageEffectMap()->find(effvec[i]);
 			if (itra != dosageEffectMap()->end()) {
 				auto [force, setting, dos] = itr->second;
-				if (force && setting)
+				if (force && setting && forcenonzero == false)
 					dos = Settings::Poisons::_Dosage;
 				else if (force)
 					dos = dos;
-				else if (setting)
+				else if (setting && forcenonzero == false)
 					dos = Settings::Poisons::_Dosage;
 				else if (Settings::Poisons::_BaseDosage == Settings::Poisons::_Dosage)
 					dos = dos;
@@ -1393,7 +1411,7 @@ int Distribution::GetPoisonDosage(RE::AlchemyItem* poison, AlchemicEffect effect
 			dosage = min;
 	}
 	// if we did not find anything at all, assign the setting
-	if (dosage <= 0)
+	if (dosage <= 0 && forcenonzero == false)
 		dosage = Settings::Poisons::_Dosage;
 	return dosage;
 }
@@ -1415,6 +1433,7 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 	}
 	bool ret = Distribution::excludedNPCs()->contains(acinfo->GetFormID());
 	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetPluginID());
+	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetRaceFormID());
 	ret |= acinfo->IsFollower();
 	ret |= (Distribution::excludedNPCs()->contains(acinfo->GetFormIDOriginal()));
 	for (auto& id : acinfo->GetTemplateIDs())
@@ -1471,6 +1490,7 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 		if (ret == false && !Distribution::npcMap()->contains(id) && !Distribution::npcMap()->contains(id.GetOriginalID())) {
 			auto race = actor->GetRace();
 			if (race) {
+				ret |= Distribution::excludedPlugins_NPCs()->contains(race->GetFormID());
 				ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
 				for (uint32_t i = 0; i < race->numKeywords; i++) {
 					ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());

@@ -111,6 +111,7 @@ namespace Events
 						if (Settings::Removal::_RemoveItemsOnDeath) {
 							LOG_1("[TESDeathEvent] Removing items from actor {}", std::to_string(acinfo->GetFormID()));
 							auto items = Distribution::GetAllInventoryItems(acinfo);
+							Distribution::FilterDistributionExcludedItems(items);
 							LOG_1("[TESDeathEvent] found {} items", items.size());
 							if (items.size() > 0) {
 								// remove items that are too much
@@ -377,13 +378,15 @@ namespace Events
 	/// <param name="count">The number of items added</param>
 	/// <param name="sourceContainer">The container the item was in before</param>
 	/// <param name="a_event">The event information</param>
-	void EventHandler::OnItemAdded(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* /*sourceContainer*/, const RE::TESContainerChangedEvent* /*a_event*/)
+	void EventHandler::OnItemAdded(RE::TESObjectREFR* container, RE::TESBoundObject* baseObj, int /*count*/, RE::TESObjectREFR* sourceContainer, const RE::TESContainerChangedEvent* /*a_event*/)
 	{
 		LOG_1("[OnItemAddedEvent] {} added to {}", Utility::PrintForm(baseObj), Utility::PrintForm(container));
 		RE::Actor* actor = container->As<RE::Actor>();
 		if (actor) {
 			// handle event for an actor
 			//std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
+			
+			// if actor is the player character
 			
 		}
 		
