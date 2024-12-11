@@ -304,7 +304,8 @@ namespace Events
 				acinfo->IsInRagdollState() ||
 				acinfo->IsUnconscious() ||
 				acinfo->IsStaggered() ||
-				acinfo->IsBleedingOut()) {
+				acinfo->IsBleedingOut() ||
+				acinfo->IsSleeping()) {
 				LOG_1("Actor is unable to use items");
 				acinfo->SetHandleActor(false);
 				return;
