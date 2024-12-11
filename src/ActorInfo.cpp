@@ -1794,6 +1794,17 @@ bool ActorInfo::IsBleedingOut()
 	return false;
 }
 
+bool ActorInfo::IsSleeping()
+{
+	aclock;
+	if (!valid || dead)
+		return false;
+
+	if (actor.get() && actor.get().get())
+		return actor.get().get()->AsActorState()->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSleeping || actor.get().get()->AsActorState()->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kWaitingForSleepAnim;
+	return false;
+}
+
 /*
 class PerkEntryVisitorActor : public RE::PerkEntryVisitor
 {

@@ -1069,6 +1069,12 @@ public:
 	bool IsBleedingOut();
 
 	/// <summary>
+	/// Returns whether the actor is sleeping
+	/// </summary>
+	/// <returns></returns>
+	bool IsSleeping();
+
+	/// <summary>
 	/// Returns the basic poison dosage as the result of perks
 	/// </summary>
 	/// <returns></returns>
