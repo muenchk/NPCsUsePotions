@@ -1338,10 +1338,13 @@ bool ActorInfo::GetHandleActor()
 void ActorInfo::SetHandleActor(bool handle)
 {
 	aclock;
-	if (!valid || dead)
+	if (!valid || dead) {
 		handleactor = false;
-	else
+		LOG_1("invalid");
+	} else {
 		handleactor = handle;
+		LOG_1("set {}", handle);
+	}
 }
 
 float ActorInfo::GetPlayerDistance()
@@ -1883,6 +1886,31 @@ int32_t ActorInfo::GetBasePoisonDosage(Compatibility* comp)
 		}
 	}
 	return 0;
+}
+
+bool ActorInfo::IsPoisoned()
+{
+	aclock;
+	if (!valid || dead)
+		return false;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		auto list = act->GetMagicTarget()->GetActiveEffectList();
+		if (list) {
+			auto itr = list->begin();
+			while (itr != list->end()) {
+				if ((*itr)->GetBaseObject()->IsDetrimental()) {
+					//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
+					//	if (alch->IsPoison())
+					//		return true;
+					return ACM::HasPoisonResistValue((*itr)->spell);
+				}
+				itr++;
+			}
+		}
+	}
+	return false;
 }
 
 #pragma endregion

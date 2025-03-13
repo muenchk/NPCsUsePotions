@@ -24,6 +24,7 @@ private:
 	/// map that maps potionids to potion properties (effect, duration, magnitude, detrimental, dosage)
 	/// </summary>
 	std::unordered_map<uint32_t, std::tuple<AlchemicEffect, int, float, bool, int>> alchitemEffectMap;
+	std::unordered_map<uint32_t, bool> poisonresistMagicItemMap;
 
 	/// <summary>
 	/// map that contains game objects that are used in custom object conditions, for fast access
@@ -154,6 +155,23 @@ public:
 	/// Resets all saved AlchemyItem effects
 	/// </summary>
 	void ResetAlchItemEffects();
+
+	/// <summary>
+	/// returns whether a magic item has an effect with poison resistance as its resistance value
+	/// </summary>
+	/// <param name="formid"></param>
+	/// <returns></returns>
+	std::pair<bool, bool> GetMagicItemPoisonResist(uint32_t formid);
+	/// <summary>
+	/// sets whether a magic item has an effect with poison resistance as its resistance value
+	/// </summary>
+	/// <param name="formid"></param>
+	/// <param name="poison"></param>
+	void SetMagicItemPoisonResist(uint32_t formid, bool poison);
+	/// <summary>
+	/// resets the poison resistance mapping
+	/// </summary>
+	void ResetMagicItemPoisonResist();
 
 	/// <summary>
 	/// Returns the TESForm associated with the formid from an internal buffer

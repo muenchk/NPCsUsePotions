@@ -462,6 +462,26 @@ void Data::ResetAlchItemEffects()
 	alchitemEffectMap.clear();
 }
 
+std::pair<bool, bool> Data::GetMagicItemPoisonResist(uint32_t formid)
+{
+	auto itr = poisonresistMagicItemMap.find(formid);
+	if (itr != poisonresistMagicItemMap.end())
+	{
+		return { true, itr->second };
+	} else
+		return { false, false };
+}
+
+void Data::SetMagicItemPoisonResist(uint32_t formid, bool poison)
+{
+	poisonresistMagicItemMap.insert_or_assign(formid, poison);
+}
+
+void Data::ResetMagicItemPoisonResist()
+{
+
+}
+
 RE::TESForm* Data::FindForm(uint32_t formid, std::string pluginname)
 {
 	auto itr = customItemFormMap.find(formid);

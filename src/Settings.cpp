@@ -238,312 +238,9 @@ void Settings::LoadDistrConfig()
 							switch (ruleType) {
 							case 1:  // distribution rule
 								{
-									if (splits->size() != 25) {
-										logwarn("rule has wrong number of fields, expected 25. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
-										delete splits;
-										continue;
-									}
-									// next entry is the rulename, so we just set it
-									Distribution::Rule* rule = nullptr;
-									bool existing = false;
-									for (auto rl : Distribution::_rules) {
-										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding rule: {}", rl->ruleName);
-											rule = rl;
-											existing = true;
-											break;
-										}
-									}
-									if (existing == false)
-										rule = new Distribution::Rule();
-									rule->ruleVersion = ruleVersion;
-									rule->ruleType = ruleType;
-									rule->ruleName = splits->at(splitindex);
-									LOGL_2("loading rule: {}", rule->ruleName);
-									splitindex++;
-									// now come the rule priority
-									rule->rulePriority = -1;
-									try {
-										rule->rulePriority = std::stoi(splits->at(splitindex));
-										splitindex++;
-									} catch (std::out_of_range&) {
-										logwarn("out-of-range expection in field \"RulePrio\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									} catch (std::invalid_argument&) {
-										logwarn("invalid-argument expection in field \"RulePrio\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes maxPotions
-									rule->maxPotions = -1;
-									try {
-										rule->maxPotions = std::stoi(splits->at(splitindex));
-										splitindex++;
-									} catch (std::out_of_range&) {
-										logwarn("out-of-range expection in field \"MaxPotions\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									} catch (std::invalid_argument&) {
-										logwarn("invalid-argument expection in field \"MaxPotions\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Potion1Chance
-									rule->potion1Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->potion1Chance.size() != chancearraysize) {
-										logwarn("field \"Potion1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Potion2Chance
-									rule->potion2Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->potion2Chance.size() != chancearraysize) {
-										logwarn("field \"Potion2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Potion3Chance
-									rule->potion3Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->potion3Chance.size() != chancearraysize) {
-										logwarn("field \"Potion3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes PotionAddChance
-									rule->potionAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->potionAdditionalChance.size() != chancearraysize) {
-										logwarn("field \"PotionAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes PotionsTierAdjust
-									rule->potionTierAdjust = -1;
-									try {
-										rule->potionTierAdjust = std::stoi(splits->at(splitindex));
-										splitindex++;
-									} catch (std::out_of_range&) {
-										logwarn("out-of-range expection in field \"PotionsTierAdjust\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									} catch (std::invalid_argument&) {
-										logwarn("invalid-argument expection in field \"PotionsTierAdjust\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Fortify1Chance
-									rule->fortify1Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->fortify1Chance.size() != chancearraysize) {
-										logwarn("field \"Fortify1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Fortify2Chance
-									rule->fortify2Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->fortify2Chance.size() != chancearraysize) {
-										logwarn("field \"Fortify2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes maxPoisons
-									rule->maxPoisons = -1;
-									try {
-										rule->maxPoisons = std::stoi(splits->at(splitindex));
-										splitindex++;
-									} catch (std::out_of_range&) {
-										logwarn("out-of-range expection in field \"MaxPoisons\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									} catch (std::invalid_argument&) {
-										logwarn("invalid-argument expection in field \"MaxPoisons\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Poison1Chance
-									rule->poison1Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->poison1Chance.size() != chancearraysize) {
-										logwarn("field \"Poison1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Poison2Chance
-									rule->poison2Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->poison2Chance.size() != chancearraysize) {
-										logwarn("field \"Poison2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes Poison3Chance
-									rule->poison3Chance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->poison3Chance.size() != chancearraysize) {
-										logwarn("field \"Poison3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes PoisonAddChance
-									rule->poisonAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->poisonAdditionalChance.size() != chancearraysize) {
-										logwarn("field \"PoisonAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-									// now comes PoisonsTierAdjust
-									rule->poisonTierAdjust = -1;
-									try {
-										rule->poisonTierAdjust = std::stoi(splits->at(splitindex));
-										splitindex++;
-									} catch (std::out_of_range&) {
-										logwarn("out-of-range expection in field \"PoisonsTierAdjust\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									} catch (std::invalid_argument&) {
-										logwarn("invalid-argument expection in field \"PoisonsTierAdjust\". file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-
-									// now comes FoodChance
-									rule->foodChance = Utility::ParseIntArray(splits->at(splitindex));
-									splitindex++;
-									if (rule->foodChance.size() != chancearraysize) {
-										logwarn("field \"FoodChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
-										delete splits;
-										delete rule;
-										continue;
-									}
-
-									// get strings for the properties
-									rule->assocObjects = splits->at(splitindex);
-									splitindex++;
-									rule->potionProperties = splits->at(splitindex);
-									splitindex++;
-									rule->fortifyproperties = splits->at(splitindex);
-									splitindex++;
-									rule->poisonProperties = splits->at(splitindex);
-									splitindex++;
-									rule->foodProperties = splits->at(splitindex);
-									splitindex++;
-
-									if (splits->at(splitindex) == "1")
-										rule->allowMixed = true;
-									else
-										rule->allowMixed = false;
-									splitindex++;
-
-									bool error = false;
-
-									// parse the associated objects
-									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
-
-									// parse the item properties
-									std::vector<std::tuple<AlchemicEffect, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
-									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
-									rule->potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
-									LOGL_2("rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
-									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr, true);
-									std::vector<std::tuple<AlchemicEffect, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
-									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
-									rule->poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
-									LOGL_2("rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
-									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr, true);
-									std::vector<std::tuple<AlchemicEffect, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
-									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
-									rule->fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
-									LOGL_2("rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
-									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr, true);
-									std::vector<std::tuple<AlchemicEffect, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
-									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
-									rule->foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
-									LOGL_2("rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
-									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr, true);
-
-									std::pair<int, Distribution::Rule*> tmptuple = { rule->rulePriority, rule };
-
-									// assign rules to search parameters
-									LOGL_2("rule {} contains {} associated objects", rule->ruleName, objects.size());
-									for (int i = 0; i < objects.size(); i++) {
-										switch (std::get<0>(objects[i])) {
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kCombatStyle:
-										case Distribution::AssocType::kClass:
-										case Distribution::AssocType::kRace:
-										case Distribution::AssocType::kKeyword:
-											if (auto item = Distribution::_assocMap.find(std::get<1>(objects[i])); item != Distribution::_assocMap.end()) {
-												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
-													Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											} else {
-												Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
-											}
-											break;
-										case Distribution::AssocType::kNPC:
-										case Distribution::AssocType::kActor:
-											if (auto item = Distribution::_npcMap.find(std::get<1>(objects[i])); item != Distribution::_npcMap.end()) {
-												if (item->second->rulePriority < rule->rulePriority)
-													Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
-											} else {
-												Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
-											}
-											break;
-										}
-									}
-									// add rule to the list of rules and we are finished! probably.
-									/* if (Distribution::_rules.contains(rule))
-									{
-										auto ritr = Distribution::_rules.find(rule);
-										if (ritr != Distribution::_rules.end()) {
-											// get old rule
-											auto rtmp = *ritr;
-											// erase old rule
-											Distribution::_rules.erase(rule);
-											// delete old rule
-											delete rtmp;
-											// insert new rule
-											Distribution::_rules.insert(rule);
-										} else {
-											logcritical("Critical error in code, please report to author. file: {}, rule:\"{}\"", file, tmp);
-											delete rule;
-											delete splits;
-											continue;
-										}
-									} else*/
-										Distribution::_rules.insert(rule);
-
-									if (rule->ruleName == DefaultRuleName && (Distribution::defaultRule == nullptr ||
-																				 rule->rulePriority > Distribution::defaultRule->rulePriority))
-										Distribution::defaultRule = rule;
+									logcritical("Rule is no longer supported. file: {}, rule:\"{}\"", file, tmp);
 									delete splits;
-									LOGL_2("rule {} successfully loaded.", rule->ruleName);
+									continue;
 								}
 								break;
 							case 2:  // distribution attachement
@@ -1170,7 +867,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									bool error = false;
-									std::vector<std::tuple<AlchemicEffect, float>> effects = Utility::ParseAlchemyEffects(seffects, error);
+									std::vector<std::tuple<AlchemicEffect, float, int>> effects = Utility::ParseAlchemyEffects(seffects, error);
 									for (int i = 0; i < effects.size(); i++) {
 										AlchemicEffect effect = std::get<0>(effects[i]);
 										if (effect != AlchemicEffect::kNone) {
@@ -1423,9 +1120,9 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// now comes maxPotions
-									rule->maxPotions = -1;
+									int maxPotions = -1;
 									try {
-										rule->maxPotions = std::stoi(splits->at(splitindex));
+										maxPotions = std::stoi(splits->at(splitindex));
 										splitindex++;
 									} catch (std::out_of_range&) {
 										logwarn("out-of-range expection in field \"MaxPotions\". file: {}, rule:\"{}\"", file, tmp);
@@ -1439,54 +1136,54 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// now comes Potion1Chance
-									rule->potion1Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> potion1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion1Chance.size() != chancearraysize) {
+									if (potion1Chance.size() != chancearraysize) {
 										logwarn("field \"Potion1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Potion2Chance
-									rule->potion2Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> potion2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion2Chance.size() != chancearraysize) {
+									if (potion2Chance.size() != chancearraysize) {
 										logwarn("field \"Potion2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Potion3Chance
-									rule->potion3Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> potion3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion3Chance.size() != chancearraysize) {
+									if (potion3Chance.size() != chancearraysize) {
 										logwarn("field \"Potion3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Potion4Chance
-									rule->potion4Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> potion4Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potion4Chance.size() != chancearraysize) {
+									if (potion4Chance.size() != chancearraysize) {
 										logwarn("field \"Potion4Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes PotionAddChance
-									rule->potionAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> potionAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->potionAdditionalChance.size() != chancearraysize) {
+									if (potionAdditionalChance.size() != chancearraysize) {
 										logwarn("field \"PotionAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes PotionsTierAdjust
-									rule->potionTierAdjust = -1;
+									int potionTierAdjust = -1;
 									try {
-										rule->potionTierAdjust = std::stoi(splits->at(splitindex));
+										potionTierAdjust = std::stoi(splits->at(splitindex));
 										splitindex++;
 									} catch (std::out_of_range&) {
 										logwarn("out-of-range expection in field \"PotionsTierAdjust\". file: {}, rule:\"{}\"", file, tmp);
@@ -1500,9 +1197,9 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// now comes maxFortify
-									rule->maxFortify = -1;
+									int maxFortify = -1;
 									try {
-										rule->maxFortify = std::stoi(splits->at(splitindex));
+										maxFortify = std::stoi(splits->at(splitindex));
 										splitindex++;
 									} catch (std::out_of_range&) {
 										logwarn("out-of-range expection in field \"MaxFortify\". file: {}, rule:\"{}\"", file, tmp);
@@ -1516,54 +1213,54 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// now comes Fortify1Chance
-									rule->fortify1Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> fortify1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify1Chance.size() != chancearraysize) {
+									if (fortify1Chance.size() != chancearraysize) {
 										logwarn("field \"Fortify1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Fortify2Chance
-									rule->fortify2Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> fortify2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify2Chance.size() != chancearraysize) {
+									if (fortify2Chance.size() != chancearraysize) {
 										logwarn("field \"Fortify2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Fortify3Chance
-									rule->fortify3Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> fortify3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify3Chance.size() != chancearraysize) {
+									if (fortify3Chance.size() != chancearraysize) {
 										logwarn("field \"Fortify3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Fortify4Chance
-									rule->fortify4Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> fortify4Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortify4Chance.size() != chancearraysize) {
+									if (fortify4Chance.size() != chancearraysize) {
 										logwarn("field \"Fortify4Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes FortifyAddChance
-									rule->fortifyAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> fortifyAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->fortifyAdditionalChance.size() != chancearraysize) {
+									if (fortifyAdditionalChance.size() != chancearraysize) {
 										logwarn("field \"FortifyAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes FortifyTierAdjust
-									rule->fortifyTierAdjust = -1;
+									int fortifyTierAdjust = -1;
 									try {
-										rule->fortifyTierAdjust = std::stoi(splits->at(splitindex));
+										fortifyTierAdjust = std::stoi(splits->at(splitindex));
 										splitindex++;
 									} catch (std::out_of_range&) {
 										logwarn("out-of-range expection in field \"FortifyTierAdjust\". file: {}, rule:\"{}\"", file, tmp);
@@ -1577,9 +1274,9 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// now comes maxPoisons
-									rule->maxPoisons = -1;
+									int maxPoisons = -1;
 									try {
-										rule->maxPoisons = std::stoi(splits->at(splitindex));
+										maxPoisons = std::stoi(splits->at(splitindex));
 										splitindex++;
 									} catch (std::out_of_range&) {
 										logwarn("out-of-range expection in field \"MaxPoisons\". file: {}, rule:\"{}\"", file, tmp);
@@ -1593,54 +1290,54 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// now comes Poison1Chance
-									rule->poison1Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> poison1Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison1Chance.size() != chancearraysize) {
+									if (poison1Chance.size() != chancearraysize) {
 										logwarn("field \"Poison1Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Poison2Chance
-									rule->poison2Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> poison2Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison2Chance.size() != chancearraysize) {
+									if (poison2Chance.size() != chancearraysize) {
 										logwarn("field \"Poison2Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Poison3Chance
-									rule->poison3Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> poison3Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison3Chance.size() != chancearraysize) {
+									if (poison3Chance.size() != chancearraysize) {
 										logwarn("field \"Poison3Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes Poison4Chance
-									rule->poison4Chance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> poison4Chance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poison4Chance.size() != chancearraysize) {
+									if (poison4Chance.size() != chancearraysize) {
 										logwarn("field \"Poison4Chance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes PoisonAddChance
-									rule->poisonAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> poisonAdditionalChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->poisonAdditionalChance.size() != chancearraysize) {
+									if (poisonAdditionalChance.size() != chancearraysize) {
 										logwarn("field \"PoisonAddChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
 										continue;
 									}
 									// now comes PoisonsTierAdjust
-									rule->poisonTierAdjust = -1;
+									int poisonTierAdjust = -1;
 									try {
-										rule->poisonTierAdjust = std::stoi(splits->at(splitindex));
+										poisonTierAdjust = std::stoi(splits->at(splitindex));
 										splitindex++;
 									} catch (std::out_of_range&) {
 										logwarn("out-of-range expection in field \"PoisonsTierAdjust\". file: {}, rule:\"{}\"", file, tmp);
@@ -1655,9 +1352,9 @@ void Settings::LoadDistrConfig()
 									}
 
 									// now comes FoodChance
-									rule->foodChance = Utility::ParseIntArray(splits->at(splitindex));
+									std::vector<int> foodChance = Utility::ParseIntArray(splits->at(splitindex));
 									splitindex++;
-									if (rule->foodChance.size() != chancearraysize) {
+									if (foodChance.size() != chancearraysize) {
 										logwarn("field \"FoodChance\" couldn't be parsed. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete rule;
@@ -1665,15 +1362,15 @@ void Settings::LoadDistrConfig()
 									}
 
 									// get strings for the properties
-									rule->assocObjects = splits->at(splitindex);
+									std::string assocObjects = splits->at(splitindex);
 									splitindex++;
-									rule->potionProperties = splits->at(splitindex);
+									std::string potionProperties = splits->at(splitindex);
 									splitindex++;
-									rule->fortifyproperties = splits->at(splitindex);
+									std::string fortifyproperties = splits->at(splitindex);
 									splitindex++;
-									rule->poisonProperties = splits->at(splitindex);
+									std::string poisonProperties = splits->at(splitindex);
 									splitindex++;
-									rule->foodProperties = splits->at(splitindex);
+									std::string foodProperties = splits->at(splitindex);
 									splitindex++;
 
 									if (splits->at(splitindex) == "1")
@@ -1691,41 +1388,181 @@ void Settings::LoadDistrConfig()
 									int total = 0;
 
 									// parse the associated objects
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects(rule->assocObjects, error, file, tmp, total);
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects(assocObjects, error, file, tmp, total);
 
 									// parse the item properties
-									std::vector<std::tuple<AlchemicEffect, float>> potioneffects = Utility::ParseAlchemyEffects(rule->potionProperties, error);
-									rule->potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
-									LOGL_4("PotionDistr:\t{}", Utility::PrintDistribution(rule->potionDistr));
-									rule->potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
-									rule->potionEffectMap = Utility::UnifyEffectMap(potioneffects);
-									LOGL_4("PotionEffMap:\t{}", Utility::PrintEffectMap(rule->potionEffectMap));
-									LOGL_2("rule {} contains {} potion effects", rule->ruleName, rule->potionDistr.size());
-									rule->validPotions = Utility::SumAlchemyEffects(rule->potionDistr, true);
-									std::vector<std::tuple<AlchemicEffect, float>> poisoneffects = Utility::ParseAlchemyEffects(rule->poisonProperties, error);
-									rule->poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
-									LOGL_4("PoisonDistr:\t{}", Utility::PrintDistribution(rule->poisonDistr));
-									rule->poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
-									rule->poisonEffectMap = Utility::UnifyEffectMap(poisoneffects);
-									LOGL_4("PoisonEffMap:\t{}", Utility::PrintEffectMap(rule->poisonEffectMap));
-									LOGL_2("rule {} contains {} poison effects", rule->ruleName, rule->poisonDistr.size());
-									rule->validPoisons = Utility::SumAlchemyEffects(rule->poisonDistr, true);
-									std::vector<std::tuple<AlchemicEffect, float>> fortifyeffects = Utility::ParseAlchemyEffects(rule->fortifyproperties, error);
-									rule->fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
-									LOGL_4("FortifyDistr:\t{}", Utility::PrintDistribution(rule->fortifyDistr));
-									rule->fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
-									rule->fortifyEffectMap = Utility::UnifyEffectMap(fortifyeffects);
-									LOGL_4("FortifyEffMap:\t{}", Utility::PrintEffectMap(rule->fortifyEffectMap));
-									LOGL_2("rule {} contains {} fortify potion effects", rule->ruleName, rule->fortifyDistr.size());
-									rule->validFortifyPotions = Utility::SumAlchemyEffects(rule->fortifyDistr, true);
-									std::vector<std::tuple<AlchemicEffect, float>> foodeffects = Utility::ParseAlchemyEffects(rule->foodProperties, error);
-									rule->foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
-									LOGL_4("FoodDistr:\t{}", Utility::PrintDistribution(rule->foodDistr));
-									rule->foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
-									rule->foodEffectMap = Utility::UnifyEffectMap(foodeffects);
-									LOGL_4("FoodEffMap:\t{}", Utility::PrintEffectMap(rule->foodEffectMap));
-									LOGL_2("rule {} contains {} food effects", rule->ruleName, rule->foodDistr.size());
-									rule->validFood = Utility::SumAlchemyEffects(rule->foodDistr, true);
+									rule->potions = new Distribution::EffCategoryPreset();
+									rule->potions->name = rule->ruleName + "_potions_catpreset";
+									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->potions->name, rule->potions);
+									rule->poisons = new Distribution::EffCategoryPreset();
+									rule->poisons->name = rule->ruleName + "_poisons_catpreset";
+									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->poisons->name, rule->poisons);
+									rule->fortify = new Distribution::EffCategoryPreset();
+									rule->fortify->name = rule->ruleName + "_fortify_catpreset";
+									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->fortify->name, rule->fortify);
+									rule->food = new Distribution::EffCategoryPreset();
+									rule->food->name = rule->ruleName + "_food_catpreset";
+									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->food->name, rule->food);
+									
+									rule->potionEffects = new Distribution::EffectPreset();
+									rule->potionEffects->name = rule->ruleName + "_potion_effectspreset";
+									Distribution::_internEffectPresets.insert_or_assign(rule->potionEffects->name, rule->potionEffects);
+									rule->poisonEffects = new Distribution::EffectPreset();
+									rule->poisonEffects->name = rule->ruleName + "_poison_effectspreset";
+									Distribution::_internEffectPresets.insert_or_assign(rule->poisonEffects->name, rule->poisonEffects);
+									rule->fortifyEffects = new Distribution::EffectPreset();
+									rule->fortifyEffects->name = rule->ruleName + "_fortify_effectspreset";
+									Distribution::_internEffectPresets.insert_or_assign(rule->fortifyEffects->name, rule->fortifyEffects);
+									rule->foodEffects = new Distribution::EffectPreset();
+									rule->foodEffects->name = rule->ruleName + "_food_effectspreset";
+									Distribution::_internEffectPresets.insert_or_assign(rule->foodEffects->name, rule->foodEffects);
+
+
+									auto meanfalloff = [](std::vector<int> vec1, std::vector<int> vec2, std::vector<int> vec3, std::vector<int> vec4, int num) {
+										float mean = 0;
+										int mac = 0;
+										if (vec1[num] != 0) {
+											mean += (float)vec2[num] / (float)vec1[num];
+											mac++;
+										}
+										if (vec2[num] != 0) {
+											mean += (float)vec3[num] / (float)vec2[num];
+											mac++;
+										}
+										if (vec3[num] != 0) {
+											mean += (float)vec4[num] / (float)vec3[num];
+											mac++;
+										}
+										if (mac != 0)
+											mean = mean / (float)mac;
+										return mean;
+									};
+									auto meanfallofflin = [](std::vector<int> vec1, std::vector<int> vec2, std::vector<int> vec3, std::vector<int> vec4, int num) {
+										float mean = 0;
+										mean += vec1[num] - vec2[num];
+										mean += vec2[num] - vec3[num];
+										mean += vec3[num] - vec4[num];
+										mean = mean / 3;
+										loginfo("mean: {}", mean);
+										return mean;
+									};
+									auto addcats = [](Distribution::EffCategoryPreset* preset) {
+										for (int i = 0; i < 5; i++)
+										{
+											preset->cats[i] = new Distribution::EffCategory();
+											preset->cats[i]->name = preset->name + "_" + std::to_string(i);
+											Distribution::_internEffectCategories.insert_or_assign(preset->cats[i]->name, preset->cats[i]);
+										}
+									};
+									auto setcat = [](Distribution::EffCategoryPreset* preset, int num, int base, float falloff, int max, Distribution::FalloffFunction fall) {
+										preset->cats[num]->baseChance = base;
+										preset->cats[num]->falloff = falloff;
+										preset->cats[num]->max = max;
+										preset->cats[num]->falloffFunc = fall;
+									};
+									addcats(rule->potions);
+									addcats(rule->poisons);
+									addcats(rule->fortify);
+									addcats(rule->food);
+									rule->potions->tieradjust = potionTierAdjust;
+									rule->poisons->tieradjust = poisonTierAdjust;
+									rule->fortify->tieradjust = fortifyTierAdjust;
+									rule->food->tieradjust = 0;
+
+									setcat(rule->potions, 0, potion1Chance[0], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 0), maxPotions, Distribution::FalloffFunction::Exponential);
+									setcat(rule->potions, 1, potion1Chance[1], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 1), maxPotions, Distribution::FalloffFunction::Exponential);
+									setcat(rule->potions, 2, potion1Chance[2], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 2), maxPotions, Distribution::FalloffFunction::Exponential);
+									setcat(rule->potions, 3, potion1Chance[3], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 3), maxPotions, Distribution::FalloffFunction::Exponential);
+									setcat(rule->potions, 4, potion1Chance[4], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 4), maxPotions, Distribution::FalloffFunction::Exponential);
+
+									setcat(rule->poisons, 0, poison1Chance[0], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 0), maxPoisons, Distribution::FalloffFunction::Exponential);
+									setcat(rule->poisons, 1, poison1Chance[1], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 1), maxPoisons, Distribution::FalloffFunction::Exponential);
+									setcat(rule->poisons, 2, poison1Chance[2], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 2), maxPoisons, Distribution::FalloffFunction::Exponential);
+									setcat(rule->poisons, 3, poison1Chance[3], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 3), maxPoisons, Distribution::FalloffFunction::Exponential);
+									setcat(rule->poisons, 4, poison1Chance[4], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 4), maxPoisons, Distribution::FalloffFunction::Exponential);
+
+									setcat(rule->fortify, 0, fortify1Chance[0], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 0), maxFortify, Distribution::FalloffFunction::Exponential);
+									setcat(rule->fortify, 1, fortify1Chance[1], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 1), maxFortify, Distribution::FalloffFunction::Exponential);
+									setcat(rule->fortify, 2, fortify1Chance[2], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 2), maxFortify, Distribution::FalloffFunction::Exponential);
+									setcat(rule->fortify, 3, fortify1Chance[3], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 3), maxFortify, Distribution::FalloffFunction::Exponential);
+									setcat(rule->fortify, 4, fortify1Chance[4], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 4), maxFortify, Distribution::FalloffFunction::Exponential);
+
+									setcat(rule->food, 0, foodChance[0], 0, 1, Distribution::FalloffFunction::Exponential);
+									setcat(rule->food, 1, foodChance[1], 0, 1, Distribution::FalloffFunction::Exponential);
+									setcat(rule->food, 2, foodChance[2], 0, 1, Distribution::FalloffFunction::Exponential);
+									setcat(rule->food, 3, foodChance[3], 0, 1, Distribution::FalloffFunction::Exponential);
+									setcat(rule->food, 4, foodChance[4], 0, 1, Distribution::FalloffFunction::Exponential);
+
+									
+									std::vector<std::tuple<AlchemicEffect, float, int>> potioneffects = Utility::ParseAlchemyEffects(potionProperties, error);
+
+									auto potionDistr = Utility::GetDistribution(potioneffects, RandomRange);
+									LOGL_4("PotionDistr:\t{}", Utility::PrintDistribution(potionDistr));
+									auto potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
+									auto potionEffectMap = Utility::UnifyEffectMap(potioneffects);
+									for (auto [alch, weight] : potionEffectMap) {
+										Distribution::Effect eff;
+										eff.effect = alch;
+										eff.max = 0;
+										eff.current = 0;
+										eff.weight = 1000 * weight;
+										rule->potionEffects->effects.insert_or_assign(alch, eff);
+									}
+									rule->potionEffects->standardDistr = Distribution::GetEffectDistribution(rule->potionEffects->effects);
+									rule->potionEffects->validEffects = Distribution::SumAlchemyEffects(rule->potionEffects->standardDistr);
+									LOGL_4("PotionEffMap:\t{}", Utility::PrintEffectMap(potionEffectMap));
+									LOGL_2("rule {} contains {} potion effects", rule->ruleName, potionDistr.size());
+									std::vector<std::tuple<AlchemicEffect, float, int>> poisoneffects = Utility::ParseAlchemyEffects(poisonProperties, error);
+									auto poisonDistr = Utility::GetDistribution(poisoneffects, RandomRange);
+									LOGL_4("PoisonDistr:\t{}", Utility::PrintDistribution(poisonDistr));
+									auto poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
+									auto poisonEffectMap = Utility::UnifyEffectMap(poisoneffects);
+									for (auto [alch, weight] : poisonEffectMap) {
+										Distribution::Effect eff;
+										eff.effect = alch;
+										eff.max = 0;
+										eff.current = 0;
+										eff.weight = 1000 * weight;
+										rule->poisonEffects->effects.insert_or_assign(alch, eff);
+									}
+									rule->poisonEffects->standardDistr = Distribution::GetEffectDistribution(rule->poisonEffects->effects);
+									rule->poisonEffects->validEffects = Distribution::SumAlchemyEffects(rule->poisonEffects->standardDistr);
+									LOGL_4("PoisonEffMap:\t{}", Utility::PrintEffectMap(poisonEffectMap));
+									LOGL_2("rule {} contains {} poison effects", rule->ruleName, poisonDistr.size());
+									std::vector<std::tuple<AlchemicEffect, float, int>> fortifyeffects = Utility::ParseAlchemyEffects(fortifyproperties, error);
+									auto fortifyDistr = Utility::GetDistribution(fortifyeffects, RandomRange);
+									LOGL_4("FortifyDistr:\t{}", Utility::PrintDistribution(fortifyDistr));
+									auto fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
+									auto fortifyEffectMap = Utility::UnifyEffectMap(fortifyeffects);
+									for (auto [alch, weight] : fortifyEffectMap) {
+										Distribution::Effect eff;
+										eff.effect = alch;
+										eff.max = 0;
+										eff.current = 0;
+										eff.weight = 1000 * weight;
+										rule->fortifyEffects->effects.insert_or_assign(alch, eff);
+									}
+									rule->fortifyEffects->standardDistr = Distribution::GetEffectDistribution(rule->fortifyEffects->effects);
+									rule->fortifyEffects->validEffects = Distribution::SumAlchemyEffects(rule->fortifyEffects->standardDistr);
+									LOGL_4("FortifyEffMap:\t{}", Utility::PrintEffectMap(fortifyEffectMap));
+									LOGL_2("rule {} contains {} fortify potion effects", rule->ruleName, fortifyDistr.size());
+									std::vector<std::tuple<AlchemicEffect, float, int>> foodeffects = Utility::ParseAlchemyEffects(foodProperties, error);
+									auto foodDistr = Utility::GetDistribution(foodeffects, RandomRange);
+									LOGL_4("FoodDistr:\t{}", Utility::PrintDistribution(foodDistr));
+									auto foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
+									auto foodEffectMap = Utility::UnifyEffectMap(foodeffects);
+									for (auto [alch, weight] : foodEffectMap) {
+										Distribution::Effect eff;
+										eff.effect = alch;
+										eff.max = 0;
+										eff.current = 0;
+										eff.weight = 1000 * weight;
+										rule->foodEffects->effects.insert_or_assign(alch, eff);
+									}
+									rule->foodEffects->standardDistr = Distribution::GetEffectDistribution(rule->foodEffects->effects);
+									rule->foodEffects->validEffects = Distribution::SumAlchemyEffects(rule->foodEffects->standardDistr);
+									LOGL_4("FoodEffMap:\t{}", Utility::PrintEffectMap(foodEffectMap));
+									LOGL_2("rule {} contains {} food effects", rule->ruleName, foodDistr.size());
 
 									std::pair<int, Distribution::Rule*> tmptuple = { rule->rulePriority, rule };
 
@@ -1791,6 +1628,398 @@ void Settings::LoadDistrConfig()
 							}
 						}
 						break;
+					case 3:
+						{
+							switch (ruleType) {
+							case 1:  // rule
+								{
+									if (splits->size() != 14) {
+										logwarn("rule has wrong number of fields, expected 14. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										delete splits;
+										continue;
+									}
+									// next entry is the rulename, so we just set it
+									Distribution::Rule* rule = nullptr;
+									bool existing = false;
+									for (auto rl : Distribution::_rules) {
+										loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length()) if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length())
+										{
+											loginfo("Overriding rule: {}", rl->ruleName);
+											rule = rl;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+										rule = new Distribution::Rule();
+									rule->ruleVersion = ruleVersion;
+									rule->ruleType = ruleType;
+									rule->ruleName = splits->at(splitindex);
+									LOGL_2("loading rule: {}", rule->ruleName);
+									splitindex++;
+									// now come the rule priority
+									rule->rulePriority = -1;
+									try {
+										rule->rulePriority = std::stoi(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"RulePrio\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete rule;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"RulePrio\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete rule;
+										continue;
+									}
+									// potion preset
+									std::string potionpreset = splits->at(splitindex);
+									splitindex++;
+									// potion effect preset
+									std::string potioneffectpreset = splits->at(splitindex);
+									splitindex++;
+									// poison preset
+									std::string poisonpreset = splits->at(splitindex);
+									splitindex++;
+									// poison effect preset
+									std::string poisoneffectpreset = splits->at(splitindex);
+									splitindex++;
+									// fortify preset
+									std::string fortifypreset = splits->at(splitindex);
+									splitindex++;
+									// fortify effect preset
+									std::string fortifyeffectpreset = splits->at(splitindex);
+									splitindex++;
+									// food preset
+									std::string foodpreset = splits->at(splitindex);
+									splitindex++;
+									// food effect preset
+									std::string foodeffectpreset = splits->at(splitindex);
+									splitindex++;
+									// allow mixed
+									if (splits->at(splitindex) == "1")
+										rule->allowMixed = true;
+									else
+										rule->allowMixed = false;
+									splitindex++;
+									// style scaling
+									if (splits->at(splitindex) == "1")
+										rule->styleScaling = true;
+									else
+										rule->styleScaling = false;
+									splitindex++;
+
+									// we got all relevant information, now find all presets we need
+									try {
+										auto potions = Distribution::_internEffectCategoryPresets.at(potionpreset);
+										auto potionEffects = Distribution::_internEffectPresets.at(potioneffectpreset);
+										auto poisons = Distribution::_internEffectCategoryPresets.at(poisonpreset);
+										auto poisonEffects = Distribution::_internEffectPresets.at(poisoneffectpreset);
+										auto fortify = Distribution::_internEffectCategoryPresets.at(fortifypreset);
+										auto fortifyEffects = Distribution::_internEffectPresets.at(fortifyeffectpreset);
+										auto food = Distribution::_internEffectCategoryPresets.at(foodpreset);
+										auto foodEffects = Distribution::_internEffectPresets.at(foodeffectpreset);
+
+										if (potions && potionEffects && poisons && poisonEffects && fortify && fortifyEffects && food && foodEffects) {
+											// all components found, assemble rule
+											rule->potions = potions;
+											rule->potionEffects = potionEffects;
+											rule->poisons = poisons;
+											rule->poisonEffects = poisonEffects;
+											rule->fortify = fortify;
+											rule->fortifyEffects = fortifyEffects;
+											rule->food = food;
+											rule->foodEffects = foodEffects;
+										} else {
+											logwarn("At least one preset could not be found. file: {}, rule:\"{}\"", file, tmp);
+											delete splits;
+											delete rule;
+											continue;
+										}
+									} catch (std::exception& e) {
+										logwarn("At least one preset could not be found. file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete rule;
+										continue;
+									}
+
+									Distribution::_rules.insert(rule);
+
+									if (rule->ruleName == DefaultRuleName && (Distribution::defaultRule == nullptr ||
+																				 rule->rulePriority > Distribution::defaultRule->rulePriority))
+										Distribution::defaultRule = rule;
+									delete splits;
+									LOGL_2("rule {} successfully loaded.", rule->ruleName);
+								}
+								break;
+							case 23:  // Effect Preset
+								{
+									if (splits->size() != 4) {
+										logwarn("rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										delete splits;
+										continue;
+									}
+
+									// next entry is the effect preset name, so we just set it
+									Distribution::EffectPreset* preset = nullptr;
+									bool existing = false;
+									for (auto [name, pres] : Distribution::_internEffectPresets) {
+										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
+											loginfo("Overriding category: {}", name);
+											preset = pres;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+										preset = new Distribution::EffectPreset();
+									// name
+									preset->name = splits->at(splitindex);
+									splitindex++;
+									// associated effects
+									std::string effectProperties = splits->at(splitindex);
+									splitindex++;
+
+									Utility::ParseAlchemyEffects(effectProperties, preset);
+									preset->standardDistr = Distribution::GetEffectDistribution(preset->effects);
+									preset->validEffects = Distribution::SumAlchemyEffects(preset->standardDistr);
+									Distribution::_internEffectPresets.insert_or_assign(preset->name, preset);
+
+									delete splits;
+									LOGL_2("EffectPreset {} successfully loaded.", preset->name);
+								}
+								break;
+							case 24:  // effect preset attach
+								{
+									if (splits->size() != 4) {
+										logwarn("rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										delete splits;
+										continue;
+									}
+									auto names = Utility::SplitString(splits->at(splitindex), ',', true);
+									splitindex++;
+									std::vector<Distribution::EffectPreset*> presets;
+									for (std::string name : names) {
+										// next entry is the effect preset name, so we just set it
+										Distribution::EffectPreset* preset = nullptr;
+										bool existing = false;
+										for (auto [name, pres] : Distribution::_internEffectPresets) {
+											if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
+												loginfo("Overriding category: {}", name);
+												preset = pres;
+												existing = true;
+												break;
+											}
+										}
+										if (existing == false || preset == nullptr) {
+											LOGL_2("EffectPreset {} cannot be found and not attachment be performed. file: {}, rule:\"{}\"", splits->at(splitindex), file, tmp);
+										}
+										else
+										{
+											presets.push_back(preset);
+										}
+									}
+
+									// associated effects
+									std::string effectProperties = splits->at(splitindex);
+									splitindex++;
+									std::string cumnames = "|";
+									for (auto preset : presets)
+									{
+										Utility::ParseAlchemyEffects(effectProperties, preset);
+										preset->standardDistr = Distribution::GetEffectDistribution(preset->effects);
+										preset->validEffects = Distribution::SumAlchemyEffects(preset->standardDistr);
+										cumnames += preset->name + "|";
+									}
+
+									delete splits;
+									LOGL_2("Effect Attachment has been performed on presets {}", cumnames);
+								}
+								break;
+							case 25:  // category
+								{
+									if (splits->size() != 6) {
+										logwarn("rule has wrong number of fields, expected 6. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										delete splits;
+										continue;
+									}
+									// next entry is the category name, so we just set it
+									Distribution::EffCategory* category = nullptr;
+									bool existing = false;
+									for (auto [name, cat] : Distribution::_internEffectCategories) {
+										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
+											loginfo("Overriding category: {}", name);
+											category = cat;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+										category = new Distribution::EffCategory();
+									// name
+									category->name = splits->at(splitindex);
+									splitindex++;
+									// base chance
+									category->baseChance = 0;
+									try {
+										category->baseChance  = std::stoi(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"BaseChance\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"BaseChance\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									}
+									// falloff
+									category->falloff = 0;
+									try {
+										category->falloff = std::stof(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"Falloff\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"Falloff\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									}
+									// max
+									category->max = 0;
+									try {
+										category->max = std::stoi(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"Max\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"Max\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									}
+									// fallofffunc
+									category->falloffFunc = Distribution::FalloffFunction::Exponential;
+									try {
+										category->falloffFunc = (Distribution::FalloffFunction)std::stoi(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"FalloffFunction\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"FalloffFunction\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									}
+									// insert category
+									Distribution::_internEffectCategories.insert_or_assign(category->name, category);
+									delete splits;
+									LOGL_2("category {} successfully loaded.", category->name);
+								}
+								break;
+							case 26:  // category preset
+								{
+									if (splits->size() != 9) {
+										logwarn("rule has wrong number of fields, expected 9. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										delete splits;
+										continue;
+									}
+									// next entry is the preset name, so we just set it
+									Distribution::EffCategoryPreset* catpreset = nullptr;
+									bool existing = false;
+									for (auto [name, cat] : Distribution::_internEffectCategoryPresets) {
+										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
+											loginfo("Overriding category: {}", name);
+											catpreset = cat;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+										catpreset = new Distribution::EffCategoryPreset();
+									// name
+									catpreset->name = splits->at(splitindex);
+									splitindex++;
+									// strength 1
+									std::string strength1 = splits->at(splitindex);
+									splitindex++;
+									// strength 2
+									std::string strength2 = splits->at(splitindex);
+									splitindex++;
+									// strength 3
+									std::string strength3 = splits->at(splitindex);
+									splitindex++;
+									// strength 4
+									std::string strength4 = splits->at(splitindex);
+									splitindex++;
+									// strength 5
+									std::string strength5 = splits->at(splitindex);
+									splitindex++;
+									// tieradjust
+									int tieradjust = 0;
+									try {
+										tieradjust = std::stoi(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"TierAdjust\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete catpreset;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"TierAdjust\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete catpreset;
+										continue;
+									}
+									// find categories
+									try {
+										auto str1 = Distribution::_internEffectCategories.at(strength1);
+										auto str2 = Distribution::_internEffectCategories.at(strength2);
+										auto str3 = Distribution::_internEffectCategories.at(strength3);
+										auto str4 = Distribution::_internEffectCategories.at(strength4);
+										auto str5 = Distribution::_internEffectCategories.at(strength5);
+										if (str1 && str2 && str3 && str4 && str5) {
+											catpreset->cats[0] = str1;
+											catpreset->cats[1] = str2;
+											catpreset->cats[2] = str3;
+											catpreset->cats[3] = str4;
+											catpreset->cats[4] = str5;
+										} else {
+											logwarn("One or more categories could not be found. file: {}, rule:\"{}\"", file, tmp);
+											delete splits;
+											delete catpreset;
+											continue;
+										}
+									} catch (std::exception&) {
+										logwarn("One or more categories could not be found. file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete catpreset;
+										continue;
+									}
+									// set stuff
+									catpreset->tieradjust = tieradjust;
+									// insert category preset
+									Distribution::_internEffectCategoryPresets.insert_or_assign(catpreset->name, catpreset);
+									delete splits;
+									LOGL_2("category preset {} successfully loaded.", catpreset->name);
+								}
+								break;
+							}
+						}
+					break;
 					default:
 						logwarn("Rule version does not exist. file: {}, rule:\"{}\"", file, tmp);
 						delete splits;
@@ -2776,6 +3005,7 @@ void Settings::ClassifyItems()
 
 	Data* data = Data::GetSingleton();
 	data->ResetAlchItemEffects();
+	data->ResetMagicItemPoisonResist();
 	Comp* comp = Comp::GetSingleton();
 
 	std::vector<std::tuple<std::string, std::string>> ingredienteffectmap;
@@ -2795,8 +3025,7 @@ void Settings::ClassifyItems()
 					if (item) {
 						LOGL_4("Found AlchemyItem {}", Utility::PrintForm(item));
 						// check for exclusion based on keywords
-						if (item->HasKeyword(comp->NUP_ExcludeItem))
-						{
+						if (item->HasKeyword(comp->NUP_ExcludeItem)) {
 							EXCL("[Keyword Excl] Item:      {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							Distribution::_excludedItems.insert(item->GetFormID());
 							continue;
@@ -2825,8 +3054,7 @@ void Settings::ClassifyItems()
 							continue;
 						}
 						// check whether the item is excluded from distrubtion only
-						if (Distribution::excludedDistrItems()->contains(item->GetFormID()))
-						{
+						if (Distribution::excludedDistrItems()->contains(item->GetFormID())) {
 							EXCL("Excluded Distr] Item:     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							continue;
 						}
@@ -2837,8 +3065,8 @@ void Settings::ClassifyItems()
 						if (item->IsFood() == false && item->IsMedicine() == false && item->IsPoison() == false && item->HasKeyword(Settings::VendorItemFood) == false && item->HasKeyword(Settings::VendorItemFoodRaw) == false && item->HasKeyword(Settings::VendorItemPoison) == false && item->HasKeyword(Settings::VendorItemPotion) == false) {
 							if (item->data.consumptionSound == Settings::FoodEat) {
 								item->data.flags = RE::AlchemyItem::AlchemyFlag::kFoodItem | item->data.flags;
-							//} else if (item->data.consumptionSound == Settings::PoisonUse) {
-							//	item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
+								//} else if (item->data.consumptionSound == Settings::PoisonUse) {
+								//	item->data.flags = RE::AlchemyItem::AlchemyFlag::kPoison | item->data.flags;
 							} else if (item->data.consumptionSound == Settings::PotionUse) {
 								item->data.flags = RE::AlchemyItem::AlchemyFlag::kMedicine | item->data.flags;
 							}
@@ -2879,12 +3107,10 @@ void Settings::ClassifyItems()
 						}
 						// check for AlchemicEffects exclusions based on user settings
 						ItemType type = std::get<2>(clas);
-						switch (type)
-						{
+						switch (type) {
 						case ItemType::kPotion:
 						case ItemType::kFortifyPotion:
-							if ((effects & Potions::_prohibitedEffects).IsValid())
-							{
+							if ((effects & Potions::_prohibitedEffects).IsValid()) {
 								// found effect that has been marked as excluded
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
@@ -2952,7 +3178,7 @@ void Settings::ClassifyItems()
 
 						// if the value of the item is less than zero, we should not insert them into the distribution lists, since they are likely to be broken
 						// or test/dummy items
-						if (item->CalculateTotalGoldValue(player)) {
+						if (item->CalculateTotalGoldValue(player) > 0) {
 							// determine the type of item
 							if (std::get<2>(clas) == ItemType::kFood &&
 								(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
@@ -2982,8 +3208,7 @@ void Settings::ClassifyItems()
 								else if ((std::get<0>(clas) & AlchemicEffect::kHealth) > 0 ||
 										 (std::get<0>(clas) & AlchemicEffect::kMagicka) > 0 ||
 										 (std::get<0>(clas) & AlchemicEffect::kStamina) > 0 ||
-										 (std::get<0>(clas) & AlchemicEffect::kInvisibility) > 0)
-									{
+										 (std::get<0>(clas) & AlchemicEffect::kInvisibility) > 0) {
 									switch (std::get<1>(clas)) {
 									case ItemStrength::kWeak:
 										_potionsWeak_main.insert(_potionsWeak_main.end(), { std::get<0>(clas), item });
@@ -3025,6 +3250,7 @@ void Settings::ClassifyItems()
 						// add item into effect map
 						data->SetAlchItemEffects(item->GetFormID(), std::get<0>(clas), std::get<3>(clas), std::get<4>(clas), std::get<5>(clas), dosage);
 						LOGL_1("Saved effects for {} dur {} mag {} effect {}", Utility::PrintForm(item), std::get<3>(clas), std::get<4>(clas), std::get<0>(clas).string());
+						data->SetMagicItemPoisonResist(item->GetFormID(), ACM::HasPoisonResistValue(item));
 					}
 
 					itemi = form->As<RE::IngredientItem>();

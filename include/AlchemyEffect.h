@@ -1,5 +1,9 @@
 #pragma once
 
+#include <boost/bimap.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+#include <boost/unordered_map.hpp>
+
 typedef uint64_t AlchemyBaseEffect;
 
 
@@ -276,6 +280,16 @@ private:
 	uint64_t second;
 
 	AlchemicEffect ShiftLeft(const uint64_t& shift) const;
+
+	//typedef boost::bimap<boost::bimaps::unordered_set_of<std::string>, boost::bimaps::unordered_set_of<AlchemicEffect>> StringEffectMap;
+
+	/// <summary>
+	/// string registry
+	/// </summary>
+	//StringEffectMap _stringEffectMap;
+	std::unordered_map<std::string, AlchemicEffect> _stringEffectMap;
+
+	void InitStringConversion();
 
 public:
 	AlchemicEffect() = default;

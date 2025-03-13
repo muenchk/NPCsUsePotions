@@ -141,6 +141,18 @@ public:
 		/// </summary>
 		static inline bool _DisableItemUsageWhileStaggered = false;  // disables potion and poison usage while the npc is staggered
 		/// <summary>
+		/// [Settings] Whether to disable item usage while an actor is in the air
+		/// </summary>
+		static inline bool _DisableItemUsageWhileFlying = false;
+		/// <summary>
+		/// [Settings] Whether to disable item usage while an actor is bleeding out
+		/// </summary>
+		static inline bool _DisableItemUsageWhileBleedingOut = false;
+		/// <summary>
+		/// [Settings] Whether to disable item usage while an actor is sleeping
+		/// </summary>
+		static inline bool _DisableItemUsageWhileSleeping = false;
+		/// <summary>
 		/// [Settings] Disables all actors that are neither followers nor the player
 		/// </summary>
 		static inline bool _DisableNonFollowerNPCs = false;          // disable item usage for npcs that aren't followers or the player.

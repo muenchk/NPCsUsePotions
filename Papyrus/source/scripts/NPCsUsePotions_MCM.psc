@@ -26,6 +26,9 @@ int G_MaxFortifyDuration
 int G_CycleTime
 int G_GlobalCooldown
 int G_DisableItemUsageWhileStaggered
+int G_DisableItemUsageWhileFlying
+int G_DisableItemUsageWhileBleedingOut
+int G_DisableItemUsageWhileSleeping
 int G_DisableNonFollowerNPCs
 int G_DisableOutOfCombatProcessing
 int G_DisableItemUsageForExcludedNPCs
@@ -155,6 +158,9 @@ Event OnPageReset(string page)
         G_DisableNonFollowerNPCs = AddToggleOption("Disable Non-Follower NPCs", Usage_GetDisableNonFollowerNPCs())
         G_DisableOutOfCombatProcessing = AddToggleOption("Disable Out-Of-Combat Health potion usage", Usage_GetDisableOutOfCombatProcessing())
         G_DisableItemUsageWhileStaggered = AddToggleOption("Disable item usage while staggered", Usage_GetDisableItemUsageWhileStaggered())
+        G_DisableItemUsageWhileFlying = AddToggleOption("Disable item usage while flying", Usage_GetDisableItemUsageWhileFlying())
+        G_DisableItemUsageWhileBleedingOut = AddToggleOption("Disable item usage while bleeding out", Usage_GetDisableItemUsageWhileBleedingOut())
+        G_DisableItemUsageWhileSleeping = AddToggleOption("Disable item usage while sleeping", Usage_GetDisableItemUsageWhileSleeping())
         G_DisableItemUsageForExcludedNPCs = AddToggleOption("Disable item usage for excluded npcs", Usage_GetDisableItemUsageForExcludedNPCs())
         AddHeaderOption("Removal Options")
         G_Remove = AddToggleOption("Remove Items on Death", Removal_GetRemoveItemsOnDeath())
@@ -396,6 +402,12 @@ Event OnOptionSelect(int option)
         Usage_SetDisableOutOfCombatProcessing(!Usage_GetDisableOutOfCombatProcessing())
     elseif (option == G_DisableItemUsageWhileStaggered)
         Usage_SetDisableItemUsageWhileStaggered(!Usage_GetDisableItemUsageWhileStaggered())
+    elseif (option == G_DisableItemUsageWhileFlying)
+        Usage_SetDisableItemUsageWhileFlying(!Usage_GetDisableItemUsageWhileFlying())
+    elseif (option == G_DisableItemUsageWhileBleedingOut)
+        Usage_SetDisableItemUsageWhileBleedingOut(!Usage_GetDisableItemUsageWhileBleedingOut())
+    elseif (option == G_DisableItemUsageWhileSleeping)
+        Usage_SetDisableItemUsageWhileSleeping(!Usage_GetDisableItemUsageWhileSleeping())
     elseif (option == G_DisableItemUsageForExcludedNPCs)
         Usage_SetDisableItemUsageForExcludedNPCs(!Usage_GetDisableItemUsageForExcludedNPCs())
     elseif (option == D_EnableLog)
@@ -792,6 +804,12 @@ Event OnOptionDefault(int option)
         Usage_SetDisableOutOfCombatProcessing(false)
     elseif (option == G_DisableItemUsageWhileStaggered)
         Usage_SetDisableItemUsageWhileStaggered(false)
+    elseif (option == G_DisableItemUsageWhileFlying)
+        Usage_SetDisableItemUsageWhileFlying(false)
+    elseif (option == G_DisableItemUsageWhileBleedingOut)
+        Usage_SetDisableItemUsageWhileBleedingOut(false)
+    elseif (option == G_DisableItemUsageWhileSleeping)
+        Usage_SetDisableItemUsageWhileSleeping(false)
     elseif (option == G_DisableItemUsageForExcludedNPCs)
         Usage_SetDisableItemUsageForExcludedNPCs(false)
     elseif (option == D_EnableLog)
@@ -972,7 +990,13 @@ Event OnOptionHighlight(int option)
     elseif (option == G_DisableOutOfCombatProcessing)
         SetInfoText("PCs are only handled when they are fighting -> Old handling method until version 3. If disabled, NPCs will use Health potions outside of combat. For instance, if they run into traps.")
     elseif (option == G_DisableItemUsageWhileStaggered)
-        SetInfoText("NPCs that are staggered, in mid-air, flying, unconcious, bleeding-out, ragdolling or in a kill-move aren't able to use any potions and poisons.")
+        SetInfoText("NPCs that are staggered, unconcious,ragdolling or in a kill-move aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
+    elseif (option == G_DisableItemUsageWhileFlying)
+        SetInfoText("NPCs that are in mid-air or flying aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
+    elseif (option == G_DisableItemUsageWhileBleedingOut)
+        SetInfoText("NPCs that are bleeding-out aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
+    elseif (option == G_DisableItemUsageWhileSleeping)
+        SetInfoText("NPCs that are sleeping aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
     elseif (option == G_DisableItemUsageForExcludedNPCs)
         SetInfoText("NPCs that are excluded from item distribution, will not use any Potions, Fortifypotions, Poisons or Food from any other in-game source.")
     elseif (option == D_EnableLog)
@@ -1061,6 +1085,21 @@ int Function Usage_GetEffectiveGlobalCooldownFood() global native
 bool Function Usage_GetDisableItemUsageWhileStaggered() global native
 ; sets whether staggered npcs should not use items
 Function Usage_SetDisableItemUsageWhileStaggered(bool disable) global native
+
+; returns whether flying npcs should not use items
+bool Function Usage_GetDisableItemUsageWhileFlying() global native
+; sets whether flying npcs should not use items
+Function Usage_SetDisableItemUsageWhileFlying(bool disable) global native
+
+; returns whether bleeding npcs should not use items
+bool Function Usage_GetDisableItemUsageWhileBleedingOut() global native
+; sets whether staggered npcs should not use items
+Function Usage_SetDisableItemUsageWhileBleedingOut(bool disable) global native
+
+; returns whether sleeping npcs should not use items
+bool Function Usage_GetDisableItemUsageWhileSleeping() global native
+; sets whether sleeping npcs should not use items
+Function Usage_SetDisableItemUsageWhileSleeping(bool disable) global native
 
 ; returns whether processing of NPCs that are not active followers of the player is disabled
 bool Function Usage_GetDisableNonFollowerNPCs() global native

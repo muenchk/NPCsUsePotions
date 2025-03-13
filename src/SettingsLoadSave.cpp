@@ -251,6 +251,12 @@ void Settings::Load()
 		// usage
 		Usage::_DisableItemUsageWhileStaggered = ini.GetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered);
 		loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileStaggered", std::to_string(Usage::_DisableItemUsageWhileStaggered));
+		Usage::_DisableItemUsageWhileFlying = ini.GetBoolValue("Usage", "DisableItemUsageWhileFlying", Usage::_DisableItemUsageWhileFlying);
+		loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileFlying", std::to_string(Usage::_DisableItemUsageWhileFlying));
+		Usage::_DisableItemUsageWhileBleedingOut = ini.GetBoolValue("Usage", "DisableItemUsageWhileBleedingOut", Usage::_DisableItemUsageWhileBleedingOut);
+		loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileBleedingOut", std::to_string(Usage::_DisableItemUsageWhileBleedingOut));
+		Usage::_DisableItemUsageWhileSleeping = ini.GetBoolValue("Usage", "DisableItemUsageWhileSleeping", Usage::_DisableItemUsageWhileSleeping);
+		loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileSleeping", std::to_string(Usage::_DisableItemUsageWhileSleeping));
 		Usage::_DisableNonFollowerNPCs = ini.GetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs);
 		loginfo("Setting: {} {}", "usage:             DisableNonFollowerNPCs", std::to_string(Usage::_DisableNonFollowerNPCs));
 		Usage::_DisableOutOfCombatProcessing = ini.GetBoolValue("Usage", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing);
@@ -489,7 +495,10 @@ void Settings::Save()
 	
 
 	// usage
-	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered, in mid-air, flying, unconcious, bleeding-out, ragdolling or in a kill-move aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered, unconcious, ragdolling or in a kill-move aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileFlying", Usage::_DisableItemUsageWhileFlying, "// NPCs that are in mid-air or flying aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileBleedingOut", Usage::_DisableItemUsageWhileBleedingOut, "// NPCs that are bleeding-out aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileSleeping", Usage::_DisableItemUsageWhileSleeping, "// NPCs that are sleeping aren't able to use any potions and poisons.");
 	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs, "// NPCs that are not currently followers of the player won't use potions, etc.");
 	ini.SetBoolValue("Usage", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing, "// NPCs are only handled when they are fighting -> Old handling method \n"
 																								"// until version 3.\n"
