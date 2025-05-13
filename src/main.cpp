@@ -101,7 +101,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// init game objects and load pluginnames
 		Settings::InitGameStuff();
 		// load settings
-		Settings::Load();  // also resaves the file
+		Settings::Load();
+		Settings::Save();
 		loginfo("Settings loaded");
 		// init ACM data access
 		ACM::Init();

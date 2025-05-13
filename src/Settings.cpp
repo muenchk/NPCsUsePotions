@@ -1067,6 +1067,98 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
+							case 30: // exclude if plugin is loaded
+								{
+									if (splits->size() != 4) {
+										logwarn("rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string plugin = splits->at(splitindex);
+									splitindex++;
+									if (RE::TESDataHandler::GetSingleton()->LookupLoadedModByName(plugin) == nullptr && RE::TESDataHandler::GetSingleton()->LookupLoadedLightModByName(plugin) == nullptr) {
+										logwarn("File is not loaded: {}. file: {}, rule:\"{}\"", plugin, file, tmp);
+										delete splits;
+										continue;
+									}
+
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kActor:
+										case Distribution::AssocType::kNPC:
+											Distribution::_excludedNPCs.insert(std::get<1>(items[i]));
+											break;
+										case Distribution::AssocType::kFaction:
+										case Distribution::AssocType::kKeyword:
+										case Distribution::AssocType::kRace:
+											Distribution::_excludedAssoc.insert(std::get<1>(items[i]));
+											break;
+										case Distribution::AssocType::kItem:
+											Distribution::_excludedItems.insert(std::get<1>(items[i]));
+											break;
+										}
+										if (Logging::EnableLoadLog) {
+											if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
+												std::get<0>(items[i]) & Distribution::AssocType::kNPC) {
+												LOGL_2("excluded actor {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kFaction) {
+												LOGL_2("excluded faction {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kKeyword) {
+												LOGL_2("excluded keyword {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
+												LOGL_2("excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+												LOGL_2("excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else {
+												LOGL_2("{} has the wrong FormType to be excluded from distribution. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+											}
+											EXCL("Exclusion:                {}", Utility::PrintForm(std::get<2>(items[i])));
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 31:  // excludeeffect if plugin is loaded
+								{
+									if (splits->size() != 4) {
+										logwarn("rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string plugin = splits->at(splitindex);
+									splitindex++;
+									if (RE::TESDataHandler::GetSingleton()->LookupLoadedModByName(plugin) == nullptr && RE::TESDataHandler::GetSingleton()->LookupLoadedLightModByName(plugin) == nullptr)
+									{
+										logwarn("File is not loaded: {}. file: {}, rule:\"{}\"", plugin, file, tmp);
+										delete splits;
+										continue;
+									}
+
+									std::string effect = splits->at(splitindex);
+									splitindex++;
+									AlchemicEffect e = 0;
+									try {
+										e = effect;
+									} catch (std::exception&) {
+										logwarn("expection in field \"Effect\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									}
+									if (e != AlchemicEffect::kNone) {
+										Distribution::_excludedEffects.insert(e);
+										EXCL("Exclusion Effect:         {}", e.string());
+										LOGL_2("Exluded Effect:	{}.", e.string());
+									} else {
+										LOGL_2("Effect {} is empty. file: {}, rule: \"{}\"", e.string(), file, tmp);
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
 							default:
 								logwarn("Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;

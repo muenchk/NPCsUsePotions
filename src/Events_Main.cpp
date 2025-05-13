@@ -668,14 +668,14 @@ CheckActorsSkipIteration:
 		initialized = false;
 
 		// checking if player should be handled
-		if ((Settings::Player::_playerPotions ||
-				Settings::Player::_playerFortifyPotions ||
-				Settings::Player::_playerPoisons ||
-				Settings::Player::_playerFood)) {
+		//if ((Settings::Player::_playerPotions ||
+		//		Settings::Player::_playerFortifyPotions ||
+		//		Settings::Player::_playerPoisons ||
+		//		Settings::Player::_playerFood)) {
 			// inject player into the list and remove him later
 			ACSetRegister(data->FindActor(RE::PlayerCharacter::GetSingleton()));
 			LOG_3("Adding player to the list");
-		}
+		//}
 
 		// reset event time_map
 		EventHandler::GetSingleton()->time_map.clear();

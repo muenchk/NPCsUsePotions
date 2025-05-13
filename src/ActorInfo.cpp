@@ -1888,26 +1888,95 @@ int32_t ActorInfo::GetBasePoisonDosage(Compatibility* comp)
 	return 0;
 }
 
+class VisitorPoisoned: public RE::MagicTarget::ForEachActiveEffectVisitor
+{
+public:
+	bool found = false;
+	int32_t total = 0;
+
+	virtual RE::BSContainer::ForEachResult Accept(RE::ActiveEffect* a_effect) override
+	{
+		total++;
+		loginfo("Visiting Active Effect: {}", total);
+		if (a_effect) {
+			loginfo("list element: {}", Utility::PrintForm(a_effect->GetBaseObject()));
+			if (a_effect->GetBaseObject()->IsDetrimental()) {
+				//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
+				//	if (alch->IsPoison())
+				//		return true;
+				loginfo("list resist value: {}", (int)(a_effect->GetBaseObject()->data.resistVariable));
+				found = a_effect->GetBaseObject()->data.resistVariable == RE::ActorValue::kPoisonResist;
+				if (found)
+					return RE::BSContainer::ForEachResult::kStop;
+				//return ACM::HasPoisonResistValue((*itr)->spell);
+			}
+			if (a_effect->effect) {
+			}
+		}
+		return RE::BSContainer::ForEachResult::kContinue;
+	}
+};
+
 bool ActorInfo::IsPoisoned()
 {
 	aclock;
 	if (!valid || dead)
 		return false;
 
+	int32_t total = 0;
+
 	if (actor.get() && actor.get().get()) {
+		bool found = false;
 		RE::Actor* act = actor.get().get();
-		auto list = act->GetMagicTarget()->GetActiveEffectList();
-		if (list) {
-			auto itr = list->begin();
-			while (itr != list->end()) {
-				if ((*itr)->GetBaseObject()->IsDetrimental()) {
-					//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
-					//	if (alch->IsPoison())
-					//		return true;
-					return ACM::HasPoisonResistValue((*itr)->spell);
+		if (!REL::Module::IsVR()) {
+			auto list = act->AsMagicTarget()->GetActiveEffectList();
+			if (list) {
+				loginfo("list empty: {}", list->empty());
+				auto itr = list->begin();
+				while (itr != list->end()) {
+					total++;
+					loginfo("Visiting Active Effect: {}", total);
+					loginfo("list element: {}", Utility::PrintForm((*itr)->GetBaseObject()));
+					if ((*itr)->GetBaseObject()->IsDetrimental()) {
+						//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
+						//	if (alch->IsPoison())
+						//		return true;
+						loginfo("list resist value: {}", (int)((*itr)->GetBaseObject()->data.resistVariable));
+						found = (*itr)->GetBaseObject()->data.resistVariable == RE::ActorValue::kPoisonResist;
+						if (found)
+							return true;
+						//return ACM::HasPoisonResistValue((*itr)->spell);
+					}
+					itr++;
 				}
-				itr++;
+			} else {
+				loginfo("not list");
 			}
+		} else {
+			auto visitor = [&found, &total](RE::ActiveEffect* activeEffect) -> RE::BSContainer::ForEachResult {
+				total++;
+				loginfo("Visiting Active Effect: {}", total);
+				if (activeEffect) {
+					loginfo("list element: {}", Utility::PrintForm(activeEffect->GetBaseObject()));
+					if (activeEffect->GetBaseObject()->IsDetrimental()) {
+						//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
+						//	if (alch->IsPoison())
+						//		return true;
+						loginfo("list resist value: {}", (int)(activeEffect->GetBaseObject()->data.resistVariable));
+						found = activeEffect->GetBaseObject()->data.resistVariable == RE::ActorValue::kPoisonResist;
+						if (found)
+							return RE::BSContainer::ForEachResult::kStop;
+						//return ACM::HasPoisonResistValue((*itr)->spell);
+					}
+					if (activeEffect->effect) {
+					}
+				}
+				return RE::BSContainer::ForEachResult::kContinue;
+			};
+			VisitorPoisoned vi;
+			act->AsMagicTarget()->VisitEffects(vi);
+			if (vi.found)
+				return true;
 		}
 	}
 	return false;

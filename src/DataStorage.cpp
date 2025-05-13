@@ -86,6 +86,7 @@ namespace Storage
 		LOG_1("{}[DataStorage] [RevertGameCallback]");
 		// save settings in case they have been changed
 		if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
+			LOG_1("Applying setting changes.");
 			Settings::Save();
 		}
 		processing = false;

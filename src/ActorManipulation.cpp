@@ -254,6 +254,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 					} else if (res = HasAlchemyEffect(item, alchemyEffect);
 							   std::get<0>(res) &&
 							   (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
+						LOG_3("Adding Poison to list: {}", Utility::PrintForm(item));
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 					}
 				}
