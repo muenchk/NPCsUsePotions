@@ -599,10 +599,15 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPotions(std::shared_p
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
+		int koeff = 0;
 		switch (potions->cats[astr]->falloffFunc) {
 		case FalloffFunction::Exponential:
 			for (int i = 0; i < potions->cats[astr]->max; i++) {
-				loginfo("Potion Prob: {}", potions->cats[astr]->baseChance * std::pow(potions->cats[astr]->falloff, i) * Settings::Distr::_ProbabilityScaling);
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				loginfo("Potion Prob: {}", potions->cats[astr]->baseChance * std::pow(potions->cats[astr]->falloff, koeff) * Settings::Distr::_ProbabilityScaling);
 				if (rand100(randi) <= potions->cats[astr]->baseChance * std::pow(potions->cats[astr]->falloff, i) * Settings::Distr::_ProbabilityScaling) {
 					auto pot = GetRandomPotion(str, acinfo, distr);
 					ret.push_back(pot);
@@ -612,7 +617,11 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPotions(std::shared_p
 			break;
 		case FalloffFunction::Linear:
 			for (int i = 0; i < potions->cats[astr]->max; i++) {
-				loginfo("Potion Prob: {}", (potions->cats[astr]->baseChance - potions->cats[astr]->falloff * i) * Settings::Distr::_ProbabilityScaling);
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				loginfo("Potion Prob: {}", (potions->cats[astr]->baseChance - potions->cats[astr]->falloff * koeff) * Settings::Distr::_ProbabilityScaling);
 				if (rand100(randi) <= (potions->cats[astr]->baseChance - potions->cats[astr]->falloff * i) * Settings::Distr::_ProbabilityScaling) {
 					auto pot = GetRandomPotion(str, acinfo, distr);
 					ret.push_back(pot);
@@ -634,10 +643,15 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPoisons(std::shared_p
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
+		int koeff = 0;
 		switch (poisons->cats[astr]->falloffFunc) {
 		case FalloffFunction::Exponential:
 			for (int i = 0; i < poisons->cats[astr]->max; i++) {
-				if (rand100(randi) <= poisons->cats[astr]->baseChance * std::pow(poisons->cats[astr]->falloff, i) * Settings::Distr::_ProbabilityScaling) {
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				if (rand100(randi) <= poisons->cats[astr]->baseChance * std::pow(poisons->cats[astr]->falloff, koeff) * Settings::Distr::_ProbabilityScaling) {
 					auto pot = GetRandomPoison(str, acinfo, distr);
 					ret.push_back(pot);
 				}
@@ -645,7 +659,11 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPoisons(std::shared_p
 			break;
 		case FalloffFunction::Linear:
 			for (int i = 0; i < poisons->cats[astr]->max; i++) {
-				if (rand100(randi) <= (poisons->cats[astr]->baseChance - poisons->cats[astr]->falloff * i) * Settings::Distr::_ProbabilityScaling) {
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				if (rand100(randi) <= (poisons->cats[astr]->baseChance - poisons->cats[astr]->falloff * koeff) * Settings::Distr::_ProbabilityScaling) {
 					auto pot = GetRandomPoison(str, acinfo, distr);
 					ret.push_back(pot);
 				}
@@ -665,10 +683,15 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFortifyPotions(std::s
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
+		int koeff = 0;
 		switch (fortify->cats[astr]->falloffFunc) {
 		case FalloffFunction::Exponential:
 			for (int i = 0; i < fortify->cats[astr]->max; i++) {
-				if (rand100(randi) <= fortify->cats[astr]->baseChance * std::pow(fortify->cats[astr]->falloff, i) * Settings::Distr::_ProbabilityScaling) {
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				if (rand100(randi) <= fortify->cats[astr]->baseChance * std::pow(fortify->cats[astr]->falloff, koeff) * Settings::Distr::_ProbabilityScaling) {
 					auto pot = GetRandomFortifyPotion(str, acinfo, distr);
 					ret.push_back(pot);
 				}
@@ -676,7 +699,11 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFortifyPotions(std::s
 			break;
 		case FalloffFunction::Linear:
 			for (int i = 0; i < fortify->cats[astr]->max; i++) {
-				if (rand100(randi) <= (fortify->cats[astr]->baseChance - fortify->cats[astr]->falloff * i) * Settings::Distr::_ProbabilityScaling) {
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				if (rand100(randi) <= (fortify->cats[astr]->baseChance - fortify->cats[astr]->falloff * koeff) * Settings::Distr::_ProbabilityScaling) {
 					auto pot = GetRandomFortifyPotion(str, acinfo, distr);
 					ret.push_back(pot);
 				}
@@ -696,18 +723,27 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFood(std::shared_ptr<
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
+		int koeff = 0;
 		switch (food->cats[astr]->falloffFunc) {
 		case FalloffFunction::Exponential:
 			for (int i = 0; i < food->cats[astr]->max; i++) {
-				if (rand100(randi) <= food->cats[astr]->baseChance * std::pow(food->cats[astr]->falloff, i) * Settings::Distr::_ProbabilityScaling) {
-					auto pot = GetRandomFortifyPotion(str, acinfo, distr);
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				if (rand100(randi) <= food->cats[astr]->baseChance * std::pow(food->cats[astr]->falloff, koeff) * Settings::Distr::_ProbabilityScaling) {
+					auto pot = GetRandomFood_intern(str, acinfo, distr);
 					ret.push_back(pot);
 				}
 			}
 			break;
 		case FalloffFunction::Linear:
 			for (int i = 0; i < food->cats[astr]->max; i++) {
-				if (rand100(randi) <= (food->cats[astr]->baseChance - food->cats[astr]->falloff * i) * Settings::Distr::_ProbabilityScaling) {
+				if (potions->cats[astr]->falloffdelay > i)
+					koeff = 0;
+				else
+					koeff = i - potions->cats[astr]->falloffdelay;
+				if (rand100(randi) <= (food->cats[astr]->baseChance - food->cats[astr]->falloff * koeff) * Settings::Distr::_ProbabilityScaling) {
 					auto pot = GetRandomFood_intern(str, acinfo, distr);
 					ret.push_back(pot);
 				}

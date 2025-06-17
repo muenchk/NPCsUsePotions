@@ -77,7 +77,7 @@ enum class AlchemyBaseEffectSecond : AlchemyBaseEffect
 	kFortifyMagicka = (unsigned __int64)1 << 53,    // 20000000000000
 	kFortifyStamina = (unsigned __int64)1 << 54,    // 40000000000000
 	kShield = (unsigned __int64)1 << 55,            // 80000000000000
-	kUnused2 = (unsigned __int64)1 << 56,           // 100000000000000
+	kDamageUndead = (unsigned __int64)1 << 56,           // 100000000000000
 	kUnused3 = (unsigned __int64)1 << 57,           // 200000000000000
 	kUnused4 = (unsigned __int64)1 << 58,           // 300000000000000
 	kUnused5 = (unsigned __int64)1 << 59,           // 400000000000000
@@ -86,10 +86,11 @@ enum class AlchemyBaseEffectSecond : AlchemyBaseEffect
 	kUnused8 = (unsigned __int64)1 << 62,           // 2000000000000000
 	kCustom = (unsigned __int64)1 << 63,            // 4000000000000000
 
-	// 2000007
+	// 100002000007
 	kAnyPotion = static_cast<uint64_t>(kHealth) |
 	             static_cast<uint64_t>(kMagicka) |
 	             static_cast<uint64_t>(kStamina) |
+	             static_cast<uint64_t>(kCurePoison) |
 	             static_cast<uint64_t>(kInvisibility),
 
 	// 720387DFFBFFFF
@@ -193,6 +194,7 @@ enum class AlchemyBaseEffectSecond : AlchemyBaseEffect
 	kAllPotions = static_cast<uint64_t>(kHealth) |
 	              static_cast<uint64_t>(kMagicka) |
 	              static_cast<uint64_t>(kStamina) |
+	              static_cast<uint64_t>(kCurePoison) |
 	              static_cast<uint64_t>(kInvisibility) |
 				  static_cast<uint64_t>(kOneHanded) |
 	              static_cast<uint64_t>(kTwoHanded) |
@@ -452,7 +454,7 @@ public:
 	static const AlchemicEffect kFortifyMagicka;
 	static const AlchemicEffect kFortifyStamina;
 	static const AlchemicEffect kShield;
-	static const AlchemicEffect kUnused2;
+	static const AlchemicEffect kDamageUndead;
 	static const AlchemicEffect kUnused3;
 	static const AlchemicEffect kUnused4;
 	static const AlchemicEffect kUnused5;

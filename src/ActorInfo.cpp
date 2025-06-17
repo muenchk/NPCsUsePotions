@@ -1934,18 +1934,20 @@ bool ActorInfo::IsPoisoned()
 				loginfo("list empty: {}", list->empty());
 				auto itr = list->begin();
 				while (itr != list->end()) {
-					total++;
-					loginfo("Visiting Active Effect: {}", total);
-					loginfo("list element: {}", Utility::PrintForm((*itr)->GetBaseObject()));
-					if ((*itr)->GetBaseObject()->IsDetrimental()) {
-						//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
-						//	if (alch->IsPoison())
-						//		return true;
-						loginfo("list resist value: {}", (int)((*itr)->GetBaseObject()->data.resistVariable));
-						found = (*itr)->GetBaseObject()->data.resistVariable == RE::ActorValue::kPoisonResist;
-						if (found)
-							return true;
-						//return ACM::HasPoisonResistValue((*itr)->spell);
+					//total++;
+					//loginfo("Visiting Active Effect: {}", total);
+					if (*itr) {
+						loginfo("list element: {}", Utility::PrintForm((*itr)->GetBaseObject()));
+						if ((*itr)->GetBaseObject() && (*itr)->GetBaseObject()->IsDetrimental()) {
+							//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
+							//	if (alch->IsPoison())
+							//		return true;
+							loginfo("list resist value: {}", (int)((*itr)->GetBaseObject()->data.resistVariable));
+							found = (*itr)->GetBaseObject()->data.resistVariable == RE::ActorValue::kPoisonResist;
+							if (found)
+								return true;
+							//return ACM::HasPoisonResistValue((*itr)->spell);
+						}
 					}
 					itr++;
 				}
@@ -1954,11 +1956,11 @@ bool ActorInfo::IsPoisoned()
 			}
 		} else {
 			auto visitor = [&found, &total](RE::ActiveEffect* activeEffect) -> RE::BSContainer::ForEachResult {
-				total++;
-				loginfo("Visiting Active Effect: {}", total);
+				//total++;
+				//loginfo("Visiting Active Effect: {}", total);
 				if (activeEffect) {
 					loginfo("list element: {}", Utility::PrintForm(activeEffect->GetBaseObject()));
-					if (activeEffect->GetBaseObject()->IsDetrimental()) {
+					if (activeEffect->GetBaseObject() && activeEffect->GetBaseObject()->IsDetrimental()) {
 						//if (RE::AlchemyItem* alch = (*itr)->spell->As<RE::AlchemyItem>(); alch != nullptr)
 						//	if (alch->IsPoison())
 						//		return true;

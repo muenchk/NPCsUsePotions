@@ -164,8 +164,11 @@ void Settings::LoadDistrConfig()
 	char buffer[1024];
 
 	// extract the rules from all files
-	for (std::string file : files) {
-		try {
+	for (size_t i = 0; i < files.size(); i++) {
+		std::string file = files[i];
+		loginfo("Evaluating file: {}", file);
+		//try 
+		{
 			std::ifstream infile(file);
 			if (infile.is_open()) {
 				std::string line;
@@ -1180,9 +1183,9 @@ void Settings::LoadDistrConfig()
 									Distribution::Rule* rule = nullptr;
 									bool existing = false;
 									for (auto rl : Distribution::_rules) {
-										loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length())
+										//loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length())
 										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding rule: {}", rl->ruleName);
+											loginfo("Overriding rule: {}. file: {}", rl->ruleName, file);
 											rule = rl;
 											existing = true;
 											break;
@@ -1734,9 +1737,9 @@ void Settings::LoadDistrConfig()
 									Distribution::Rule* rule = nullptr;
 									bool existing = false;
 									for (auto rl : Distribution::_rules) {
-										loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length()) if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length())
-										{
-											loginfo("Overriding rule: {}", rl->ruleName);
+										//loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length()) if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length())
+										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
+											loginfo("Overriding rule: {}. file: {}", rl->ruleName, file);
 											rule = rl;
 											existing = true;
 											break;
@@ -1805,13 +1808,37 @@ void Settings::LoadDistrConfig()
 									// we got all relevant information, now find all presets we need
 									try {
 										auto potions = Distribution::_internEffectCategoryPresets.at(potionpreset);
+										if (!potions)
+											logwarn("Could not find preset {}", potionpreset);
+										LOGL_3("found preset {}", potionpreset);
 										auto potionEffects = Distribution::_internEffectPresets.at(potioneffectpreset);
+										if (!potionEffects)
+											logwarn("Could not find preset {}", potioneffectpreset);
+										LOGL_3("found preset {}", potioneffectpreset);
 										auto poisons = Distribution::_internEffectCategoryPresets.at(poisonpreset);
+										if (!poisons)
+											logwarn("Could not find preset {}", poisonpreset);
+										LOGL_3("found preset {}", poisonpreset);
 										auto poisonEffects = Distribution::_internEffectPresets.at(poisoneffectpreset);
+										if (!poisonEffects)
+											logwarn("Could not find preset {}", poisoneffectpreset);
+										LOGL_3("found preset {}", poisoneffectpreset);
 										auto fortify = Distribution::_internEffectCategoryPresets.at(fortifypreset);
+										if (!fortify)
+											logwarn("Could not find preset {}", fortifypreset);
+										LOGL_3("found preset {}", fortifypreset);
 										auto fortifyEffects = Distribution::_internEffectPresets.at(fortifyeffectpreset);
+										if (!fortifyEffects)
+											logwarn("Could not find preset {}", fortifyeffectpreset);
+										LOGL_3("found preset {}", fortifyeffectpreset);
 										auto food = Distribution::_internEffectCategoryPresets.at(foodpreset);
+										if (!food)
+											logwarn("Could not find preset {}", foodpreset);
+										LOGL_3("found preset {}", foodpreset);
 										auto foodEffects = Distribution::_internEffectPresets.at(foodeffectpreset);
+										if (!foodEffects)
+											logwarn("Could not find preset {}", foodeffectpreset);
+										LOGL_3("found preset {}", foodeffectpreset);
 
 										if (potions && potionEffects && poisons && poisonEffects && fortify && fortifyEffects && food && foodEffects) {
 											// all components found, assemble rule
@@ -1830,7 +1857,7 @@ void Settings::LoadDistrConfig()
 											continue;
 										}
 									} catch (std::exception& e) {
-										logwarn("At least one preset could not be found. file: {}, rule:\"{}\"", file, tmp);
+										logwarn("At least one preset could not be found, error: {}. file: {}, rule:\"{}\"", e.what(), file, tmp);
 										delete splits;
 										delete rule;
 										continue;
@@ -1858,7 +1885,7 @@ void Settings::LoadDistrConfig()
 									bool existing = false;
 									for (auto [name, pres] : Distribution::_internEffectPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding category: {}", name);
+											loginfo("Overriding preset: {}", name);
 											preset = pres;
 											existing = true;
 											break;
@@ -1892,20 +1919,20 @@ void Settings::LoadDistrConfig()
 									auto names = Utility::SplitString(splits->at(splitindex), ',', true);
 									splitindex++;
 									std::vector<Distribution::EffectPreset*> presets;
-									for (std::string name : names) {
+									for (std::string pname : names) {
 										// next entry is the effect preset name, so we just set it
 										Distribution::EffectPreset* preset = nullptr;
 										bool existing = false;
 										for (auto [name, pres] : Distribution::_internEffectPresets) {
-											if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
-												loginfo("Overriding category: {}", name);
+											if (Utility::ToLower(name).find(Utility::ToLower(pname)) != std::string::npos && name.length() == pname.length()) {
+												loginfo("Overriding preset: {}", name);
 												preset = pres;
 												existing = true;
 												break;
 											}
 										}
 										if (existing == false || preset == nullptr) {
-											LOGL_2("EffectPreset {} cannot be found and not attachment be performed. file: {}, rule:\"{}\"", splits->at(splitindex), file, tmp);
+											LOGL_2("EffectPreset {} cannot be found and not attachment be performed. file: {}, rule:\"{}\"", splits->at(splitindex-1), file, tmp);
 										}
 										else
 										{
@@ -1931,8 +1958,8 @@ void Settings::LoadDistrConfig()
 								break;
 							case 25:  // category
 								{
-									if (splits->size() != 6) {
-										logwarn("rule has wrong number of fields, expected 6. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+									if (splits->size() != 8) {
+										logwarn("rule has wrong number of fields, expected 8. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
 										delete splits;
 										continue;
 									}
@@ -1980,6 +2007,22 @@ void Settings::LoadDistrConfig()
 										continue;
 									} catch (std::invalid_argument&) {
 										logwarn("invalid-argument expection in field \"Falloff\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									}
+									// falloff delay
+									category->falloffdelay = 0;
+									try {
+										category->falloffdelay = std::stoi(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"FallOffDelay\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										delete category;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"FallOffDelay\". file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
 										delete category;
 										continue;
@@ -2109,6 +2152,58 @@ void Settings::LoadDistrConfig()
 									LOGL_2("category preset {} successfully loaded.", catpreset->name);
 								}
 								break;
+							case 27:  // effect preset copy
+								{
+									if (splits->size() != 4) {
+										logwarn("rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										delete splits;
+										continue;
+									}
+									// next entry is the new effect preset name, so we just set it
+									Distribution::EffectPreset* oldpreset = nullptr;
+									bool existing = false;
+									for (auto [name, pres] : Distribution::_internEffectPresets) {
+										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
+											loginfo("Copying preset: {}", name);
+											oldpreset = pres;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+									{
+										delete splits;
+										logwarn("Original EffectPreset {} could not be found. file: {}, rule:\"{}\"", splits->at(splitindex), file, tmp);
+										continue;
+									}
+									splitindex++;
+									// next entry is the new effect preset name, so we just set it
+									Distribution::EffectPreset* preset = nullptr;
+									existing = false;
+									for (auto [name, pres] : Distribution::_internEffectPresets) {
+										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
+											loginfo("Overriding preset: {}", name);
+											preset = pres;
+											existing = true;
+											break;
+										}
+									}
+									if (existing == false)
+										preset = new Distribution::EffectPreset();
+									// name
+									preset->name = splits->at(splitindex);
+									splitindex++;
+
+									preset->effects = oldpreset->effects;
+									preset->standardDistr = oldpreset->standardDistr;
+									preset->validEffects = oldpreset->validEffects;
+
+									Distribution::_internEffectPresets.insert_or_assign(preset->name, preset);
+
+									delete splits;
+									LOGL_2("EffectPreset {} successfully copied to {}.", oldpreset->name, preset->name);
+								}
+								break;
 							}
 						}
 					break;
@@ -2122,9 +2217,9 @@ void Settings::LoadDistrConfig()
 				logwarn("file {} couldn't be read successfully", file);
 			}
 
-		} catch (std::exception&) {
-			logwarn("file {} couldn't be read successfully due to an error", file);
-		}
+		} //catch (std::exception& e) {
+		//	logwarn("file {} couldn't be read successfully due to an error: {}", file, e.what());
+		//}
 	}
 
 	// create default rule if there is none

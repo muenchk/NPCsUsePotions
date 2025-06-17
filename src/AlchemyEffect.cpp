@@ -662,7 +662,8 @@ void AlchemicEffect::InitStringConversion()
 		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"fortifyhealth", kFortifyHealth)/*)*/;
 		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"fortifymagicka", kFortifyMagicka)/*)*/;
 		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"fortifystamina", kFortifyStamina)/*)*/;
-		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"shield", kShield)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"shield", kShield) /*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"damageundead", kDamageUndead) /*)*/;
 
 		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"custom", kCustom)/*)*/;
 
@@ -928,7 +929,7 @@ const AlchemicEffect AlchemicEffect::kFortifyHealth = AlchemyBaseEffectSecond::k
 const AlchemicEffect AlchemicEffect::kFortifyMagicka = AlchemyBaseEffectSecond::kFortifyMagicka;
 const AlchemicEffect AlchemicEffect::kFortifyStamina = AlchemyBaseEffectSecond::kFortifyStamina;
 const AlchemicEffect AlchemicEffect::kShield = AlchemyBaseEffectSecond::kShield;
-const AlchemicEffect AlchemicEffect::kUnused2 = AlchemyBaseEffectSecond::kUnused2;
+const AlchemicEffect AlchemicEffect::kDamageUndead = AlchemyBaseEffectSecond::kDamageUndead;
 const AlchemicEffect AlchemicEffect::kUnused3 = AlchemyBaseEffectSecond::kUnused3;
 const AlchemicEffect AlchemicEffect::kUnused4 = AlchemyBaseEffectSecond::kUnused4;
 const AlchemicEffect AlchemicEffect::kUnused5 = AlchemyBaseEffectSecond::kUnused5;

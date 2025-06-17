@@ -233,6 +233,8 @@ std::string Utility::ToString(AlchemicEffect ae)
 			return "Custom";
 		case AlchemyBaseEffectSecond::kShield:
 			return "Shield";
+		case AlchemyBaseEffectSecond::kDamageUndead:
+			return "DamageUndead";
 		default:
 			return "Unknown";
 		}

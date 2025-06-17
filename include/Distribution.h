@@ -56,6 +56,10 @@ public:
 		/// </summary>
 		float falloff;
 		/// <summary>
+		/// delay until falloff is applied
+		/// </summary>
+		int falloffdelay = 0;
+		/// <summary>
 		/// type of falloff calculation
 		/// </summary>
 		FalloffFunction falloffFunc = FalloffFunction::Exponential;

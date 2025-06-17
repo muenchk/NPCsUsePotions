@@ -39,6 +39,7 @@ namespace Events
 				if (!data->UpdateActorInfo(acinfo)) {
 					LOG_1("Removed invalid actor");
 					acset.erase(itr);
+				} else if (acinfo->Is3DLoaded() == false) {
 				} else {
 					actors.insert(*itr);
 				}
