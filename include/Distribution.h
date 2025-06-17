@@ -6,6 +6,8 @@
 #include "Data.h"
 #include "Settings.h"
 
+#include <set>
+
 	/// <summary>
 /// Class handling all functions related to item distribution
 /// </summary>
@@ -31,6 +33,106 @@ public:
 	class CustomItemStorage;
 
 #define RandomRange 1000
+
+	enum class FalloffFunction
+	{
+		Exponential = 0x1,
+		Linear = 0x2,
+	};
+
+	struct EffCategory
+	{
+		/// <summary>
+		/// name of effect category
+		/// </summary>
+		std::string name = "";
+		/// <summary>
+		/// base chance of cat
+		/// </summary>
+		int baseChance = 50;
+		/// <summary>
+		/// falloff for further potions
+		/// [BaseChance * pow(falloff, numpot)
+		/// </summary>
+		float falloff;
+		/// <summary>
+		/// delay until falloff is applied
+		/// </summary>
+		int falloffdelay = 0;
+		/// <summary>
+		/// type of falloff calculation
+		/// </summary>
+		FalloffFunction falloffFunc = FalloffFunction::Exponential;
+		/// <summary>
+		/// max number of items given in this category
+		/// </summary>
+		int max;
+	};
+
+	struct EffCategoryPreset
+	{
+		/// <summary>
+		/// name of the preset
+		/// </summary>
+		std::string name;
+		/// <summary>
+		/// categories for actor strength
+		/// </summary>
+		std::vector<EffCategory*> cats = {
+			nullptr, nullptr, nullptr, nullptr, nullptr
+		};
+		/// <summary>
+		/// item tier adjust
+		/// </summary>
+		int tieradjust = 0;
+	};
+
+	struct Effect
+	{
+		AlchemicEffect effect;
+		int weight;
+		int max;
+		int current = 0;
+	};
+
+	struct EffectLess
+	{
+		bool operator()(const Effect& lhs, const Effect& rhs) const
+		{
+			return lhs.effect < rhs.effect;
+		}
+	};
+
+	struct EffectDistr
+	{
+		std::vector<std::pair<int, Effect>> effects;
+		int total = 0;
+
+		void RemoveEffect(AlchemicEffect eff)
+		{
+			auto itr = effects.begin();
+			while (itr != effects.end())
+			{
+				if (itr->second.effect == eff) {
+					total -= itr->first;
+					effects.erase(itr);
+				}
+				itr++;
+			}
+		}
+	};
+
+	struct EffectPreset
+	{
+		/// <summary>
+		/// name of the preset
+		/// </summary>
+		std::string name;
+		std::unordered_map<AlchemicEffect, Effect> effects;
+		EffectDistr standardDistr;
+		
+		AlchemicEffect validEffects;
+	};
 
 	/// <summary>
 	/// A distribution rule
@@ -59,69 +161,17 @@ public:
 		/// TYPE 1 - Rule
 		// general
 		int rulePriority = 0;
-		std::string assocObjects;
-		std::string potionProperties;
-		std::string fortifyproperties;
-		std::string poisonProperties;
-		std::string foodProperties;
 		bool allowMixed = true;
 		bool styleScaling = true;
-		// chances and options
-		int maxPotions = 5;
-		int maxFortify = 5;
-		int maxPoisons = 5;
-		std::vector<int> potion1Chance;
-		std::vector<int> potion2Chance;
-		std::vector<int> potion3Chance;
-		std::vector<int> potion4Chance;
-		std::vector<int> potionAdditionalChance;
-		int potionTierAdjust = 0;
-		std::vector<int> fortify1Chance;
-		std::vector<int> fortify2Chance;
-		std::vector<int> fortify3Chance;
-		std::vector<int> fortify4Chance;
-		std::vector<int> fortifyAdditionalChance;
-		int fortifyTierAdjust = 0;
-		std::vector<int> poison1Chance;
-		std::vector<int> poison2Chance;
-		std::vector<int> poison3Chance;
-		std::vector<int> poison4Chance;
-		std::vector<int> poisonAdditionalChance;
-		int poisonTierAdjust = 0;
-		std::vector<int> foodChance;
 
-		// distributions for different item types
-		std::vector<std::tuple<int, AlchemicEffect>> potionDistr;
-		std::vector<std::tuple<int, AlchemicEffect>> potionDistrChance;
-		std::vector<std::tuple<int, AlchemicEffect>> poisonDistr;
-		std::vector<std::tuple<int, AlchemicEffect>> poisonDistrChance;
-		std::vector<std::tuple<int, AlchemicEffect>> fortifyDistr;
-		std::vector<std::tuple<int, AlchemicEffect>> fortifyDistrChance;
-		std::vector<std::tuple<int, AlchemicEffect>> foodDistr;
-		std::vector<std::tuple<int, AlchemicEffect>> foodDistrChance;
-
-		// raw effect maps for the item types
-		std::map<AlchemicEffect, float> potionEffectMap;
-		std::map<AlchemicEffect, float> poisonEffectMap;
-		std::map<AlchemicEffect, float> fortifyEffectMap;
-		std::map<AlchemicEffect, float> foodEffectMap;
-
-		/// <summary>
-		/// accumulated alchemy effects valid for potions
-		/// </summary>
-		AlchemicEffect validPotions = 0;
-		/// <summary>
-		/// accumulated alchemy effect valid for poisons
-		/// </summary>
-		AlchemicEffect validPoisons = 0;
-		/// <summary>
-		/// accumulated alchemy effects valid for fortify potions
-		/// </summary>
-		AlchemicEffect validFortifyPotions = 0;
-		/// <summary>
-		/// accumulated alchemy effects valid for food
-		/// </summary>
-		AlchemicEffect validFood = 0;
+		EffCategoryPreset* potions;
+		EffectPreset* potionEffects;
+		EffCategoryPreset* poisons;
+		EffectPreset* poisonEffects;
+		EffCategoryPreset* fortify;
+		EffectPreset* fortifyEffects;
+		EffCategoryPreset* food;
+		EffectPreset* foodEffects;
 
 		/// <summary>
 		/// returns a random potion according to [strength] and [acsstrength]
@@ -151,7 +201,7 @@ public:
 		/// <summary>
 		/// Returns a distribution scaled according to the number of custom items of an actor and their combat style
 		/// </summary>
-		std::vector<std::tuple<int, AlchemicEffect>> GetScaledDistribution(Settings::ItemType type, std::shared_ptr<ActorInfo> const& acinfo);
+		EffectDistr GetScaledDistribution(Settings::ItemType type, EffectPreset* preset, std::shared_ptr<ActorInfo> const& acinfo);
 
 #define COPY(vec1, vec2)       \
 	vec2.reserve(vec1.size()); \
@@ -178,110 +228,192 @@ public:
 			rl->ruleType = ruleType;
 			rl->ruleName = ruleName;
 			rl->rulePriority = rulePriority;
-			rl->assocObjects = assocObjects;
-			rl->potionProperties = potionProperties;
-			rl->fortifyproperties = fortifyproperties;
-			rl->poisonProperties = poisonProperties;
-			rl->foodProperties = foodProperties;
 			rl->allowMixed = allowMixed;
 			rl->styleScaling = styleScaling;
-			rl->maxPotions = maxPotions;
-			rl->maxFortify = maxFortify;
-			rl->maxPoisons = maxPoisons;
-			rl->potionTierAdjust = potionTierAdjust;
-			rl->fortifyTierAdjust = fortifyTierAdjust;
-			rl->poisonTierAdjust = poisonTierAdjust;
-			COPY(potion1Chance, rl->potion1Chance);
-			COPY(potion2Chance, rl->potion2Chance);
-			COPY(potion3Chance, rl->potion3Chance);
-			COPY(potion4Chance, rl->potion4Chance);
-			COPY(potionAdditionalChance, rl->potionAdditionalChance);
-			COPY(fortify1Chance, rl->fortify1Chance);
-			COPY(fortify2Chance, rl->fortify2Chance);
-			COPY(fortify3Chance, rl->fortify3Chance);
-			COPY(fortify4Chance, rl->fortify4Chance);
-			COPY(fortifyAdditionalChance, rl->fortifyAdditionalChance);
-			COPY(poison1Chance, rl->poison1Chance);
-			COPY(poison2Chance, rl->poison2Chance);
-			COPY(poison3Chance, rl->poison3Chance);
-			COPY(poison4Chance, rl->poison4Chance);
-			COPY(poisonAdditionalChance, rl->poisonAdditionalChance);
-			COPY(foodChance, rl->foodChance);
-			COPY(potionDistr, rl->potionDistr);
-			COPY(potionDistrChance, rl->potionDistrChance);
-			COPY(poisonDistr, rl->poisonDistr);
-			COPY(poisonDistrChance, rl->poisonDistrChance);
-			COPY(fortifyDistr, rl->fortifyDistr);
-			COPY(fortifyDistrChance, rl->fortifyDistrChance);
-			COPY(foodDistr, rl->foodDistr);
-			COPY(foodDistrChance, rl->foodDistrChance);
-			rl->validPotions = validPotions;
-			rl->validPoisons = validPoisons;
-			rl->validFortifyPotions = validFortifyPotions;
-			rl->validFood = validFood;
-			COPYMAP(potionEffectMap, rl->potionEffectMap);
-			COPYMAP(poisonEffectMap, rl->poisonEffectMap);
-			COPYMAP(fortifyEffectMap, rl->fortifyEffectMap);
-			COPYMAP(foodEffectMap, rl->foodEffectMap);
+			rl->potions = potions;
+			rl->potionEffects = potionEffects;
+			rl->poisons = poisons;
+			rl->poisonEffects = poisonEffects;
+			rl->fortify = fortify;
+			rl->fortifyEffects = fortifyEffects;
+			rl->food = food;
+			rl->foodEffects = foodEffects;
 			return rl;
 		}
 
-		Rule(int _ruleVersion, int _ruleType, std::string _ruleName, int _rulePriority, bool _allowMixed, bool _styleScaling, int _maxPotions,
-			std::vector<int> _potion1Chance, std::vector<int> _potion2Chance, std::vector<int> _potion3Chance, std::vector<int> _potion4Chance,
-			std::vector<int> _potionAdditionalChance, int _potionTierAdjust,
-			int _maxFortify, std::vector<int> _fortify1Chance, std::vector<int> _fortify2Chance, std::vector<int> _fortify3Chance, std::vector<int> _fortify4Chance, std::vector<int> _fortifyAddtionalChance, int _fortifyTierAdjust,
-			int _maxPoisons, std::vector<int> _poison1Chance, std::vector<int> _poison2Chance, std::vector<int> _poison3Chance, std::vector<int> _poison4Chance, std::vector<int> _poisonAdditionalChance, int _poisonTierAdjust, 
-			std::vector<int> _foodChance, 
-			std::vector<std::tuple<int, AlchemicEffect>> _potionDistr,
-			std::vector<std::tuple<int, AlchemicEffect>> _poisonDistr,
-			std::vector<std::tuple<int, AlchemicEffect>> _fortifyDistr,
-			std::vector<std::tuple<int, AlchemicEffect>> _foodDistr, 
-			AlchemicEffect _validPotions, AlchemicEffect _validPoisons, AlchemicEffect _validFortifyPotions, AlchemicEffect _validFood) :
+		Rule(int _ruleVersion, int _ruleType, std::string _ruleName, int _rulePriority, bool _allowMixed, bool _styleScaling, EffCategoryPreset* _potions, EffectPreset* _potionEffects, EffCategoryPreset* _poisons, EffectPreset* _poisonEffects, EffCategoryPreset* _fortify, EffectPreset* _fortifyEffects, EffCategoryPreset* _food, EffectPreset* _foodEffects) :
 			ruleVersion{ _ruleVersion },
 			ruleType{ _ruleType },
 			ruleName{ _ruleName },
 			rulePriority{ _rulePriority },
 			allowMixed{ _allowMixed },
 			styleScaling{ _styleScaling },
-			maxPotions{ _maxPotions },
-			maxFortify{ _maxFortify },
-			maxPoisons{ _maxPoisons },
-			potion1Chance{ _potion1Chance },
-			potion2Chance{ _potion2Chance },
-			potion3Chance{ _potion3Chance },
-			potion4Chance{ _potion4Chance },
-			potionAdditionalChance{ _potionAdditionalChance },
-			poison1Chance{ _poison1Chance },
-			poison2Chance{ _poison2Chance },
-			poison3Chance{ _poison3Chance },
-			poison4Chance{ _poison4Chance },
-			poisonAdditionalChance{ _poisonAdditionalChance },
-			fortify1Chance{ _fortify1Chance },
-			fortify2Chance{ _fortify2Chance },
-			fortify3Chance{ _fortify3Chance },
-			fortify4Chance{ _fortify4Chance },
-			fortifyAdditionalChance{ _fortifyAddtionalChance },
-			potionTierAdjust{ _potionTierAdjust },
-			fortifyTierAdjust{ _fortifyTierAdjust },
-			poisonTierAdjust{ _poisonTierAdjust },
-			foodChance{ _foodChance },
-			potionDistr{ _potionDistr },
-			poisonDistr{ _poisonDistr },
-			fortifyDistr{ _fortifyDistr },
-			foodDistr{ _foodDistr },
-			validPotions{ _validPotions },
-			validPoisons{ _validPoisons },
-			validFortifyPotions{ _validFortifyPotions },
-			validFood{ _validFood }
+			potions{ _potions },
+			poisons{ _poisons },
+			fortify{ _fortify },
+			food{ _food },
+			potionEffects{ _potionEffects },
+			poisonEffects{ _poisonEffects },
+			fortifyEffects{ _fortifyEffects },
+			foodEffects{ _foodEffects }
 		{
-			potionDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_potionDistr);
-			potionDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
-			poisonDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_poisonDistr);
-			poisonDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
-			fortifyDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_fortifyDistr);
-			fortifyDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
-			foodDistrChance = std::vector<std::tuple<int, AlchemicEffect>>(_foodDistr);
-			foodDistrChance.push_back({ RandomRange, AlchemicEffect::kCustom });
+		}
+		Rule(int _ruleVersion, int _ruleType, std::string _ruleName, int _rulePriority, bool _allowMixed, bool _styleScaling, int maxPotions,
+			std::vector<int> potion1Chance, std::vector<int> potion2Chance, std::vector<int> potion3Chance, std::vector<int> potion4Chance,
+			std::vector<int> potionAdditionalChance, int potionTierAdjust,
+			int maxFortify, std::vector<int> fortify1Chance, std::vector<int> fortify2Chance, std::vector<int> fortify3Chance, std::vector<int> fortify4Chance, std::vector<int> fortifyAddtionalChance, int fortifyTierAdjust,
+			int maxPoisons, std::vector<int> poison1Chance, std::vector<int> poison2Chance, std::vector<int> poison3Chance, std::vector<int> poison4Chance, std::vector<int> poisonAdditionalChance, int poisonTierAdjust,
+			std::vector<int> foodChance,
+			std::vector<std::tuple<int, AlchemicEffect>> potionDistr,
+			std::vector<std::tuple<int, AlchemicEffect>> poisonDistr,
+			std::vector<std::tuple<int, AlchemicEffect>> fortifyDistr,
+			std::vector<std::tuple<int, AlchemicEffect>> foodDistr,
+			AlchemicEffect validPotions, AlchemicEffect validPoisons, AlchemicEffect validFortifyPotions, AlchemicEffect validFood) :
+			ruleVersion{ _ruleVersion },
+			ruleType{ _ruleType },
+			ruleName{ _ruleName },
+			rulePriority{ _rulePriority },
+			allowMixed{ _allowMixed },
+			styleScaling{ _styleScaling }
+		{
+			potions = new Distribution::EffCategoryPreset();
+			potions->name = ruleName + "_potions_catpreset";
+			Distribution::_internEffectCategoryPresets.insert_or_assign(potions->name, potions);
+			poisons = new Distribution::EffCategoryPreset();
+			poisons->name = ruleName + "_poisons_catpreset";
+			Distribution::_internEffectCategoryPresets.insert_or_assign(poisons->name, poisons);
+			fortify = new Distribution::EffCategoryPreset();
+			fortify->name = ruleName + "_fortify_catpreset";
+			Distribution::_internEffectCategoryPresets.insert_or_assign(fortify->name, fortify);
+			food = new Distribution::EffCategoryPreset();
+			food->name = ruleName + "_food_catpreset";
+			Distribution::_internEffectCategoryPresets.insert_or_assign(food->name, food);
+
+			potionEffects = new Distribution::EffectPreset();
+			potionEffects->name = ruleName + "_potion_effectspreset";
+			Distribution::_internEffectPresets.insert_or_assign(potionEffects->name, potionEffects);
+			poisonEffects = new Distribution::EffectPreset();
+			poisonEffects->name = ruleName + "_poison_effectspreset";
+			Distribution::_internEffectPresets.insert_or_assign(poisonEffects->name, poisonEffects);
+			fortifyEffects = new Distribution::EffectPreset();
+			fortifyEffects->name = ruleName + "_fortify_effectspreset";
+			Distribution::_internEffectPresets.insert_or_assign(fortifyEffects->name, fortifyEffects);
+			foodEffects = new Distribution::EffectPreset();
+			foodEffects->name = ruleName + "_food_effectspreset";
+			Distribution::_internEffectPresets.insert_or_assign(foodEffects->name, foodEffects);
+
+			auto meanfalloff = [](std::vector<int> vec1, std::vector<int> vec2, std::vector<int> vec3, std::vector<int> vec4, int num) {
+				float mean = 0;
+				int mac = 0;
+				if (vec1[num] != 0) {
+					mean += (float)vec2[num] / (float)vec1[num];
+					mac++;
+				}
+				if (vec2[num] != 0) {
+					mean += (float)vec3[num] / (float)vec2[num];
+					mac++;
+				}
+				if (vec3[num] != 0) {
+					mean += (float)vec4[num] / (float)vec3[num];
+					mac++;
+				}
+				if (mac != 0)
+					mean = mean / (float)mac;
+				return mean;
+			};
+			auto addcats = [](Distribution::EffCategoryPreset* preset) {
+				for (int i = 0; i < 5; i++) {
+					preset->cats[i] = new Distribution::EffCategory();
+					preset->cats[i]->name = preset->name + "_" + std::to_string(i);
+					Distribution::_internEffectCategories.insert_or_assign(preset->cats[i]->name, preset->cats[i]);
+				}
+			};
+			auto setcat = [](Distribution::EffCategoryPreset* preset, int num, int base, float falloff, int max) {
+				preset->cats[num]->baseChance = base;
+				preset->cats[num]->falloff = falloff;
+				preset->cats[num]->max = max;
+			};
+			addcats(potions);
+			addcats(poisons);
+			addcats(fortify);
+			addcats(food);
+			potions->tieradjust = potionTierAdjust;
+			poisons->tieradjust = poisonTierAdjust;
+			fortify->tieradjust = fortifyTierAdjust;
+			food->tieradjust = 0;
+
+			potionEffects->validEffects = validPotions;
+			poisonEffects->validEffects = validPoisons;
+			fortifyEffects->validEffects = validFortifyPotions;
+			foodEffects->validEffects = validFood;
+
+			setcat(potions, 0, potion1Chance[0], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 0), maxPotions);
+			setcat(potions, 1, potion1Chance[1], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 1), maxPotions);
+			setcat(potions, 2, potion1Chance[2], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 2), maxPotions);
+			setcat(potions, 3, potion1Chance[3], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 3), maxPotions);
+			setcat(potions, 4, potion1Chance[4], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 4), maxPotions);
+
+			setcat(poisons, 0, poison1Chance[0], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 0), maxPoisons);
+			setcat(poisons, 1, poison1Chance[1], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 1), maxPoisons);
+			setcat(poisons, 2, poison1Chance[2], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 2), maxPoisons);
+			setcat(poisons, 3, poison1Chance[3], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 3), maxPoisons);
+			setcat(poisons, 4, poison1Chance[4], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 4), maxPoisons);
+
+			setcat(fortify, 0, fortify1Chance[0], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 0), maxFortify);
+			setcat(fortify, 1, fortify1Chance[1], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 1), maxFortify);
+			setcat(fortify, 2, fortify1Chance[2], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 2), maxFortify);
+			setcat(fortify, 3, fortify1Chance[3], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 3), maxFortify);
+			setcat(fortify, 4, fortify1Chance[4], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 4), maxFortify);
+
+			setcat(food, 0, foodChance[0], 0, 1);
+			setcat(food, 1, foodChance[1], 0, 1);
+			setcat(food, 2, foodChance[2], 0, 1);
+			setcat(food, 3, foodChance[3], 0, 1);
+			setcat(food, 4, foodChance[4], 0, 1);
+
+			for (auto [weight, alch] : potionDistr) {
+				Distribution::Effect eff;
+				eff.effect = alch;
+				eff.max = 0;
+				eff.current = 0;
+				eff.weight = 1000 * weight;
+				potionEffects->effects.insert_or_assign(alch, eff);
+			}
+			potionEffects->standardDistr = Distribution::GetEffectDistribution(potionEffects->effects);
+			potionEffects->validEffects = Distribution::SumAlchemyEffects(potionEffects->standardDistr);
+
+			for (auto [weight, alch] : poisonDistr) {
+				Distribution::Effect eff;
+				eff.effect = alch;
+				eff.max = 0;
+				eff.current = 0;
+				eff.weight = 1000 * weight;
+				poisonEffects->effects.insert_or_assign(alch, eff);
+			}
+			poisonEffects->standardDistr = Distribution::GetEffectDistribution(poisonEffects->effects);
+			poisonEffects->validEffects = Distribution::SumAlchemyEffects(poisonEffects->standardDistr);
+
+			for (auto [weight, alch] : fortifyDistr) {
+				Distribution::Effect eff;
+				eff.effect = alch;
+				eff.max = 0;
+				eff.current = 0;
+				eff.weight = 1000 * weight;
+				fortifyEffects->effects.insert_or_assign(alch, eff);
+			}
+			fortifyEffects->standardDistr = Distribution::GetEffectDistribution(fortifyEffects->effects);
+			fortifyEffects->validEffects = Distribution::SumAlchemyEffects(fortifyEffects->standardDistr);
+
+			for (auto [weight, alch] : foodDistr) {
+				Distribution::Effect eff;
+				eff.effect = alch;
+				eff.max = 0;
+				eff.current = 0;
+				eff.weight = 1000 * weight;
+				foodEffects->effects.insert_or_assign(alch, eff);
+			}
+			foodEffects->standardDistr = Distribution::GetEffectDistribution(foodEffects->effects);
+			foodEffects->validEffects = Distribution::SumAlchemyEffects(foodEffects->standardDistr);
 		}
 		Rule() {}
 		/// <summary>
@@ -296,119 +428,29 @@ public:
 
 	private:
 		/// <summary>
-		/// Calculates and returns the first random potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion1(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the second random potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion2(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the third random potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion3(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the fourth random potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion4(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns an additional random potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotionAdditional(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
 		/// Returns an according to potion properties randomly chosen potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPotion(int str, std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the first random poison
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison1(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the second random poison
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison2(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the third random poison
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison3(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the fourth random poison
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison4(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns addtional random poison
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoisonAdditional(std::shared_ptr<ActorInfo> const& acinfo);
+		RE::AlchemyItem* GetRandomPotion(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr);
 		/// <summary>
 		/// Returns an according to poison properties randomly chosen poison
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomPoison(int str, std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the first random fortify potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion1(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the second random fortify potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion2(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the third random fortify potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion3(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns the fourth random fortify potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion4(std::shared_ptr<ActorInfo> const& acinfo);
-		/// <summary>
-		/// Calculates and returns additional random fortify potion
-		/// </summary>
-		/// <param name="acinfo">information about the actor the item is for</param>
-		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotionAdditional(std::shared_ptr<ActorInfo> const& acinfo);
+		RE::AlchemyItem* GetRandomPoison(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr);
 		/// <summary>
 		/// Returns an according to fortify properties randomly chosen fortify potion
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFortifyPotion(int str, std::shared_ptr<ActorInfo> const& acinfo);
+		RE::AlchemyItem* GetRandomFortifyPotion(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr);
 		/// <summary>
 		/// Calculates and returns a random food item
 		/// </summary>
 		/// <param name="acinfo">information about the actor the item is for</param>
 		/// <returns></returns>
-		RE::AlchemyItem* GetRandomFood_intern(std::shared_ptr<ActorInfo> const& acinfo);
+		RE::AlchemyItem* GetRandomFood_intern(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr);
 
 		/// <summary>
 		/// Returns a random effect accoring to the rules item effect properties
@@ -421,7 +463,7 @@ public:
 		/// </summary>
 		/// <param name="distribution">distribution to pull effect from</param>
 		/// <returns></returns>
-		AlchemicEffect GetRandomEffect(std::vector<std::tuple<int, AlchemicEffect>> distribution);
+		AlchemicEffect GetRandomEffect(EffectDistr& distr);
 		/// <summary>
 		/// Returns a random effect accoring to the rules item effect properties with additional custom item chance
 		/// </summary>
@@ -451,6 +493,28 @@ public:
 		/// <param name="effect"></param>
 		void RemoveAlchemyEffectFood(AlchemicEffect effect);
 	};
+
+	static EffectDistr GetEffectDistribution(std::unordered_map<AlchemicEffect, Effect>& effectmap)
+	{
+		EffectDistr distr;
+		distr.total = 0;
+		for (auto [eff, effect] : effectmap) {
+			distr.effects.push_back({ effect.weight, effect });
+			distr.total += effect.weight;
+		}
+		return distr;
+	}
+
+	static AlchemicEffect SumAlchemyEffects(EffectDistr& distr)
+	{
+		AlchemicEffect eff;
+		for (auto [_, effect] : distr.effects)
+		{
+			eff |= effect.effect;
+		}
+		eff |= AlchemicEffect::kCustom;
+		return eff;
+	}
 
 	// Storage for custom items
 	class CustomItemStorage
@@ -604,6 +668,12 @@ private:
 	/// map that defines overwrites for AlchemyEffects for MagicEffects
 	/// </summary>
 	static inline std::unordered_map<RE::FormID, AlchemicEffect> _magicEffectAlchMap;
+
+	static inline std::unordered_map<std::string, EffCategory*> _internEffectCategories;
+
+	static inline std::unordered_map<std::string, EffCategoryPreset*> _internEffectCategoryPresets;
+
+	static inline std::unordered_map<std::string, EffectPreset*> _internEffectPresets;
 
 	
 public:

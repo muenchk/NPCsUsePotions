@@ -93,13 +93,21 @@ public:
 	#pragma endregion
 
 	#pragma region AlchemyFunctions
+
+	/// <summary>
+	/// check whether a magic item has an effect that has PoisonResistance as its resistance value
+	/// </summary>
+	/// <param name="item"></param>
+	/// <returns></returns>
+	static bool HasPoisonResistValue(RE::MagicItem* item);
+
 	/// <summary>
 	/// checks wether an item has the desired effect and additionally returns its magnitude
 	/// </summary>
 	/// <param name="item">item to check</param>
 	/// <param name="eff">effect to look for</param>
 	/// <returns>wether the item has the specified effect, the magnitude, and the duration, the total effects, whether there is a detrimental effect</returns>
-	static std::tuple<bool, float, int, AlchemicEffect, bool> HasAlchemyEffect(RE::AlchemyItem* item, AlchemicEffect alchemyEffect);
+	static std::tuple<bool, float, int, AlchemicEffect, bool> HasAlchemyEffect(RE::AlchemyItem* item, AlchemicEffect alchemyEffect, bool excluderestore = false);
 
 	/// <summary>
 	/// Searches for potions with the effect [eff] in the inventory of the actor [actor]

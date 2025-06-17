@@ -387,7 +387,29 @@ namespace Events
 			//std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 			
 			// if actor is the player character
-			
+			if (actor->IsPlayerRef()) {
+				if (sourceContainer != nullptr) {
+					if (auto itr = time_map.find(sourceContainer->GetFormID()); itr != time_map.end()) {
+						if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - itr->second).count() > 180) {
+							time_map.insert({ sourceContainer->GetFormID(), std::chrono::steady_clock::now() });
+							SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+							ev->eventName = RE::BSFixedString("NPCsUsePotions_quicklooteventcontainer");
+							ev->strArg = "";
+							ev->numArg = 0.0f;
+							ev->sender = sourceContainer;
+							SKSE::GetModCallbackEventSource()->SendEvent(ev);
+						}
+					} else {
+						time_map.insert({ sourceContainer->GetFormID(), std::chrono::steady_clock::now() });
+						SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+						ev->eventName = RE::BSFixedString("NPCsUsePotions_quicklooteventcontainer");
+						ev->strArg = "";
+						ev->numArg = 0.0f;
+						ev->sender = sourceContainer;
+						SKSE::GetModCallbackEventSource()->SendEvent(ev);
+					}
+				}
+			}
 		}
 		
 		// handle event for generic objects

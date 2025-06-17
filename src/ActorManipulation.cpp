@@ -15,9 +15,49 @@ void ACM::Init()
 	ACM::data = Data::GetSingleton();
 	ACM::comp = Compatibility::GetSingleton();
 }
+// calc all alchemyeffects of the item and return the duration and magnitude of the effect with the highest product mag * dur
+bool ACM::HasPoisonResistValue(RE::MagicItem* item)
+{
+	LOG_3("");
+	auto [mapf, poison] = data->GetMagicItemPoisonResist(item->GetFormID());
+
+	if (mapf) {
+		if (poison) {
+			LOG_4("fast success");
+			return true;
+		} else {
+			LOG_4("fast fail: not a poison");
+			return false;
+		}
+	} else {
+		RE::EffectSetting* sett = nullptr;
+		if ((item->avEffectSetting) == nullptr && item->effects.size() == 0) {
+			LOG_4("fail: no item effects");
+			return false;
+		}
+		bool poison = false;
+		if (item->effects.size() > 0) {
+			for (uint32_t i = 0; i < item->effects.size(); i++) {
+				sett = item->effects[i]->baseEffect;
+				if (sett && sett->data.resistVariable == RE::ActorValue::kPoisonResist) {
+					poison = true;
+				}
+			}
+		} else {
+			if (item->avEffectSetting && item->avEffectSetting->data.resistVariable == RE::ActorValue::kPoisonResist) {
+				poison = true;
+			}
+		}
+		
+		LOG_4("slow doing");
+		// save calculated values to data
+		data->SetMagicItemPoisonResist(item->GetFormID(), poison);
+		return poison;
+	}
+}
 
 // calc all alchemyeffects of the item and return the duration and magnitude of the effect with the highest product mag * dur
-std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::AlchemyItem* item, AlchemicEffect alchemyEffect)
+std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::AlchemyItem* item, AlchemicEffect alchemyEffect, bool excluderestore)
 {
 	LOG_3("");
 	// check if the ite is excluded
@@ -25,8 +65,9 @@ std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::Alc
 		return { false, -1.0f, -1, AlchemicEffect::kNone, false };
 	auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
 	LOG_4("Item: {}, Effect: {}, Dur: {}, Mag: {}, Detr:{}, Dosage: {}", Utility::PrintForm(item), eff.string(), dur, mag, detr, dosage);
+	static AlchemicEffect restoreeff = AlchemicEffect::kHealth | AlchemicEffect::kMagicka | AlchemicEffect::kStamina;
 	if (mapf) {
-		if ((eff & alchemyEffect) != 0) {
+		if ((eff & alchemyEffect) != 0 && (!excluderestore || (eff & restoreeff) == 0)) { // don't use potion if it has restore on it and we want to exclude them
 			LOG_4("fast success");
 			return { true, mag, dur, eff, detr };
 		}
@@ -100,7 +141,7 @@ std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::Alc
 				mag = err.magnitude;
 			}
 		}
-		if (found) {
+		if (found && (!excluderestore || (out & restoreeff) == 0)) {
 			//LOG_1("dur {} mag {}, effect {}, converted {}", dur, mag, out);
 			LOG_4("slow success");
 			// save calculated values to data
@@ -145,7 +186,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 					if (fortify && acinfo->CanUseFortify(item->GetFormID()) || !fortify && acinfo->CanUsePotion(item->GetFormID())) {
 						auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
 						ret.insert(ret.begin(), { mag, dur, item, AlchemicEffect::kCustom });
-					} else if (res = HasAlchemyEffect(item, alchemyEffect);
+					} else if (res = HasAlchemyEffect(item, alchemyEffect, fortify);
 							   std::get<0>(res) &&
 							   (Settings::Potions::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
@@ -213,6 +254,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 					} else if (res = HasAlchemyEffect(item, alchemyEffect);
 							   std::get<0>(res) &&
 							   (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
+						LOG_3("Adding Poison to list: {}", Utility::PrintForm(item));
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 					}
 				}

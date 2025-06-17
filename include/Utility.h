@@ -226,12 +226,95 @@ public:
 	static std::string PrintEffectMap(std::map<AlchemicEffect, float> effectMap);
 
 	/// <summary>
-	/// Splits a string at a delimiter and optionally removes empty results
+	/// Splits a string at a delimiter, optionally removes empty results, and optionally respects escaped sequences
 	/// </summary>
-	/// <param name="delimiter"></param>
-	/// <param name="removeEmpty"></param>
+	/// <param name="str">input to split</param>
+	/// <param name="delimiter">delimiter at which to split</param>
+	/// <param name="removeEmpty">whether to remove empty strings</param>
+	/// <param name="escape">whether to respect escaped sequences</param>
+	/// <param name="escapesymbol">symbol that marks escaped sequences, sequences need to be surrounded by this symbol</param>
 	/// <returns></returns>
-	static std::vector<std::string> SplitString(std::string str, char delimiter, bool removeEmpty = false);
+	static std::vector<std::string> SplitString(std::string str, char delimiter, bool removeEmpty, bool escape = false, char escapesymbol = '\"', bool allowdisableescape = false, char disblechar = '\\');
+
+	/// <summary>
+	/// Splits a string at a delimiter, optionally removes empty results, and optionally respects escaped sequences
+	/// </summary>
+	/// <param name="str">input to split</param>
+	/// <param name="delimiter">delimiter at which to split</param>
+	/// <param name="removeEmpty">whether to remove empty strings</param>
+	/// <param name="escape">whether to respect escaped sequences</param>
+	/// <param name="escapesymbol">symbol that marks escaped sequences, sequences need to be surrounded by this symbol</param>
+	/// <returns></returns>
+	static std::vector<std::string> SplitString(std::string str, std::string delimiter, bool removeEmpty, bool escape = false, char escapesymbol = '\"');
+
+	/// <summary>
+	/// Evaluates whether the char at position [position] is escaped
+	/// </summary>
+	/// <param name="str">input to search</param>
+	/// <param name="escapesymbol">symbol that marks escaped sequences, sequences need to be surrounded by this symbol</param>
+	/// <param name="position">the position to check</param>
+	/// <returns></returns>
+	static bool IsEscaped(std::string str, int32_t position, char escapesymbol = '\"')
+	{
+		bool escaped = false;
+		int32_t count = 0;
+		for (char c : str) {
+			//logdebug("Char: {}\t Window: {}\t Wsize: {}\t Wmaxsize: {}\t tmp: {}", c, slide.GetWindow(), slide.size, slide.maxsize, tmp);
+			if (escaped == true) {
+				// escaped sequence.
+				if (c == escapesymbol) {
+					escaped = !escaped;
+				}
+			} else {
+				if (c == escapesymbol) {
+					// we are at the beginning of an escaped sequence
+					escaped = !escaped;
+				}
+			}
+			if (count == position)
+				return escaped;
+			count++;
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Removes whitespace from an input in-place, optionally respects escaped sequences
+	/// </summary>
+	static std::string& RemoveWhiteSpaces(std::string& str, char escape, bool removetab = false, bool allowdisableescape = false, char disablechar = '\\');
+
+	/// <summary>
+	/// Removes Symbols from an input in-place, optionally respects escaped sequences
+	/// </summary>
+	static std::string& RemoveSymbols(std::string& str, char symbol, bool enableescape = false, char escape = '\"');
+
+	/// <summary>
+	/// Removes Symbols from an input in-place, optionally doesn't remove escaped characters
+	/// </summary>
+	static std::string& RemoveSymbols(std::string& str, char symbol, char disablechar);
+
+	/// <summary>
+	/// Counts the occurences of the given symbol, respecting escaped sequences
+	/// </summary>
+	static int32_t CountSymbols(std::string str, char symbol, char escaped1, char escaped2)
+	{
+		int32_t count = 0;
+		bool escape = false;
+		for (char& c : str) {
+			// escaped strings are marked by, e.g., " or ' and everything between two of them should not be counted
+			// we need to check for both since one string could be marked with ", while another one could use '
+			// this means that something thats invalid in python "usdzfgf' is counted as valid.
+			if (c == escaped1 || c == escaped2)
+				escape = !escape;
+			if (escape == false)
+				if (c == symbol)
+					count++;
+		}
+		return count;
+	}
+
+	static std::vector<std::pair<char, int32_t>> GetSymbols(std::string str);
+
 
 	/// <summary>
 	/// The current combat style of an actor
@@ -347,8 +430,15 @@ public:
 	/// </summary>
 	/// <param name="input">string to parse</param>
 	/// <param name="error">Overrisable value, which is set to true if there is an error during parsing.</param>
-	/// <returns>A vector of AlchemyEffects and Weights</returns>
-	static std::vector<std::tuple<AlchemicEffect, float>> ParseAlchemyEffects(std::string input, bool& error);
+	/// <returns>A vector of AlchemyEffects, Weights, and max occurences</returns>
+	static std::vector<std::tuple<AlchemicEffect, float /*weight*/, int /*max*/>> ParseAlchemyEffects(std::string input, bool& error);
+
+	/// <summary>
+	/// parses alchemy effects from an input string for Rule version 3
+	/// </summary>
+	/// <param name="input"></param>
+	/// <param name="preset"></param>
+	static bool ParseAlchemyEffects(std::string input, Distribution::EffectPreset* preset);
 
 	/// <summary>
 	/// Computes a distribution from an effectmap.
@@ -356,7 +446,7 @@ public:
 	/// <param name="effectmap">effectmap containing effects and weights which will be translated into the distribution</param>
 	/// <param name="range">range the distribution chances are computed for</param>
 	/// <returns>Weighted Distribution</returns>
-	static std::vector<std::tuple<int, AlchemicEffect>> GetDistribution(std::vector<std::tuple<AlchemicEffect, float>> effectmap, int range, bool chance = false);
+	static std::vector<std::tuple<int, AlchemicEffect>> GetDistribution(std::vector<std::tuple<AlchemicEffect, float, int>> effectmap, int range, bool chance = false);
 
 	/// <summary>
 	/// Computes a distribution from a unified effect map
@@ -370,7 +460,7 @@ public:
 	/// </summary>
 	/// <param name="effectmap">effectmap containing effects and weights that shal be unified</param>
 	/// <returns>map with alchemyeffects and their weights</returns>
-	static std::map<AlchemicEffect, float> UnifyEffectMap(std::vector<std::tuple<AlchemicEffect, float>> effectmap);
+	static std::map<AlchemicEffect, float> UnifyEffectMap(std::vector<std::tuple<AlchemicEffect, float, int>> effectmap);
 
 	/// <summary>
 	/// Sums the Alchemyeffects in [list]

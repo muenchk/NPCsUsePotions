@@ -345,6 +345,33 @@ public:
 	}
 
 	/// <summary>
+	/// returns whether item usage should be disabled while an actor is in the air
+	/// </summary>
+	/// <returns></returns>
+	bool DisableItemUsageWhileFlying()
+	{
+		return Settings::Usage::_DisableItemUsageWhileFlying || _disableParalyzedItems;
+	}
+
+	/// <summary>
+	/// returns whether item usage should be disabled while an actor is bleeding out
+	/// </summary>
+	/// <returns></returns>
+	bool DisableItemUsageWhileBleedingOut()
+	{
+		return Settings::Usage::_DisableItemUsageWhileBleedingOut || _disableParalyzedItems;
+	}
+
+	/// <summary>
+	/// returns whether item usage should be disabled while an actor is sleeping
+	/// </summary>
+	/// <returns></returns>
+	bool DisableItemUsageWhileSleeping()
+	{
+		return Settings::Usage::_DisableItemUsageWhileSleeping || _disableParalyzedItems;
+	}
+
+	/// <summary>
 	/// Returns the global cooldown for item usage
 	/// </summary>
 	/// <returns></returns>

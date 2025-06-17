@@ -233,6 +233,8 @@ std::string Utility::ToString(AlchemicEffect ae)
 			return "Custom";
 		case AlchemyBaseEffectSecond::kShield:
 			return "Shield";
+		case AlchemyBaseEffectSecond::kDamageUndead:
+			return "DamageUndead";
 		default:
 			return "Unknown";
 		}
@@ -379,29 +381,253 @@ std::string Utility::PrintEffectMap(std::map<AlchemicEffect, float> effectMap)
 	return ret;
 }
 
+struct window
+{
+	std::string sliding;
 
-std::vector<std::string> Utility::SplitString(std::string str, char delimiter, bool removeEmpty)
+	int32_t size = 0;
+	int32_t maxsize = 0;
+
+	char AddChar(char c)
+	{
+		char ret = 0;
+		if (size == maxsize) {
+			ret = sliding[0];
+			sliding = sliding.substr(1, sliding.length() - 1);
+			sliding += c;
+		} else {
+			sliding += c;
+			size++;
+		}
+		return ret;
+	}
+	void Reset()
+	{
+		sliding = "";
+		size = 0;
+	}
+	std::string GetWindow()
+	{
+		return sliding;
+	}
+	int32_t Compare(std::string& other)
+	{
+		return sliding.compare(other);
+	}
+};
+
+std::vector<std::string> Utility::SplitString(std::string str, char delimiter, bool removeEmpty, bool escape, char escapesymbol, bool allowdisableescape, char disablechar)
 {
 	std::vector<std::string> splits;
-	size_t pos = str.find(delimiter);
-	while (pos != std::string::npos) {
-		splits.push_back(str.substr(0, pos));
-		str.erase(0, pos + 1);
-		pos = str.find(delimiter);
-	}
-	if (str.length() != 0)
+	if (escape) {
+		std::string tmp;
+		bool escaped = false;
+		char last = 0;
+		for (char c : str) {
+			if (escaped == false) {
+				if (c == delimiter) {
+					splits.push_back(tmp);
+					tmp = "";
+				} else if (c == escapesymbol && (allowdisableescape == false || allowdisableescape && last != disablechar)) {
+					escaped = !escaped;
+					tmp += c;
+				} else
+					tmp += c;
+			} else {
+				if (c == escapesymbol && (allowdisableescape == false || allowdisableescape && last != disablechar)) {
+					escaped = !escaped;
+					tmp += c;
+				} else
+					tmp += c;
+			}
+			last = c;
+		}
+		if (tmp.empty() == false || last == delimiter && escaped == false)
+			splits.push_back(tmp);
+	} else {
+		size_t pos = str.find(delimiter);
+		while (pos != std::string::npos) {
+			splits.push_back(str.substr(0, pos));
+			str.erase(0, pos + 1);
+			pos = str.find(delimiter);
+		}
 		splits.push_back(str);
+	}
 	if (removeEmpty) {
 		auto itr = splits.begin();
 		while (itr != splits.end()) {
 			if (*itr == "") {
-				splits.erase(itr);
+				itr = splits.erase(itr);
 				continue;
 			}
 			itr++;
 		}
 	}
 	return splits;
+}
+
+std::vector<std::string> Utility::SplitString(std::string str, std::string delimiter, bool removeEmpty, bool escape, char escapesymbol)
+{
+	std::vector<std::string> splits;
+	if (escape) {
+		bool escaped = false;
+		std::string tmp;
+		window slide;
+		slide.maxsize = (int)delimiter.size();
+		for (char c : str) {
+			//logdebug("Char: {}\t Window: {}\t Wsize: {}\t Wmaxsize: {}\t tmp: {}", c, slide.GetWindow(), slide.size, slide.maxsize, tmp);
+			if (escape == true && escaped == true) {
+				// escaped sequence.
+				// just add char to string since we don't use window during escaped sequences
+				tmp += c;
+				if (c == escapesymbol) {
+					escaped = !escaped;
+				}
+			} else {
+				char x = slide.AddChar(c);
+				if (x != 0)
+					tmp += x;
+				if (escape == true && c == escapesymbol) {
+					// we are at the beginning of an escaped sequence
+					escaped = !escaped;
+					// add window to string since we don't use window during escaped sequence
+					tmp += slide.GetWindow();
+					slide.Reset();
+				} else {
+					if (slide.Compare(delimiter) == 0) {
+						// delimiter matches sliding window
+						splits.push_back(tmp);
+						tmp = "";
+						slide.Reset();
+					}
+				}
+			}
+		}
+		// assemble last complete string part
+		tmp += slide.GetWindow();
+		// add as last split
+		splits.push_back(tmp);
+	}
+
+	/* if (escape) {
+		std::string tmp;
+		bool escaped = false;
+		char llast = 0;
+		char last = 0;
+		for (char c : str) {
+			llast = last;
+			last = c;
+			if (escaped == false) {
+				if ((std::string("") + last) + c == delimiter) {
+					splits.push_back(tmp.substr(0, tmp.size() - 2));
+					tmp = "";
+					last = 0;
+				} else if (c == escapesymbol) {
+					escaped = !escaped;
+					tmp += c;
+				} else
+					tmp += c;
+			} else {
+				if (c == escapesymbol) {
+					escaped = !escaped;
+					tmp += c;
+				} else
+					tmp += c;
+			}
+		}
+		if (tmp.empty() == false || (std::string("") + llast) + last == delimiter && escaped == false)
+			splits.push_back(tmp);
+	} */
+	else {
+		size_t pos = str.find(delimiter);
+		while (pos != std::string::npos) {
+			splits.push_back(str.substr(0, pos));
+			str.erase(0, pos + delimiter.length());
+			pos = str.find(delimiter);
+		}
+		splits.push_back(str);
+	}
+	if (removeEmpty) {
+		auto itr = splits.begin();
+		while (itr != splits.end()) {
+			if (*itr == "") {
+				itr = splits.erase(itr);
+				continue;
+			}
+			itr++;
+		}
+	}
+	return splits;
+}
+
+std::string& Utility::RemoveWhiteSpaces(std::string& str, char escape, bool removetab, bool allowdisableescape, char disablechar)
+{
+	bool escaped = false;
+	auto itr = str.begin();
+	char last = 0;
+	while (itr != str.end()) {
+		if (*itr == escape && (allowdisableescape == false || allowdisableescape && last != disablechar))
+			escaped = !escaped;
+		last = *itr;
+		if (!escaped) {
+			//char c = *_itr;
+			if (*itr == ' ' || (removetab && *itr == '\t')) {
+				itr = str.erase(itr);
+				continue;
+			}
+		}
+		itr++;
+	}
+	return str;
+}
+
+std::string& Utility::RemoveSymbols(std::string& str, char symbol, bool enableescape, char escape)
+{
+	bool escaped = false;
+	auto itr = str.begin();
+	while (itr != str.end()) {
+		if (enableescape && *itr == escape)
+			escaped = !escaped;
+		if (!escaped) {
+			char c = *itr;
+			if (*itr == symbol) {
+				itr = str.erase(itr);
+				continue;
+			}
+		}
+		itr++;
+	}
+	return str;
+}
+
+std::string& Utility::RemoveSymbols(std::string& str, char symbol, char disablechar)
+{
+	auto itr = str.begin();
+	char last = 0;
+	while (itr != str.end()) {
+		if (*itr == symbol && last != disablechar) {
+			itr = str.erase(itr);
+			continue;
+		}
+		last = *itr;
+		itr++;
+	}
+	return str;
+}
+
+std::vector<std::pair<char, int32_t>> Utility::GetSymbols(std::string str)
+{
+	std::vector<std::pair<char, int32_t>> result;
+	for (char c : str) {
+		for (size_t i = 0; i < result.size(); i++) {
+			if (result[i].first == c) {
+				result[i] = { c, result[i].second + 1 };
+				continue;
+			}
+		}
+		result.push_back({ c, 1 });
+	}
+	return result;
 }
 
 std::string Utility::ToStringCombatStyle(uint32_t style)
@@ -1414,27 +1640,39 @@ Distribution::AssocType Utility::MatchValidFormType(RE::FormType type, bool& val
 	}
 }
 
-std::vector<std::tuple<AlchemicEffect, float>> Utility::ParseAlchemyEffects(std::string input, bool& error)
+std::vector<std::tuple<AlchemicEffect, float, int>> Utility::ParseAlchemyEffects(std::string input, bool& error)
 {
 	LOG_3("");
-	std::vector<std::tuple<AlchemicEffect, float>> ret;
+	std::vector<std::tuple<AlchemicEffect, float, int>> ret;
 	try {
 		float modifier = 1.0f;
+		int max = 0;
 		size_t pos = 0;
 		AlchemicEffect effect = 0;
 		while (input.empty() == false) {
 			effect = 0;
 			modifier = 1.0f;
+			max = 0;
 			input.erase(0, input.find('<') + 1);
 			if ((pos = input.find('>')) != std::string::npos) {
 				// we have a valid entry, probably
 				std::string entry = input.substr(0, pos);
 				input.erase(0, pos + 1);
-
+				// find weight if present
 				if ((pos = entry.find(',')) != std::string::npos) {
 					auto tmp = entry;
 					entry = entry.substr(0, pos);
 					tmp = tmp.erase(0, pos + 1);
+					// if weight is present find max value
+					if ((pos = tmp.find(',')) != std::string::npos) {
+						auto tmp2 = tmp;
+						tmp = tmp.substr(0, pos);
+						tmp2 = tmp2.erase(0, pos + 1);
+						try {
+							max = std::stoi(tmp2);
+						} catch (std::exception&) {
+						}
+					}
 					try {
 						modifier = std::stof(tmp);
 					} catch (std::exception&) {
@@ -1446,7 +1684,7 @@ std::vector<std::tuple<AlchemicEffect, float>> Utility::ParseAlchemyEffects(std:
 				} catch (std::exception&) {
 				}
 				if (!(effect == 0 || modifier == 0.0f)) {
-					ret.push_back({ effect, modifier });
+					ret.push_back({ effect, modifier, max });
 				}
 
 			} else {
@@ -1463,7 +1701,148 @@ std::vector<std::tuple<AlchemicEffect, float>> Utility::ParseAlchemyEffects(std:
 	return ret;
 }
 
-std::vector<std::tuple<int, AlchemicEffect>> Utility::GetDistribution(std::vector<std::tuple<AlchemicEffect, float>> effectmap, int range, bool chance)
+bool Utility::ParseAlchemyEffects(std::string input, Distribution::EffectPreset* preset)
+{
+	LOG_3("");
+	if (preset == nullptr)
+		return false;
+	try {
+		float modifier = 1.0f;
+		int max = 0;
+		size_t pos = 0;
+		int32_t op = 0;
+		AlchemicEffect effect= 0;
+		while (input.empty() == false)
+		{
+			effect = 0;
+			modifier = 1.0f;
+			max = 0;
+			op = 0;
+			input.erase(0, input.find('<') + 1);
+			if ((pos = input.find('>')) != std::string::npos) {
+				std::string entry = input.substr(0, pos);
+				input.erase(0, pos + 1);
+				// find weight
+				if ((pos = entry.find(',')) != std::string::npos) {
+					auto tmp = entry;
+					entry = entry.substr(0, pos);
+					tmp = tmp.erase(0, pos + 1);
+					// find max value
+					if ((pos = tmp.find(',')) != std::string::npos)
+					{
+						auto tmp2 = tmp;
+						tmp = tmp.substr(0, pos);
+						tmp2 = tmp2.erase(0, pos + 1);
+						// find operation
+						if ((pos = tmp2.find(',')) != std::string::npos) {
+							auto tmp3 = tmp2;
+							tmp2 = tmp2.substr(0, pos);
+							tmp3 = tmp3.erase(0, pos + 1);
+							try
+							{
+								op = std::stoi(tmp3);
+							}
+							catch (std::exception&)
+							{
+
+							}
+						}
+						try
+						{
+							max = std::stoi(tmp2);
+						}
+						catch (std::exception&) {
+
+						}
+					}
+					try {
+						modifier = std::stof(tmp);
+					}
+					catch (std::exception&)
+					{
+
+					}
+				}
+				try {
+					effect = entry;
+				}
+				catch (std::exception&) {
+
+				}
+				if (!(effect == 0)) {
+					std::vector<AlchemicEffect> effects;
+					if (effect.IsEffect())
+						effects.push_back(effect);
+					else
+						effects = AlchEff::GetAlchemyEffects(effect);
+
+					if (modifier == 0.0f) {
+						for (auto eff : effects)
+							preset->effects.erase(eff);
+					} else {
+						for (auto eff : effects) {
+							auto itr = preset->effects.find(eff);
+							if (itr != preset->effects.end()) {
+								Distribution::Effect e;
+								switch (op) {
+								case 1:  // add
+									e = itr->second;
+									e.max += max;
+									e.weight += modifier;
+									preset->effects.insert_or_assign(eff, e);
+									break;
+								case 2:  // sub
+									e = itr->second;
+									e.max -= max;
+									if (e.max < 0)
+										e.max = 0;
+									e.weight -= modifier;
+									if (e.weight <= 0)
+										preset->effects.erase(eff);
+									else
+										preset->effects.insert_or_assign(eff, e);
+									break;
+								case 3:   // override
+									e = itr->second;
+									e.max = max;
+									e.weight = modifier;
+									preset->effects.insert_or_assign(eff, e);
+									break;
+								default:  // override
+									break;
+								}
+							}
+							else
+							{
+								// not found -> just set
+								Distribution::Effect e;
+								e.effect = eff;
+								e.weight = modifier;
+								e.max = max;
+								e.current = 0;
+								preset->effects.insert_or_assign(eff, e);
+							}
+						}
+					}
+
+				} else {
+					LOG_5("warning: found empty effect, effectstring: {}", entry);
+				}
+
+			} else {
+				// invalid input return what we parsed so far and set error
+				return false;
+			}
+		}
+	}
+	catch (std::exception&) {
+		return false;
+	}
+	LOG_3("found effects: {}", preset->effects.size());
+	return true;
+}
+
+std::vector<std::tuple<int, AlchemicEffect>> Utility::GetDistribution(std::vector<std::tuple<AlchemicEffect, float, int>> effectmap, int range, bool chance)
 {
 	std::vector<std::tuple<int, AlchemicEffect>> ret;
 	if (effectmap.size() == 0)
@@ -1527,7 +1906,7 @@ std::vector<std::tuple<int, AlchemicEffect>> Utility::GetDistribution(std::map<A
 	return ret;
 }
 
-std::map<AlchemicEffect, float> Utility::UnifyEffectMap(std::vector<std::tuple<AlchemicEffect, float>> effectmap)
+std::map<AlchemicEffect, float> Utility::UnifyEffectMap(std::vector<std::tuple<AlchemicEffect, float, int>> effectmap)
 {
 	AlchemicEffect tmp = 0;
 	std::map<AlchemicEffect, float> map;

@@ -160,6 +160,57 @@ namespace Papyrus
 			void Set_DisableItemUsageWhileStaggered(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled);
 
 			/// <summary>
+			/// Returns wether item usage is disabled while an npc is flying
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			bool Get_DisableItemUsageWhileFlying(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			/// <summary>
+			/// Sets whether item usahe is disabled while an npc is flying
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="disable"></param>
+			void Set_DisableItemUsageWhileFlying(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled);
+
+			/// <summary>
+			/// Returns wether item usage is disabled while an npc is bleeding out
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			bool Get_DisableItemUsageWhileBleedingOut(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			/// <summary>
+			/// Sets whether item usahe is disabled while an npc is bleeding out
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="disable"></param>
+			void Set_DisableItemUsageWhileBleedingOut(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled);
+
+			/// <summary>
+			/// Returns wether item usage is disabled while an npc is sleeping
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			bool Get_DisableItemUsageWhileSleeping(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			/// <summary>
+			/// Sets whether item usahe is disabled while an npc is sleeping
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="disable"></param>
+			void Set_DisableItemUsageWhileSleeping(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled);
+
+			/// <summary>
 			/// Returns whether processing of NPCs that are not active followers of the player is disabled
 			/// </summary>
 			/// <param name="a_vm"></param>

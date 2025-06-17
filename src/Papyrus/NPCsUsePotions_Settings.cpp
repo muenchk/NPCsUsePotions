@@ -31,6 +31,12 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Usage_GetEffectiveGlobalCooldownFood"), script, Usage::Get_EffectiveGlobalCooldownFood);
 			a_vm->RegisterFunction(std::string("Usage_GetDisableItemUsageWhileStaggered"), script, Usage::Get_DisableItemUsageWhileStaggered);
 			a_vm->RegisterFunction(std::string("Usage_SetDisableItemUsageWhileStaggered"), script, Usage::Set_DisableItemUsageWhileStaggered);
+			a_vm->RegisterFunction(std::string("Usage_GetDisableItemUsageWhileFlying"), script, Usage::Get_DisableItemUsageWhileFlying);
+			a_vm->RegisterFunction(std::string("Usage_SetDisableItemUsageWhileFlying"), script, Usage::Set_DisableItemUsageWhileFlying);
+			a_vm->RegisterFunction(std::string("Usage_GetDisableItemUsageWhileBleedingOut"), script, Usage::Get_DisableItemUsageWhileBleedingOut);
+			a_vm->RegisterFunction(std::string("Usage_SetDisableItemUsageWhileBleedingOut"), script, Usage::Set_DisableItemUsageWhileBleedingOut);
+			a_vm->RegisterFunction(std::string("Usage_GetDisableItemUsageWhileSleeping"), script, Usage::Get_DisableItemUsageWhileSleeping);
+			a_vm->RegisterFunction(std::string("Usage_SetDisableItemUsageWhileSleeping"), script, Usage::Set_DisableItemUsageWhileSleeping);
 			a_vm->RegisterFunction(std::string("Usage_GetDisableNonFollowerNPCs"), script, Usage::Get_DisableNonFollowerNPCs);
 			a_vm->RegisterFunction(std::string("Usage_SetDisableNonFollowerNPCs"), script, Usage::Set_DisableNonFollowerNPCs);
 			a_vm->RegisterFunction(std::string("Usage_GetDisableOutOfCombatProcessing"), script, Usage::Get_DisableOutOfCombatProcessing);
@@ -357,6 +363,39 @@ namespace Papyrus
 			void Set_DisableItemUsageWhileStaggered(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
 				Settings::Usage::_DisableItemUsageWhileStaggered = disabled;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			bool Get_DisableItemUsageWhileFlying(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::Usage::_DisableItemUsageWhileFlying;
+			}
+
+			void Set_DisableItemUsageWhileFlying(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
+			{
+				Settings::Usage::_DisableItemUsageWhileFlying = disabled;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			bool Get_DisableItemUsageWhileBleedingOut(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::Usage::_DisableItemUsageWhileBleedingOut;
+			}
+
+			void Set_DisableItemUsageWhileBleedingOut(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
+			{
+				Settings::Usage::_DisableItemUsageWhileBleedingOut = disabled;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			bool Get_DisableItemUsageWhileSleeping(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::Usage::_DisableItemUsageWhileSleeping;
+			}
+
+			void Set_DisableItemUsageWhileSleeping(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
+			{
+				Settings::Usage::_DisableItemUsageWhileSleeping = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 

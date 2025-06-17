@@ -56,12 +56,18 @@ namespace Events
 
 	void Main::HandleActorPotions(std::shared_ptr<ActorInfo> acinfo)
 	{
-		if (!acinfo->IsValid())
+		if (!acinfo->IsValid()) {
+			LOG_2("{} Invalid", Utility::PrintForm(acinfo));
 			return;
-		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false)
+		}
+		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false) {
+			LOG_2("{} out-of-combat or not to be handled", Utility::PrintForm(acinfo));
 			return;
-		if (Settings::Potions::_HandleWeaponSheathedAsOutOfCombat && !acinfo->IsWeaponDrawn())
+		}
+		if (Settings::Potions::_HandleWeaponSheathedAsOutOfCombat && !acinfo->IsWeaponDrawn()) {
+			LOG_2("{} weapon sheathed", Utility::PrintForm(acinfo));
 			return;
+		}
 		LOG_1("{}", Utility::PrintForm(acinfo));
 		AlchemicEffect alch = 0;
 		AlchemicEffect alch2 = 0;
@@ -84,6 +90,8 @@ namespace Events
 			// construct combined effect
 			if (alch && acinfo->IsVampire())
 				alch |= AlchemicEffect::kBlood;
+			if (acinfo->IsPoisoned())
+				alch |= AlchemicEffect::kCurePoison;
 			alch |= alch2 | alch3;
 			LOG_4("check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch.string(), acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina());
 			// use potions
@@ -278,10 +286,13 @@ namespace Events
 	/// <param name="acinfo"></param>
 	void Main::HandleActorRuntimeData(std::shared_ptr<ActorInfo> acinfo)
 	{
-		if (!acinfo->IsValid())
+		if (!acinfo->IsValid()) {
+			LOG_1("Actor is invalid");
 			return;
+		}
 		// if global cooldown greater zero, we can skip everything
 		if (acinfo->GetGlobalCooldownTimer() > tolerance) {
+			LOG_1("Actor has active cooldown exceeding tolerance");
 			acinfo->SetHandleActor(false);
 			return;
 		}
@@ -298,15 +309,33 @@ namespace Events
 		// check for paralyzed
 		if (comp->DisableItemUsageWhileParalyzed()) {
 			if (acinfo->IsParalyzed() ||
-				acinfo->IsFlying() ||
 				acinfo->IsInKillMove() ||
-				acinfo->IsInMidair() ||
 				acinfo->IsInRagdollState() ||
 				acinfo->IsUnconscious() ||
-				acinfo->IsStaggered() ||
-				acinfo->IsBleedingOut() ||
-				acinfo->IsSleeping()) {
+				acinfo->IsStaggered()) {
 				LOG_1("Actor is unable to use items");
+				acinfo->SetHandleActor(false);
+				return;
+			}
+		}
+		if (comp->DisableItemUsageWhileFlying()) {
+			if (acinfo->IsFlying() ||
+				acinfo->IsInMidair()) {
+				LOG_1("Actor is in the air and unable to use items");
+				acinfo->SetHandleActor(false);
+				return;
+			}
+		}
+		if (comp->DisableItemUsageWhileBleedingOut()) {
+			if (acinfo->IsBleedingOut()) {
+				LOG_1("Actor is bleeding out and unable to use items");
+				acinfo->SetHandleActor(false);
+				return;
+			}
+		}
+		if (comp->DisableItemUsageWhileBleedingOut()) {
+			if (acinfo->IsSleeping()) {
+				LOG_1("Actor is sleeping and unable to use items");
 				acinfo->SetHandleActor(false);
 				return;
 			}
@@ -369,9 +398,12 @@ namespace Events
 
 		// if actor is valid and not dead
 		if (acinfo->IsValid() && !acinfo->IsDead() && acinfo->GetActor() && acinfo->GetActor()->AsActorValueOwner()->GetActorValue(RE::ActorValue::kHealth) > 0) {
+			LOG_1("Handle Actor");
 			acinfo->SetHandleActor(true);
-		} else
+		} else {
+			LOG_1("invalid, dead, etc.");
 			acinfo->SetHandleActor(false);
+		}
 
 		if (acinfo->IsInCombat()) {
 			// increase time spent in combat
@@ -648,14 +680,14 @@ CheckActorsSkipIteration:
 
 		SKSE::GetTaskInterface()->AddTask([]() {
 			// checking if player should be handled
-			if ((Settings::Player::_playerPotions ||
-					Settings::Player::_playerFortifyPotions ||
-					Settings::Player::_playerPoisons ||
-					Settings::Player::_playerFood)) {
+			//if ((Settings::Player::_playerPotions ||
+			//		Settings::Player::_playerFortifyPotions ||
+			//		Settings::Player::_playerPoisons ||
+			//		Settings::Player::_playerFood)) {
 				// inject player into the list and remove him later
 				ACSetRegister(data->FindActor(RE::PlayerCharacter::GetSingleton()));
 				LOG_3("Adding player to the list");
-			}
+			//}
 		});
 
 		// reset event time_map

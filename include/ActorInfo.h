@@ -1080,5 +1080,11 @@ public:
 	/// <returns></returns>
 	int32_t GetBasePoisonDosage(Compatibility* comp);
 
+	/// <summary>
+	/// Returns whether there are any effects applied to the actor that originate in a poison item
+	/// </summary>
+	/// <returns></returns>
+	bool IsPoisoned();
+
 #pragma endregion
 };

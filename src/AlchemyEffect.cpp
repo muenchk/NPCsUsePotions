@@ -453,14 +453,18 @@ namespace AlchEff
 	{
 		std::vector<AlchemicEffect> effvec;
 		AlchemicEffect base = 1;
-		for (int i = 0; i < 64; i++) {
-			if ((effects & (base << i)).IsValid())
-				effvec.push_back(static_cast<AlchemicEffect>(base << i));
+		//for (int i = 0; i < 64; i++) {
+		//	if ((effects & (base << i)).IsValid())
+		//		effvec.push_back(static_cast<AlchemicEffect>(base << i));
+		//}
+		for (AlchemicEffect c = 1; c < AlchemicEffect(4611686018427387904, 1); c = c << 1)
+		{
+			if ((effects & (c)).IsValid())
+				effvec.push_back(c);
 		}
 		return effvec;
 	}
 }
-
 static ::Compatibility* comp;
 
 void AlchemicEffect::Init()
@@ -596,14 +600,93 @@ AlchemicEffect& AlchemicEffect::operator=(const AlchemicEffect& rhs)
 	return *this;
 }
 
+void AlchemicEffect::InitStringConversion()
+{
+	static bool init = false;
+	if (init == false)
+	{
+		init = true;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"none", kNone)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"health", kHealth)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"magicka", kMagicka)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"stamina", kStamina)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"onehanded", kOneHanded)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"twohanded", kTwoHanded)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"archery", kArchery)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"block", kBlock)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"heavyarmor", kHeavyArmor)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"lightarmor", kLightArmor)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"alteration", kAlteration)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"conjuration", kConjuration)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"destruction", kDestruction)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"illusion", kIllusion)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"restoration", kRestoration)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"healtrate", kHealRate)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"magickarate", kMagickaRate)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"staminarate", kStaminaRate)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"speedmult", kSpeedMult)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"criticalchance", kCriticalChance)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"meeledamage", kMeleeDamage)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"unarmeddamage", kUnarmedDamage)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"damageresist", kDamageResist)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"poisonresist", kPoisonResist)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"resistfire", kResistFire)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"resistshock", kResistShock)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"resistfrost", kResistFrost)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"resistmagic", kResistMagic)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"resistdisease", kResistDisease)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"paralysis", kParalysis)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"invisibility", kInvisibility)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"weaponspeedmult", kWeaponSpeedMult)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"attackdamagemult", kAttackDamageMult)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"healratemult", kHealRateMult)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"magickaratemult", kMagickaRateMult)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"staminaratemult", kStaminaRateMult)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"blood", kBlood)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"pickpocket", kPickpocket)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"lockpicking", kLockpicking)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"sneak", kSneak)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"frenzy", kFrenzy)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"fear", kFear)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"bowspeed", kBowSpeed)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"reflectdamage", kReflectDamage)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"curedisease", kCureDisease)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"curepoison", kCurePoison)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"enchanting", kEnchanting)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"waterbreathing", kWaterbreathing)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"smithing", kSmithing)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"speech", kSpeech)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"carryweight", kCarryWeight)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"persuasion", kPersuasion)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"alchemy", kAlchemy)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"fortifyhealth", kFortifyHealth)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"fortifymagicka", kFortifyMagicka)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"fortifystamina", kFortifyStamina)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"shield", kShield) /*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"damageundead", kDamageUndead) /*)*/;
+
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"custom", kCustom)/*)*/;
+
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"anypotion", kAnyPotion)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"anypoison", kAnyPoison)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"anyregen", kAnyRegen)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"anyfortify", kAnyFortify)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"anyfood", kAnyFood)/*)*/;
+		_stringEffectMap./*insert*/insert_or_assign(/*StringEffectMap::value_type(*/"anypotion", kAllPotions)/*)*/;
+	}
+}
+
 AlchemicEffect::AlchemicEffect(const std::string& rhs)
 {
+	InitStringConversion();
+	bool numvalue = true;
 	if (rhs.size() > 16) {
 		int length = (int)rhs.size() - 16;
 		try {
 			first = std::stoull(rhs.substr(0, length), nullptr, 16);
 			second = std::stoull(rhs.substr(length, 16), nullptr, 16);
 		} catch (std::exception& e) {
+			numvalue = false;
 			//throw(InitializationError("Cannot convert string to AlchemicEffect", e.what()));
 		}
 	} else {
@@ -611,7 +694,31 @@ AlchemicEffect::AlchemicEffect(const std::string& rhs)
 		try {
 			second = std::stoull(rhs, nullptr, 16);
 		} catch (std::exception& e) {
+			numvalue = false;
 			//throw(InitializationError("Cannot convert string to AlchemicEffect", e.what()));
+		}
+	}
+	// if numvalue is true then the string we were given does not represent a numerical alchemic effect
+	// check if its instead a string identifier
+	if (numvalue)
+	{
+		auto itr = _stringEffectMap/*.left*/.find(Utility::ToLower(rhs));
+		if (itr != _stringEffectMap/*.left*/.end())
+		{
+			first = itr->second.first;
+			second = itr->second.second;
+		}
+		else
+		{
+			auto splits = Utility::SplitString(rhs, ':', true);
+			for (std::string eff : splits)
+			{
+				auto itr = _stringEffectMap /*.left*/.find(Utility::ToLower(rhs));
+				if (itr != _stringEffectMap /*.left*/.end()) {
+					first |= itr->second.first;
+					second |= itr->second.second;
+				}
+			}
 		}
 	}
 }
@@ -822,7 +929,7 @@ const AlchemicEffect AlchemicEffect::kFortifyHealth = AlchemyBaseEffectSecond::k
 const AlchemicEffect AlchemicEffect::kFortifyMagicka = AlchemyBaseEffectSecond::kFortifyMagicka;
 const AlchemicEffect AlchemicEffect::kFortifyStamina = AlchemyBaseEffectSecond::kFortifyStamina;
 const AlchemicEffect AlchemicEffect::kShield = AlchemyBaseEffectSecond::kShield;
-const AlchemicEffect AlchemicEffect::kUnused2 = AlchemyBaseEffectSecond::kUnused2;
+const AlchemicEffect AlchemicEffect::kDamageUndead = AlchemyBaseEffectSecond::kDamageUndead;
 const AlchemicEffect AlchemicEffect::kUnused3 = AlchemyBaseEffectSecond::kUnused3;
 const AlchemicEffect AlchemicEffect::kUnused4 = AlchemyBaseEffectSecond::kUnused4;
 const AlchemicEffect AlchemicEffect::kUnused5 = AlchemyBaseEffectSecond::kUnused5;
