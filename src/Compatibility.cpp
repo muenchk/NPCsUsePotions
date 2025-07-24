@@ -278,7 +278,7 @@ void Compatibility::Load()
 	if (_loadedUltimatePotions)
 	{
 		RE::DebugNotification("NPCsUsePotions found UAPNG", 0, false);
-		LOG_1("Found Ultimate Animted Potions.");
+		LOG_1("Found Ultimate Animated Potions.");
 	}
 
 	// base game
