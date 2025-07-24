@@ -270,8 +270,12 @@ namespace Events
 		// we are only checking for health here
 		if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
 			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
-			auto tup = ACM::ActorUsePotion(acinfo, AlchemicEffect::kHealth, false);
-			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid()) {
+			// construct combined effect
+			AlchemicEffect alch = AlchemicEffect::kHealth;
+			if (acinfo->IsVampire())
+				alch |= AlchemicEffect::kBlood;
+			auto tup = ACM::ActorUsePotion(acinfo, alch, false);
+			if ((AlchemicEffect::kHealth & std::get<1>(tup)).IsValid() || (AlchemicEffect::kBlood & std::get<1>(tup)).IsValid()) {
 				acinfo->SetDurHealth(Main::CalcPotionDuration(std::get<0>(tup)));  // convert to milliseconds
 				// update global cooldown
 				acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
