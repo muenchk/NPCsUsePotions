@@ -65,14 +65,12 @@ Distribution::EffectDistr Distribution::Rule::GetScaledDistribution(Settings::It
 		break;
 	case Settings::ItemType::kPotion:
 		customnum = (int)acinfo->citems.potionsset.size();
-		LogConsole(Utility::PrintEffectMap(effectMap).c_str());
 		for (auto& [effect, adjuster] : _probabilityAdjustersPotion) {
 			if (effectMap.contains(effect)) {
 				Effect eff = effectMap.at(effect);
 				float weight = eff.weight;
 				eff.weight *= adjuster;
 				effectMap.insert_or_assign(effect, eff);
-				LogConsole(("Orig: " + std::to_string(weight) + "Adjuster: " + std::to_string(adjuster) + "Adjusting Invis: " + std::to_string(eff.weight)).c_str());
 			}
 		}
 		break;
@@ -390,9 +388,7 @@ GetScaledDistributionMagic:
 			}
 		}
 	}
-	auto effectdistr = GetEffectDistribution(effectMap);
-	//LogConsole(Utility::PrintEffectDistr(&effectdistr).c_str());
-	return effectdistr;
+	return GetEffectDistribution(effectMap);
 }
 
 AlchemicEffect Distribution::Rule::GetRandomEffect(EffectDistr& distr)
