@@ -134,6 +134,8 @@ void Settings::Load()
 		ini.SetUnicode();
 		ini.LoadFile(path);
 
+		bool error = false;
+
 		// read settings
 		{
 			// potions
@@ -172,6 +174,13 @@ void Settings::Load()
 			} catch (std::exception) {
 			}
 			loginfo("Setting: {} {}", "Potions:           ProhibitedEffects", Potions::_prohibitedEffects.string());
+			Distribution::_probabilityAdjustersPotion.clear();
+			Utility::ReadAdjusters(ini.GetValue("Potions", "PotionProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersPotion, error);
+			if (error) {
+				logcritical("Cannot read Potion Probability Adjusters");
+				error = false;
+			}
+			loginfo("Setting: {} {}", "Potions:           PotionProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPotion));
 
 			// poisons
 			Poisons::_enablePoisons = ini.GetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons);
@@ -196,6 +205,13 @@ void Settings::Load()
 					Poisons::_prohibitedEffects = AlchemicEffect(prohib);
 			} catch (std::exception) {}
 			loginfo("Setting: {} {}", "Poisons:           ProhibitedEffects", Poisons::_prohibitedEffects.string());
+			Distribution::_probabilityAdjustersPoison.clear();
+			Utility::ReadAdjusters(ini.GetValue("Poisons", "PoisonProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersPoison, error);
+			if (error) {
+				logcritical("Cannot read Poisons Probability Adjusters");
+				error = false;
+			}
+			loginfo("Setting: {} {}", "Poisons:           PoisonProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPoison));
 
 			// fortify potions
 			FortifyPotions::_enableFortifyPotions = ini.GetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions);
@@ -208,6 +224,13 @@ void Settings::Load()
 			loginfo("Setting: {} {}", "Fortify Potions:   FightingNPCsNumberThresholdFortify", std::to_string(FortifyPotions::_EnemyNumberThresholdFortify));
 			FortifyPotions::_UseFortifyPotionChance = static_cast<int>(ini.GetLongValue("FortifyPotions", "UseFortifyPotionChance", FortifyPotions::_UseFortifyPotionChance));
 			loginfo("Setting: {} {}", "Fortify Potions:   UseFortifyPotionChance", std::to_string(FortifyPotions::_UseFortifyPotionChance));
+			Distribution::_probabilityAdjustersFortify.clear();
+			Utility::ReadAdjusters(ini.GetValue("FortifyPotions", "FortifyProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersFortify, error);
+			if (error) {
+				logcritical("Cannot read Fortify Probability Adjusters");
+				error = false;
+			}
+			loginfo("Setting: {} {}", "Fortify Potions:           FortifyProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersFortify));
 
 			// food
 			Food::_enableFood = ini.GetBoolValue("Food", "EnableFoodUsage", Food::_enableFood);
@@ -226,6 +249,13 @@ void Settings::Load()
 					Food::_prohibitedEffects = AlchemicEffect(prohib);
 			} catch (std::exception) {}
 			loginfo("Setting: {} {}", "Food:           ProhibitedEffects", Food::_prohibitedEffects.string());
+			Distribution::_probabilityAdjustersFood.clear();
+			Utility::ReadAdjusters(ini.GetValue("Food", "FoodProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersFood, error);
+			if (error) {
+				logcritical("Cannot read Food Probability Adjusters");
+				error = false;
+			}
+			loginfo("Setting: {} {}", "Food:           FoodProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersFood));
 
 			// player
 			Player::_playerPotions = ini.GetBoolValue("Player", "EnablePlayerPotions", Player::_playerPotions);
@@ -429,6 +459,8 @@ void Settings::Save()
 																				"// An NPC can use a potion if they (1) have a potion in their inventory, \n"
 																				"// and (2) when the respective value falls below the threshold.");
 	ini.SetValue("Potions", "ProhibitedEffects", Potions::_prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
+	ini.SetValue("Potions", "PotionProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPotion).c_str(),
+		"// Global probability adjusters for potion effects");
 
 
 	// poisons
@@ -450,6 +482,8 @@ void Settings::Save()
 		"// The dosage for specific poisons, or alchemic effects can also be defined \n"
 		"// by distribution rules and may outrule this setting.");
 	ini.SetValue("Poisons", "ProhibitedEffects", Poisons::_prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
+	ini.SetValue("Poisons", "PoisonProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPoison).c_str(),
+		"// Global probability adjusters for poison effects");
 
 
 	// fortify potions
@@ -468,6 +502,9 @@ void Settings::Save()
 																											"// An NPC will not use a Fortify Light Armor potion if they are wearing \n"
 																											"// Heavy Armor, for instance.\n");
 
+	ini.SetValue("FortifyPotions", "FortifyProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersFortify).c_str(),
+		"// Global probability adjusters for fortify potion effects");
+
 
 	// food
 	ini.SetBoolValue("Food", "EnableFoodUsage", Food::_enableFood, "// Allows NPCs to use food items, to gain beneficial effects.");
@@ -480,6 +517,9 @@ void Settings::Save()
 																			"// from eating food, if you are using survival mods, without impacting other NPCs.");
 	ini.SetBoolValue("Food", "DontUseWithWeaponsSheathed", Food::_DontUseWithWeaponsSheathed, "// When weapons are sheathed food will not be used.");
 	ini.SetValue("Food", "ProhibitedEffects", Food::_prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
+
+	ini.SetValue("Food", "FoodProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersFood).c_str(), 
+		"// Global probability adjusters for food effects");
 
 
 	// player

@@ -98,6 +98,16 @@ std::string Utility::ToString(ItemStrength is)
 	}
 }
 
+bool Compare(std::string& lhs, std::string& rhs)
+{
+	return lhs.find(rhs) != std::string::npos&& lhs.length() == rhs.length();
+}
+
+bool Compare(std::string& lhs, std::string rhs)
+{
+	return lhs.find(rhs) != std::string::npos && lhs.length() == rhs.length();
+}
+
 std::string Utility::ToString(AlchemicEffect ae)
 {
 	if (ae.IsEffect()) {
@@ -363,6 +373,138 @@ std::string Utility::ToString(AlchemicEffect ae)
 	}
 }
 
+AlchemicEffect FromString(std::string str)
+{
+	if (Compare(str, "Alteration"))
+		return AlchemicEffect::kAlteration;
+	if (Compare(str, "AnyFood"))
+		return AlchemicEffect::kAnyFood;
+	if (Compare(str, "AnyFortify"))
+		return AlchemicEffect::kAnyFortify;
+	if (Compare(str, "AnyPoison"))
+		return AlchemicEffect::kAnyPoison;
+	if (Compare(str, "AnyPotion"))
+		return AlchemicEffect::kAnyPotion;
+	if (Compare(str, "Archery"))
+		return AlchemicEffect::kArchery;
+	if (Compare(str, "AttackDamageMult"))
+		return AlchemicEffect::kAttackDamageMult;
+	if (Compare(str, "Block"))
+		return AlchemicEffect::kBlock;
+	if (Compare(str, "Blood"))
+		return AlchemicEffect::kBlood;
+	if (Compare(str, "BowSpeed"))
+		return AlchemicEffect::kBowSpeed;
+	if (Compare(str, "Conjuration"))
+		return AlchemicEffect::kConjuration;
+	if (Compare(str, "CriticalChance"))
+		return AlchemicEffect::kCriticalChance;
+	if (Compare(str, "DamageResist"))
+		return AlchemicEffect::kDamageResist;
+	if (Compare(str, "Destruction"))
+		return AlchemicEffect::kDestruction;
+	if (Compare(str, "Fear"))
+		return AlchemicEffect::kFear;
+	if (Compare(str, "Frenzy"))
+		return AlchemicEffect::kFrenzy;
+	if (Compare(str, "HealRate"))
+		return AlchemicEffect::kHealRate;
+	if (Compare(str, "HealRateMult"))
+		return AlchemicEffect::kHealRateMult;
+	if (Compare(str, "Health"))
+		return AlchemicEffect::kHeavyArmor;
+	if (Compare(str, "HeavyArmor"))
+		return AlchemicEffect::kIllusion;
+	if (Compare(str, "Illusion"))
+		return AlchemicEffect::kAnyFood;
+	if (Compare(str, "Invisibility"))
+		return AlchemicEffect::kInvisibility;
+	if (Compare(str, "LightArmor"))
+		return AlchemicEffect::kLightArmor;
+	if (Compare(str, "Lockpicking"))
+		return AlchemicEffect::kLockpicking;
+	if (Compare(str, "Magicka"))
+		return AlchemicEffect::kMagicka;
+	if (Compare(str, "MagickaRate"))
+		return AlchemicEffect::kMagickaRate;
+	if (Compare(str, "MagickaRateMult"))
+		return AlchemicEffect::kMagickaRateMult;
+	if (Compare(str, "MeleeDamage"))
+		return AlchemicEffect::kMeleeDamage;
+	if (Compare(str, "None"))
+		return AlchemicEffect::kNone;
+	if (Compare(str, "OneHanded"))
+		return AlchemicEffect::kOneHanded;
+	if (Compare(str, "Paralysis"))
+		return AlchemicEffect::kParalysis;
+	if (Compare(str, "Pickpocket"))
+		return AlchemicEffect::kPickpocket;
+	if (Compare(str, "PoisonResist"))
+		return AlchemicEffect::kPoisonResist;
+	if (Compare(str, "ReflectDamage"))
+		return AlchemicEffect::kReflectDamage;
+	if (Compare(str, "ResistDisease"))
+		return AlchemicEffect::kResistDisease;
+	if (Compare(str, "ResistFire"))
+		return AlchemicEffect::kResistFire;
+	if (Compare(str, "ResistFrost"))
+		return AlchemicEffect::kResistFrost;
+	if (Compare(str, "ResistMagic"))
+		return AlchemicEffect::kResistMagic;
+	if (Compare(str, "ResistShock"))
+		return AlchemicEffect::kResistShock;
+	if (Compare(str, "Restoration"))
+		return AlchemicEffect::kRestoration;
+	if (Compare(str, "Sneak"))
+		return AlchemicEffect::kSneak;
+	if (Compare(str, "SpeedMult"))
+		return AlchemicEffect::kSpeedMult;
+	if (Compare(str, "Stamina"))
+		return AlchemicEffect::kStaminaRate;
+	if (Compare(str, "StaminaRate"))
+		return AlchemicEffect::kAnyFood;
+	if (Compare(str, "StaminaRateMult"))
+		return AlchemicEffect::kStaminaRateMult;
+	if (Compare(str, "TwoHanded"))
+		return AlchemicEffect::kTwoHanded;
+	if (Compare(str, "UnarmedDamage"))
+		return AlchemicEffect::kUnarmedDamage;
+	if (Compare(str, "WeapenSpeedMult"))
+		return AlchemicEffect::kWeaponSpeedMult;
+	if (Compare(str, "CureDisease"))
+		return AlchemicEffect::kCureDisease;
+	if (Compare(str, "CurePoison"))
+		return AlchemicEffect::kCurePoison;
+	if (Compare(str, "Enchanting"))
+		return AlchemicEffect::kEnchanting;
+	if (Compare(str, "Waterbreathing"))
+		return AlchemicEffect::kWaterbreathing;
+	if (Compare(str, "Smithing"))
+		return AlchemicEffect::kSmithing;
+	if (Compare(str, "Speech"))
+		return AlchemicEffect::kSpeech;
+	if (Compare(str, "CarryWeight"))
+		return AlchemicEffect::kCarryWeight;
+	if (Compare(str, "Alchemy"))
+		return AlchemicEffect::kAlchemy;
+	if (Compare(str, "Persuasion"))
+		return AlchemicEffect::kPersuasion;
+	if (Compare(str, "FortifyHealth"))
+		return AlchemicEffect::kFortifyHealth;
+	if (Compare(str, "FortifyMagicka"))
+		return AlchemicEffect::kFortifyMagicka;
+	if (Compare(str, "FortifyStamina"))
+		return AlchemicEffect::kFortifyStamina;
+	if (Compare(str, "Custom"))
+		return AlchemicEffect::kCustom;
+	if (Compare(str, "Shield"))
+		return AlchemicEffect::kShield;
+	if (Compare(str, "DamageUndead"))
+		return AlchemicEffect::kDamageUndead;
+
+	return AlchemicEffect::kNone;
+}
+
 std::string Utility::PrintDistribution(std::vector<std::tuple<int, AlchemicEffect>> distribution)
 {
 	std::string ret = "|";
@@ -377,6 +519,15 @@ std::string Utility::PrintEffectMap(std::map<AlchemicEffect, float> effectMap)
 	std::string ret = "|";
 	for (auto& [key, value] : effectMap) {
 		ret += ToString(key) + ":" + std::to_string(value) + "|";
+	}
+	return ret;
+}
+
+std::string Utility::PrintEffectMap(std::unordered_map<AlchemicEffect, Distribution::Effect>& effectMap)
+{
+	std::string ret = "|";
+	for (auto& [key, value] : effectMap) {
+		ret += ToString(key) + ":" + std::to_string(value.weight) + "|";
 	}
 	return ret;
 }
@@ -1252,6 +1403,53 @@ RE::TESForm* Utility::GetTESForm(RE::TESDataHandler* datahandler, RE::FormID for
 		tmp = RE::TESForm::LookupByEditorID(std::string_view{ editorid });
 	}
 	return tmp;
+}
+
+void Utility::ReadAdjusters(std::string input, std::unordered_map<AlchemicEffect, float>* adjusterMap, bool& error)
+{
+	if (!adjusterMap)
+		return;
+	while (input.empty() == false) {
+		size_t pos;
+		AlchemicEffect effect;
+		float adjuster = 0;
+		input.erase(0, input.find('<') + 1);
+		while (input.empty() == false) {
+			input.erase(0, input.find('<') + 1);
+			if ((pos = input.find('>')) != std::string::npos) {
+				// we have a valid entry, probably
+				std::string entry = input.substr(0, pos);
+				input.erase(0, pos + 1);
+				// parse form or editor id
+				if ((pos = entry.find(',')) == std::string::npos) {
+					error = true;
+				}
+				effect = entry.substr(0, pos);
+				entry.erase(0, pos + 1);
+				try {
+					adjuster = static_cast<float>(std::stof(entry.substr(0, pos)));
+				} catch (std::exception&) {
+					continue;
+				}
+
+				adjusterMap->insert_or_assign(effect, adjuster);
+			} else {
+				// invalid input return what we parsed so far and set error
+				error = true;
+			}
+		}
+	}
+}
+
+std::string Utility::WriteAdjusters(std::unordered_map<AlchemicEffect, float>* adjusterMap)
+{
+	if (!adjusterMap)
+		return "";
+	std::string res = "";
+	for (auto& [effect, adjuster] : *adjusterMap) {
+		res += "<" + effect.string() + "," + std::to_string(adjuster) + ">";
+	}
+	return res;
 }
 
 std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> Utility::ParseAssocObjects(std::string input, bool& error, std::string file, std::string line, int& totalobjects)

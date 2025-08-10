@@ -258,7 +258,7 @@ public:
 	public:
 		InitializationError(const char* const _Message, const char* const _OrigMessage)
 		{
-			exception::exception(_OrigMessage);
+			static_cast<void>(std::exception::exception(_OrigMessage));
 			_newmessage = _Message;
 		}
 
@@ -338,7 +338,7 @@ public:
 	/// Returns the hexadecimal representation of the object as string
 	/// </summary>
 	/// <returns></returns>
-	std::string string();
+	std::string string() const;
 	/// <summary>
 	/// Returns the singular effect represented by the object as AlchemyBaseEffectSecond
 	/// </summary>
