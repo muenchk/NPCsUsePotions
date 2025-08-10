@@ -159,6 +159,8 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Distr_SetProbabilityScaling"), script, Distribution::Set_ProbabilityScaling);
 			a_vm->RegisterFunction(std::string("Distr_GetDoNotDistributeMixedInvisPotions"), script, Distribution::Get_DoNotDistributeMixedInvisPotions);
 			a_vm->RegisterFunction(std::string("Distr_SetDoNotDistributeMixedInvisPotions"), script, Distribution::Set_DoNotDistributeMixedInvisPotions);
+			a_vm->RegisterFunction(std::string("Distr_GetProbabilityAdjuster"), script, Distribution::Get_ProbabilityAdjuster);
+			a_vm->RegisterFunction(std::string("Distr_SetProbabilityAdjuster"), script, Distribution::Set_ProbabilityAdjuster);
 			// removal
 			a_vm->RegisterFunction(std::string("Removal_GetRemoveItemsOnDeath"), script, Removal::Get_RemoveItemsOnDeath);
 			a_vm->RegisterFunction(std::string("Removal_SetRemoveItemsOnDeath"), script, Removal::Set_RemoveItemsOnDeath);
@@ -1123,6 +1125,84 @@ namespace Papyrus
 			{
 				Settings::Distr::_DoNotDistributeMixedInvisPotions = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			float Get_ProbabilityAdjuster(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int effect, int itemtype)
+			{
+				AlchemicEffect eff = AlchemicEffect::GetFromBaseValue(effect);
+				switch (itemtype) {
+				case (uint32_t)Settings::ItemType::kPotion:
+					{
+						auto itr = ::Distribution::probabilityAdjustersPotion()->find(eff);
+						if (itr != ::Distribution::probabilityAdjustersPotion()->end())
+							return itr->second;
+					}
+					break;
+				case (uint32_t)Settings::ItemType::kFortifyPotion:
+					{
+						auto itr = ::Distribution::probabilityAdjustersFortify()->find(eff);
+						if (itr != ::Distribution::probabilityAdjustersFortify()->end())
+							return itr->second;
+					}
+					break;
+				case (uint32_t)Settings::ItemType::kPoison:
+					{
+						auto itr = ::Distribution::probabilityAdjustersPoison()->find(eff);
+						if (itr != ::Distribution::probabilityAdjustersPoison()->end())
+							return itr->second;
+					}
+					break;
+				case (uint32_t)Settings::ItemType::kFood:
+					{
+						auto itr = ::Distribution::probabilityAdjustersFood()->find(eff);
+						if (itr != ::Distribution::probabilityAdjustersFood()->end())
+							return itr->second;
+					}
+					break;
+				}
+				return 1.0f;
+			}
+			void Set_ProbabilityAdjuster(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int effect, int itemtype, float value)
+			{
+				if (value < 0)
+					return;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+
+				AlchemicEffect eff = AlchemicEffect::GetFromBaseValue(effect);
+				switch (itemtype) {
+				case (uint32_t)Settings::ItemType::kPotion:
+					{
+						if (value == 1.0f)
+							::Distribution::probabilityAdjustersPotion()->erase(eff);
+						else
+							::Distribution::probabilityAdjustersPotion()->insert_or_assign(eff, value);
+					}
+					break;
+				case (uint32_t)Settings::ItemType::kFortifyPotion:
+					{
+						if (value == 1.0f)
+							::Distribution::probabilityAdjustersFortify()->erase(eff);
+						else
+							::Distribution::probabilityAdjustersFortify()->insert_or_assign(eff, value);
+					}
+					break;
+				case (uint32_t)Settings::ItemType::kPoison:
+					{
+						if (value == 1.0f)
+							::Distribution::probabilityAdjustersPoison()->erase(eff);
+						else
+							::Distribution::probabilityAdjustersPoison()->insert_or_assign(eff, value);
+					}
+					break;
+				case (uint32_t)Settings::ItemType::kFood:
+					{
+						if (value == 1.0f)
+							::Distribution::probabilityAdjustersFood()->erase(eff);
+						else
+							::Distribution::probabilityAdjustersFood()->insert_or_assign(eff, value);
+					}
+					break;
+				}
 			}
 		}
 

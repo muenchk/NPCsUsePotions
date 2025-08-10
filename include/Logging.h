@@ -96,7 +96,7 @@
 		((void)0);
 #else
 #	define LogConsole(c_str) \
-		((void)0);  //RE::ConsoleLog::GetSingleton()->Print(c_str);
+		RE::ConsoleLog::GetSingleton()->Print(c_str); // ((void)0); 
 #endif
 
 

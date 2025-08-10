@@ -90,7 +90,7 @@ public:
 	struct Effect
 	{
 		AlchemicEffect effect;
-		int weight;
+		float weight;
 		int max;
 		int current = 0;
 	};
@@ -105,7 +105,7 @@ public:
 
 	struct EffectDistr
 	{
-		std::vector<std::pair<int, Effect>> effects;
+		std::vector<std::pair<float, Effect>> effects;
 		int total = 0;
 
 		void RemoveEffect(AlchemicEffect eff)
@@ -675,6 +675,14 @@ private:
 
 	static inline std::unordered_map<std::string, EffectPreset*> _internEffectPresets;
 
+	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersPotion;
+
+	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersPoison;
+
+	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersFortify;
+
+	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersFood;
+
 	
 public:
 
@@ -687,6 +695,7 @@ public:
 	static inline std::unordered_map<RE::FormID, std::tuple<bool, bool, int>> _dummyMap5;
 	static inline std::unordered_map<AlchemicEffect, std::tuple<bool, bool, int>> _dummyMap6;
 	static inline std::unordered_map<RE::FormID, AlchemicEffect> _dummyMap7;
+	static inline std::unordered_map<AlchemicEffect, float> _dummyMap8;
 	static inline std::unordered_set<RE::FormID> _dummySet1;
 	static inline std::unordered_set<uint8_t> _dummySet2;
 	static inline std::unordered_set<uint16_t> _dummySet3;
@@ -806,6 +815,10 @@ public:
 	/// </summary>
 	static inline std::unordered_map<RE::FormID, AlchemicEffect>* magicEffectAlchMap() { return initialised ? &_magicEffectAlchMap : &_dummyMap7; }
 
+	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersPotion() { return initialised ? &_probabilityAdjustersPotion : &_dummyMap8; }
+	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersPoison() { return initialised ? &_probabilityAdjustersPoison : &_dummyMap8; }
+	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersFortify() { return initialised ? &_probabilityAdjustersFortify : &_dummyMap8; }
+	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersFood() { return initialised ? &_probabilityAdjustersFood : &_dummyMap8; }
 
 
 	static std::vector<std::tuple<int, AlchemicEffect>> GetVector(int i, AlchemicEffect alch)
@@ -936,6 +949,8 @@ public:
 	friend void Settings::ApplySkillBoostPerks();
 	friend void Settings::ClassifyItems();
 	friend void Settings::UpdateSettings();
+	friend void Settings::Load();
+	friend void Settings::Save();
 
 private:
 	/// <summary>

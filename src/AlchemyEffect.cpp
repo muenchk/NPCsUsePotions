@@ -767,7 +767,7 @@ AlchemicEffect::operator std::string()
 	return first ? Utility::GetHex(first) + Utility::GetHexFill(second) : Utility::GetHex(second);
 }
 
-std::string AlchemicEffect::string()
+std::string AlchemicEffect::string() const
 {
 	return first ? Utility::GetHex(first) + Utility::GetHexFill(second) : Utility::GetHex(second);
 }

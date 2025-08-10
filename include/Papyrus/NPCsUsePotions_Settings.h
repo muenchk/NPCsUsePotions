@@ -1275,6 +1275,9 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name=""></param>
 			void Set_DoNotDistributeMixedInvisPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool value);
+
+			float Get_ProbabilityAdjuster(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int effect, int itemtype);
+			void Set_ProbabilityAdjuster(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int effect, int itemtype, float value);
 		}
 
 		namespace Removal

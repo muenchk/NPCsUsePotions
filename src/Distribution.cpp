@@ -35,15 +35,46 @@ Distribution::EffectDistr Distribution::Rule::GetScaledDistribution(Settings::It
 	switch (type) {
 	case Settings::ItemType::kFood:
 		customnum = (int)acinfo->citems.foodset.size();
+		for (auto& [effect, adjuster] : _probabilityAdjustersFood) {
+			if (effectMap.contains(effect)) {
+				Effect eff = effectMap.at(effect);
+				eff.weight *= adjuster;
+				effectMap.insert_or_assign(effect, eff);
+			}
+		}
 		break;
 	case Settings::ItemType::kFortifyPotion:
 		customnum = (int)acinfo->citems.fortifyset.size();
+		for (auto& [effect, adjuster] : _probabilityAdjustersFortify) {
+			if (effectMap.contains(effect)) {
+				Effect eff = effectMap.at(effect);
+				eff.weight *= adjuster;
+				effectMap.insert_or_assign(effect, eff);
+			}
+		}
 		break;
 	case Settings::ItemType::kPoison:
 		customnum = (int)acinfo->citems.poisonsset.size();
+		for (auto& [effect, adjuster] : _probabilityAdjustersPoison) {
+			if (effectMap.contains(effect)) {
+				Effect eff = effectMap.at(effect);
+				eff.weight *= adjuster;
+				effectMap.insert_or_assign(effect, eff);
+			}
+		}
 		break;
 	case Settings::ItemType::kPotion:
 		customnum = (int)acinfo->citems.potionsset.size();
+		LogConsole(Utility::PrintEffectMap(effectMap).c_str());
+		for (auto& [effect, adjuster] : _probabilityAdjustersPotion) {
+			if (effectMap.contains(effect)) {
+				Effect eff = effectMap.at(effect);
+				float weight = eff.weight;
+				eff.weight *= adjuster;
+				effectMap.insert_or_assign(effect, eff);
+				LogConsole(("Orig: " + std::to_string(weight) + "Adjuster: " + std::to_string(adjuster) + "Adjusting Invis: " + std::to_string(eff.weight)).c_str());
+			}
+		}
 		break;
 	}
 
@@ -359,7 +390,9 @@ GetScaledDistributionMagic:
 			}
 		}
 	}
-	return GetEffectDistribution(effectMap);
+	auto effectdistr = GetEffectDistribution(effectMap);
+	//LogConsole(Utility::PrintEffectDistr(&effectdistr).c_str());
+	return effectdistr;
 }
 
 AlchemicEffect Distribution::Rule::GetRandomEffect(EffectDistr& distr)
@@ -594,8 +627,9 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPotions(std::shared_p
 	std::vector<RE::AlchemyItem*> ret;
 	if (ruleVersion == 2 || ruleVersion == 3) {
 		EffectDistr distr = potionEffects->standardDistr;
-		if (styleScaling)
+		if (styleScaling || Distribution::_probabilityAdjustersPotion.size() > 0) {
 			distr = GetScaledDistribution(Settings::ItemType::kPotion, potionEffects, acinfo);
+		}
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
@@ -638,7 +672,7 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPoisons(std::shared_p
 	std::vector<RE::AlchemyItem*> ret;
 	if (ruleVersion == 2 || ruleVersion == 3) {
 		EffectDistr distr = poisonEffects->standardDistr;
-		if (styleScaling)
+		if (styleScaling || Distribution::_probabilityAdjustersPoison.size() > 0)
 			distr = GetScaledDistribution(Settings::ItemType::kPoison, poisonEffects, acinfo);
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
@@ -678,7 +712,7 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFortifyPotions(std::s
 	std::vector<RE::AlchemyItem*> ret;
 	if (ruleVersion == 2 || ruleVersion == 3) {
 		EffectDistr distr = fortifyEffects->standardDistr;
-		if (styleScaling)
+		if (styleScaling || Distribution::_probabilityAdjustersFortify.size() > 0)
 			distr = GetScaledDistribution(Settings::ItemType::kFortifyPotion, fortifyEffects, acinfo);
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
@@ -718,7 +752,7 @@ std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFood(std::shared_ptr<
 	std::vector<RE::AlchemyItem*> ret;
 	if (ruleVersion == 2 || ruleVersion == 3) {
 		EffectDistr distr = foodEffects->standardDistr;
-		if (styleScaling)
+		if (styleScaling || Distribution::_probabilityAdjustersFood.size() > 0)
 			distr = GetScaledDistribution(Settings::ItemType::kFood, foodEffects, acinfo);
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());

@@ -1870,6 +1870,9 @@ void Settings::LoadDistrConfig()
 										Distribution::defaultRule = rule;
 									delete splits;
 									LOGL_2("rule {} successfully loaded.", rule->ruleName);
+
+									
+									loginfo("Distr Effect Map: {}", Utility::PrintEffectMap(rule->potionEffects->effects));
 								}
 								break;
 							case 23:  // Effect Preset

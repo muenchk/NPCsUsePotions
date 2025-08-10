@@ -8,6 +8,7 @@
 #include "Distribution.h"
 #include <tuple>
 #include <utility>
+#include <unordered_map>
 
 using ActorInfoPtr = std::weak_ptr<ActorInfo>;
 
@@ -177,6 +178,14 @@ public:
 		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
 	}
 
+	static std::string PrintEffectDistr(Distribution::EffectDistr* distr)
+	{
+		std::string res = "";
+		for (int i = 0; i < distr->effects.size(); i++)
+			res += "<" + std::to_string(distr->effects[i].first) + "," + Utility::ToString(distr->effects[i].second.effect) + ">";
+		return res;
+	}
+
 	/// <summary>
 	/// Converts all symbols in a string into lower case.
 	/// </summary>
@@ -212,6 +221,13 @@ public:
 	static std::string ToString(AlchemicEffect ae);
 
 	/// <summary>
+	/// Converts a string with the name of an alchemiceffect to an alchemiceffect
+	/// </summary>
+	/// <param name="str"></param>
+	/// <returns></returns>
+	static AlchemicEffect FromString(std::string str);
+
+	/// <summary>
 	/// Returns a string representation of a distribution
 	/// </summary>
 	/// <param name="distribution"></param>
@@ -224,6 +240,8 @@ public:
 	/// <param name="distribution"></param>
 	/// <returns></returns>
 	static std::string PrintEffectMap(std::map<AlchemicEffect, float> effectMap);
+
+	static std::string PrintEffectMap(std::unordered_map<AlchemicEffect, Distribution::Effect>& effectMap);
 
 	/// <summary>
 	/// Splits a string at a delimiter, optionally removes empty results, and optionally respects escaped sequences
@@ -396,6 +414,21 @@ public:
 	/// <param name="editorid">editorid of the item, defaults to empty string</param>
 	/// <returns></returns>
 	static RE::TESForm* GetTESForm(RE::TESDataHandler* datahandler, RE::FormID formid, std::string pluginname, std::string editorid = "");
+
+	/// <summary>
+	/// Reads probability Adjusters
+	/// </summary>
+	/// <param name="input"></param>
+	/// <param name="adjusterMap"></param>
+	/// <param name="error"></param>
+	static void ReadAdjusters(std::string input, std::unordered_map<AlchemicEffect, float>* adjusterMap, bool& error);
+
+	/// <summary>
+	/// Writes the probability adjusters to a string
+	/// </summary>
+	/// <param name="adjusterMap"></param>
+	/// <returns></returns>
+	static std::string WriteAdjusters(std::unordered_map<AlchemicEffect, float>* adjusterMap);
 
 	/// <summary>
 	/// Parses objects for distribution rules from a string input
