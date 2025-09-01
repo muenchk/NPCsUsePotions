@@ -796,4 +796,9 @@ namespace Events
 		}
 	}
 
+	void Main::IncEventTime(std::chrono::nanoseconds time)
+	{
+		_eventTime += time;
+	}
+
 }

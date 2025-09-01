@@ -502,6 +502,11 @@ namespace Events
 				// get starttime of iteration
 				begin = std::chrono::steady_clock::now();
 
+				auto eventtime = Main::_eventTime;
+				Main::_eventTime = 0ns;
+				LogConsole(("Time spend on Events last cycle " + Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(eventtime).count())).c_str());
+				
+
 				LOG_1("Handling {} registered Actors", std::to_string(acset.size()));
 
 				if (!CanProcess())
