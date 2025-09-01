@@ -951,6 +951,7 @@ public:
 	friend void Settings::UpdateSettings();
 	friend void Settings::Load();
 	friend void Settings::Save();
+	friend void Settings::StaticExclusions(RE::TESDataHandler* datahandler);
 
 private:
 	/// <summary>

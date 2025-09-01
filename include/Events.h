@@ -92,6 +92,8 @@ namespace Events
 		/// </summary>
 		static inline std::mutex lockalternateregistration;
 
+		static inline std::chrono::nanoseconds _eventTime = 0ns;
+
 
 		//-------------------Handler-------------------------
 
@@ -463,6 +465,12 @@ namespace Events
 		/// <param name="length"></param>
 		/// <returns></returns>
 		static long ReadDeadActors(SKSE::SerializationInterface* a_intfc, uint32_t length);
+
+		/// <summary>
+		/// increases the event time spend
+		/// </summary>
+		/// <param name="time"></param>
+		static void IncEventTime(std::chrono::nanoseconds time);
 
 		//---------------------Threads-----------------------
 

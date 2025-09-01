@@ -299,6 +299,7 @@ void Settings::LoadDistrConfig()
 										case Distribution::AssocType::kFaction:
 										case Distribution::AssocType::kKeyword:
 										case Distribution::AssocType::kRace:
+										case Distribution::AssocType::kEffectSetting:
 											Distribution::_excludedAssoc.insert(std::get<1>(items[i]));
 											break;
 										case Distribution::AssocType::kItem:
@@ -317,6 +318,8 @@ void Settings::LoadDistrConfig()
 												LOGL_2("excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
 												LOGL_2("excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kEffectSetting) {
+												LOGL_2("excluded magic effect {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
 											else
 											{
@@ -1098,10 +1101,14 @@ void Settings::LoadDistrConfig()
 										case Distribution::AssocType::kFaction:
 										case Distribution::AssocType::kKeyword:
 										case Distribution::AssocType::kRace:
+										case Distribution::AssocType::kEffectSetting:
 											Distribution::_excludedAssoc.insert(std::get<1>(items[i]));
 											break;
 										case Distribution::AssocType::kItem:
 											Distribution::_excludedItems.insert(std::get<1>(items[i]));
+											break;
+										case Distribution::AssocType::kCombatStyle:
+										case Distribution::AssocType::kClass:
 											break;
 										}
 										if (Logging::EnableLoadLog) {
@@ -1116,6 +1123,8 @@ void Settings::LoadDistrConfig()
 												LOGL_2("excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
 												LOGL_2("excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kEffectSetting) {
+												LOGL_2("excluded magic effect {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											} else {
 												LOGL_2("{} has the wrong FormType to be excluded from distribution. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
 											}
@@ -2461,6 +2470,8 @@ void Settings::LoadDistrConfig()
 		}
 	}
 
+	StaticExclusions(datahandler);
+
 	// create backup of crucial lists
 	std::copy(Distribution::_excludedItems.begin(), Distribution::_excludedItems.end(), std::inserter(Distribution::_excludedItemsBackup, Distribution::_excludedItemsBackup.begin()));
 
@@ -2508,12 +2519,6 @@ void Settings::LoadDistrConfig()
 		loginfo("[INIT] Couldn't find Vampire Keyword in game.");
 	}
 
-	// hard exclude everyone that may become a follower
-	//Distribution::_excludedAssoc.insert(0x0005C84E);
-
-	// exclude currenhireling faction
-	//Distribution::_excludedAssoc.insert(0xbd738);
-
 	Settings::AlchemySkillBoosts = RE::TESForm::LookupByID<RE::BGSPerk>(0xA725C);
 	if (Settings::AlchemySkillBoosts == nullptr)
 		loginfo("[INIT] Couldn't find AlchemySkillBoosts Perk in game.");
@@ -2521,14 +2526,84 @@ void Settings::LoadDistrConfig()
 	if (Settings::PerkSkillBoosts == nullptr)
 		loginfo("[INIT] Couldn't find PerkSkillBoosts Perk in game.");
 
+	Distribution::initialised = true;
+
+	if (Settings::Fixes::_ApplySkillBoostPerks)
+		Settings::ApplySkillBoostPerks();
+
+	if (Logging::EnableLoadLog) {
+		LOGL_2("Number of Rules: {}", Distribution::rules()->size());
+		LOGL_2("Number of NPCs: {}", Distribution::npcMap()->size());
+		LOGL_2("Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
+		LOGL_2("Number of Associations: {}", Distribution::assocMap()->size());
+		LOGL_2("Buckets of Associations: {}", Distribution::assocMap()->bucket_count());
+		LOGL_2("Number of Bosses: {}", Distribution::bosses()->size());
+		LOGL_2("Buckets of Bosses: {}", Distribution::bosses()->bucket_count());
+		LOGL_2("Number of Excluded NPCs: {}", Distribution::excludedNPCs()->size());
+		LOGL_2("Buckets of Excluded NPCs: {}", Distribution::excludedNPCs()->bucket_count());
+		LOGL_2("Number of Excluded Associations: {}", Distribution::excludedAssoc()->size());
+		LOGL_2("Buckets of Excluded Associations: {}", Distribution::excludedAssoc()->bucket_count());
+		LOGL_2("Number of Excluded Items: {}", Distribution::excludedItems()->size());
+		LOGL_2("Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
+		LOGL_2("Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
+		LOGL_2("Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
+		/*for (int i = 0; i < Distribution::_rules.size(); i++) {
+			LOGL_2("rule {} pointer {}", i, Utility::GetHex((uintptr_t)Distribution::_rules[i]));
+		}
+		auto iter = Distribution::_assocMap.begin();
+		while (iter != Distribution::_assocMap.end()) {
+			LOGL_2("assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
+			iter++;
+		}*/
 
 
+		auto cuitr = Distribution::_customItems.begin();
+		int x = 0;
+		while (cuitr != Distribution::_customItems.end()) {
+			x++;
+			std::vector<Distribution::CustomItemStorage*> cust = cuitr->second;
+			LOGL_1("{}: FormID: {}\tEntries: {}", std::to_string(x), std::to_string(cuitr->first), cust.size());
+			for (int b = 0; b < cust.size(); b++) {
+				
+				for (int i = 0; i < cust[b]->items.size(); i++) {
+					auto cit = cust[b]->items[i];
+					LOGL_1("{}: Items: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->death.size(); i++) {
+					auto cit = cust[b]->death[i];
+					LOGL_1("{{}: Death: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->poisons.size(); i++) {
+					auto cit = cust[b]->poisons[i];
+					LOGL_1("{}: Poisons: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->potions.size(); i++) {
+					auto cit = cust[b]->potions[i];
+					LOGL_1("{}: Potions: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+				for (int i = 0; i < cust[b]->fortify.size(); i++) {
+					auto cit = cust[b]->fortify[i];
+					LOGL_1("{}: Fortify: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+				}
+			}
+			cuitr++;
+		}
+	}
 
+	// reactivate generic logging
+	if (Logging::EnableLog == true)
+		Logging::EnableGenericLogging = true;
+	else
+		Logging::EnableGenericLogging = false;
+}
+
+void Settings::StaticExclusions(RE::TESDataHandler* datahandler)
+{
 	/// EXCLUDE ITEMS
 
 	// handle standard exclusions
 	RE::TESForm* tmp = nullptr;
-	
+
 	// MQ201Drink (don't give quest items out)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00036D53, "", "")) != nullptr)
 		Distribution::_excludedItems.insert(tmp->GetFormID());
@@ -2564,27 +2639,27 @@ void Settings::LoadDistrConfig()
 	// Blades Potion: probably esberns
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000E6DF5, "", "")) != nullptr)
 		Distribution::_excludedItems.insert(tmp->GetFormID());
-	// MS14WineAltoA: probably jessica's 
+	// MS14WineAltoA: probably jessica's
 	if ((tmp = Utility::GetTESForm(datahandler, 0x000F257E, "", "")) != nullptr)
 		Distribution::_excludedItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x00102019, "", "")) != nullptr)
-		Distribution::_excludedItems.insert(tmp->GetFormID());
+		Distribution::_excludedDistrItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201A, "", "")) != nullptr)
-		Distribution::_excludedItems.insert(tmp->GetFormID());
+		Distribution::_excludedDistrItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201B, "", "")) != nullptr)
-		Distribution::_excludedItems.insert(tmp->GetFormID());
+		Distribution::_excludedDistrItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201C, "", "")) != nullptr)
-		Distribution::_excludedItems.insert(tmp->GetFormID());
+		Distribution::_excludedDistrItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201D, "", "")) != nullptr)
-		Distribution::_excludedItems.insert(tmp->GetFormID());
+		Distribution::_excludedDistrItems.insert(tmp->GetFormID());
 	// White Phial
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010201E, "", "")) != nullptr)
-		Distribution::_excludedItems.insert(tmp->GetFormID());
+		Distribution::_excludedDistrItems.insert(tmp->GetFormID());
 	// DA03FoodMammothMeat (quest item)
 	if ((tmp = Utility::GetTESForm(datahandler, 0x0010211A, "", "")) != nullptr)
 		Distribution::_excludedItems.insert(tmp->GetFormID());
@@ -2598,7 +2673,6 @@ void Settings::LoadDistrConfig()
 	// DLC1FoodSoulHuskExtract
 	if ((tmp = Utility::GetTESForm(datahandler, 0x015A1E, "Dawnguard.esm", "")) != nullptr)
 		Distribution::_excludedItems.insert(tmp->GetFormID());
-
 
 	/// EXCLUDE SUMMONS
 
@@ -2758,83 +2832,12 @@ void Settings::LoadDistrConfig()
 	// DLC2dunKarstaagIceWraithSummoned
 	if ((tmp = Utility::GetTESForm(datahandler, 0x034B5A, "Dragonborn.esm", "")) != nullptr)
 		Distribution::_excludedNPCs.insert(tmp->GetFormID());
-		
-	// EXCLUDED FACTIONS
 
+	// EXCLUDED FACTIONS
 
 	// template:
 	//if ((tmp = Utility::GetTESForm(datahandler, 0, "", "")) != nullptr)
 	//	Distribution::_excludedItems.insert(tmp->GetFormID());
-
-	Distribution::initialised = true;
-
-	if (Settings::Fixes::_ApplySkillBoostPerks)
-		Settings::ApplySkillBoostPerks();
-
-	if (Logging::EnableLoadLog) {
-		LOGL_2("Number of Rules: {}", Distribution::rules()->size());
-		LOGL_2("Number of NPCs: {}", Distribution::npcMap()->size());
-		LOGL_2("Buckets of NPCs: {}", Distribution::npcMap()->bucket_count());
-		LOGL_2("Number of Associations: {}", Distribution::assocMap()->size());
-		LOGL_2("Buckets of Associations: {}", Distribution::assocMap()->bucket_count());
-		LOGL_2("Number of Bosses: {}", Distribution::bosses()->size());
-		LOGL_2("Buckets of Bosses: {}", Distribution::bosses()->bucket_count());
-		LOGL_2("Number of Excluded NPCs: {}", Distribution::excludedNPCs()->size());
-		LOGL_2("Buckets of Excluded NPCs: {}", Distribution::excludedNPCs()->bucket_count());
-		LOGL_2("Number of Excluded Associations: {}", Distribution::excludedAssoc()->size());
-		LOGL_2("Buckets of Excluded Associations: {}", Distribution::excludedAssoc()->bucket_count());
-		LOGL_2("Number of Excluded Items: {}", Distribution::excludedItems()->size());
-		LOGL_2("Buckets of Excluded Items: {}", Distribution::excludedItems()->bucket_count());
-		LOGL_2("Number of Baseline Exclusions: {}", Distribution::baselineExclusions()->size());
-		LOGL_2("Buckets of Baseline Exclusions: {}", Distribution::baselineExclusions()->bucket_count());
-		/*for (int i = 0; i < Distribution::_rules.size(); i++) {
-			LOGL_2("rule {} pointer {}", i, Utility::GetHex((uintptr_t)Distribution::_rules[i]));
-		}
-		auto iter = Distribution::_assocMap.begin();
-		while (iter != Distribution::_assocMap.end()) {
-			LOGL_2("assoc\t{}\trule\t{}", Utility::GetHex(iter->first), Utility::GetHex((uintptr_t)(std::get<1>(iter->second))));
-			iter++;
-		}*/
-
-
-		auto cuitr = Distribution::_customItems.begin();
-		int x = 0;
-		while (cuitr != Distribution::_customItems.end()) {
-			x++;
-			std::vector<Distribution::CustomItemStorage*> cust = cuitr->second;
-			LOGL_1("{}: FormID: {}\tEntries: {}", std::to_string(x), std::to_string(cuitr->first), cust.size());
-			for (int b = 0; b < cust.size(); b++) {
-				
-				for (int i = 0; i < cust[b]->items.size(); i++) {
-					auto cit = cust[b]->items[i];
-					LOGL_1("{}: Items: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
-				}
-				for (int i = 0; i < cust[b]->death.size(); i++) {
-					auto cit = cust[b]->death[i];
-					LOGL_1("{{}: Death: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
-				}
-				for (int i = 0; i < cust[b]->poisons.size(); i++) {
-					auto cit = cust[b]->poisons[i];
-					LOGL_1("{}: Poisons: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
-				}
-				for (int i = 0; i < cust[b]->potions.size(); i++) {
-					auto cit = cust[b]->potions[i];
-					LOGL_1("{}: Potions: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
-				}
-				for (int i = 0; i < cust[b]->fortify.size(); i++) {
-					auto cit = cust[b]->fortify[i];
-					LOGL_1("{}: Fortify: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
-				}
-			}
-			cuitr++;
-		}
-	}
-
-	// reactivate generic logging
-	if (Logging::EnableLog == true)
-		Logging::EnableGenericLogging = true;
-	else
-		Logging::EnableGenericLogging = false;
 }
 
 
@@ -3247,6 +3250,18 @@ void Settings::ClassifyItems()
 						if (Distribution::excludedDistrItems()->contains(item->GetFormID())) {
 							EXCL("Excluded Distr] Item:     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							continue;
+						}
+
+						if (item->effects.size() > 0) {
+							for (uint32_t i = 0; i < item->effects.size() && i < 4; i++) {
+								auto sett = item->effects[i]->baseEffect;
+								if (Distribution::excludedAssoc()->contains(sett->GetFormID()))
+								{
+									Distribution::_excludedItems.insert(item->GetFormID());
+									EXCL("[Excluded] Item:   {}", Utility::PrintForm<RE::AlchemyItem>(item));
+									continue;
+								}
+							}
 						}
 
 						auto clas = ClassifyItem(item);

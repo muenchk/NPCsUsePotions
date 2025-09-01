@@ -366,8 +366,8 @@ void Settings::Load()
 			loginfo("Setting: {} {}", "System:            MaxDuration", std::to_string(_MaxDuration));
 			_MaxFortifyDuration = ini.GetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration);
 			loginfo("Setting: {} {}", "System:            MaxFortifyDuration", std::to_string(_MaxFortifyDuration));
-			System::_alternateNPCRegistration = ini.GetBoolValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration);
-			loginfo("Setting: {} {}", "System:            AlternateNPCRegistration", std::to_string(System::_alternateNPCRegistration));
+			//System::_alternateNPCRegistration = ini.GetBoolValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration);
+			//loginfo("Setting: {} {}", "System:            AlternateNPCRegistration", std::to_string(System::_alternateNPCRegistration));
 
 			// compatibility
 			Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
@@ -629,8 +629,8 @@ void Settings::Save()
 																	"// values to decrease performance impact.");
 	ini.SetLongValue("System", "MaxDuration", _MaxDuration, "// Maximum duration restoration potions (health, magicka, stamina) are accounted for, idependent from their actual duration.");
 	ini.SetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration, "// Maximum duration fortification potions are accounted for, idependent from their actual duration.");
-	if (System::_alternateNPCRegistration)
-		ini.SetLongValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration, "Switches NPC registration from immediate, to registration on next cycle.");
+	//if (System::_alternateNPCRegistration)
+	//	ini.SetBoolValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration, "Switches NPC registration from immediate, to registration on next cycle.");
 
 	// compatibility
 	ini.SetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules, "// Disables item distribution and item usage for NPCs that do not\n"

@@ -124,7 +124,7 @@ public:
 		/// <summary>
 		/// [Settings] switches NPC registration from direct registration, to registration on next cycle
 		/// </summary>
-		static inline bool _alternateNPCRegistration = false;
+		static inline bool _alternateNPCRegistration = true;
 	};
 
 	/// <summary>
@@ -835,6 +835,12 @@ public:
 	/// Updates settings that have been changed during runtime and result in changes to classification
 	/// </summary>
 	static void UpdateSettings();
+
+	/// <summary>
+	/// statically excludes certain forms and npcs
+	/// </summary>
+	/// <param name="datahandler"></param>
+	static void StaticExclusions(RE::TESDataHandler* datahandler);
 
 	/// <summary>
 	/// classifies a single item based on its effects

@@ -171,8 +171,8 @@ namespace Events
 				}
 			}
 		}
-	TESDeathEventEnd:
-	PROF_1(TimeProfiling, "[TESDeathEvent] event execution time.");
+TESDeathEventEnd:
+		PROF_1(TimeProfiling, "[TESDeathEvent] event execution time.");
 		return EventResult::kContinue;
 	}
 
@@ -284,6 +284,7 @@ namespace Events
 				PROF_2(TimeProfiling, "[TESCellAttachDetachEvent] event execution time.");
 			}
 		}
+		Main::IncEventTime(std::chrono::steady_clock::now() - begin);
 		return EventResult::kContinue;
 	}
 
@@ -298,11 +299,14 @@ namespace Events
 	{
 		Statistics::Events_BGSActorCellEvent++;
 		EvalProcessingEvent();
+		StartProfiling;
 		//LOG_1("[BGSActorCellEvent]");
 		if (cells.contains(a_event->cellID) == false) {
 			cells.insert(a_event->cellID);
 			Settings::CheckCellForActors(a_event->cellID);
+			PROF_2(TimeProfiling, "[BGSActorCellEvent] event execution time.");
 		}
+		Main::IncEventTime(std::chrono::steady_clock::now() - begin);
 		return EventResult::kContinue;
 	}
 
