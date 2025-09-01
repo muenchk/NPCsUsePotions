@@ -185,6 +185,7 @@ TESDeathEventEnd:
 	EventResult EventHandler::ProcessEvent(const RE::TESHitEvent* a_event, RE::BSTEventSource<RE::TESHitEvent>*)
 	{
 		Statistics::Events_TESHitEvent++;
+		Main::InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		
 		if (a_event && a_event->target.get()) {
@@ -263,6 +264,7 @@ TESDeathEventEnd:
 	EventResult EventHandler::ProcessEvent(const RE::TESCellAttachDetachEvent* a_event, RE::BSTEventSource<RE::TESCellAttachDetachEvent>*)
 	{
 		Statistics::Events_TESCellAttachDetachEvent;
+		Main::InitializeCompatibilityObjects();
 		EvalProcessingEvent();
 		StartProfiling;
 		// return if feature disabled

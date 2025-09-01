@@ -588,11 +588,11 @@ namespace Events
 		// static values
 		static RE::UI* ui = RE::UI::GetSingleton();
 
+		loginfo("OnFrame");
+
 		// return if processing is disabled
 		if (!CanProcess())
 			return;
-
-		loginfo("OnFrame");
 
 		// main actor handling
 		if (Settings::System::_killSwitch)
@@ -907,6 +907,7 @@ CheckActorsSkipIteration:
 		// reset actor processing list
 		acset.clear();
 		DGIntimidate = nullptr;
+		loaded = false;
 	}
 
 	long Main::SaveDeadActors(SKSE::SerializationInterface* a_intfc)
