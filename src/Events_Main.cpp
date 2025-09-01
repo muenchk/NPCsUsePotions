@@ -448,6 +448,211 @@ namespace Events
 		}
 	}
 
+	void Main::CheckActorsIntern()
+	{
+		auto begin = std::chrono::steady_clock::now();
+		// find all actors that are forbidden from handling in this round
+		PullForbiddenActors();
+
+		if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+			if (playerinfo->GetActor()) {
+				// store position of player character
+				ActorInfo::SetPlayerPosition(playerinfo->GetActor()->GetPosition());
+				// reset player combat state, we don't want to include them in our checks
+				playerinfo->SetCombatState(CombatState::OutOfCombat);
+			}
+		}
+		// handle alternate npc registration
+		if (Settings::System::_alternateNPCRegistration) {
+			LOG_1("Register {} NPCs and Unregister {} NPCs", alternateregistration.size(), alternateunregistration.size());
+			while (alternateregistration.size() > 0) {
+				RE::ActorHandle handle;
+				{
+					std::unique_lock<std::mutex> lock(lockalternateregistration);
+					handle = alternateregistration.front();
+					alternateregistration.pop();
+				}
+				if (handle && handle.get() && handle.get().get()) {
+					Main::RegisterNPC(handle.get().get());
+				}
+			}
+			while (alternateunregistration.size() > 0) {
+				RE::ActorHandle handle;
+				{
+					std::unique_lock<std::mutex> lock(lockalternateregistration);
+					handle = alternateunregistration.front();
+					alternateunregistration.pop();
+				}
+				if (handle && handle.get() && handle.get().get()) {
+					Main::UnregisterNPC(handle.get().get());
+				}
+			}
+		}
+		LOG_1("Validate Actors {}", acset.size());
+
+		// validate actorsets
+		std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>> actors;
+		ValidateActorSets(actors);
+
+		LOG_1("Validated {} Actors", std::to_string(actors.size()));
+
+		if (!CanProcess() || Game::IsFastTravelling())
+			return;
+		if (IsPlayerDead())
+			return;
+
+		try {
+			actorsincombat = 0;
+			hostileactors = 0;
+
+			// update combat status of player
+			if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+				// the player should always be valid. If they don't the game doesn't work either anyway
+				if (playerinfo->GetActor()->IsInCombat()) {
+					playerinfo->SetCombatState(CombatState::InCombat);
+					// if player is in combat, decrease actorsincombat by 1 to ensure that the player won't affect
+					// the statistics
+					actorsincombat--;
+				} else
+					playerinfo->SetCombatState(CombatState::OutOfCombat);
+			}
+
+			// first decrease all cooldowns for all registered actors
+			// decreasing durations
+			//
+			// calc actors in combat
+			// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
+			std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+				if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+					DecreaseActorCooldown(acinfo);
+					// retrieve runtime data
+					HandleActorRuntimeData(acinfo);
+					if (acinfo->IsInCombat()) {
+						actorsincombat++;
+						combatants.push_front(acinfo);
+						if (acinfo->GetPlayerHostile())
+							hostileactors++;
+					}
+				}
+			});
+
+			if (!CanProcess() || Game::IsFastTravelling())
+				return;
+			if (IsPlayerDead())
+				return;
+
+			// collect actor runtime data
+			std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+				if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+					// catch forbidden actors
+					if (forbidden.contains(acinfo->GetFormID()))
+						return;
+					// emergency catch
+					if (Game::IsFastTravelling())
+						return;
+					// handle potions out-of-combat
+					if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
+						HandleActorOOCPotions(acinfo);
+					}
+					// handle potions
+					HandleActorPotions(acinfo);
+					// handle fortify potions
+					HandleActorFortifyPotions(acinfo);
+					// handle poisons
+					HandleActorPoisons(acinfo);
+					// handle food
+					HandleActorFood(acinfo);
+				}
+			});
+		} catch (std::bad_alloc& e) {
+			logcritical("Failed to execute due to memory allocation issues: {}", std::string(e.what()));
+		}
+		// write execution time of iteration
+		PROF_1(TimeProfiling, "execution time for {} actors", actors.size());
+		LOG_1("checked {} actors", std::to_string(actors.size()));
+		Statistics::Misc_ActorsHandled = actors.size();
+		Statistics::Misc_ActorsHandledTotal += actors.size();
+
+		// update settings if changes were made in the MCM menu
+		if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
+			LOG_1("Applying setting changes.");
+			begin = std::chrono::steady_clock::now();
+			Settings::UpdateSettings();
+			Settings::Save();
+			PROF_1(TimeProfiling, "Applying setting changes.");
+		}
+	}
+
+	void Main::OnFrame()
+	{
+		// static values
+		static RE::UI* ui = RE::UI::GetSingleton();
+
+		// return if processing is disabled
+		if (!CanProcess())
+			return;
+
+		loginfo("OnFrame");
+
+		// main actor handling
+		if (Settings::System::_killSwitch)
+		{
+			// if cycle has not passed since the last cycle began
+			if (_lastcyclebegin + std::chrono::milliseconds(Settings::System::_cycletime) > std::chrono::steady_clock::now())
+				goto OnFrameAfterActor;
+			_lastcyclebegin = std::chrono::steady_clock::now();
+
+			// skip if we stopped
+			if (stopactorhandler)
+				goto OnFrameAfterActor;
+
+			// non static values
+			tolerance = Settings::System::_cycletime / 5;
+			playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
+
+			/// temp section
+			AlchemicEffect alch = 0;
+			AlchemicEffect alch2 = 0;
+			AlchemicEffect alch3 = 0;
+
+			if (Game::IsFastTravelling()) {
+				LOG_2("Skip iteration due to Fast Travel");
+				goto CheckActorsSkipIteration;
+			}
+
+			actorhandlerworking = true;
+
+			PlayerDied(RE::PlayerCharacter::GetSingleton() && ((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead) || RE::PlayerCharacter::GetSingleton()->IsDead()));
+			
+			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
+			// do not compute, since nobody can actually take potions.
+			if (!ui->GameIsPaused() && initialized && !IsPlayerDead()) {
+				// get starttime of iteration
+				auto eventtime = Main::_eventTime;
+				Main::_eventTime = 0ns;
+				LogConsole(("Time spend on Events last cycle " + Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(eventtime).count())).c_str());
+				
+				LOG_1("Handling {} registered Actors", std::to_string(acset.size()));
+
+				if (!CanProcess())
+					goto CheckActorsSkipIteration;
+
+				SKSE::GetTaskInterface()->AddTask([]() {
+					CheckActorsIntern();
+					// reset combatants
+					combatants.clear();
+					actorhandlerworking = false;
+				});
+			} else {
+				LOG_1("Skip round.");
+			}
+		CheckActorsSkipIteration:;
+		}
+
+	OnFrameAfterActor:
+		return;
+	}
+
 	/// <summary>
 	/// Main routine that periodically checks the actors status, and applies items
 	/// </summary>
@@ -492,7 +697,7 @@ namespace Events
 			
 			// if we are in a paused menu (SoulsRE unpauses menus, which is supported by this)
 			// do not compute, since nobody can actually take potions.
-			if (!ui->GameIsPaused() && initialized && !playerdied) {
+			if (!ui->GameIsPaused() && initialized && !IsPlayerDead()) {
 				// get starttime of iteration
 				begin = std::chrono::steady_clock::now();
 
@@ -506,139 +711,7 @@ namespace Events
 				if (!CanProcess())
 					goto CheckActorsSkipIteration;
 
-				// find all actors that are forbidden from handling in this round
-				PullForbiddenActors();
-
-				if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-					if (playerinfo->GetActor()) {
-						// store position of player character
-						ActorInfo::SetPlayerPosition(playerinfo->GetActor()->GetPosition());
-						// reset player combat state, we don't want to include them in our checks
-						playerinfo->SetCombatState(CombatState::OutOfCombat);
-					}
-				}
-
-				// handle alternate npc registration
-				if (Settings::System::_alternateNPCRegistration) {
-					LOG_1("Register {} NPCs and Unregister {} NPCs", alternateregistration.size(), alternateunregistration.size());
-					while (alternateregistration.size() > 0) {
-						RE::ActorHandle handle;
-						{
-							std::unique_lock<std::mutex> lock(lockalternateregistration);
-							handle = alternateregistration.front();
-							alternateregistration.pop();
-						}
-						if (handle && handle.get() && handle.get().get()) {
-							Main::RegisterNPC(handle.get().get());
-						}
-					}
-					while (alternateunregistration.size() > 0) {
-						RE::ActorHandle handle;
-						{
-							std::unique_lock<std::mutex> lock(lockalternateregistration);
-							handle = alternateunregistration.front();
-							alternateunregistration.pop();
-						}
-						if (handle && handle.get() && handle.get().get()) {
-							Main::UnregisterNPC(handle.get().get());
-						}
-					}
-				}
-
-
-				LOG_1("Validate Actors {}", acset.size());
-
-				// validate actorsets
-				std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>> actors;
-				ValidateActorSets(actors);
-
-				LOG_1("Validated {} Actors", std::to_string(actors.size()));
-
-				if (!CanProcess() || Game::IsFastTravelling())
-					goto CheckActorsSkipIteration;
-				if (IsPlayerDead())
-					break;
-
-				try {
-					actorsincombat = 0;
-					hostileactors = 0;
-
-					// update combat status of player
-					if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-						// the player should always be valid. If they don't the game doesn't work either anyway
-						if (playerinfo->GetActor()->IsInCombat()) {
-							playerinfo->SetCombatState(CombatState::InCombat);
-							// if player is in combat, decrease actorsincombat by 1 to ensure that the player won't affect
-							// the statistics
-							actorsincombat--;
-						} else
-							playerinfo->SetCombatState(CombatState::OutOfCombat);
-					}
-
-					// first decrease all cooldowns for all registered actors
-					// decreasing durations
-					//
-					// calc actors in combat
-					// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
-					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
-						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-							DecreaseActorCooldown(acinfo);
-							// retrieve runtime data
-							HandleActorRuntimeData(acinfo);
-							if (acinfo->IsInCombat()) {
-								actorsincombat++;
-								combatants.push_front(acinfo);
-								if (acinfo->GetPlayerHostile())
-									hostileactors++;
-							}
-						}
-					});
-
-					if (!CanProcess() || Game::IsFastTravelling())
-						goto CheckActorsSkipIteration;
-					if (IsPlayerDead())
-						break;
-
-					// collect actor runtime data
-					std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
-						if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-							// catch forbidden actors
-							if (forbidden.contains(acinfo->GetFormID()))
-								return;
-							// emergency catch
-							if (Game::IsFastTravelling())
-								return;
-							// handle potions out-of-combat
-							if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
-								HandleActorOOCPotions(acinfo);
-							}
-							// handle potions
-							HandleActorPotions(acinfo);
-							// handle fortify potions
-							HandleActorFortifyPotions(acinfo);
-							// handle poisons
-							HandleActorPoisons(acinfo);
-							// handle food
-							HandleActorFood(acinfo);
-						}
-					});
-				} catch (std::bad_alloc& e) {
-					logcritical("Failed to execute due to memory allocation issues: {}", std::string(e.what()));
-				}
-				// write execution time of iteration
-				PROF_1(TimeProfiling, "execution time for {} actors", actors.size());
-				LOG_1("checked {} actors", std::to_string(actors.size()));
-				Statistics::Misc_ActorsHandled = actors.size();
-				Statistics::Misc_ActorsHandledTotal += actors.size();
-
-				// update settings if changes were made in the MCM menu
-				if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
-					LOG_1("Applying setting changes.");
-					begin = std::chrono::steady_clock::now();
-					Settings::UpdateSettings();
-					Settings::Save();
-					PROF_1(TimeProfiling, "Applying setting changes.");
-				}
+				CheckActorsIntern();
 			} else {
 				LOG_1("Skip round.");
 			}
@@ -675,6 +748,8 @@ CheckActorsSkipIteration:
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
 		initialized = false;
+		if (REL::Module::IsVR())
+			loaded = true;
 
 		// checking if player should be handled
 		//if ((Settings::Player::_playerPotions ||
@@ -688,19 +763,24 @@ CheckActorsSkipIteration:
 
 		// reset event time_map
 		EventHandler::GetSingleton()->time_map.clear();
-
-		if (actorhandlerrunning == false) {
-			if (actorhandler != nullptr) {
-				// if the thread is there, then destroy and delete it
-				// if it is joinable and not running it has already finished, but needs to be joined before
-				// it can be destroyed savely
-				actorhandler->~thread();
-				delete actorhandler;
-				actorhandler = nullptr;
+		
+		// vr will use the OnFrame method permanently
+		if (REL::Module::IsVR() == true)
+			Settings::System::_killSwitch = true;
+		if (Settings::System::_killSwitch == false) {
+			if (actorhandlerrunning == false) {
+				if (actorhandler != nullptr) {
+					// if the thread is there, then destroy and delete it
+					// if it is joinable and not running it has already finished, but needs to be joined before
+					// it can be destroyed savely
+					actorhandler->~thread();
+					delete actorhandler;
+					actorhandler = nullptr;
+				}
+				actorhandler = new std::thread(CheckActors);
+				actorhandler->detach();
+				LOG_1("Started CheckActors");
 			}
-			actorhandler = new std::thread(CheckActors);
-			actorhandler->detach();
-			LOG_1("Started CheckActors");
 		}
 		// reset the list of actors that died
 		deads.clear();
@@ -708,6 +788,7 @@ CheckActorsSkipIteration:
 		combatants.clear();
 		// set player to alive
 		PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead) || RE::PlayerCharacter::GetSingleton()->IsDead());
+
 		enableProcessing = true;
 
 		LOG_1("Checking for special tasks");
@@ -734,36 +815,37 @@ CheckActorsSkipIteration:
 			}
 		}
 
-		LOG_1("Finding loaded actors");
+		if (REL::Module::IsVR() == false) {
+			LOG_1("Finding loaded actors");
 
-		// when loading the game, the attach detach events for actors aren't fired until cells have been changed
-		// thus we need to get all currently loaded npcs manually
-		RE::TESObjectCELL* cell = nullptr;
-		std::vector<RE::TESObjectCELL*> gamecells;
-		const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
-		{
-			const RE::BSReadLockGuard locker{ lock };
-			if (hashtable) {
-				for (auto& [id, form] : *hashtable) {
-					if (form) {
-						cell = form->As<RE::TESObjectCELL>();
-						if (cell) {
-							gamecells.push_back(cell);
+			// when loading the game, the attach detach events for actors aren't fired until cells have been changed
+			// thus we need to get all currently loaded npcs manually
+			RE::TESObjectCELL* cell = nullptr;
+			std::vector<RE::TESObjectCELL*> gamecells;
+			const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
+			{
+				const RE::BSReadLockGuard locker{ lock };
+				if (hashtable) {
+					for (auto& [id, form] : *hashtable) {
+						if (form) {
+							cell = form->As<RE::TESObjectCELL>();
+							if (cell) {
+								gamecells.push_back(cell);
+							}
 						}
 					}
 				}
 			}
-		}
-		LOG_1("found {} cells", std::to_string(gamecells.size()));
-		for (int i = 0; i < (int)gamecells.size(); i++) {
-			if (gamecells[i]->IsAttached()) {
-				for (auto& ptr : gamecells[i]->GetRuntimeData().references)
-				{
-					if (ptr.get()) {
-						RE::Actor* actor = ptr.get()->As<RE::Actor>();
-						if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && !actor->IsPlayerRef()) {
-							if (Distribution::ExcludedNPCFromHandling(actor) == false)
-								RegisterNPC(actor);
+			LOG_1("found {} cells", std::to_string(gamecells.size()));
+			for (int i = 0; i < (int)gamecells.size(); i++) {
+				if (gamecells[i]->IsAttached()) {
+					for (auto& ptr : gamecells[i]->GetRuntimeData().references) {
+						if (ptr.get()) {
+							RE::Actor* actor = ptr.get()->As<RE::Actor>();
+							if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && !actor->IsPlayerRef()) {
+								if (Distribution::ExcludedNPCFromHandling(actor) == false)
+									RegisterNPC(actor);
+							}
 						}
 					}
 				}
@@ -798,16 +880,18 @@ CheckActorsSkipIteration:
 
 	void Main::InitThreads()
 	{
-		if (actorhandler != nullptr) {
-			// if the thread is there, then destroy and delete it
-			// if it is joinable and not running it has already finished, but needs to be joined before
-			// it can be destroyed savely
-			actorhandler->~thread();
-			delete actorhandler;
-			actorhandler = nullptr;
+		if (Settings::System::_killSwitch == false) {
+			if (actorhandler != nullptr) {
+				// if the thread is there, then destroy and delete it
+				// if it is joinable and not running it has already finished, but needs to be joined before
+				// it can be destroyed savely
+				actorhandler->~thread();
+				delete actorhandler;
+				actorhandler = nullptr;
+			}
+			actorhandler = new std::thread(CheckActors);
+			actorhandler->detach();
 		}
-		actorhandler = new std::thread(CheckActors);
-		actorhandler->detach();
 	}
 
 	/// <summary>

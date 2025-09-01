@@ -1,6 +1,35 @@
 #pragma once
 namespace Hooks
 {
+	// frame hook
+	class OnFrameHook
+	{
+	public:
+		static void Install()
+		{
+			REL::Relocation<uintptr_t> target{ REL::VariantID(35564, 36563, 0x5baa00), REL::VariantOffset(0x24, 0x24, 0x27) };
+			auto& trampoline = SKSE::GetTrampoline();
+
+			switch (REL::Module::GetRuntime()) {
+			case REL::Module::Runtime::AE:
+				_OnFrame = trampoline.write_call<5>(target.address(), OnFrame);
+				break;
+			case REL::Module::Runtime::SE:
+				_OnFrame = trampoline.write_call<5>(target.address(), OnFrame);
+				break;
+			case REL::Module::Runtime::VR:
+				_OnFrame = trampoline.write_call<6>(target.address(), OnFrame);
+				break;
+			}
+
+			logger::info("Hooked Main::FrameUpdate");
+		}
+
+	private:
+		static uint64_t OnFrame(void* unk);
+		static inline REL::Relocation<decltype(OnFrame)> _OnFrame;
+	};
+
 	/// <summary>
 	/// executed when the player uses a potion
 	/// </summary>

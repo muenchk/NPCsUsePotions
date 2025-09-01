@@ -79,9 +79,21 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 	}
 
 	const auto ver = a_skse->RuntimeVersion();
-	if (ver < SKSE::RUNTIME_SSE_1_5_39) {
-		logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
-		return false;
+	if (REL::Module::IsAE()) {
+		if (ver < SKSE::RUNTIME_SSE_LATEST_AE) {
+			logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
+			return false;
+		}
+	} else if (REL::Module::IsSE()) {
+		if (ver < SKSE::RUNTIME_SSE_1_5_97) {
+			logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
+			return false;
+		}
+	} else if (REL::Module::IsVR()) {
+		if (ver < SKSE::RUNTIME_LATEST_VR) {
+			logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
+			return false;
+		}
 	}
 	return true;
 } 

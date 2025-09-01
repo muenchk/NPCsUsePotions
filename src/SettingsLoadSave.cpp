@@ -368,6 +368,8 @@ void Settings::Load()
 			loginfo("Setting: {} {}", "System:            MaxFortifyDuration", std::to_string(_MaxFortifyDuration));
 			//System::_alternateNPCRegistration = ini.GetBoolValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration);
 			//loginfo("Setting: {} {}", "System:            AlternateNPCRegistration", std::to_string(System::_alternateNPCRegistration));
+			System::_killSwitch = ini.GetBoolValue("System", "KillSwitch", System::_killSwitch);
+			loginfo("Setting: {} {}", "System:            KillSwitch", std::to_string(System::_killSwitch));
 
 			// compatibility
 			Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
@@ -631,6 +633,8 @@ void Settings::Save()
 	ini.SetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration, "// Maximum duration fortification potions are accounted for, idependent from their actual duration.");
 	//if (System::_alternateNPCRegistration)
 	//	ini.SetBoolValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration, "Switches NPC registration from immediate, to registration on next cycle.");
+	ini.SetBoolValue("System", "KillSwitch", System::_killSwitch, "Switches actors handling to main thread");
+
 
 	// compatibility
 	ini.SetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules, "// Disables item distribution and item usage for NPCs that do not\n"

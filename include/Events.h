@@ -49,6 +49,10 @@ namespace Events
 		/// determines whether events and functions are run
 		/// </summary>
 		static inline bool initialized = false;
+		/// <summary>
+		/// determines whether the game has been loaded [VR ONLY]
+		/// </summary>
+		static inline bool loaded = false;
 
 		//--------------------Lists---------------------------
 
@@ -91,9 +95,6 @@ namespace Events
 		/// mutex to restrict access to alternateregistration and alternateunregistration
 		/// </summary>
 		static inline std::mutex lockalternateregistration;
-
-		static inline std::chrono::nanoseconds _eventTime = 0ns;
-
 
 		//-------------------Handler-------------------------
 
@@ -140,6 +141,16 @@ namespace Events
 		/// enables all active functions
 		/// </summary>
 		static inline bool enableProcessing = false;
+
+		//-------------------Timing--------------------------
+
+		static inline std::chrono::nanoseconds _eventTime = 0ns;
+
+		static inline std::chrono::steady_clock::time_point _lastcyclebegin = std::chrono::steady_clock::now();
+
+		//-----------------CheckActors-----------------------
+
+		static inline std::weak_ptr<ActorInfo> playerweak;
 
 		//--------------------Brawl--------------------------
 
@@ -315,6 +326,11 @@ namespace Events
 		/// </summary>
 		static void CheckActors();
 
+		/// <summary>
+		/// Actual handling of actors shared by CheckActors and OnFrame
+		/// </summary>
+		static void CheckActorsIntern();
+
 		//---------------------Friends---------------------
 
 	public:
@@ -387,6 +403,11 @@ namespace Events
 		{
 			enableProcessing = true;
 		}
+
+		/// <summary>
+		/// Function executed every frame
+		/// </summary>
+		static void OnFrame();
 
 		//----------------------Support----------------------------
 

@@ -125,6 +125,11 @@ public:
 		/// [Settings] switches NPC registration from direct registration, to registration on next cycle
 		/// </summary>
 		static inline bool _alternateNPCRegistration = true;
+
+		/// <summary>
+		/// [Settings] switches to handling actors on main thread
+		/// </summary>
+		static inline bool _killSwitch = false;
 	};
 
 	/// <summary>

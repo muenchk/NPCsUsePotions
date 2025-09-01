@@ -542,7 +542,7 @@ TESDeathEventEnd:
 		LOG_1("Registered {}", typeid(RE::TESEquipEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG_1("Registered {}", typeid(RE::TESDeathEvent).name());
-		if (Settings::Debug::_CalculateCellRules) {
+		if (REL::Module::IsVR() == false && Settings::Debug::_CalculateCellRules) {
 			RE::PlayerCharacter::GetSingleton()->AsBGSActorCellEventSource()->AddEventSink(EventHandler::GetSingleton());
 			LOG_1("Registered {}", typeid(RE::BGSActorCellEvent).name());
 		}
@@ -551,9 +551,11 @@ TESDeathEventEnd:
 		scriptEventSourceHolder->GetEventSource<RE::TESFormDeleteEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG_1("Registered {}", typeid(RE::TESFormDeleteEvent).name())
 		scriptEventSourceHolder->GetEventSource<RE::TESContainerChangedEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG_1("Registered {}", typeid(RE::TESContainerChangedEvent).name())
-		scriptEventSourceHolder->GetEventSource<RE::TESFastTravelEndEvent>()->AddEventSink(EventHandler::GetSingleton());
-		LOG_1("Registered {}", typeid(RE::TESFastTravelEndEvent).name())
+		LOG_1("Registered {}", typeid(RE::TESContainerChangedEvent).name());
+		if (REL::Module::IsVR() == false) {
+			scriptEventSourceHolder->GetEventSource<RE::TESFastTravelEndEvent>()->AddEventSink(EventHandler::GetSingleton());
+			LOG_1("Registered {}", typeid(RE::TESFastTravelEndEvent).name())
+		}
 		//scriptEventSourceHolder->GetEventSource<RE::TESActivateEvent>()->AddEventSink(EventHandler::GetSingleton());
 		//LOG1_1("Registered {}", typeid(RE::TESActivateEvent).name())
 		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);

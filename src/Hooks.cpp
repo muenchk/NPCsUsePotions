@@ -5,6 +5,11 @@
 
 namespace Hooks
 {
+	uint64_t OnFrameHook::OnFrame(void* unk)
+	{
+		Events::Main::OnFrame();
+		return _OnFrame(unk);
+	}
 
 	bool FastTravelConfirmHook::FastTravelConfirm(uint64_t self, uint64_t menu)
 	{
@@ -42,9 +47,15 @@ namespace Hooks
 
 	void InstallHooks()
 	{
-		FastTravelConfirmHook::InstallHook();
-		Papyrus_FastTravelHook::InstallHook();
-		//FadeThenFastTravelHook::InstallHook();
-		PlayerUsePotionHook::InstallHook();
+		if (REL::Module::IsVR()) {
+			OnFrameHook::Install();
+			PlayerUsePotionHook::InstallHook();
+		} else {
+			OnFrameHook::Install();
+			FastTravelConfirmHook::InstallHook();
+			Papyrus_FastTravelHook::InstallHook();
+			//FadeThenFastTravelHook::InstallHook();
+			PlayerUsePotionHook::InstallHook();
+		}
 	}
 }
