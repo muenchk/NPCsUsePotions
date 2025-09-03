@@ -271,7 +271,6 @@ TESDeathEventEnd:
 		if (Settings::Usage::_DisableOutOfCombatProcessing)
 			return EventResult::kContinue;
 		Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
-		//auto begin = std::chrono::steady_clock::now();
 
 		if (a_event && a_event->reference) {
 			RE::Actor* actor = a_event->reference->As<RE::Actor>();
@@ -286,7 +285,7 @@ TESDeathEventEnd:
 				PROF_2(TimeProfiling, "[TESCellAttachDetachEvent] event execution time.");
 			}
 		}
-		Main::IncEventTime(std::chrono::steady_clock::now() - begin);
+		Main::IncEventTime(std::chrono::steady_clock::now() - TimeProfiling);
 		return EventResult::kContinue;
 	}
 
@@ -308,7 +307,7 @@ TESDeathEventEnd:
 			Settings::CheckCellForActors(a_event->cellID);
 			PROF_2(TimeProfiling, "[BGSActorCellEvent] event execution time.");
 		}
-		Main::IncEventTime(std::chrono::steady_clock::now() - begin);
+		Main::IncEventTime(std::chrono::steady_clock::now() - TimeProfiling);
 		return EventResult::kContinue;
 	}
 

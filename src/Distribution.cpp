@@ -2030,7 +2030,7 @@ bool CheckDistributability(std::shared_ptr<ActorInfo> const& acinfo, Distributio
 
 Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& acinfo, Misc::NPCTPLTInfo* tpltinfo)
 {
-	auto begin = std::chrono::steady_clock::now();
+	StartProfiling;
 	if (acinfo == nullptr || acinfo->IsValid() == false)
 		return emptyRule;
 	// get npc template info

@@ -450,7 +450,7 @@ namespace Events
 
 	void Main::CheckActorsIntern()
 	{
-		auto begin = std::chrono::steady_clock::now();
+		StartProfiling;
 		// find all actors that are forbidden from handling in this round
 		PullForbiddenActors();
 
@@ -576,7 +576,7 @@ namespace Events
 		// update settings if changes were made in the MCM menu
 		if (Settings::_modifiedSettings == Settings::ChangeFlag::kChanged) {
 			LOG_1("Applying setting changes.");
-			begin = std::chrono::steady_clock::now();
+			ResetProfiling;
 			Settings::UpdateSettings();
 			Settings::Save();
 			PROF_1(TimeProfiling, "Applying setting changes.");
@@ -667,7 +667,7 @@ namespace Events
 		/// static section
 		RE::UI* ui = RE::UI::GetSingleton();
 		// profile
-		auto begin = std::chrono::steady_clock::now();
+		StartProfiling;
 		// tolerance for potion drinking, to diminish effects of computation times
 		// on cycle time
 		tolerance = Settings::System::_cycletime / 5;
@@ -699,7 +699,7 @@ namespace Events
 			// do not compute, since nobody can actually take potions.
 			if (!ui->GameIsPaused() && initialized && !IsPlayerDead()) {
 				// get starttime of iteration
-				begin = std::chrono::steady_clock::now();
+				ResetProfiling;
 
 				auto eventtime = Main::_eventTime;
 				Main::_eventTime = 0ns;
@@ -744,7 +744,7 @@ CheckActorsSkipIteration:
 	void Main::LoadGameCallback(SKSE::SerializationInterface* /*a_intfc*/)
 	{
 		LOG_1("");
-		auto begin = std::chrono::steady_clock::now();
+		StartProfiling;
 		// if we canceled the main thread, reset that
 		stopactorhandler = false;
 		initialized = false;
