@@ -147,86 +147,25 @@ public:
 	/// calculates and returns the time passed sinve programstart
 	/// </summary>
 	/// <returns></returns>
-	static std::string TimePassed()
-	{
-		std::stringstream ss;
-		ss << "[" << std::setw(12) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - execstart) << "]";
-		return ss.str();
-	}
+	static std::string TimePassed();
+
 	/// <summary>
 	/// returns time passed formatted
 	/// </summary>
 	/// <returns></returns>
-	static std::string TimePassedFormatted()
-	{
-		return FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - execstart).count());
-	}
+	static std::string TimePassedFormatted();
 
 	/// <summary>
 	/// Formats microseconds into a proper time string
 	/// </summary>
 	/// <returns></returns>
-	static std::string FormatTime(int64_t microseconds)
-	{
-		std::stringstream ss;
-		int64_t tmp = 0;
-		if (microseconds >= 60000000) {
-			tmp = (int64_t)trunc((long double)microseconds / 60000000);
-			ss << std::setw(6) << tmp << "m ";
-			microseconds -= tmp * 60000000;
-		} //else
-			//ss << "        ";
-		if (microseconds >= 1000000) {
-			tmp = (int64_t)trunc((long double)microseconds / 1000000);
-			ss << std::setw(2) << tmp << "s ";
-			microseconds -= tmp * 1000000;
-		} //else
-			//ss << "    ";
-		if (microseconds >= 1000) {
-			tmp = (int64_t)trunc((long double)microseconds / 1000);
-			ss << std::setw(3) << tmp << "ms ";
-			microseconds -= tmp * 1000;
-		} //else
-			//ss << "      ";
-		ss << std::setw(3) << microseconds << "μs";
-		return ss.str();
-	}
+	static std::string FormatTime(int64_t microseconds);
 
 	/// <summary>
 	/// Formats nanoseconds into a proper time string
 	/// </summary>
 	/// <returns></returns>
-	static std::string FormatTimeNS(int64_t nanoseconds)
-	{
-		std::stringstream ss;
-		int64_t tmp = 0;
-		if (nanoseconds > 60000000000) {
-			tmp = (int64_t)trunc((long double)nanoseconds / 60000000000);
-			ss << std::setw(6) << tmp << "m ";
-			nanoseconds -= tmp * 60000000000;
-		} else
-			ss << "        ";
-		if (nanoseconds > 1000000000) {
-			tmp = (int64_t)trunc((long double)nanoseconds / 1000000000);
-			ss << std::setw(2) << tmp << "s ";
-			nanoseconds -= tmp * 1000000000;
-		} else
-			ss << "    ";
-		if (nanoseconds > 1000000) {
-			tmp = (int64_t)trunc((long double)nanoseconds / 1000000);
-			ss << std::setw(3) << tmp << "ms ";
-			nanoseconds -= tmp * 1000000;
-		} else
-			ss << "      ";
-		if (nanoseconds > 1000) {
-			tmp = (int64_t)trunc((long double)nanoseconds / 1000);
-			ss << std::setw(3) << tmp << "μs ";
-			nanoseconds -= tmp * 1000;
-		} else
-			ss << "      ";
-		ss << std::setw(3) << nanoseconds << "ns";
-		return ss.str();
-	}
+	static std::string FormatTimeNS(int64_t nanoseconds);
 
 	/// <summary>
 	/// Whether logging is enables
@@ -277,37 +216,11 @@ private:
 
 public:
 
-	static void BeginLogging()
-	{
-		if (logger != nullptr) {
-			// if the thread is there, then destroy and delete it
-			// if it is joinable and not running it has already finished, but needs to be joined before
-			// it can be destroyed savely
-			logger->request_stop();
-			logger->join();
-			logger->~jthread();
-			delete logger;
-			logger = nullptr;
-		}
-		logger = new std::jthread(AsyncLogger);
-		//logger->detach();
-	}
+	static void BeginLogging();
 
-	static void EndLogging()
-	{
-		if (logger != nullptr) {
-			logger->request_stop();
-			logger->join();
-			logger->~jthread();
-			delete logger;
-			logger = nullptr;
-		}
-	}
+	static void EndLogging();
 
-	static void LogMessage(MessageType type, std::string message)
-	{
-		_queue.push_back({ type, message });
-	}
+	static void LogMessage(MessageType type, std::string message);
 };
 
 
@@ -322,57 +235,18 @@ public:
 	/// Inits profile log
 	/// </summary>
 	/// <param name="pluginname"></param>
-	static void Init(std::string pluginname, bool append = false)
-	{
-		std::unique_lock<std::mutex> guard(_m_lock);
-		//lock.acquire();
-		//auto path = SKSE::log::log_directory();
-		//if (path.has_value()) {
-		//	_stream = new std::ofstream(path.value() / pluginname / (pluginname + "log.log"), std::ios_base::out | std::ios_base::trunc);
-		//}
-
-		_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + ".log"), std::ios_base::out | std::ios_base::trunc);
-		if (_stream == nullptr || _stream->is_open() == false)
-			std::cout << "Cannot create Log!\n";
-		//lock.release();
-	}
+	static void Init(std::string pluginname, bool append = false);
 
 	/// <summary>
 	/// Closes log log
 	/// </summary>
-	static void Close()
-	{
-		std::unique_lock<std::mutex> guard(_m_lock);
-		//lock.acquire();
-		if (_stream != nullptr) {
-			_stream->flush();
-			_stream->close();
-			delete _stream;
-			_stream = nullptr;
-		}
-		//lock.release();
-	}
+	static void Close();
 
 	/// <summary>
 	/// writes to the log log
 	/// </summary>
-	/// <typeparam name="...Args"></typeparam>
 	/// <param name="message"></param>
-	template <class... Args>
-	static void write(std::string message)
-	{
-		std::unique_lock<std::mutex> guard(_m_lock);
-		//lock.acquire();
-		if (_stream) {
-			try {
-				_stream->write(message.c_str(), message.size());
-				_stream->flush();
-			} catch (std::exception& e) {
-				std::cout << "Error in logging stream: " << e.what() << "\n";
-			}
-		}
-		//lock.release();
-	}
+	static void write(std::string message);
 };
 
 template <class... Args>
@@ -442,43 +316,18 @@ public:
 	/// Inits profile log
 	/// </summary>
 	/// <param name="pluginname"></param>
-	static void Init(std::string pluginname)
-	{
-		lock.acquire();
-		_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + "_profile.log"), std::ios_base::out | std::ios_base::trunc);
-		lock.release();
-	}
+	static void Init(std::string pluginname);
 
 	/// <summary>
 	/// Closes profile log
 	/// </summary>
-	static void Close()
-	{
-		lock.acquire();
-		if (_stream != nullptr) {
-			_stream->flush();
-			_stream->close();
-			delete _stream;
-			_stream = nullptr;
-		}
-		lock.release();
-	}
+	static void Close();
 
 	/// <summary>
 	/// writes to the profile log
 	/// </summary>
-	/// <typeparam name="...Args"></typeparam>
 	/// <param name="message"></param>
-	template <class... Args>
-	static void write(std::string message)
-	{
-		lock.acquire();
-		if (_stream) {
-			_stream->write(message.c_str(), message.size());
-			_stream->flush();
-		}
-		lock.release();
-	}
+	static void write(std::string message);
 };
 template <class... Args>
 struct [[maybe_unused]] profile
@@ -511,43 +360,18 @@ public:
 	/// Inits item usage log
 	/// </summary>
 	/// <param name="pluginname"></param>
-	static void Init(std::string pluginname)
-	{
-		lock.acquire();
-		_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + "_usage.log"), std::ios_base::out | std::ios_base::trunc);
-		lock.release();
-	}
+	static void Init(std::string pluginname);
 
 	/// <summary>
 	/// Closes item usage log
 	/// </summary>
-	static void Close()
-	{
-		lock.acquire();
-		if (_stream != nullptr) {
-			_stream->flush();
-			_stream->close();
-			delete _stream;
-			_stream = nullptr;
-		}
-		lock.release();
-	}
+	static void Close();
 
 	/// <summary>
 	/// writes to the item usage log
 	/// </summary>
-	/// <typeparam name="...Args"></typeparam>
 	/// <param name="message"></param>
-	template <class... Args>
-	static void write(std::string message)
-	{
-		lock.acquire();
-		if (_stream) {
-			_stream->write(message.c_str(), message.size());
-			_stream->flush();
-		}
-		lock.release();
-	}
+	static void write(std::string message);
 };
 template <class... Args>
 struct [[maybe_unused]] logusage
@@ -577,43 +401,18 @@ public:
 	/// Inits item usage log
 	/// </summary>
 	/// <param name="pluginname"></param>
-	static void Init(std::string pluginname)
-	{
-		lock.acquire();
-		_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + "_excl.log"), std::ios_base::out | std::ios_base::trunc);
-		lock.release();
-	}
+	static void Init(std::string pluginname);
 
 	/// <summary>
 	/// Closes item usage log
 	/// </summary>
-	static void Close()
-	{
-		lock.acquire();
-		if (_stream != nullptr) {
-			_stream->flush();
-			_stream->close();
-			delete _stream;
-			_stream = nullptr;
-		}
-		lock.release();
-	}
+	static void Close();
 
 	/// <summary>
 	/// writes to the item usage log
 	/// </summary>
-	/// <typeparam name="...Args"></typeparam>
 	/// <param name="message"></param>
-	template <class... Args>
-	static void write(std::string message)
-	{
-		lock.acquire();
-		if (_stream) {
-			_stream->write(message.c_str(), message.size());
-			_stream->flush();
-		}
-		lock.release();
-	}
+	static void write(std::string message);
 };
 template <class... Args>
 struct [[maybe_unused]] logexcl
