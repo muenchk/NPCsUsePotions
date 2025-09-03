@@ -53,7 +53,7 @@ namespace Console
 				info->executeFunction = &Process;
 				info->conditionFunction = nullptr;
 
-				loginfo("Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
+				//loginfo("Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
 			} else {
 				logcritical("Failed to register console command: {} ({})", LONG_NAME, SHORT_NAME);
 			}
@@ -105,7 +105,7 @@ namespace Console
 				info->executeFunction = &Process;
 				info->conditionFunction = nullptr;
 
-				loginfo("Registered console command: {} ({})", LONG_NAME, SHORT_NAME);
+				//loginfo("Registered console command: {} ({})", std::string(LONG_NAME), std::string(SHORT_NAME));
 			} else {
 				logcritical("Failed to register console command: {} ({})", LONG_NAME, SHORT_NAME);
 			}

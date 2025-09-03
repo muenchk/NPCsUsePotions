@@ -3205,7 +3205,7 @@ void Settings::ClassifyItems()
 
 	// start sorting items
 
-	auto begin = std::chrono::steady_clock::now();
+	StartProfiling;
 	const auto& [hashtable, lock] = RE::TESForm::GetAllForms();
 	{
 		const RE::BSReadLockGuard locker{ lock };

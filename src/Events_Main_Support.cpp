@@ -707,7 +707,7 @@ namespace Events
 		EvalProcessing();
 		std::this_thread::sleep_for(5s);
 
-		auto begin = std::chrono::steady_clock::now();
+		StartProfiling;
 
 		auto datahandler = RE::TESDataHandler::GetSingleton();
 		auto actors = datahandler->GetFormArray<RE::Actor>();

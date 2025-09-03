@@ -29,7 +29,7 @@ namespace
 		Logging::log_directory = Settings::log_directory;
 		auto spath = path.value();
 		spath /= Settings::PluginNamePlain;
-		spath /= fmt::format("{}.log"sv, Plugin::NAME);
+		spath /= fmt::format("{}_skse.log"sv, Plugin::NAME);
 		auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(spath.string(), true);
 #endif
 
@@ -46,9 +46,11 @@ namespace
 		//spdlog::set_pattern("%g(%#): [%^%l%$] %v"s);
 		spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
 
+		Log::Init(Settings::PluginNamePlain);
 		Profile::Init(Settings::PluginNamePlain);
 		LogUsage::Init(Settings::PluginNamePlain);
 		LogExcl::Init(Settings::PluginNamePlain);
+		Logging::BeginLogging();
 	}
 }
 
@@ -170,6 +172,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	loginfo("{} v{}", Plugin::NAME, Plugin::VERSION.string());
 	profile(__func__, std::chrono::steady_clock::now(), "{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	logusage("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
+	logexcl("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
 
