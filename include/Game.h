@@ -99,6 +99,12 @@ namespace Game
 		/// </summary>
 		/// <param name="id">unique registration id</param>
 		void UnregisterForRevertCallback(uint32_t id);
+
+		/// <summary>
+		/// Sends the load game event
+		/// </summary>
+		/// <param name="a_intfc"></param>
+		static void SendLoadGameCallback();
 	};
 
 	bool IsFastTravelling();

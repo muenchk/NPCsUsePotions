@@ -102,6 +102,12 @@ namespace Game
 		}
 	}
 
+	void SaveLoad::SendLoadGameCallback()
+	{
+		SKSE::SerializationInterface* serialization = (SKSE::SerializationInterface*)SKSE::GetSerializationInterface();
+		LoadCallback(serialization);
+	}
+
 	SaveLoad* SaveLoad::GetSingleton()
 	{
 		static SaveLoad singleton;

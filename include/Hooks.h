@@ -7,7 +7,8 @@ namespace Hooks
 	public:
 		static void Install()
 		{
-			REL::Relocation<uintptr_t> target{ REL::VariantID(35564, 36563, 0x5baa00), REL::VariantOffset(0x24, 0x24, 0x27) };
+			//REL::Relocation<uintptr_t> target{ REL::VariantID(35564, 36563, 0x5baa00), REL::VariantOffset(0x24, 0x24, 0x27) };
+			REL::Relocation<uintptr_t> target{ REL::VariantID(35564, 36563, 0x5bb1fa), REL::VariantOffset(0x24, 0x24, 0) };
 			auto& trampoline = SKSE::GetTrampoline();
 
 			switch (REL::Module::GetRuntime()) {
@@ -18,7 +19,8 @@ namespace Hooks
 				_OnFrame = trampoline.write_call<5>(target.address(), OnFrame);
 				break;
 			case REL::Module::Runtime::VR:
-				_OnFrame = trampoline.write_call<6>(target.address(), OnFrame);
+				//_OnFrame = trampoline.write_call<6>(target.address(), OnFrame);
+				_OnFrame = trampoline.write_call<5>(target.address(), OnFrame);
 				break;
 			}
 

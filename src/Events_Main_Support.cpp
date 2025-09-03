@@ -17,7 +17,8 @@ namespace Events
 	void Main::InitializeCompatibilityObjects()
 	{
 		if (REL::Module::IsVR() && !loaded)
-			LoadGameCallback(nullptr);
+			Game::SaveLoad::SendLoadGameCallback();
+			//LoadGameCallback(nullptr);
 		EvalProcessing();
 		// now that the game was loaded we can try to initialize all our variables we conuldn't before
 		if (!initialized) {

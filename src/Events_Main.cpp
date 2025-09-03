@@ -588,7 +588,7 @@ namespace Events
 		// static values
 		static RE::UI* ui = RE::UI::GetSingleton();
 
-		loginfo("OnFrame");
+		//loginfo("OnFrame");
 
 		// return if processing is disabled
 		if (!CanProcess())
