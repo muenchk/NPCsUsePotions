@@ -450,6 +450,11 @@ namespace Events
 
 	void Main::CheckActorsIntern()
 	{
+		playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
+		// tolerance for potion drinking, to diminish effects of computation times
+		// on cycle time
+		tolerance = Settings::System::_cycletime / 5;
+
 		StartProfiling;
 		// find all actors that are forbidden from handling in this round
 		PullForbiddenActors();
@@ -585,6 +590,8 @@ namespace Events
 
 	void Main::OnFrame()
 	{
+		StartProfiling;
+
 		// static values
 		static RE::UI* ui = RE::UI::GetSingleton();
 
@@ -606,15 +613,6 @@ namespace Events
 			if (stopactorhandler)
 				goto OnFrameAfterActor;
 
-			// non static values
-			tolerance = Settings::System::_cycletime / 5;
-			playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
-
-			/// temp section
-			AlchemicEffect alch = 0;
-			AlchemicEffect alch2 = 0;
-			AlchemicEffect alch3 = 0;
-
 			if (Game::IsFastTravelling()) {
 				LOG_2("Skip iteration due to Fast Travel");
 				goto CheckActorsSkipIteration;
@@ -630,7 +628,7 @@ namespace Events
 				// get starttime of iteration
 				auto eventtime = Main::_eventTime;
 				Main::_eventTime = 0ns;
-				LogConsole(("Time spend on Events last cycle " + Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(eventtime).count())).c_str());
+				//LogConsole(("Time spend on Events last cycle " + Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(eventtime).count())).c_str());
 				
 				LOG_1("Handling {} registered Actors", std::to_string(acset.size()));
 
@@ -643,6 +641,7 @@ namespace Events
 					combatants.clear();
 					actorhandlerworking = false;
 				});
+				PROF_1(TimeProfiling, "OnFrame Time");
 			} else {
 				LOG_1("Skip round.");
 			}
@@ -668,16 +667,6 @@ namespace Events
 		RE::UI* ui = RE::UI::GetSingleton();
 		// profile
 		StartProfiling;
-		// tolerance for potion drinking, to diminish effects of computation times
-		// on cycle time
-		tolerance = Settings::System::_cycletime / 5;
-
-		std::weak_ptr<ActorInfo> playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
-
-		/// temp section
-		AlchemicEffect alch = 0;
-		AlchemicEffect alch2 = 0;
-		AlchemicEffect alch3 = 0;
 
 		auto datahandler = RE::TESDataHandler::GetSingleton();
 
@@ -703,7 +692,7 @@ namespace Events
 
 				auto eventtime = Main::_eventTime;
 				Main::_eventTime = 0ns;
-				LogConsole(("Time spend on Events last cycle " + Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(eventtime).count())).c_str());
+				//LogConsole(("Time spend on Events last cycle " + Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(eventtime).count())).c_str());
 				
 
 				LOG_1("Handling {} registered Actors", std::to_string(acset.size()));

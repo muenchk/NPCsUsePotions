@@ -762,16 +762,16 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 /* CTDs consistently when playing animations from here
 bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, RE::AlchemyItem* poison)
 {
-	LOG2_4("{}[AnimatedPoison_ApplyPoison] actor {} poison {}", Utility::PrintForm(acinfo), Utility::PrintForm(poison))
+	LOG2_4("[AnimatedPoison_ApplyPoison] actor {} poison {}", Utility::PrintForm(acinfo), Utility::PrintForm(poison))
 
 	// if parameters are invalid or compatibility disabled return
 	if (!comp->LoadedAnimatedPoisons() || acinfo == nullptr || poison == nullptr || acinfo->Animation_busy || acinfo->actor == nullptr || acinfo->actor->IsPlayerRef()) {
-		LOG2_4("{}[AnimatedPoison_ApplyPoison] {} {}", comp->LoadedAnimatedPoisons(), acinfo->Animation_busy);
+		LOG2_4("[AnimatedPoison_ApplyPoison] {} {}", comp->LoadedAnimatedPoisons(), acinfo->Animation_busy);
 		return false;
 	}
 	acinfo->Animation_busy = true;
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 1");
+	LOG_4("[AnimatedPoison_ApplyPoison] 1");
 
 	// save form id, since this function will take longer to complete. If the actor is dead in the meantime we may run into problems
 	// if we do not reacquire all objects we are working with
@@ -803,7 +803,7 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 		return false;
 	}
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 2");
+	LOG_4("[AnimatedPoison_ApplyPoison] 2");
 
 
 	// get poisonkeywtring // read json in future
@@ -835,7 +835,7 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 			return false;
 	}
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 3");
+	LOG_4("[AnimatedPoison_ApplyPoison] 3");
 	// ignore force third person
 	bool lefthand = false;
 	bool sloweffect = false;
@@ -897,7 +897,7 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 		}
 	}
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 4");
+	LOG_4("[AnimatedPoison_ApplyPoison] 4");
 
 	// slow effect cast
 	if (comp->AnPois_TogglePlayerSlowEffect->value == 1) {
@@ -906,7 +906,7 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 		sloweffect = true;
 	}
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 5");
+	LOG_4("[AnimatedPoison_ApplyPoison] 5");
 	
 	// send animation
 	//std::this_thread::sleep_for(100ms);
@@ -919,7 +919,7 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 	if (acinfo == nullptr)
 		return false;
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 6");
+	LOG_4("[AnimatedPoison_ApplyPoison] 6");
 	
 	// requip lefthand weapon
 	if (lefthand && leftbound)
@@ -931,7 +931,7 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 		// skip rest of equipping stuff for now
 	}
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 7");
+	LOG_4("[AnimatedPoison_ApplyPoison] 7");
 
 
 	if (sloweffect)
@@ -941,12 +941,12 @@ bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, R
 		acinfo->actor->RemoveItem(comp->AnPois_SlowEffectItem, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 	}
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 8");
+	LOG_4("[AnimatedPoison_ApplyPoison] 8");
 
 
 	acinfo->actor->SetGraphVariableBool("bSprintOK", true);
 
-	LOG_4("{}[AnimatedPoison_ApplyPoison] 9");
+	LOG_4("[AnimatedPoison_ApplyPoison] 9");
 	*/
 /*
 	acinfo->Animation_busy = false;

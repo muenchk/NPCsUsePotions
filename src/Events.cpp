@@ -57,7 +57,7 @@ namespace Events
 		return EventResult::kContinue;
 
 #define CheckDeadEvent                       \
-	LOG1_1("{}[PlayerDead] {}", playerdied); \
+	LOG1_1("[PlayerDead] {}", playerdied); \
 	if (playerdied == true) {                \
 		return EventResult::kContinue;       \
 	}

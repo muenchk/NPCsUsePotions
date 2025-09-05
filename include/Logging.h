@@ -50,50 +50,50 @@
 
 #define LOGL_1(a_fmt, ...) \
 	if (Logging::EnableLoadLog) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 		
 
 #define LOGL_2(a_fmt, ...)                                      \
 	if (Logging::EnableLoadLog && Logging::LogLevel >= 1) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 #define LOGL_3(a_fmt, ...)                                      \
 	if (Logging::EnableLoadLog && Logging::LogLevel >= 2) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 #define LOGL_4(a_fmt, ...)                                      \
 	if (Logging::EnableLoadLog && Logging::LogLevel >= 3) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 // regular logging with timestamps
 
 #define LOG_1(a_fmt, ...)             \
 	if (Logging::EnableLog && Logging::EnableGenericLogging) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 #define LOG_2(a_fmt, ...)                                        \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 1) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 #define LOG_3(a_fmt, ...)                                        \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 2) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 #define LOG_4(a_fmt, ...)                                        \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 3) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 #define LOG_5(a_fmt, ...)                                      \
 	if (Logging::EnableLog && Logging::EnableGenericLogging && Logging::LogLevel >= 4) \
-		loginfo(__func__, a_fmt __VA_OPT__(, ) __VA_ARGS__);
+		loginfo(a_fmt __VA_OPT__(, ) __VA_ARGS__);
 		//static_cast<void>(logger::info(fmt::runtime(fmt::format("{} {:<30} ", Logging::TimePassed(), "[" + std::string(__func__) + "]") + std::string(a_fmt)) __VA_OPT__(, ) __VA_ARGS__));
 
 // profiling

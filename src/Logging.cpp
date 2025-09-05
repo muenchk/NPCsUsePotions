@@ -105,7 +105,7 @@ void Logging::BeginLogging()
 		// if it is joinable and not running it has already finished, but needs to be joined before
 		// it can be destroyed savely
 		logger->request_stop();
-		logger->join();
+		logger->detach();
 		logger->~jthread();
 		delete logger;
 		logger = nullptr;
@@ -118,7 +118,7 @@ void Logging::EndLogging()
 {
 	if (logger != nullptr) {
 		logger->request_stop();
-		logger->join();
+		logger->detach();
 		logger->~jthread();
 		delete logger;
 		logger = nullptr;

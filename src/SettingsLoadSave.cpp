@@ -361,6 +361,8 @@ void Settings::Load()
 
 			// system
 			System::_cycletime = ini.GetLongValue("System", "CycleWaitTime", System::_cycletime);
+			if (System::_cycletime < 500)
+				System::_cycletime = 500;
 			loginfo("Setting: {} {}", "System:            CycleWaitTime", std::to_string(System::_cycletime));
 			_MaxDuration = ini.GetLongValue("System", "MaxDuration", _MaxDuration);
 			loginfo("Setting: {} {}", "System:            MaxDuration", std::to_string(_MaxDuration));

@@ -2571,7 +2571,7 @@ void Settings::LoadDistrConfig()
 				}
 				for (int i = 0; i < cust[b]->death.size(); i++) {
 					auto cit = cust[b]->death[i];
-					LOGL_1("{{}: Death: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
+					LOGL_1("{}: Death: Name: {}\tChance: {}", std::to_string(x), cit->object->GetName(), std::to_string(cit->chance));
 				}
 				for (int i = 0; i < cust[b]->poisons.size(); i++) {
 					auto cit = cust[b]->poisons[i];
