@@ -150,6 +150,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 	case SKSE::MessagingInterface::kPostLoad:
 		Settings::Interfaces::RequestAPIs();
 		break;
+	case SKSE::MessagingInterface::kNewGame:
+		Game::SaveLoad::SendLoadGameCallback();
+		break;
 	}
 }
 
@@ -158,14 +161,6 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	// find logging folder
 
 	InitializeLog();
-
-	loginfo("kAnyFood\t{}", Utility::GetHex((uint64_t)AlchemyBaseEffectSecond::kAnyFood));
-	loginfo("kAnyFortify\t{}", Utility::GetHex((uint64_t)AlchemyBaseEffectSecond::kAnyFortify));
-	loginfo("kAnyPoison\t{}", Utility::GetHex((uint64_t)AlchemyBaseEffectSecond::kAnyPoison));
-	loginfo("kAnyPotion\t{}", Utility::GetHex((uint64_t)AlchemyBaseEffectSecond::kAnyPotion));
-	loginfo("kAnyRegen\t{}", Utility::GetHex((uint64_t)AlchemyBaseEffectSecond::kAnyRegen));
-	loginfo("kAnyFortifyRegen\t{}", Utility::GetHex(((uint64_t)AlchemyBaseEffectSecond::kAnyRegen | (uint64_t)AlchemyBaseEffectSecond::kAnyFortify)));
-	loginfo("kAllPotions\t{}", Utility::GetHex((uint64_t)AlchemyBaseEffectSecond::kAllPotions));
 
 	loginfo("Game Version: {}", a_skse->RuntimeVersion().string());
 

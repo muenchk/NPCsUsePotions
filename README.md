@@ -22,19 +22,10 @@ Bug reports and suggestions should be posted in the Bug / Forum section of the n
 * [VR Address Library for SKSEVR](https://www.nexusmods.com/skyrimspecialedition/mods/58101)
 	* For the VR Edition
 
-## Building for SSE / AE
+## Building for SSE / AE / VR
 ```
 git clone https://github.com/muenchk/NPCsUsePotions.git
 cd NPCsUsePotions
 cmake --preset all 				
 cmake --build build --config Release
-```
-
-## Building for VR
-```
-git clone https://github.com/muenchk/NPCsUsePotions.git
-cd NPCsUsePotions
-git checkout vr
-cmake --preset vr				# for Skyrim VR
-cmake --build buildvr --config Release
 ```
