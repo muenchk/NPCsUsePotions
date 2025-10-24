@@ -144,16 +144,28 @@ namespace Events
 
 		//-------------------Timing--------------------------
 
+		/// <summary>
+		/// amount of time used to process events since the last main actor handling
+		/// </summary>
 		static inline std::chrono::nanoseconds _eventTime = 0ns;
 
+		/// <summary>
+		/// time when mods main actor handling has last been run
+		/// </summary>
 		static inline std::chrono::steady_clock::time_point _lastcyclebegin = std::chrono::steady_clock::now();
 
 		//-----------------CheckActors-----------------------
 
+		/// <summary>
+		/// weak reference to the player info
+		/// </summary>
 		static inline std::weak_ptr<ActorInfo> playerweak;
 
 		//--------------------Brawl--------------------------
-
+		
+		/// <summary>
+		/// Quest that handles brawls. Items should not be used during brawls.
+		/// </summary>
 		static inline RE::TESQuest* DGIntimidate = nullptr;
 
 		//---------------Access Functions--------------------

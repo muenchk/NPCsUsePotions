@@ -668,19 +668,33 @@ private:
 	/// map that defines overwrites for AlchemyEffects for MagicEffects
 	/// </summary>
 	static inline std::unordered_map<RE::FormID, AlchemicEffect> _magicEffectAlchMap;
-
+	/// <summary>
+	/// map of all effect categories read during rule loading
+	/// </summary>
 	static inline std::unordered_map<std::string, EffCategory*> _internEffectCategories;
-
+	/// <summary>
+	/// map of all category presets read during rule loading
+	/// </summary>
 	static inline std::unordered_map<std::string, EffCategoryPreset*> _internEffectCategoryPresets;
-
+	/// <summary>
+	/// map of all effect preset read during rule loading
+	/// </summary>
 	static inline std::unordered_map<std::string, EffectPreset*> _internEffectPresets;
-
+	/// <summary>
+	/// multiplcative factors for the alchemyeffect distribution probabilities for potions
+	/// </summary>
 	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersPotion;
-
+	/// <summary>
+	/// multiplcative factors for the alchemyeffect distribution probabilities for poisons
+	/// </summary>
 	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersPoison;
-
+	/// <summary>
+	/// multiplcative factors for the alchemyeffect distribution probabilities for fortify potions
+	/// </summary>
 	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersFortify;
-
+	/// <summary>
+	/// multiplcative factors for the alchemyeffect distribution probabilities for food
+	/// </summary>
 	static inline std::unordered_map<AlchemicEffect, float> _probabilityAdjustersFood;
 
 	
@@ -815,9 +829,25 @@ public:
 	/// </summary>
 	static inline std::unordered_map<RE::FormID, AlchemicEffect>* magicEffectAlchMap() { return initialised ? &_magicEffectAlchMap : &_dummyMap7; }
 
+	/// <summary>
+	/// returns the map that contains probability adjusters for potions
+	/// </summary>
+	/// <returns></returns>
 	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersPotion() { return initialised ? &_probabilityAdjustersPotion : &_dummyMap8; }
+	/// <summary>
+	/// returns the map that contains probability adjusters for poisons
+	/// </summary>
+	/// <returns></returns>
 	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersPoison() { return initialised ? &_probabilityAdjustersPoison : &_dummyMap8; }
+	/// <summary>
+	/// returns the map that contains probability adjusters for fortify potions
+	/// </summary>
+	/// <returns></returns>
 	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersFortify() { return initialised ? &_probabilityAdjustersFortify : &_dummyMap8; }
+	/// <summary>
+	/// returns the map that contains probability adjusters for food
+	/// </summary>
+	/// <returns></returns>
 	static inline std::unordered_map<AlchemicEffect, float>* probabilityAdjustersFood() { return initialised ? &_probabilityAdjustersFood : &_dummyMap8; }
 
 

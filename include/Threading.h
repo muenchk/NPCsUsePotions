@@ -2,6 +2,9 @@
 
 #include <atomic>
 
+/// <summary>
+/// Spinlock aka. Busy Waiting
+/// </summary>
 class Spinlock
 {
 	std::atomic_flag* _flag;
@@ -21,6 +24,9 @@ public:
 	}
 };
 
+/// <summary>
+/// Spinlock aka. shadow mutex
+/// </summary>
 class SpinlockA
 {
 	std::atomic_flag* _flag;

@@ -1,7 +1,11 @@
 #pragma once
 
 
-
+/// <summary>
+/// thread safe std::Sdeque wrapper
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <typeparam name="Allocator"></typeparam>
 template <class T, class Allocator = std::pmr::polymorphic_allocator<T>>
 class ts_deque
 {

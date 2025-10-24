@@ -107,7 +107,15 @@ namespace Game
 		static void SendLoadGameCallback();
 	};
 
+	/// <summary>
+	/// Returns whether the player is currently fast traveling
+	/// </summary>
+	/// <returns></returns>
 	bool IsFastTravelling();
 
+	/// <summary>
+	/// Sets whether the player is currently fast traveling
+	/// </summary>
+	/// <param name="travelling"></param>
 	void SetFastTraveling(bool travelling = true);
 }

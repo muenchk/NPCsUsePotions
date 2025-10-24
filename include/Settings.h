@@ -810,15 +810,33 @@ public:
 	/// </summary>
 	static inline RE::BGSEquipSlot* Equip_Potion;
 
+	/// <summary>
+	/// Game Sound Descriptor played when a potion is used
+	/// </summary>
 	static inline RE::BGSSoundDescriptorForm* PotionUse;
+	/// <summary>
+	/// Game Sound Descriptor played when a poison is used
+	/// </summary>
 	static inline RE::BGSSoundDescriptorForm* PoisonUse;
+	/// <summary>
+	/// Game Sound Descriptor played when a food is consumed
+	/// </summary>
 	static inline RE::BGSSoundDescriptorForm* FoodEat;
 	[[deprecated]] static inline bool FixedPotionUse = true;
 	[[deprecated]] static inline bool FixedPoisonUse = true;
 	[[deprecated]] static inline bool FixedFoodEat = true;
 
+	/// <summary>
+	/// array of pluginnames sorted according to their pluginID
+	/// </summary>
 	static inline std::string pluginnames[256+4096];
+	/// <summary> 
+	/// maps pluginnames to their respective pluginIDs (according to load order)
+	/// </summary>
 	static inline std::unordered_map<std::string, uint32_t> pluginNameMap;
+	/// <summary>
+	/// maps plugin indexes to the plugins name
+	/// </summary>
 	static inline std::unordered_map<uint32_t, std::string> pluginIndexMap;
 
 	/// <summary>
@@ -884,5 +902,9 @@ public:
 	/// </summary>
 	static void CleanAlchemyEffects();
 
+	/// <summary>
+	/// Calculates TESRace that do not possess a potion slot and may crash when a potion is used on them
+	/// </summary>
+	/// <returns></returns>
 	static std::set<RE::FormID> CalcRacesWithoutPotionSlot();
 };

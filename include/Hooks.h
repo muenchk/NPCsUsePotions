@@ -71,6 +71,7 @@ namespace Hooks
 
 	/// <summary>
 	/// executed when fading to fast travel (from world map, not carriage)
+	/// CURRENTLY UNUSED
 	/// </summary>
 	class FadeThenFastTravelHook
 	{
@@ -90,7 +91,9 @@ namespace Hooks
 		static inline REL::Relocation<decltype(FadeThenFastTravel)> _FadeThenFastTravel;
 	};
 
-
+	/// <summary>
+	/// Hooks for when fast travel begins / ends
+	/// </summary>
 	class Papyrus_FastTravelHook
 	{
 	private:
@@ -158,12 +161,21 @@ namespace Hooks
 		}
 
 	private:
+		/// <summary>
+		/// Hook executed when the player begins fast traveling
+		/// </summary>
 		static void FastTravelBegin();
 
+		/// <summary>
+		/// Hook executed when the fast travel ends
+		/// </summary>
 		static void FastTravelEnd();
 
 	};
 
+	/// <summary>
+	/// Installs all hooks
+	/// </summary>
 	void InstallHooks();
 }
 

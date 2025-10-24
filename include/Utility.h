@@ -235,12 +235,17 @@ public:
 	static std::string PrintDistribution(std::vector<std::tuple<int, AlchemicEffect>> distribution);
 
 	/// <summary>
-	/// Returns a string representation of an effect map
+	/// Returns a string representation of an effect map [old version]
 	/// </summary>
 	/// <param name="distribution"></param>
 	/// <returns></returns>
 	static std::string PrintEffectMap(std::map<AlchemicEffect, float> effectMap);
 
+	/// <summary>
+	/// Returns a string representation of an effect map
+	/// </summary>
+	/// <param name="effectMap"></param>
+	/// <returns></returns>
 	static std::string PrintEffectMap(std::unordered_map<AlchemicEffect, Distribution::Effect>& effectMap);
 
 	/// <summary>
@@ -331,6 +336,11 @@ public:
 		return count;
 	}
 
+	/// <summary>
+	/// returns a vector of characters in the input str as well as the number of occurences
+	/// </summary>
+	/// <param name="str"></param>
+	/// <returns></returns>
 	static std::vector<std::pair<char, int32_t>> GetSymbols(std::string str);
 
 
