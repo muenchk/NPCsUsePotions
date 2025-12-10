@@ -474,8 +474,10 @@ namespace Events
 				RE::ActorHandle handle;
 				{
 					std::unique_lock<std::mutex> lock(lockalternateregistration);
-					handle = alternateregistration.front();
-					alternateregistration.pop();
+					if (alternateregistration.size() > 0) {
+						handle = alternateregistration.front();
+						alternateregistration.pop();
+					}
 				}
 				if (handle && handle.get() && handle.get().get()) {
 					Main::RegisterNPC(handle.get().get());
@@ -485,8 +487,10 @@ namespace Events
 				RE::ActorHandle handle;
 				{
 					std::unique_lock<std::mutex> lock(lockalternateregistration);
-					handle = alternateunregistration.front();
-					alternateunregistration.pop();
+					if (alternateunregistration.size() > 0) {
+						handle = alternateunregistration.front();
+						alternateunregistration.pop();
+					}
 				}
 				if (handle && handle.get() && handle.get().get()) {
 					Main::UnregisterNPC(handle.get().get());
