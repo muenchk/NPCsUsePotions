@@ -1209,7 +1209,7 @@ void Distribution::FilterDistributionExcludedItems(std::vector<RE::AlchemyItem*>
 	auto ritr = items.begin();
 	while (ritr != items.end()) {
 		if (_excludedDistrItems.contains((*ritr)->GetFormID()))
-			ritr == items.erase(ritr);
+			ritr = items.erase(ritr);
 		else
 			ritr++;
 	}

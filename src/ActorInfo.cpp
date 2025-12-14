@@ -1939,7 +1939,7 @@ bool ActorInfo::IsPoisoned()
 					if (*itr) {
 						effects.push_back((*itr)->GetBaseObject());
 					}
-					itr++;
+					static_cast<void>(itr++);
 				}
 				for (auto eff : effects) {
 					if (eff) {

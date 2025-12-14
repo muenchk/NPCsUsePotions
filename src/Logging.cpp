@@ -92,6 +92,9 @@ void Logging::AsyncLogger(std::stop_token stop)
 			case MessageType::Exclusion:
 				LogExcl::write(pair.second);
 				break;
+			case MessageType::Distr:
+				LogDistr::write(pair.second);
+				break;
 			}
 		} catch (std::exception&) {
 		}
@@ -250,6 +253,34 @@ void LogExcl::Close()
 	lock.release();
 }
 void LogExcl::write(std::string message)
+{
+	lock.acquire();
+	if (_stream) {
+		_stream->write(message.c_str(), message.size());
+		_stream->flush();
+	}
+	lock.release();
+}
+
+void LogDistr::Init(std::string pluginname)
+{
+	lock.acquire();
+	_stream = new std::ofstream(Logging::log_directory / pluginname / (pluginname + "_distr.log"), std::ios_base::out | std::ios_base::trunc);
+	lock.release();
+}
+
+void LogDistr::Close()
+{
+	lock.acquire();
+	if (_stream != nullptr) {
+		_stream->flush();
+		_stream->close();
+		delete _stream;
+		_stream = nullptr;
+	}
+	lock.release();
+}
+void LogDistr::write(std::string message)
 {
 	lock.acquire();
 	if (_stream) {

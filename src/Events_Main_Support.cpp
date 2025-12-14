@@ -524,6 +524,7 @@ namespace Events
 						}
 						acinfo->AddItem(items[i], 1);
 						LOG_4("added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo));
+						logdistr("Actor:\t{}\tItem:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(items[i]));
 					}
 					acinfo->SetLastDistrTime(RE::Calendar::GetSingleton()->GetDaysPassed());
 				}

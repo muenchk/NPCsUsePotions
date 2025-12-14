@@ -50,6 +50,7 @@ namespace
 		Profile::Init(Settings::PluginNamePlain);
 		LogUsage::Init(Settings::PluginNamePlain);
 		LogExcl::Init(Settings::PluginNamePlain);
+		LogDistr::Init(Settings::PluginNamePlain);
 		Logging::BeginLogging();
 	}
 }

@@ -106,6 +106,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 			"/wd5220" # 'member': a non-static data member with a volatile qualified type no longer implies that compiler generated copy / move constructors and copy / move assignment operators are not trivial
 			#"/wd4333" # to large right shift -> data loss
 
+			"/Ob3"
+
 			"$<$<CONFIG:DEBUG>:>"
 			"$<$<CONFIG:RELEASE>:/Zc:inline;/JMC-;/Ob3>"
 	)

@@ -201,7 +201,8 @@ public:
 		Log,
 		Profile,
 		Usage,
-		Exclusion
+		Exclusion,
+		Distr
 	};
 
 private:
@@ -430,3 +431,47 @@ struct [[maybe_unused]] logexcl
 
 template <class... Args>
 logexcl(fmt::format_string<Args...>, Args&&...) -> logexcl<Args...>;
+
+
+
+class LogDistr
+{
+	static inline std::ofstream* _stream = nullptr;
+	static inline std::binary_semaphore lock{ 1 };
+
+public:
+	/// <summary>
+	/// Inits item usage log
+	/// </summary>
+	/// <param name="pluginname"></param>
+	static void Init(std::string pluginname);
+
+	/// <summary>
+	/// Closes item usage log
+	/// </summary>
+	static void Close();
+
+	/// <summary>
+	/// writes to the item usage log
+	/// </summary>
+	/// <param name="message"></param>
+	static void write(std::string message);
+};
+template <class... Args>
+struct [[maybe_unused]] logdistr
+{
+	logdistr() = delete;
+
+	explicit logdistr(
+		fmt::format_string<Args...> a_fmt,
+		Args&&... a_args)
+	{
+		if (Logging::EnableLog) {
+			std::string mes = "[usage] [" + Logging::TimePassed() + "] " + fmt::format(a_fmt, std::forward<Args>(a_args)...) + "\n";
+			Logging::LogMessage(Logging::MessageType::Distr, mes);
+		}
+	}
+};
+
+template <class... Args>
+logdistr(fmt::format_string<Args...>, Args&&...) -> logdistr<Args...>;
