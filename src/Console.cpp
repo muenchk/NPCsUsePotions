@@ -194,6 +194,7 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	console->Print("Reloading Settings...");
 	Settings::Load();
 	console->Print("Reloading Distribution rules...");
+	Settings::ResetDistrConfig();
 	Settings::LoadDistrConfig();
 	if (preproc)
 		Events::Main::UnlockProcessing();

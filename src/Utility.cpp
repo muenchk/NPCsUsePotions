@@ -2243,7 +2243,7 @@ uint32_t Utility::Mods::GetPluginIndex(std::string pluginname)
 	if (itr != Settings::pluginNameMap.end()) {
 		return itr->second;
 	} else
-		return 0x1;
+		return MAXUINT32;
 }
 
 uint32_t Utility::Mods::GetPluginIndex(RE::TESForm* form)

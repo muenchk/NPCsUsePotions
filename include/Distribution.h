@@ -976,6 +976,7 @@ public:
 	friend void Settings::CheckCellForActors(RE::FormID cellid);
 	friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);
 	friend void Settings::LoadDistrConfig();
+	friend void Settings::ResetDistrConfig();
 	friend void Settings::ApplySkillBoostPerks();
 	friend void Settings::ClassifyItems();
 	friend void Settings::UpdateSettings();

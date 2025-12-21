@@ -87,6 +87,11 @@ public:
 	static void LoadDistrConfig();
 
 	/// <summary>
+	/// Resets the distribution config
+	/// </summary>
+	static void ResetDistrConfig();
+
+	/// <summary>
 	/// Calculates the distribution rules of all actors in the cell with [cellid]
 	/// </summary>
 	/// <param name="cellid">id of the cell the check</param>

@@ -110,6 +110,54 @@ std::set<RE::FormID> Settings::CalcRacesWithoutPotionSlot()
 	return ret;
 }
 
+void Settings::ResetDistrConfig()
+{
+	for (auto rule : Distribution::_rules)
+		delete rule;
+	Distribution::_rules.clear();
+	Distribution::_npcMap.clear();
+	Distribution::_assocMap.clear();
+	Distribution::_bosses.clear();
+	Distribution::_excludedNPCs.clear();
+	Distribution::_excludedAssoc.clear();
+	Distribution::_excludedItems.clear();
+	Distribution::_excludedDistrItems.clear();
+	Distribution::_excludedItemsBackup.clear();
+	Distribution::_excludedItemsPlayer.clear();
+	Distribution::_baselineExclusions.clear();
+	Distribution::_whitelistItems.clear();
+	
+	for (auto [_, custvec] : Distribution::_customItems)
+		for (auto str : custvec)
+			delete str;
+	Distribution::_customItems.clear();
+	Distribution::_excludedPlugins.clear();
+	Distribution::_itemStrengthMap.clear();
+	Distribution::_actorStrengthMap.clear();
+	Distribution::_followerFactions.clear();
+	Distribution::_dosageItemMap.clear();
+	Distribution::_dosageEffectMap.clear();
+	Distribution::_excludedEffects.clear();
+	Distribution::_excludedPlugins_NPCs.clear();
+	Distribution::_whitelistNPCs.clear();
+	Distribution::_whitelistNPCsPlugin.clear();
+	Distribution::_alcohol.clear();
+	Distribution::_magicEffectAlchMap.clear();
+	for (auto [_, cat] : Distribution::_internEffectCategories)
+		delete cat;
+	Distribution::_internEffectCategories.clear();
+	for (auto [_, preset] : Distribution::_internEffectCategoryPresets)
+		delete preset;
+	Distribution::_internEffectCategoryPresets.clear();
+	for (auto [_, preset] : Distribution::_internEffectPresets)
+		delete preset;
+	Distribution::_internEffectPresets.clear();
+	Distribution::_probabilityAdjustersPotion.clear();
+	Distribution::_probabilityAdjustersPoison.clear();
+	Distribution::_probabilityAdjustersFortify.clear();
+	Distribution::_probabilityAdjustersFood.clear();
+}
+
 void Settings::LoadDistrConfig()
 {
 	// set to false, to avoid other funcions running stuff on our variables

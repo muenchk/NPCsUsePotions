@@ -11,7 +11,7 @@
 #include "Papyrus.h"
 
 #include <string>
-#include <ShlObj_core.h>
+//#include <ShlObj_core.h>
 
 namespace
 {

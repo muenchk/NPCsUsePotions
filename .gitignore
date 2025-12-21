@@ -10,6 +10,7 @@ src/out
 src/TODO.txt
 src/Changelog.txt
 startenv.bat
+startenv26.bat
 startenvlaptop.bat
 out/
 cloc_langdef.txt
