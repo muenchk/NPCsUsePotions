@@ -373,6 +373,336 @@ std::string Utility::ToString(AlchemicEffect ae)
 	}
 }
 
+std::string Utility::ToStringLocalized(AlchemicEffect ae)
+{
+	std::string result = "";
+	if (ae.IsEffect()) {
+		switch (ae.AlchemyBaseEffectFirst()) {
+		case AlchemyBaseEffectFirst::kNone:
+			break;
+		default:
+			SKSE::Translation::Translate("$NUP_kUnknown", result);
+			return result;
+		}
+		switch (ae.AlchemyBaseEffectSecond()) {
+		case AlchemyBaseEffectSecond::kAlteration:
+			SKSE::Translation::Translate("$NUP_kAlteration", result);
+			return result;
+		case AlchemyBaseEffectSecond::kAnyFood:
+			SKSE::Translation::Translate("$NUP_kAnyFood", result);
+			return result;
+		case AlchemyBaseEffectSecond::kAnyFortify:
+			SKSE::Translation::Translate("$NUP_kAnyFortify", result);
+			return result;
+		case AlchemyBaseEffectSecond::kAnyPoison:
+			SKSE::Translation::Translate("$NUP_kAnyPoison", result);
+			return result;
+		case AlchemyBaseEffectSecond::kAnyPotion:
+			SKSE::Translation::Translate("$NUP_kAnyPotion", result);
+			return result;
+		case AlchemyBaseEffectSecond::kArchery:
+			SKSE::Translation::Translate("$NUP_kArchery", result);
+			return result;
+		case AlchemyBaseEffectSecond::kAttackDamageMult:
+			SKSE::Translation::Translate("$NUP_kAttackDamageMult", result);
+			return result;
+		case AlchemyBaseEffectSecond::kBlock:
+			SKSE::Translation::Translate("$NUP_kBlock", result);
+			return result;
+		case AlchemyBaseEffectSecond::kBlood:
+			SKSE::Translation::Translate("$NUP_kBlood", result);
+			return result;
+		case AlchemyBaseEffectSecond::kBowSpeed:
+			SKSE::Translation::Translate("$NUP_kBowSpeed", result);
+			return result;
+		case AlchemyBaseEffectSecond::kConjuration:
+			SKSE::Translation::Translate("$NUP_kConjuration", result);
+			return result;
+		case AlchemyBaseEffectSecond::kCriticalChance:
+			SKSE::Translation::Translate("$NUP_kCriticalChance", result);
+			return result;
+		case AlchemyBaseEffectSecond::kDamageResist:
+			SKSE::Translation::Translate("$NUP_kDamageResist", result);
+			return result;
+		case AlchemyBaseEffectSecond::kDestruction:
+			SKSE::Translation::Translate("$NUP_kDestruction", result);
+			return result;
+		case AlchemyBaseEffectSecond::kFear:
+			SKSE::Translation::Translate("$NUP_kFear", result);
+			return result;
+		case AlchemyBaseEffectSecond::kFrenzy:
+			SKSE::Translation::Translate("$NUP_kFrenzy", result);
+			return result;
+		case AlchemyBaseEffectSecond::kHealRate:
+			SKSE::Translation::Translate("$NUP_kHealRate", result);
+			return result;
+		case AlchemyBaseEffectSecond::kHealRateMult:
+			SKSE::Translation::Translate("$NUP_kHealRateMult", result);
+			return result;
+		case AlchemyBaseEffectSecond::kHealth:
+			SKSE::Translation::Translate("$NUP_kHealth", result);
+			return result;
+		case AlchemyBaseEffectSecond::kHeavyArmor:
+			SKSE::Translation::Translate("$NUP_kHeavyArmor", result);
+			return result;
+		case AlchemyBaseEffectSecond::kIllusion:
+			SKSE::Translation::Translate("$NUP_kIllusion", result);
+			return result;
+		case AlchemyBaseEffectSecond::kInvisibility:
+			SKSE::Translation::Translate("$NUP_kInvisibility", result);
+			return result;
+		case AlchemyBaseEffectSecond::kLightArmor:
+			SKSE::Translation::Translate("$NUP_kLightArmor", result);
+			return result;
+		case AlchemyBaseEffectSecond::kLockpicking:
+			SKSE::Translation::Translate("$NUP_kLockpicking", result);
+			return result;
+		case AlchemyBaseEffectSecond::kMagicka:
+			SKSE::Translation::Translate("$NUP_kMagicka", result);
+			return result;
+		case AlchemyBaseEffectSecond::kMagickaRate:
+			SKSE::Translation::Translate("$NUP_kMagickaRate", result);
+			return result;
+		case AlchemyBaseEffectSecond::kMagickaRateMult:
+			SKSE::Translation::Translate("$NUP_kMagickaRateMult", result);
+			return result;
+		case AlchemyBaseEffectSecond::kMeleeDamage:
+			SKSE::Translation::Translate("$NUP_kMeleeDamage", result);
+			return result;
+		case AlchemyBaseEffectSecond::kNone:
+			SKSE::Translation::Translate("$NUP_kNone", result);
+			return result;
+		case AlchemyBaseEffectSecond::kOneHanded:
+			SKSE::Translation::Translate("$NUP_kOneHanded", result);
+			return result;
+		case AlchemyBaseEffectSecond::kParalysis:
+			SKSE::Translation::Translate("$NUP_kParalysis", result);
+			return result;
+		case AlchemyBaseEffectSecond::kPickpocket:
+			SKSE::Translation::Translate("$NUP_kPickpocket", result);
+			return result;
+		case AlchemyBaseEffectSecond::kPoisonResist:
+			SKSE::Translation::Translate("$NUP_kPoisonResist", result);
+			return result;
+		case AlchemyBaseEffectSecond::kReflectDamage:
+			SKSE::Translation::Translate("$NUP_kReflectDamage", result);
+			return result;
+		case AlchemyBaseEffectSecond::kResistDisease:
+			SKSE::Translation::Translate("$NUP_kResistDisease", result);
+			return result;
+		case AlchemyBaseEffectSecond::kResistFire:
+			SKSE::Translation::Translate("$NUP_kResistFire", result);
+			return result;
+		case AlchemyBaseEffectSecond::kResistFrost:
+			SKSE::Translation::Translate("$NUP_kResistFrost", result);
+			return result;
+		case AlchemyBaseEffectSecond::kResistMagic:
+			SKSE::Translation::Translate("$NUP_kResistMagic", result);
+			return result;
+		case AlchemyBaseEffectSecond::kResistShock:
+			SKSE::Translation::Translate("$NUP_kResistShock", result);
+			return result;
+		case AlchemyBaseEffectSecond::kRestoration:
+			SKSE::Translation::Translate("$NUP_kRestoration", result);
+			return result;
+		case AlchemyBaseEffectSecond::kSneak:
+			SKSE::Translation::Translate("$NUP_kSneak", result);
+			return result;
+		case AlchemyBaseEffectSecond::kSpeedMult:
+			SKSE::Translation::Translate("$NUP_kSpeedMult", result);
+			return result;
+		case AlchemyBaseEffectSecond::kStamina:
+			SKSE::Translation::Translate("$NUP_kStamina", result);
+			return result;
+		case AlchemyBaseEffectSecond::kStaminaRate:
+			SKSE::Translation::Translate("$NUP_kStaminaRate", result);
+			return result;
+		case AlchemyBaseEffectSecond::kStaminaRateMult:
+			SKSE::Translation::Translate("$NUP_kStaminaRateMult", result);
+			return result;
+		case AlchemyBaseEffectSecond::kTwoHanded:
+			SKSE::Translation::Translate("$NUP_kTwoHanded", result);
+			return result;
+		case AlchemyBaseEffectSecond::kUnarmedDamage:
+			SKSE::Translation::Translate("$NUP_kUnarmedDamage", result);
+			return result;
+		case AlchemyBaseEffectSecond::kWeaponSpeedMult:
+			SKSE::Translation::Translate("$NUP_kWeaponSpeedMult", result);
+			return result;
+		case AlchemyBaseEffectSecond::kCureDisease:
+			SKSE::Translation::Translate("$NUP_kCureDisease", result);
+			return result;
+		case AlchemyBaseEffectSecond::kCurePoison:
+			SKSE::Translation::Translate("$NUP_kCurePoison", result);
+			return result;
+		case AlchemyBaseEffectSecond::kEnchanting:
+			SKSE::Translation::Translate("$NUP_kEnchanting", result);
+			return result;
+		case AlchemyBaseEffectSecond::kWaterbreathing:
+			SKSE::Translation::Translate("$NUP_kWaterbreathing", result);
+			return result;
+		case AlchemyBaseEffectSecond::kSmithing:
+			SKSE::Translation::Translate("$NUP_kSmithing", result);
+			return result;
+		case AlchemyBaseEffectSecond::kSpeech:
+			SKSE::Translation::Translate("$NUP_kSpeech", result);
+			return result;
+		case AlchemyBaseEffectSecond::kCarryWeight:
+			SKSE::Translation::Translate("$NUP_kCarryWeight", result);
+			return result;
+		case AlchemyBaseEffectSecond::kAlchemy:
+			SKSE::Translation::Translate("$NUP_kAlchemy", result);
+			return result;
+		case AlchemyBaseEffectSecond::kPersuasion:
+			SKSE::Translation::Translate("$NUP_kPersuasion", result);
+			return result;
+		case AlchemyBaseEffectSecond::kFortifyHealth:
+			SKSE::Translation::Translate("$NUP_kFortifyHealth", result);
+			return result;
+		case AlchemyBaseEffectSecond::kFortifyMagicka:
+			SKSE::Translation::Translate("$NUP_kFortifyMagicka", result);
+			return result;
+		case AlchemyBaseEffectSecond::kFortifyStamina:
+			SKSE::Translation::Translate("$NUP_kFortifyStamina", result);
+			return result;
+		case AlchemyBaseEffectSecond::kCustom:
+			SKSE::Translation::Translate("$NUP_kCustom", result);
+			return result;
+		case AlchemyBaseEffectSecond::kShield:
+			SKSE::Translation::Translate("$NUP_kShield", result);
+			return result;
+		case AlchemyBaseEffectSecond::kDamageUndead:
+			SKSE::Translation::Translate("$NUP_kDamageUndead", result);
+			return result;
+		default:
+			SKSE::Translation::Translate("$NUP_kUnknown", result);
+			return result;
+		}
+	} else {
+		std::string ret = "|";
+		if ((ae & AlchemicEffect::kAlteration).IsValid())
+			ret += "Alteration|";
+		if ((ae & AlchemicEffect::kArchery).IsValid())
+			ret += "Archery|";
+		if ((ae & AlchemicEffect::kAttackDamageMult).IsValid())
+			ret += "AttackDamageMult|";
+		if ((ae & AlchemicEffect::kBlock).IsValid())
+			ret += "Block|";
+		if ((ae & AlchemicEffect::kBlood).IsValid())
+			ret += "Blood|";
+		if ((ae & AlchemicEffect::kBowSpeed).IsValid())
+			ret += "BowSpeed|";
+		if ((ae & AlchemicEffect::kConjuration).IsValid())
+			ret += "Conjuration|";
+		if ((ae & AlchemicEffect::kCriticalChance).IsValid())
+			ret += "CriticalChance|";
+		if ((ae & AlchemicEffect::kDamageResist).IsValid())
+			ret += "DamageResist|";
+		if ((ae & AlchemicEffect::kDestruction).IsValid())
+			ret += "Destruction|";
+		if ((ae & AlchemicEffect::kFear).IsValid())
+			ret += "Fear|";
+		if ((ae & AlchemicEffect::kFrenzy).IsValid())
+			ret += "Frenzy|";
+		if ((ae & AlchemicEffect::kHealRate).IsValid())
+			ret += "HealRate|";
+		if ((ae & AlchemicEffect::kHealRateMult).IsValid())
+			ret += "HealRateMult|";
+		if ((ae & AlchemicEffect::kHealth).IsValid())
+			ret += "Health|";
+		if ((ae & AlchemicEffect::kHeavyArmor).IsValid())
+			ret += "HeavyArmor|";
+		if ((ae & AlchemicEffect::kIllusion).IsValid())
+			ret += "Illusion|";
+		if ((ae & AlchemicEffect::kInvisibility).IsValid())
+			ret += "Invisibility|";
+		if ((ae & AlchemicEffect::kLightArmor).IsValid())
+			ret += "LightArmor|";
+		if ((ae & AlchemicEffect::kLockpicking).IsValid())
+			ret += "Lockpicking|";
+		if ((ae & AlchemicEffect::kMagicka).IsValid())
+			ret += "Magicka|";
+		if ((ae & AlchemicEffect::kMagickaRate).IsValid())
+			ret += "MagickaRate|";
+		if ((ae & AlchemicEffect::kMagickaRateMult).IsValid())
+			ret += "MagickaRateMult|";
+		if ((ae & AlchemicEffect::kMeleeDamage).IsValid())
+			ret += "MeleeDamage|";
+		if ((ae & AlchemicEffect::kNone).IsValid())
+			ret += "None|";
+		if ((ae & AlchemicEffect::kOneHanded).IsValid())
+			ret += "OneHanded|";
+		if ((ae & AlchemicEffect::kParalysis).IsValid())
+			ret += "Paralysis|";
+		if ((ae & AlchemicEffect::kPickpocket).IsValid())
+			ret += "Pickpocket|";
+		if ((ae & AlchemicEffect::kPoisonResist).IsValid())
+			ret += "PoisonResist|";
+		if ((ae & AlchemicEffect::kReflectDamage).IsValid())
+			ret += "ReflectDamage|";
+		if ((ae & AlchemicEffect::kResistDisease).IsValid())
+			ret += "ResistDisease|";
+		if ((ae & AlchemicEffect::kResistFire).IsValid())
+			ret += "ResistFire|";
+		if ((ae & AlchemicEffect::kResistFrost).IsValid())
+			ret += "ResistFrost|";
+		if ((ae & AlchemicEffect::kResistMagic).IsValid())
+			ret += "ResistMagic|";
+		if ((ae & AlchemicEffect::kResistShock).IsValid())
+			ret += "ResistShock|";
+		if ((ae & AlchemicEffect::kRestoration).IsValid())
+			ret += "Restoration|";
+		if ((ae & AlchemicEffect::kSneak).IsValid())
+			ret += "Sneak|";
+		if ((ae & AlchemicEffect::kSpeedMult).IsValid())
+			ret += "SpeedMult|";
+		if ((ae & AlchemicEffect::kStamina).IsValid())
+			ret += "Stamina|";
+		if ((ae & AlchemicEffect::kStaminaRate).IsValid())
+			ret += "StaminaRate|";
+		if ((ae & AlchemicEffect::kStaminaRateMult).IsValid())
+			ret += "StaminaRateMult|";
+		if ((ae & AlchemicEffect::kTwoHanded).IsValid())
+			ret += "TwoHanded|";
+		if ((ae & AlchemicEffect::kUnarmedDamage).IsValid())
+			ret += "UnarmedDamage|";
+		if ((ae & AlchemicEffect::kWeaponSpeedMult).IsValid())
+			ret += "WeapenSpeedMult|";
+		if ((ae & AlchemicEffect::kCureDisease).IsValid())
+			ret += "CureDisease|";
+		if ((ae & AlchemicEffect::kCurePoison).IsValid())
+			ret += "CurePoison|";
+		if ((ae & AlchemicEffect::kEnchanting).IsValid())
+			ret += "Enchanting|";
+		if ((ae & AlchemicEffect::kWaterbreathing).IsValid())
+			ret += "Waterbreathing|";
+		if ((ae & AlchemicEffect::kSmithing).IsValid())
+			ret += "Smithing|";
+		if ((ae & AlchemicEffect::kSpeech).IsValid())
+			ret += "Speech|";
+		if ((ae & AlchemicEffect::kCarryWeight).IsValid())
+			ret += "CarryWeight|";
+		if ((ae & AlchemicEffect::kAlchemy).IsValid())
+			ret += "Alchemy|";
+		if ((ae & AlchemicEffect::kPersuasion).IsValid())
+			ret += "Persuasion|";
+		if ((ae & AlchemicEffect::kFortifyHealth).IsValid())
+			ret += "FortifyHealth|";
+		if ((ae & AlchemicEffect::kFortifyMagicka).IsValid())
+			ret += "FortifyMagicka|";
+		if ((ae & AlchemicEffect::kFortifyStamina).IsValid())
+			ret += "FortifyStamina|";
+		if ((ae & AlchemicEffect::kCustom).IsValid())
+			ret += "Custom|";
+		if ((ae & AlchemicEffect::kShield).IsValid())
+			ret += "Shield|";
+
+		if (ret == "|")
+			return "|Unknown|";
+		return ret;
+	}
+}
+
 AlchemicEffect FromString(std::string str)
 {
 	if (Compare(str, "Alteration"))

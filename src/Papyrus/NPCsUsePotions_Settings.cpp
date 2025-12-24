@@ -305,7 +305,7 @@ namespace Papyrus
 
 		RE::BSFixedString ToStringAlchemicEffect(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 		{
-			return Utility::ToString(AlchemicEffect::GetFromBaseValue(value));
+			return Utility::ToStringLocalized(AlchemicEffect::GetFromBaseValue(value));
 		}
 
 		namespace System

@@ -221,6 +221,13 @@ public:
 	static std::string ToString(AlchemicEffect ae);
 
 	/// <summary>
+	/// Converst an AlchemicEffect to a localized string
+	/// </summary>
+	/// <param name="ae"></param>
+	/// <returns></returns>
+	static std::string ToStringLocalized(AlchemicEffect ae);
+
+	/// <summary>
 	/// Converts a string with the name of an alchemiceffect to an alchemiceffect
 	/// </summary>
 	/// <param name="str"></param>
