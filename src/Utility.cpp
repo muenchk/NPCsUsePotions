@@ -3,6 +3,9 @@
 #include <Distribution.h>
 #include "Compatibility.h"
 
+
+#define TRANSLATE(in, out) if (SKSE::Translation::Translate(in, out); out.empty()) out = in;
+
 bool Utility::SortMagnitude(std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> first, std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> second)
 {
 	return (std::get<0>(first) * (std::get<1>(first) == 0 ? 1 : std::get<1>(first))) > (std::get<0>(second) * (std::get<1>(second) == 0 ? 1 : std::get<1>(second)));
@@ -381,201 +384,201 @@ std::string Utility::ToStringLocalized(AlchemicEffect ae)
 		case AlchemyBaseEffectFirst::kNone:
 			break;
 		default:
-			SKSE::Translation::Translate("$NUP_kUnknown", result);
+			TRANSLATE("$NUP_kUnknown", result);
 			return result;
 		}
 		switch (ae.AlchemyBaseEffectSecond()) {
 		case AlchemyBaseEffectSecond::kAlteration:
-			SKSE::Translation::Translate("$NUP_kAlteration", result);
+			TRANSLATE("$NUP_kAlteration", result);
 			return result;
 		case AlchemyBaseEffectSecond::kAnyFood:
-			SKSE::Translation::Translate("$NUP_kAnyFood", result);
+			TRANSLATE("$NUP_kAnyFood", result);
 			return result;
 		case AlchemyBaseEffectSecond::kAnyFortify:
-			SKSE::Translation::Translate("$NUP_kAnyFortify", result);
+			TRANSLATE("$NUP_kAnyFortify", result);
 			return result;
 		case AlchemyBaseEffectSecond::kAnyPoison:
-			SKSE::Translation::Translate("$NUP_kAnyPoison", result);
+			TRANSLATE("$NUP_kAnyPoison", result);
 			return result;
 		case AlchemyBaseEffectSecond::kAnyPotion:
-			SKSE::Translation::Translate("$NUP_kAnyPotion", result);
+			TRANSLATE("$NUP_kAnyPotion", result);
 			return result;
 		case AlchemyBaseEffectSecond::kArchery:
-			SKSE::Translation::Translate("$NUP_kArchery", result);
+			TRANSLATE("$NUP_kArchery", result);
 			return result;
 		case AlchemyBaseEffectSecond::kAttackDamageMult:
-			SKSE::Translation::Translate("$NUP_kAttackDamageMult", result);
+			TRANSLATE("$NUP_kAttackDamageMult", result);
 			return result;
 		case AlchemyBaseEffectSecond::kBlock:
-			SKSE::Translation::Translate("$NUP_kBlock", result);
+			TRANSLATE("$NUP_kBlock", result);
 			return result;
 		case AlchemyBaseEffectSecond::kBlood:
-			SKSE::Translation::Translate("$NUP_kBlood", result);
+			TRANSLATE("$NUP_kBlood", result);
 			return result;
 		case AlchemyBaseEffectSecond::kBowSpeed:
-			SKSE::Translation::Translate("$NUP_kBowSpeed", result);
+			TRANSLATE("$NUP_kBowSpeed", result);
 			return result;
 		case AlchemyBaseEffectSecond::kConjuration:
-			SKSE::Translation::Translate("$NUP_kConjuration", result);
+			TRANSLATE("$NUP_kConjuration", result);
 			return result;
 		case AlchemyBaseEffectSecond::kCriticalChance:
-			SKSE::Translation::Translate("$NUP_kCriticalChance", result);
+			TRANSLATE("$NUP_kCriticalChance", result);
 			return result;
 		case AlchemyBaseEffectSecond::kDamageResist:
-			SKSE::Translation::Translate("$NUP_kDamageResist", result);
+			TRANSLATE("$NUP_kDamageResist", result);
 			return result;
 		case AlchemyBaseEffectSecond::kDestruction:
-			SKSE::Translation::Translate("$NUP_kDestruction", result);
+			TRANSLATE("$NUP_kDestruction", result);
 			return result;
 		case AlchemyBaseEffectSecond::kFear:
-			SKSE::Translation::Translate("$NUP_kFear", result);
+			TRANSLATE("$NUP_kFear", result);
 			return result;
 		case AlchemyBaseEffectSecond::kFrenzy:
-			SKSE::Translation::Translate("$NUP_kFrenzy", result);
+			TRANSLATE("$NUP_kFrenzy", result);
 			return result;
 		case AlchemyBaseEffectSecond::kHealRate:
-			SKSE::Translation::Translate("$NUP_kHealRate", result);
+			TRANSLATE("$NUP_kHealRate", result);
 			return result;
 		case AlchemyBaseEffectSecond::kHealRateMult:
-			SKSE::Translation::Translate("$NUP_kHealRateMult", result);
+			TRANSLATE("$NUP_kHealRateMult", result);
 			return result;
 		case AlchemyBaseEffectSecond::kHealth:
-			SKSE::Translation::Translate("$NUP_kHealth", result);
+			TRANSLATE("$NUP_kHealth", result);
 			return result;
 		case AlchemyBaseEffectSecond::kHeavyArmor:
-			SKSE::Translation::Translate("$NUP_kHeavyArmor", result);
+			TRANSLATE("$NUP_kHeavyArmor", result);
 			return result;
 		case AlchemyBaseEffectSecond::kIllusion:
-			SKSE::Translation::Translate("$NUP_kIllusion", result);
+			TRANSLATE("$NUP_kIllusion", result);
 			return result;
 		case AlchemyBaseEffectSecond::kInvisibility:
-			SKSE::Translation::Translate("$NUP_kInvisibility", result);
+			TRANSLATE("$NUP_kInvisibility", result);
 			return result;
 		case AlchemyBaseEffectSecond::kLightArmor:
-			SKSE::Translation::Translate("$NUP_kLightArmor", result);
+			TRANSLATE("$NUP_kLightArmor", result);
 			return result;
 		case AlchemyBaseEffectSecond::kLockpicking:
-			SKSE::Translation::Translate("$NUP_kLockpicking", result);
+			TRANSLATE("$NUP_kLockpicking", result);
 			return result;
 		case AlchemyBaseEffectSecond::kMagicka:
-			SKSE::Translation::Translate("$NUP_kMagicka", result);
+			TRANSLATE("$NUP_kMagicka", result);
 			return result;
 		case AlchemyBaseEffectSecond::kMagickaRate:
-			SKSE::Translation::Translate("$NUP_kMagickaRate", result);
+			TRANSLATE("$NUP_kMagickaRate", result);
 			return result;
 		case AlchemyBaseEffectSecond::kMagickaRateMult:
-			SKSE::Translation::Translate("$NUP_kMagickaRateMult", result);
+			TRANSLATE("$NUP_kMagickaRateMult", result);
 			return result;
 		case AlchemyBaseEffectSecond::kMeleeDamage:
-			SKSE::Translation::Translate("$NUP_kMeleeDamage", result);
+			TRANSLATE("$NUP_kMeleeDamage", result);
 			return result;
 		case AlchemyBaseEffectSecond::kNone:
-			SKSE::Translation::Translate("$NUP_kNone", result);
+			TRANSLATE("$NUP_kNone", result);
 			return result;
 		case AlchemyBaseEffectSecond::kOneHanded:
-			SKSE::Translation::Translate("$NUP_kOneHanded", result);
+			TRANSLATE("$NUP_kOneHanded", result);
 			return result;
 		case AlchemyBaseEffectSecond::kParalysis:
-			SKSE::Translation::Translate("$NUP_kParalysis", result);
+			TRANSLATE("$NUP_kParalysis", result);
 			return result;
 		case AlchemyBaseEffectSecond::kPickpocket:
-			SKSE::Translation::Translate("$NUP_kPickpocket", result);
+			TRANSLATE("$NUP_kPickpocket", result);
 			return result;
 		case AlchemyBaseEffectSecond::kPoisonResist:
-			SKSE::Translation::Translate("$NUP_kPoisonResist", result);
+			TRANSLATE("$NUP_kPoisonResist", result);
 			return result;
 		case AlchemyBaseEffectSecond::kReflectDamage:
-			SKSE::Translation::Translate("$NUP_kReflectDamage", result);
+			TRANSLATE("$NUP_kReflectDamage", result);
 			return result;
 		case AlchemyBaseEffectSecond::kResistDisease:
-			SKSE::Translation::Translate("$NUP_kResistDisease", result);
+			TRANSLATE("$NUP_kResistDisease", result);
 			return result;
 		case AlchemyBaseEffectSecond::kResistFire:
-			SKSE::Translation::Translate("$NUP_kResistFire", result);
+			TRANSLATE("$NUP_kResistFire", result);
 			return result;
 		case AlchemyBaseEffectSecond::kResistFrost:
-			SKSE::Translation::Translate("$NUP_kResistFrost", result);
+			TRANSLATE("$NUP_kResistFrost", result);
 			return result;
 		case AlchemyBaseEffectSecond::kResistMagic:
-			SKSE::Translation::Translate("$NUP_kResistMagic", result);
+			TRANSLATE("$NUP_kResistMagic", result);
 			return result;
 		case AlchemyBaseEffectSecond::kResistShock:
-			SKSE::Translation::Translate("$NUP_kResistShock", result);
+			TRANSLATE("$NUP_kResistShock", result);
 			return result;
 		case AlchemyBaseEffectSecond::kRestoration:
-			SKSE::Translation::Translate("$NUP_kRestoration", result);
+			TRANSLATE("$NUP_kRestoration", result);
 			return result;
 		case AlchemyBaseEffectSecond::kSneak:
-			SKSE::Translation::Translate("$NUP_kSneak", result);
+			TRANSLATE("$NUP_kSneak", result);
 			return result;
 		case AlchemyBaseEffectSecond::kSpeedMult:
-			SKSE::Translation::Translate("$NUP_kSpeedMult", result);
+			TRANSLATE("$NUP_kSpeedMult", result);
 			return result;
 		case AlchemyBaseEffectSecond::kStamina:
-			SKSE::Translation::Translate("$NUP_kStamina", result);
+			TRANSLATE("$NUP_kStamina", result);
 			return result;
 		case AlchemyBaseEffectSecond::kStaminaRate:
-			SKSE::Translation::Translate("$NUP_kStaminaRate", result);
+			TRANSLATE("$NUP_kStaminaRate", result);
 			return result;
 		case AlchemyBaseEffectSecond::kStaminaRateMult:
-			SKSE::Translation::Translate("$NUP_kStaminaRateMult", result);
+			TRANSLATE("$NUP_kStaminaRateMult", result);
 			return result;
 		case AlchemyBaseEffectSecond::kTwoHanded:
-			SKSE::Translation::Translate("$NUP_kTwoHanded", result);
+			TRANSLATE("$NUP_kTwoHanded", result);
 			return result;
 		case AlchemyBaseEffectSecond::kUnarmedDamage:
-			SKSE::Translation::Translate("$NUP_kUnarmedDamage", result);
+			TRANSLATE("$NUP_kUnarmedDamage", result);
 			return result;
 		case AlchemyBaseEffectSecond::kWeaponSpeedMult:
-			SKSE::Translation::Translate("$NUP_kWeaponSpeedMult", result);
+			TRANSLATE("$NUP_kWeaponSpeedMult", result);
 			return result;
 		case AlchemyBaseEffectSecond::kCureDisease:
-			SKSE::Translation::Translate("$NUP_kCureDisease", result);
+			TRANSLATE("$NUP_kCureDisease", result);
 			return result;
 		case AlchemyBaseEffectSecond::kCurePoison:
-			SKSE::Translation::Translate("$NUP_kCurePoison", result);
+			TRANSLATE("$NUP_kCurePoison", result);
 			return result;
 		case AlchemyBaseEffectSecond::kEnchanting:
-			SKSE::Translation::Translate("$NUP_kEnchanting", result);
+			TRANSLATE("$NUP_kEnchanting", result);
 			return result;
 		case AlchemyBaseEffectSecond::kWaterbreathing:
-			SKSE::Translation::Translate("$NUP_kWaterbreathing", result);
+			TRANSLATE("$NUP_kWaterbreathing", result);
 			return result;
 		case AlchemyBaseEffectSecond::kSmithing:
-			SKSE::Translation::Translate("$NUP_kSmithing", result);
+			TRANSLATE("$NUP_kSmithing", result);
 			return result;
 		case AlchemyBaseEffectSecond::kSpeech:
-			SKSE::Translation::Translate("$NUP_kSpeech", result);
+			TRANSLATE("$NUP_kSpeech", result);
 			return result;
 		case AlchemyBaseEffectSecond::kCarryWeight:
-			SKSE::Translation::Translate("$NUP_kCarryWeight", result);
+			TRANSLATE("$NUP_kCarryWeight", result);
 			return result;
 		case AlchemyBaseEffectSecond::kAlchemy:
-			SKSE::Translation::Translate("$NUP_kAlchemy", result);
+			TRANSLATE("$NUP_kAlchemy", result);
 			return result;
 		case AlchemyBaseEffectSecond::kPersuasion:
-			SKSE::Translation::Translate("$NUP_kPersuasion", result);
+			TRANSLATE("$NUP_kPersuasion", result);
 			return result;
 		case AlchemyBaseEffectSecond::kFortifyHealth:
-			SKSE::Translation::Translate("$NUP_kFortifyHealth", result);
+			TRANSLATE("$NUP_kFortifyHealth", result);
 			return result;
 		case AlchemyBaseEffectSecond::kFortifyMagicka:
-			SKSE::Translation::Translate("$NUP_kFortifyMagicka", result);
+			TRANSLATE("$NUP_kFortifyMagicka", result);
 			return result;
 		case AlchemyBaseEffectSecond::kFortifyStamina:
-			SKSE::Translation::Translate("$NUP_kFortifyStamina", result);
+			TRANSLATE("$NUP_kFortifyStamina", result);
 			return result;
 		case AlchemyBaseEffectSecond::kCustom:
-			SKSE::Translation::Translate("$NUP_kCustom", result);
+			TRANSLATE("$NUP_kCustom", result);
 			return result;
 		case AlchemyBaseEffectSecond::kShield:
-			SKSE::Translation::Translate("$NUP_kShield", result);
+			TRANSLATE("$NUP_kShield", result);
 			return result;
 		case AlchemyBaseEffectSecond::kDamageUndead:
-			SKSE::Translation::Translate("$NUP_kDamageUndead", result);
+			TRANSLATE("$NUP_kDamageUndead", result);
 			return result;
 		default:
-			SKSE::Translation::Translate("$NUP_kUnknown", result);
+			TRANSLATE("$NUP_kUnknown", result);
 			return result;
 		}
 	} else {
