@@ -2,22 +2,27 @@ Scriptname NPCsUsePotions_MCM extends SKI_ConfigBase
 
 Event OnConfigInit()
     Pages = new string[11]
-    Pages[0] = "General" ; general, system, removal, fixes
-    Pages[1] = "Potions"
-    Pages[2] = "Poisons"
-    Pages[3] = "Fortify Potions"
-    Pages[4] = "Food"
-    Pages[5] = "Player"
-    Pages[6] = "Distribution"
-    Pages[7] = "Whitelist"
-    Pages[8] = "Compatbility"
-    Pages[9] = "Debug"
-    Pages[10] = "Statistics"
+    Pages[0] = "$NUP_PaGeneral" ; general, system, removal, fixes
+    Pages[1] = "$NUP_PaPotions"
+    Pages[2] = "$NUP_PaPoisons"
+    Pages[3] = "$NUP_PaFortifyPotions"
+    Pages[4] = "$NUP_PaFood"
+    Pages[5] = "$NUP_PaPlayer"
+    Pages[6] = "$NUP_PaDistribution"
+    Pages[7] = "$NUP_PaWhitelist"
+    Pages[8] = "$NUP_PaCompatibility"
+    Pages[9] = "$NUP_PaDebug"
+    Pages[10] = "$NUP_PaStatistics"
 EndEvent
 
 ;event OnGameReload()
 ;    InitPages()
 ;endEvent
+
+int ENUMPotion = 2
+int ENUMFortify = 8
+int ENUMPoison = 1
+int ENUMFood = 4
 
 ; ----------- MCM Properties -----------
 ; general
@@ -47,6 +52,12 @@ int PO_HealthThreshold
 int PO_MagickaThreshold
 int PO_StaminaThreshold
 int PO_Chance
+
+int PO_Prob_Add
+int PO_Prob_Selec = 0
+int[] PO_Prob_Act
+int[] PO_Prob_Ind
+int PO_Prob_act_maxindex
 ; poisons
 int PI_EnablePoisons
 int PI_AllowPositive
@@ -56,18 +67,36 @@ int PI_LevelScale
 int PI_NumberThreshold
 int PI_PoisonChance
 int PI_Dosage
+
+int PI_Prob_Add
+int PI_Prob_Selec = 0
+int[] PI_Prob_Act
+int[] PI_Prob_Ind
+int PI_Prob_act_maxindex
 ; fortify potions
 int FO_EnableFortiy
 int FO_WeaponsSheathed
 int FO_LevelScale
 int FO_NumberThreshold
 int FO_Chance
+
+int FO_Prob_Add
+int FO_Prob_Selec = 0
+int[] FO_Prob_Act
+int[] FO_Prob_Ind
+int FO_Prob_act_maxindex
 ; food
 int F_EnableFood
 int F_AllowDetrimental
 int F_RestrictCS
 int F_DisableFollowers
 int F_WeaponsSheathed
+
+int F_Prob_Add
+int F_Prob_Selec = 0
+int[] F_Prob_Act
+int[] F_Prob_Ind
+int F_Prob_act_maxindex
 ; player
 int PL_PlayerPotions
 int PL_PlayerPoisons
@@ -127,136 +156,232 @@ int S_EventsHandled
 int S_ActorsHandledTotal
 int S_ActorsHandled
 
+
+string[] EffectOptionsPotion
+int[] EffectOptionsPotionIndex
+string[] EffectOptions
+
 Event OnPageReset(string page)
     Pages = new string[11]
-    Pages[0] = "General" ; general, system, removal, fixes
-    Pages[1] = "Potions"
-    Pages[2] = "Poisons"
-    Pages[3] = "Fortify Potions"
-    Pages[4] = "Food"
-    Pages[5] = "Player"
-    Pages[6] = "Distribution"
-    Pages[7] = "Whitelist"
-    Pages[8] = "Compatbility"
-    Pages[9] = "Debug"
-    Pages[10] = "Statistics"
+    Pages[0] = "$NUP_PaGeneral" ; general, system, removal, fixes
+    Pages[1] = "$NUP_PaPotions"
+    Pages[2] = "$NUP_PaPoisons"
+    Pages[3] = "$NUP_PaFortifyPotions"
+    Pages[4] = "$NUP_PaFood"
+    Pages[5] = "$NUP_PaPlayer"
+    Pages[6] = "$NUP_PaDistribution"
+    Pages[7] = "$NUP_PaWhitelist"
+    Pages[8] = "$NUP_PaCompatibility"
+    Pages[9] = "$NUP_PaDebug"
+    Pages[10] = "$NUP_PaStatistics"
+
+    ENUMPotion = 2
+    ENUMFortify = 8
+    ENUMPoison = 1
+    ENUMFood = 4
+
+    EffectOptions = new string[64]
+    int ii = 0
+    int iden = 1
+    while (ii < 64)
+        EffectOptions[ii] = ToStringAlchemicEffect(ii + 1)
+        ii = ii + 1
+    endwhile
+
+    EffectOptionsPotion = new string[5]
+    EffectOptionsPotionIndex = new int[5]
+    EffectOptionsPotion[0] = ToStringAlchemicEffect(1) ; Health
+    EffectOptionsPotionIndex[0] = 1
+    EffectOptionsPotion[1] = ToStringAlchemicEffect(2) ; Magicka
+    EffectOptionsPotionIndex[1] = 2
+    EffectOptionsPotion[2] = ToStringAlchemicEffect(3) ; Stamina
+    EffectOptionsPotionIndex[2] = 3
+    EffectOptionsPotion[3] = ToStringAlchemicEffect(45) ; CurePoison
+    EffectOptionsPotionIndex[3] = 45
+    EffectOptionsPotion[4] = ToStringAlchemicEffect(30) ; Invisibility
+    EffectOptionsPotionIndex[4] = 30
+
+    PO_Prob_Act = new int[64]
+    PO_Prob_Ind = new int[64]
+    PO_Prob_act_maxindex = 0
+    PI_Prob_Act = new int[64]
+    PI_Prob_Ind = new int[64]
+    PI_Prob_act_maxindex = 0
+    FO_Prob_Act = new int[64]
+    FO_Prob_Ind = new int[64]
+    FO_Prob_act_maxindex = 0
+    F_Prob_Act = new int[64]
+    F_Prob_Ind = new int[64]
+    F_Prob_act_maxindex = 0
 
     if (page == Pages[0]) ; general
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        AddHeaderOption("Cooldown Options")
-        G_GlobalCooldown = AddSliderOption("Global Cooldown", Usage_GetGlobalCooldown())
-        AddTextOption("Effective Potion Cooldown", Usage_GetEffectiveGlobalCooldownPotions())
-        AddTextOption("Effective Poison Cooldown", Usage_GetEffectiveGlobalCooldownPoisons())
-        AddTextOption("Effective Food Cooldown", Usage_GetEffectiveGlobalCooldownFood())
-        G_MaxDuration = AddSliderOption("Max Duration for restoration potions", GetMaxDuration())
-        G_MaxFortifyDuration = AddSliderOption("Max Duration for fortificaion potions", GetMaxFortifyDuration())
-        AddHeaderOption("System")
-        G_CycleTime = AddSliderOption("Cycle Time", GetCycleTime())
+        AddHeaderOption("$NUP_HCooldownOption")
+        G_GlobalCooldown = AddSliderOption("$NUP_SGlobalCooldown", Usage_GetGlobalCooldown())
+        AddTextOption("$NUP_TEffectivePotionCooldown", Usage_GetEffectiveGlobalCooldownPotions())
+        AddTextOption("$NUP_TEffectivePoisonCooldown", Usage_GetEffectiveGlobalCooldownPoisons())
+        AddTextOption("$NUP_TEffectiveFoodCooldown", Usage_GetEffectiveGlobalCooldownFood())
+        G_MaxDuration = AddSliderOption("$NUP_SMaxDurationForRestPotions", GetMaxDuration())
+        G_MaxFortifyDuration = AddSliderOption("$NUP_SMaxDurationForFortPotions", GetMaxFortifyDuration())
+        AddHeaderOption("$NUP_HSystem")
+        G_CycleTime = AddSliderOption("$NUP_SCycleTime", GetCycleTime())
         SetCursorPosition(1)
-        AddHeaderOption("General Options")
-        G_DisableNonFollowerNPCs = AddToggleOption("Disable Non-Follower NPCs", Usage_GetDisableNonFollowerNPCs())
-        G_DisableOutOfCombatProcessing = AddToggleOption("Disable Out-Of-Combat Health potion usage", Usage_GetDisableOutOfCombatProcessing())
-        G_DisableItemUsageWhileStaggered = AddToggleOption("Disable item usage while staggered", Usage_GetDisableItemUsageWhileStaggered())
-        G_DisableItemUsageWhileFlying = AddToggleOption("Disable item usage while flying", Usage_GetDisableItemUsageWhileFlying())
-        G_DisableItemUsageWhileBleedingOut = AddToggleOption("Disable item usage while bleeding out", Usage_GetDisableItemUsageWhileBleedingOut())
-        G_DisableItemUsageWhileSleeping = AddToggleOption("Disable item usage while sleeping", Usage_GetDisableItemUsageWhileSleeping())
-        G_DisableItemUsageForExcludedNPCs = AddToggleOption("Disable item usage for excluded npcs", Usage_GetDisableItemUsageForExcludedNPCs())
-        AddHeaderOption("Removal Options")
-        G_Remove = AddToggleOption("Remove Items on Death", Removal_GetRemoveItemsOnDeath())
-        G_RemoveChance = AddSliderOption("Chance to Remove Item",Removal_GetChanceToRemoveItem())
-        G_RemoveMaxLeft = AddSliderOption("Max Items Left", Removal_GetMaxItemsLeft())
-        AddHeaderOption("Fixes")
-        G_ApplySkillBoost = AddToggleOption("Apply Skill Boost Perks", Fixes_GetApplySkillBoostPerks())
-        G_ForceFixSounds = AddToggleOption("Force Fix Potion Sounds", Fixes_GetForceFixPotionSounds())
+        AddHeaderOption("$NUP_HGeneralOptions")
+        G_DisableNonFollowerNPCs = AddToggleOption("$NUP_CDisableNonFollowerNPCs", Usage_GetDisableNonFollowerNPCs())
+        G_DisableOutOfCombatProcessing = AddToggleOption("$NUP_CDisableOOCHealth", Usage_GetDisableOutOfCombatProcessing())
+        G_DisableItemUsageWhileStaggered = AddToggleOption("$NUP_CDisableItemStaggered", Usage_GetDisableItemUsageWhileStaggered())
+        G_DisableItemUsageWhileFlying = AddToggleOption("$NUP_CDisableItemFlying", Usage_GetDisableItemUsageWhileFlying())
+        G_DisableItemUsageWhileBleedingOut = AddToggleOption("$NUP_CDisableItemBleedingOut", Usage_GetDisableItemUsageWhileBleedingOut())
+        G_DisableItemUsageWhileSleeping = AddToggleOption("$NUP_CDisableItemSleeping", Usage_GetDisableItemUsageWhileSleeping())
+        G_DisableItemUsageForExcludedNPCs = AddToggleOption("$NUP_CDisableExcluded", Usage_GetDisableItemUsageForExcludedNPCs())
+        AddHeaderOption("$NUP_HRemovalOptions")
+        G_Remove = AddToggleOption("$NUP_CRemoveItemsOfDeath", Removal_GetRemoveItemsOnDeath())
+        G_RemoveChance = AddSliderOption("NUP_SChanceToRemoveItem",Removal_GetChanceToRemoveItem())
+        G_RemoveMaxLeft = AddSliderOption("$NUP_SMaxItemsLeft", Removal_GetMaxItemsLeft())
+        AddHeaderOption("$NUP_HFixes")
+        G_ApplySkillBoost = AddToggleOption("$NUP_CApplySkillBosstPerks", Fixes_GetApplySkillBoostPerks())
+        G_ForceFixSounds = AddToggleOption("$NUP_CForceFixPotionSounds", Fixes_GetForceFixPotionSounds())
     elseif (page == Pages[1]) ; potions
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        PO_EnableHealth = AddToggleOption("Enable Health Potions", Potions_GetEnableHealthRestoration())
-        PO_HealthThreshold = AddSliderOption("Health Threshold", Potions_GetHealthThreshold(), "{2}")
-        PO_EnableMagicka = AddToggleOption("Enable Magicka Potions", Potions_GetEnableMagickaRestoration())
-        PO_MagickaThreshold = AddSliderOption("Magicka Threshold", Potions_GetMagickaThreshold(), "{2}")
-        PO_EnableStamina = AddToggleOption("Enable Stamina Potions", Potions_GetEnableStaminaRestoration())
-        PO_StaminaThreshold = AddSliderOption("Stamina Threshold", Potions_GetStaminaThreshold(), "{2}")
-        PO_AllowDetrimental = AddToggleOption("Allow Potions with Detrimental Effects", Potions_GetAllowDetrimentalEffects())
-        PO_SheathedAsOOC = AddToggleOption("Treat Weapons Sheathed as Out-Of-Combat", Potions_GetHandleWeaponSheathedAsOutOfCombat())
-        PO_Chance = AddSliderOption("Chance to use Potions", Potions_GetUsePotionChance())
+        AddHeaderOption("$NUP_HPotionOptions")
+        PO_EnableHealth = AddToggleOption("$NUP_CEnableHealthPotions", Potions_GetEnableHealthRestoration())
+        PO_HealthThreshold = AddSliderOption("$NUP_SHealthThreshold", Potions_GetHealthThreshold(), "{2}")
+        PO_EnableMagicka = AddToggleOption("$NUP_CEnableMagickaPotions", Potions_GetEnableMagickaRestoration())
+        PO_MagickaThreshold = AddSliderOption("$NUP_SMagickaThreshold", Potions_GetMagickaThreshold(), "{2}")
+        PO_EnableStamina = AddToggleOption("$NUP_CEnableStaminaPotions", Potions_GetEnableStaminaRestoration())
+        PO_StaminaThreshold = AddSliderOption("$NUP_SStaminathreshold", Potions_GetStaminaThreshold(), "{2}")
+        PO_AllowDetrimental = AddToggleOption("$NUP_CAllowPotionsWithDetrimentalEffects", Potions_GetAllowDetrimentalEffects())
+        PO_SheathedAsOOC = AddToggleOption("$NUP_CTreatWeaponsSheathedAsOOC", Potions_GetHandleWeaponSheathedAsOutOfCombat())
+        PO_Chance = AddSliderOption("$NUP_SChanceToUsePotions", Potions_GetUsePotionChance())
+        SetCursorPosition(1)
+        AddHeaderOption("$NUP_HProbabilityAdjusters")
+        PO_Prob_Add = AddMenuOption("$NUP_MAddEntry", "")
+        int i = 0
+        while (i < 5)
+            float val = Distr_GetProbabilityAdjuster(EffectOptionsPotionIndex[i], ENUMPotion)
+            if (val != 1.0)
+                PO_Prob_Act[PO_Prob_act_maxindex] = AddSliderOption(ToStringAlchemicEffect(EffectOptionsPotionIndex[i]), val, "{2}")
+                PO_Prob_Ind[PO_Prob_act_maxindex] = EffectOptionsPotionIndex[i]
+                PO_Prob_act_maxindex = PO_Prob_act_maxindex + 1
+            endif
+            i = i + 1
+        endwhile
     elseif (page == Pages[2]) ; poisons
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        PI_EnablePoisons = AddToggleOption("Enable Poisons", Poisons_GetEnablePoisons())
-        PI_AllowPositive = AddToggleOption("Allow Positive Effects", Poisons_GetAllowPositiveEffects())
-        PI_WeaponsSheathed = AddToggleOption("Don't Use With Weapons Sheathed", Poisons_GetDontUseWithWeaponsSheathed())
-        PI_PoisonResist = AddToggleOption("Don't Use Against Enemies with 100 PR", Poisons_GetDontUseAgainst100PoisonResist())
-        PI_LevelScale = AddSliderOption("Enemy Level Scale Condition", Poisons_GetEnemyLevelScalePlayerLevel(), "{2}")
-        PI_NumberThreshold = AddSliderOption("Enemy Number Condition", Poisons_GetEnemyNumberThreshold())
-        PI_PoisonChance = AddSliderOption("Chance to use Poisons", Poisons_GetUsePoisonChance())
+        PI_EnablePoisons = AddToggleOption("$NUP_CEnablePoisons", Poisons_GetEnablePoisons())
+        PI_AllowPositive = AddToggleOption("$NUP_CAllowPositiveEffects", Poisons_GetAllowPositiveEffects())
+        PI_WeaponsSheathed = AddToggleOption("$NUP_CDontUseWithWeaponsSheathed", Poisons_GetDontUseWithWeaponsSheathed())
+        PI_PoisonResist = AddToggleOption("$NUP_CDontUseAgainstEnemiesWithFullPoisonResist", Poisons_GetDontUseAgainst100PoisonResist())
+        PI_LevelScale = AddSliderOption("$NUP_SEnemyLevelScaleCondition", Poisons_GetEnemyLevelScalePlayerLevel(), "{2}")
+        PI_NumberThreshold = AddSliderOption("$NUP_SEnemyNumberCondition", Poisons_GetEnemyNumberThreshold())
+        PI_PoisonChance = AddSliderOption("$NUP_SChanceToUsePoisons", Poisons_GetUsePoisonChance())
+        AddHeaderOption("$NUP_HDosage")
+        PI_Dosage = AddSliderOption("$NUP_SBasePoisonDosage", Poisons_GetDosage())
         SetCursorPosition(1)
-        AddHeaderOption("Dosage")
-        PI_Dosage = AddSliderOption("Base Poison Dosage", Poisons_GetDosage())
+        AddHeaderOption("$NUP_HProbabilityAdjusters")
+        PI_Prob_Add = AddMenuOption("$NUP_MAddEntry", "")
+        int i = 0
+        while (i < 64)
+            float val = Distr_GetProbabilityAdjuster(i + 1, ENUMPoison)
+            if (val != 1.0)
+                PI_Prob_Act[PI_Prob_act_maxindex] = AddSliderOption(ToStringAlchemicEffect(i + 1), val, "{2}")
+                PI_Prob_Ind[PI_Prob_act_maxindex] = i+1
+                PI_Prob_act_maxindex = PI_Prob_act_maxindex + 1
+            endif
+            i = i + 1
+        endwhile
     elseif (page == Pages[3]) ; fortify potions
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        FO_EnableFortiy = AddToggleOption("Enable Fortify Potions", Fortify_GetEnableFortifyPotions())
-        FO_WeaponsSheathed = AddToggleOption("Don't use with Weapons Sheathed", Fortify_GetDontUseWithWeaponsSheathed())
-        FO_LevelScale = AddSliderOption("Enemy Level Scale Condition", Fortify_GetEnemyLevelScalePlayerLevelFortify(), "{2}")
-        FO_NumberThreshold = AddSliderOption("Enemy Number Condition", Fortify_GetEnemyNumberThresholdFortify())
-        FO_Chance = AddSliderOption("Chance to use Fortify Potions", Fortify_GetUseFortifyPotionChance())
+        FO_EnableFortiy = AddToggleOption("$NUP_CEnableFortify", Fortify_GetEnableFortifyPotions())
+        FO_WeaponsSheathed = AddToggleOption("$NUP_CDontUseWithWeaponsSheathed", Fortify_GetDontUseWithWeaponsSheathed())
+        FO_LevelScale = AddSliderOption("$NUP_SEnemyLevelScaleCondition", Fortify_GetEnemyLevelScalePlayerLevelFortify(), "{2}")
+        FO_NumberThreshold = AddSliderOption("$NUP_SEnemyNumberCondition", Fortify_GetEnemyNumberThresholdFortify())
+        FO_Chance = AddSliderOption("$NUP_SChanceToUseFortifyPotions", Fortify_GetUseFortifyPotionChance())
+        SetCursorPosition(1)
+        AddHeaderOption("$NUP_HProbabilityAdjusters")
+        FO_Prob_Add = AddMenuOption("$NUP_MAddEntry", "")
+        int i = 0
+        while (i < 64)
+            float val = Distr_GetProbabilityAdjuster(i + 1, ENUMFortify)
+            if (val != 1.0)
+                FO_Prob_Act[FO_Prob_act_maxindex] = AddSliderOption(ToStringAlchemicEffect(i + 1), val, "{2}")
+                FO_Prob_Ind[FO_Prob_act_maxindex] = i+1
+                FO_Prob_act_maxindex = FO_Prob_act_maxindex + 1
+            endif
+            i = i + 1
+        endwhile
     elseif (page == Pages[4]) ; food
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        F_EnableFood = AddToggleOption("Enable Food", Food_GetEnableFood())
-        F_AllowDetrimental = AddToggleOption("Allow Food with Detrimental Effects", Food_GetAllowDetrimentalEffects())
-        F_RestrictCS = AddToggleOption("Restrict Food Usage to Combat Start", Food_GetRestrictFoodToCombatStart())
-        F_DisableFollowers = AddToggleOption("Disable Food for Followers", Food_GetDisableFollowers())
-        F_WeaponsSheathed = AddToggleOption("Dont Use Food With Sheathed Weapons", Food_GetDontUseWithWeaponsSheathed())
+        F_EnableFood = AddToggleOption("$NUP_CEnableFood", Food_GetEnableFood())
+        F_AllowDetrimental = AddToggleOption("$NUP_CAllowFoodWithDetrimentalEffects", Food_GetAllowDetrimentalEffects())
+        F_RestrictCS = AddToggleOption("$NUP_CRestrictFoodUsageToCombatStart", Food_GetRestrictFoodToCombatStart())
+        F_DisableFollowers = AddToggleOption("$NUP_CDisableFoodForFollowers", Food_GetDisableFollowers())
+        F_WeaponsSheathed = AddToggleOption("$NUP_CDontUseWithWeaponsSheathed", Food_GetDontUseWithWeaponsSheathed())
+        SetCursorPosition(1)
+        AddHeaderOption("$NUP_HProbabilityAdjusters")
+        F_Prob_Add = AddMenuOption("$NUP_MAddEntry", "")
+        int i = 0
+        while (i < 64)
+            float val = Distr_GetProbabilityAdjuster(i + 1, ENUMFood)
+            if (val != 1.0)
+                F_Prob_Act[F_Prob_act_maxindex] = AddSliderOption(ToStringAlchemicEffect(i + 1), val, "{2}")
+                F_Prob_Ind[F_Prob_act_maxindex] = i+1
+                F_Prob_act_maxindex = F_Prob_act_maxindex + 1
+            endif
+            i = i + 1
+        endwhile
     elseif (page == Pages[5]) ; player
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        AddHeaderOption("Player Options")
-        PL_PlayerPotions = AddToggleOption("Use Potions", Player_GetPlayerPotions())
-        PL_PlayerPoisons = AddToggleOption("Use Poisons", Player_GetPlayerPoisons())
-        PL_PLayerFortify = AddToggleOption("Use Fortify Potions", Player_GetPlayerFortify())
-        PL_PLayerFood = AddToggleOption("Use Food", Player_GetPlayerFood())
-        PL_UseFavoritedOnly = AddToggleOption("Only Use Favorited Items", Player_GetUseFavoritedItemsOnly())
-        PL_DontUseFavorited = AddToggleOption("Don't Use Favorited Items", Player_GetDontUseFavoritedItems())
-        PL_DontEatRawFood = AddToggleOption("Don't Eat Raw Food", Player_GetDontEatRawFood())
-        PL_DontDrinkAlcohol = AddToggleOption("Don't Drink Alcoholic Beverages", Player_GetDontDrinkAlcohol())
+        AddHeaderOption("$NUP_HPlayerOptions")
+        PL_PlayerPotions = AddToggleOption("$NUP_CUsePotions", Player_GetPlayerPotions())
+        PL_PlayerPoisons = AddToggleOption("$NUP_CUsePoisons", Player_GetPlayerPoisons())
+        PL_PLayerFortify = AddToggleOption("$NUP_CUseFortifyPotions", Player_GetPlayerFortify())
+        PL_PLayerFood = AddToggleOption("$NUP_CUseFood", Player_GetPlayerFood())
+        PL_UseFavoritedOnly = AddToggleOption("$NUP_COnlyUseFavoritedItems", Player_GetUseFavoritedItemsOnly())
+        PL_DontUseFavorited = AddToggleOption("$NUP_CDontUseFavoritedItems", Player_GetDontUseFavoritedItems())
+        PL_DontEatRawFood = AddToggleOption("$NUP_CDontEatRawFood", Player_GetDontEatRawFood())
+        PL_DontDrinkAlcohol = AddToggleOption("$NUP_CDontDrinkAlcoholicBeverages", Player_GetDontDrinkAlcohol())
     elseif (page == Pages[6]) ; distribution
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        AddHeaderOption("General Distribution Options")
-        D_Potions = AddToggleOption("Distribute Potions", Distr_GetDistributePotions())
-        D_Poisons = AddToggleOption("Distribute Poisons", Distr_GetDistributePoisons())
-        D_Fortify = AddToggleOption("Distribute Fortify Potions", Distr_GetDistributeFortify())
-        D_Food = AddToggleOption("Distribute Food", Distr_GetDistributeFood())
-        D_CustomItems = AddToggleOption("Distribute Custom Items", Distr_GetDistributeCustomItems())
-        AddHeaderOption("Dfficulty Options")
-        D_GameDifficulty = AddToggleOption("Use Game Difficulty", Distr_GetGameDifficultyScaling())
-        D_LevelEasy = AddSliderOption("Level Easy", Distr_GetLevelEasy())
-        D_LevelNormal = AddSliderOption("Level Normal", Distr_GetLevelNormal())
-        D_LevelDifficult = AddSliderOption("Level Difficult", Distr_GetLevelDifficult())
-        D_Levelnsane = AddSliderOption("Level Insane", Distr_GetLevelInsane())
-        AddHeaderOption("Item magnitude options")
-        D_MagWeak = AddSliderOption("Max magnitude for weak items", Distr_GetMaxMagnitudeWeak())
-        D_MagStandard = AddSliderOption("Max magnitude for standard items", Distr_GetMaxMagnitudeStandard())
-        D_MagPotent = AddSliderOption("Max magnitude for potent items", Distr_GetMaxMagnitudePotent())
-        AddHeaderOption("Style Scaling")
-        D_StylePrimary = AddSliderOption("Primary", Distr_GetStyleScalingPrimary(), "{2}")
-        D_StyleSecondary = AddSliderOption("Secondary", Distr_GetStyleScalingSecondary(), "{2}")
-        AddHeaderOption("Probability Modifiers")
-        D_ProbScaling = AddSliderOption("Item Chance Multiplier", Distr_GetProbabilityScaling(), "{2}")
-        AddHeaderOption("Misc Settings")
-        D_DoNotMixed = AddToggleOption("Do Not Distribute Mixed Invis Potions",Distr_GetDoNotDistributeMixedInvisPotions())
+        AddHeaderOption("$NUP_HGeneralDistributionOptions")
+        D_Potions = AddToggleOption("$NUP_CDistributePotions", Distr_GetDistributePotions())
+        D_Poisons = AddToggleOption("$NUP_CDistributePoisons", Distr_GetDistributePoisons())
+        D_Fortify = AddToggleOption("$NUP_CDistributeFortifyPotions", Distr_GetDistributeFortify())
+        D_Food = AddToggleOption("$NUP_CDistributeFood", Distr_GetDistributeFood())
+        D_CustomItems = AddToggleOption("$NUP_CDistributeCustomItems", Distr_GetDistributeCustomItems())
+        AddHeaderOption("$NUP_HDifficultyOptions")
+        D_GameDifficulty = AddToggleOption("$NUP_CUseGameDifficulty", Distr_GetGameDifficultyScaling())
+        D_LevelEasy = AddSliderOption("$NUP_SLevelEasy", Distr_GetLevelEasy())
+        D_LevelNormal = AddSliderOption("$NUP_SLevelNormal", Distr_GetLevelNormal())
+        D_LevelDifficult = AddSliderOption("$NUP_SLevelDifficult", Distr_GetLevelDifficult())
+        D_Levelnsane = AddSliderOption("$NUP_SLevelInsane", Distr_GetLevelInsane())
+        AddHeaderOption("$NUP_HItemMagnitudeOptions")
+        D_MagWeak = AddSliderOption("$NUP_SMaxMagnitudeForWeakItems", Distr_GetMaxMagnitudeWeak())
+        D_MagStandard = AddSliderOption("$NUP_SMaxMagnitudeForStandardItems", Distr_GetMaxMagnitudeStandard())
+        D_MagPotent = AddSliderOption("$NUP_SMaxMagnitudeForPotentItems", Distr_GetMaxMagnitudePotent())
+        AddHeaderOption("$NUP_HStyleScaling")
+        D_StylePrimary = AddSliderOption("$NUP_SPrimary", Distr_GetStyleScalingPrimary(), "{2}")
+        D_StyleSecondary = AddSliderOption("$NUP_SSecondary", Distr_GetStyleScalingSecondary(), "{2}")
+        AddHeaderOption("$NUP_HProbabilityModifiers")
+        D_ProbScaling = AddSliderOption("$NUP_SItemChanceMultiplier", Distr_GetProbabilityScaling(), "{2}")
+        AddHeaderOption("$NUP_HMiscSettings")
+        D_DoNotMixed = AddToggleOption("$NUP_CDoNotDistributeMixedInvisPotions",Distr_GetDoNotDistributeMixedInvisPotions())
 
         SetCursorPosition(1)
-        AddHeaderOption("Prohibited Effects")
+        AddHeaderOption("$NUP_HProhibitedEffects")
         D_Prohib_Menu_Options = new string[3]
-        D_Prohib_Menu_Options[0] = "Potions"
-        D_Prohib_Menu_Options[1] = "Poisons"
-        D_Prohib_Menu_Options[2] = "Food"
-        D_Prohib_Menu = AddMenuOption("ItemType", D_Prohib_Menu_Options[D_Prohib_Menu_Selection])
-        AddTextOption("Effects that can be prohibited", "")
+        D_Prohib_Menu_Options[0] = "$NUP_TPotions"
+        D_Prohib_Menu_Options[1] = "$NUP_TPoisons"
+        D_Prohib_Menu_Options[2] = "$NUP_TFood"
+        D_Prohib_Menu = AddMenuOption("$NUP_MItemType", D_Prohib_Menu_Options[D_Prohib_Menu_Selection])
+        AddTextOption("$NUP_TEffectsThatCanBeProhibited", "")
         int i = 1
         D_prohib_options = new int[65]
         while (i < 65)
@@ -266,54 +391,102 @@ Event OnPageReset(string page)
     elseif (page == Pages[7]) ; whitelist
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        AddHeaderOption("Whitelist Options")
-        W_EnableItems = AddToggleOption("Enable Items", Whitelist_GetEnabledItems())
-        W_EnableNPCs = AddToggleOption("Enable NPCs", Whitelist_GetEnabledNPCs())
+        AddHeaderOption("$NUP_HWhitelistOptions")
+        W_EnableItems = AddToggleOption("$NUP_EnableItems", Whitelist_GetEnabledItems())
+        W_EnableNPCs = AddToggleOption("$NUP_CEnableNPCs", Whitelist_GetEnabledNPCs())
     elseif (page == Pages[8]) ; compatbility
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        AddHeaderOption("General Compatbility Options")
-        C_DisableCreatures = AddToggleOption("Disable Creatures Without Rules", Comp_GetDisableCreaturesWhitoutRules())
-        AddHeaderOption("Animated Poisons")
-        C_AnPois_Enable = AddToggleOption("Enable Animations", Comp_AnimatedPoisons_GetEnabled())
-        AddTextOption("Loaded", Comp_AnimatedPoisons_Loaded())
-        AddHeaderOption("Animated Potions")
-        C_AnPoti_Enable = AddToggleOption("Enable Animations", Comp_AnimatedPotions_GetEnabled())
-        AddTextOption("Loaded", Comp_AnimatedPotions_Loaded())
-        AddHeaderOption("ZUPA")
-        AddTextOption("Loaded", Comp_ZUPA_Loaded())
-        AddHeaderOption("Sacrosanct")
-        AddTextOption("Loaded", Comp_Sacrosanct_Loaded())
-        AddHeaderOption("Ultimate Potions NG")
-        AddTextOption("Loaded", Comp_UltimatePotions_Loaded())
+        AddHeaderOption("$NUP_HGeneralCompatibilityOptions")
+        C_DisableCreatures = AddToggleOption("$NUP_CDisableCreaturesWithoutRules", Comp_GetDisableCreaturesWhitoutRules())
+        AddHeaderOption("$NUP_HAnimatedPoisons")
+        C_AnPois_Enable = AddToggleOption("$NUP_CEnableAnimations", Comp_AnimatedPoisons_GetEnabled())
+        AddTextOption("$NUP_TLoaded", Comp_AnimatedPoisons_Loaded())
+        AddHeaderOption("$NUP_HAnimatedPotions")
+        C_AnPoti_Enable = AddToggleOption("$NUP_CEnableAnimations", Comp_AnimatedPotions_GetEnabled())
+        AddTextOption("$NUP_TLoaded", Comp_AnimatedPotions_Loaded())
+        AddHeaderOption("$NUP_HZUPA")
+        AddTextOption("$NUP_TLoaded", Comp_ZUPA_Loaded())
+        AddHeaderOption("$NUP_HSacrosanct")
+        AddTextOption("$NUP_TLoaded", Comp_Sacrosanct_Loaded())
+        AddHeaderOption("$NUP_HUltimatePotionsNG")
+        AddTextOption("$NUP_TLoaded", Comp_UltimatePotions_Loaded())
 
 
         SetCursorPosition(1)
-        AddHeaderOption("CACO")
-        AddTextOption("Loaded", Comp_CACO_Loaded())
-        AddHeaderOption("Apothecary")
-        AddTextOption("Loaded", Comp_Apothecary_Loaded())
+        AddHeaderOption("$NUP_HCACO")
+        AddTextOption("$NUP_TLoaded", Comp_CACO_Loaded())
+        AddHeaderOption("$NUP_HApothecary")
+        AddTextOption("$NUP_TLoaded", Comp_Apothecary_Loaded())
     elseif (page == Pages[9]) ; debug
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        AddHeaderOption("Debug options")
-        D_EnableLog = AddToggleOption("Enable Logging", Debug_GetEnableLog())
-        D_EnableLoadLog = AddToggleOption("Enable Load Logging", Debug_GetEnableLoadLog())
-        D_LogLevel = AddSliderOption("Log detail level", Debug_GetLogLevel())
-        D_EnableProfiling = AddToggleOption("Enable Profiling", Debug_GetEnableProfiling())
-        D_ProfileLevel = AddSliderOption("Profiling detail level", Debug_GetProfileLevel())
+        AddHeaderOption("$NUP_HDebugOptions")
+        D_EnableLog = AddToggleOption("$NUP_CEnableLogging", Debug_GetEnableLog())
+        D_EnableLoadLog = AddToggleOption("$NUP_CEnableLoadLogging", Debug_GetEnableLoadLog())
+        D_LogLevel = AddSliderOption("$NUP_SLogDetailLevel", Debug_GetLogLevel())
+        D_EnableProfiling = AddToggleOption("$NUP_CEnableProfiling", Debug_GetEnableProfiling())
+        D_ProfileLevel = AddSliderOption("$NUP_SProfilingDetailLevel", Debug_GetProfileLevel())
     elseif (page == Pages[10])
         SetCursorFillMode(TOP_TO_BOTTOM)
         SetCursorPosition(0)
-        S_ActorsSaved = AddTextOption("Actors Saved", Stats_ActorsSaved())
-        S_ActorsRead = AddTextOption("Actors Read", Stats_ActorsRead())
-        S_PotionsUsed = AddTextOption("Potions Used", Stats_PotionsUsed())
-        S_PoisonsUsed = AddTextOption("Poisons Used", Stats_PoisonsUsed())
-        S_FoodUsed = AddTextOption("Food Used", Stats_FoodUsed())
-        S_EventsHandled = AddTextOption("Events Handled", Stats_EventsHandled())
-        S_ActorsHandled = AddTextOption("Actors Handled", Stats_ActorsHandled())
-        S_ActorsHandledTotal = AddTextOption("Total Actors Handled", Stats_ActorsHandledTotal())
+        S_ActorsSaved = AddTextOption("$NUP_TActorsSaved", Stats_ActorsSaved())
+        S_ActorsRead = AddTextOption("$NUP_TActorsRead", Stats_ActorsRead())
+        S_PotionsUsed = AddTextOption("$NUP_TPotionsUsed", Stats_PotionsUsed())
+        S_PoisonsUsed = AddTextOption("$NUP_TPoisonsUsed", Stats_PoisonsUsed())
+        S_FoodUsed = AddTextOption("$NUP_TFoodUsed", Stats_FoodUsed())
+        S_EventsHandled = AddTextOption("$NUP_TEventsHandled", Stats_EventsHandled())
+        S_ActorsHandled = AddTextOption("$NUP_TActorsHandled", Stats_ActorsHandled())
+        S_ActorsHandledTotal = AddTextOption("$NUP_TTotalActorsHandled", Stats_ActorsHandledTotal())
     endif
+EndEvent
+
+Event OnOptionMenuOpen(int option)
+    if (option == 0)
+
+    elseif (option == D_Prohib_Menu)
+        SetMenuDialogStartIndex(D_Prohib_Menu_Selection)
+        SetMenuDialogDefaultIndex(0)
+        SetMenuDialogOptions(D_Prohib_Menu_Options)
+    elseif (option == PO_Prob_Add)
+        SetMenuDialogStartIndex(PO_Prob_Selec)
+        SetMenuDialogDefaultIndex(0)
+        SetMenuDialogOptions(EffectOptionsPotion)
+    elseif (option == PI_Prob_Add)
+        SetMenuDialogStartIndex(PI_Prob_Selec)
+        SetMenuDialogDefaultIndex(0)
+        SetMenuDialogOptions(EffectOptions)
+    elseif (option == FO_Prob_Add)
+        SetMenuDialogStartIndex(FO_Prob_Selec)
+        SetMenuDialogDefaultIndex(0)
+        SetMenuDialogOptions(EffectOptions)
+    elseif (option == F_Prob_Add)
+        SetMenuDialogStartIndex(F_Prob_Selec)
+        SetMenuDialogDefaultIndex(0)
+        SetMenuDialogOptions(EffectOptions)
+    endif
+EndEvent
+
+Event OnOptionMenuAccept(int option, int index)
+    if (option == 0)
+
+    ElseIf(option == PO_Prob_Add)
+        PO_Prob_Selec = index
+        Distr_SetProbabilityAdjuster(EffectOptionsPotionIndex[index], ENUMPotion, 1.01)
+    ElseIf(option == PI_Prob_Add)
+        PI_Prob_Selec = index
+        Distr_SetProbabilityAdjuster(index + 1, ENUMPoison, 1.01)
+    ElseIf(option == FO_Prob_Add)
+        FO_Prob_Selec = index
+        Distr_SetProbabilityAdjuster(index + 1, ENUMFortify, 1.01)
+    ElseIf(option == F_Prob_Add)
+        F_Prob_Selec = index
+        Distr_SetProbabilityAdjuster(index + 1, ENUMFood, 1.01)
+    elseif (option == D_Prohib_Menu)
+        D_Prohib_Menu_Selection = index
+        SetMenuOptionValue(D_Prohib_Menu, D_Prohib_Menu_Options[D_Prohib_Menu_Selection], true)
+    endif
+    ForcePageReset()
 EndEvent
 
 Event OnOptionSelect(int option)
@@ -575,6 +748,47 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogRange(0, 4)
         SetSliderDialogInterval(1)
     endif
+
+    int i = 0
+    while (i < PO_Prob_act_maxindex)
+        if (option == PO_Prob_Act[i])
+            SetSliderDialogDefaultValue(1)
+            SetSliderDialogStartValue(Distr_GetProbabilityAdjuster(PO_Prob_Ind[i], ENUMPotion))
+            SetSliderDialogRange(0, 20)
+            SetSliderDialogInterval(0.01)
+        endif
+        i = i + 1
+    endwhile
+    i = 0
+    while (i < PI_Prob_act_maxindex)
+        if (option == PI_Prob_Act[i])
+            SetSliderDialogDefaultValue(1)
+            SetSliderDialogStartValue(Distr_GetProbabilityAdjuster(PI_Prob_Ind[i], ENUMPoison))
+            SetSliderDialogRange(0, 20)
+            SetSliderDialogInterval(0.01)
+        endif
+        i = i + 1
+    endwhile
+    i = 0
+    while (i < FO_Prob_act_maxindex)
+        if (option == FO_Prob_Act[i])
+            SetSliderDialogDefaultValue(1)
+            SetSliderDialogStartValue(Distr_GetProbabilityAdjuster(FO_Prob_Ind[i], ENUMFortify))
+            SetSliderDialogRange(0, 20)
+            SetSliderDialogInterval(0.01)
+        endif
+        i = i + 1
+    endwhile
+    i = 0
+    while (i < F_Prob_act_maxindex)
+        if (option == F_Prob_Act[i])
+            SetSliderDialogDefaultValue(1)
+            SetSliderDialogStartValue(Distr_GetProbabilityAdjuster(F_Prob_Ind[i], ENUMFood))
+            SetSliderDialogRange(0, 20)
+            SetSliderDialogInterval(0.01)
+        endif
+        i = i + 1
+    endwhile
 EndEvent
 
 Event OnOptionSliderAccept(int option, float value)
@@ -639,26 +853,36 @@ Event OnOptionSliderAccept(int option, float value)
     elseif (option == D_ProfileLevel)
         Debug_SetProfileLevel(valueint)
     endif
-    ForcePageReset()
-EndEvent
 
-Event OnOptionMenuOpen(int option)
-    if (option == 0)
+    int i = 0
+    while (i < PO_Prob_act_maxindex)
+        if (option == PO_Prob_Act[i])
+            Distr_SetProbabilityAdjuster(PO_Prob_Ind[i], ENUMPotion, value)
+        endif
+        i = i + 1
+    endwhile
+    i = 0
+    while (i < PI_Prob_act_maxindex)
+        if (option == PI_Prob_Act[i])
+            Distr_SetProbabilityAdjuster(PI_Prob_Ind[i], ENUMPoison, value)
+        endif
+        i = i + 1
+    endwhile
+    i = 0
+    while (i < FO_Prob_act_maxindex)
+        if (option == FO_Prob_Act[i])
+            Distr_SetProbabilityAdjuster(FO_Prob_Ind[i], ENUMFortify, value)
+        endif
+        i = i + 1
+    endwhile
+    i = 0
+    while (i < F_Prob_act_maxindex)
+        if (option == F_Prob_Act[i])
+            Distr_SetProbabilityAdjuster(F_Prob_Ind[i], ENUMFood, value)
+        endif
+        i = i + 1
+    endwhile
 
-    elseif (option == D_Prohib_Menu)
-        SetMenuDialogStartIndex(D_Prohib_Menu_Selection)
-        SetMenuDialogDefaultIndex(0)
-        SetMenuDialogOptions(D_Prohib_Menu_Options)
-    endif
-EndEvent
-
-Event OnOptionMenuAccept(int option, int index)
-    if (option == 0)
-
-    elseif (option == D_Prohib_Menu)
-        D_Prohib_Menu_Selection = index
-        SetMenuOptionValue(D_Prohib_Menu, D_Prohib_Menu_Options[D_Prohib_Menu_Selection], true)
-    endif
     ForcePageReset()
 EndEvent
 
@@ -838,177 +1062,177 @@ EndEvent
 Event OnOptionHighlight(int option)
     if (option == 0)
     elseif (option == S_ActorsSaved)
-        SetInfoText("The number of actors saved in the last savegame.")
+        SetInfoText("$NUP_Help_ActorsSaved")
     elseif (option == S_ActorsRead)
-        SetInfoText("The number of actors read from the last savegame.")
+        SetInfoText("$NUP_Help_ActorsRead")
     elseif (option == S_PotionsUsed)
-        SetInfoText("The number of potions used this game session.")
+        SetInfoText("$NUP_Help_PotionsUsed")
     elseif (option == S_PoisonsUsed)
-        SetInfoText("The number of poisons used this game session.")
+        SetInfoText("$NUP_Help_PoisonsUsed")
     elseif (option == S_FoodUsed)
-        SetInfoText("The number of food eaten this game session.")
+        SetInfoText("$NUP_Help_FoodUsed")
     elseif (option == S_EventsHandled)
-        SetInfoText("The number of game events handled this game session.")
+        SetInfoText("$NUP_Help_EventsHandled")
     elseif (option == S_ActorsHandled)
-        SetInfoText("The number of actors handled in the last cycle.")
+        SetInfoText("$NUP_Help_ActorsHandled")
     elseif (option == S_ActorsHandledTotal)
-        SetInfoText("The number of actors that have been handled this game session.")
+        SetInfoText("$NUP_Help_ActorsHandledTotal")
     elseif (option == C_DisableCreatures)
-        SetInfoText("Disables item distribution and item usage for NPCs that do not not have any distribution rule and have the ActorTypeAnimal or ActorTypeCreature keywords. The Skill Boost Perks are also not distributed to these NPCs. If you experience problems with your game CTDing, try to enable this. Some CTDs are caused by the Skill Boost perks being added to certain creatures. If your game stops CTDing afterwards, the issue was caused by some creature. You can also enable this if you see lots of mod added animals using potions. Many NPCs and creatures are in normal NPC factions (for instance FalmerFaction), and will not be excluded by this setting. Be aware that this may also exclude NPCs that should not be excluded, due to many NPCs being assigned the creature keyword even though they should not have them. Passively disables custom item distribution for those npcs.")
+        SetInfoText("$NUP_Help_DisableCreatures")
     elseif (option == C_AnPois_Enable)
-        SetInfoText("Enables the automatic usage of poison animations for npcs.")
+        SetInfoText("$NUP_Help_AnimatedPoisonsEnable")
     elseif (option == C_AnPoti_Enable)
-        SetInfoText("Enables the automatic usage of potion animations for npcs.")
+        SetInfoText("$NUP_Help_AnimatedPotionsEnable")
     elseif (option == W_EnableItems)
-        SetInfoText("Enables the whitelist mode for items. Items that shall be distributed must be explicitly whitelisted in the rules. This is the opposite to the standard (blacklist) behaviour.")
+        SetInfoText("$NUP_Help_WhitelistEnableItems")
     elseif (option == W_EnableNPCs)
-        SetInfoText("Enables the whitelist mode for NPCs. NPCs that shall be given potions, etc. and shall use potions, etc. MUST be explicitly whitelisted in the rules. This is the opposite of the standard (blacklist) behaviour.")
+        SetInfoText("$NUP_Help_WhitelistEnableNPCs")
     elseif (option == G_Remove)
-        SetInfoText("Remove items from NPCs after they died.")
+        SetInfoText("$NUP_Help_RemoveItems")
     elseif (option == G_RemoveChance)
-        SetInfoText("Chance to remove items on death of NPC. (range: 0 to 100)")
+        SetInfoText("$NUP_Help_ChanceRemoveItems")
     elseif (option == G_RemoveMaxLeft)
-        SetInfoText("Maximum number of items chances are rolled for during removal. Everything that goes above this value is always removed.")
+        SetInfoText("$NUP_Help_RemoveMaxLeft")
     elseif (option == G_ApplySkillBoost)
-        SetInfoText("Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply. [Restart your game to apply changes]")
+        SetInfoText("$NUP_Help_ApplySkillBoostPerks")
     elseif (option == G_ForceFixSounds)
-        SetInfoText("Forcefully fixes all sounds used by consumables in the game without regard for other mods changes. If deactivate the changes of other mods that should have the same effect are respected. [Restart your game to apply changes]")
+        SetInfoText("$NUP_Help_FixSounds")
     elseif (option == D_Poisons)
-        SetInfoText("NPCs are given poisons.")
+        SetInfoText("$NUP_Help_DistrPoisons")
     elseif (option == D_Potions)
-        SetInfoText("NPCs are given potions.")
+        SetInfoText("$NUP_Help_DistrPotions")
     elseif (option == D_Fortify)
-        SetInfoText("NPCs are given fortify potions.")
+        SetInfoText("$NUP_Help_DistrFortify")
     elseif (option == D_Food)
-        SetInfoText("NPCs are given food items.")
+        SetInfoText("$NUP_Help_DistrFood")
     elseif (option == D_CustomItems)
-        SetInfoText("NPCs are given custom items definable with rules. This does not affect custom potions, poisons, fortify potions and food. They are affected by the above settings.")
+        SetInfoText("$NUP_Help_DistrCustomItems")
     elseif (option == D_LevelEasy)
-        SetInfoText("NPC lower or equal this level are considered weak.")
+        SetInfoText("$NUP_Help_LevelEasy")
     elseif (option == D_LevelNormal)
-        SetInfoText("NPC lower or equal this level are considered normal in terms of strength.")
+        SetInfoText("$NUP_Help_LevelNormal")
     elseif (option == D_LevelDifficult)
-        SetInfoText("NPC lower or equal this level are considered difficult.")
+        SetInfoText("$NUP_Help_LevelDifficult")
     elseif (option == D_Levelnsane)
-        SetInfoText("NPC lower or equal this level are considered insane. Everything above this is always treated as a boss.")
+        SetInfoText("$NUP_Help_LevelInsane")
     elseif (option == D_GameDifficulty)
-        SetInfoText("Disables NPC level scaling, but scales distribution according to game difficulty.")
+        SetInfoText("$NUP_Help_GameDifficulty")
     elseif (option == D_MagWeak)
-        SetInfoText("Items with this or lower magnitude*duration are considered weak.")
+        SetInfoText("$NUP_Help_MagWeak")
     elseif (option == D_MagStandard)
-        SetInfoText("Items with this or lower magnitude*duration are considered normal.")
+        SetInfoText("$NUP_Help_MagStandard")
     elseif (option == D_MagPotent)
-        SetInfoText("Items with this or lower magnitude*duration are considered potent. Everything above this is considered Insane tier.")
+        SetInfoText("$NUP_Help_MagPotent")
     elseif (option == D_StylePrimary)
-        SetInfoText("Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the primary combat type of an npc.")
+        SetInfoText("$NUP_Help_StylePrimary")
     elseif (option == D_StyleSecondary)
-        SetInfoText("Scaling for the weight of different alchemic effects for the distribution of potions, poison, fortify potions and food according to the secondary combat type of an npc.")
+        SetInfoText("$NUP_Help_StyeleSecondary")
     elseif (option == D_ProbScaling)
-        SetInfoText("Modifies the chances for all items distributed to npcs. This does not really affect the number of item (potions) distributed, just the chances for the frst 4 potions and first 3 poisons. Even though an overall increase in items is possible, it is incredibly unlikely due to the small base-probabilities. Anything value around 2.0 might guarantee 3 or 4 potions and poisons for most npcs.")
+        SetInfoText("$NUP_Help_ProbabilityScaling")
     elseif (option == D_DoNotMixed)
-        SetInfoText("Potions with Invisibility as one of their effects may not be distributed when they are chosen for one of their other effects. Example: [Setting: false] An NPC will be given a health potion. A health potion with the secondary effect Invisibility might be chosen and given to the player. [Setting: true] An NPC will be given a health potion. A health potion with with arbitrary secondary effects except Invisibility might be chosen.")
+        SetInfoText("$NUP_Help_DoNotDistributeMixedPotions")
     elseif (option == F_EnableFood)
-        SetInfoText("Allows NPCs to use food items, to gain beneficial effects.")
+        SetInfoText("$NUP_Help_EnableFood")
     elseif (option == F_AllowDetrimental)
-        SetInfoText("This allows NPCs to use food that has detrimental effects.")
+        SetInfoText("$NUP_Help_FoodAllowDetrimental")
     elseif (option == F_RestrictCS)
-        SetInfoText("NPCs will only eat food at the beginning of combat. This is the way it worked until version 3.0.0 If disabled, NPCs will try to eat more food as soon as an existing food buff runs out.")
+        SetInfoText("$NUP_Help_FoodRestrictToCombatStart")
     elseif (option == F_DisableFollowers)
-        SetInfoText("Disables food usage for followers only. You can use this to prevent your followers from eating food, if you are using survival mods, without impacting other NPCs.")
+        SetInfoText("$NUP_Help_FoodDisableFollowers")
     elseif (option == F_WeaponsSheathed)
-        SetInfoText("When weapons are sheathed food will not be used.")
+        SetInfoText("$NUP_Help_FoodWeaponsSheathed")
     elseif (option == FO_EnableFortiy)
-        SetInfoText("NPCs use fortify potions in combat. Potions are used based on the equipped weapons and spells.")
+        SetInfoText("$NUP_Help_EnableFortify")
     elseif (option == FO_WeaponsSheathed)
-        SetInfoText("When weapons are sheathed, no fortify potions will be used.")
+        SetInfoText("$NUP_Help_FortifyWeaponsSheatzed")
     elseif (option == FO_LevelScale)
-        SetInfoText("If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use fortify potions.")
+        SetInfoText("$NUP_Help_FortifyLevelScaling")
     elseif (option == FO_NumberThreshold)
-        SetInfoText("When the number of NPCs in a fight is at least at this value, followers start to use fortify potions regardless of the enemies level. This includes hostile and non-hostile NPCs.")
+        SetInfoText("$NUP_Help_FortifyNumberThreshold")
     elseif (option == FO_Chance)
-        SetInfoText("Chance that an NPC will use a fortify potion if they can. They can use a potion, if they have one in their inventory, and its effects are beneficial to their current choice of weapons. An NPC will not use a Fortify Light Armor potion if they are wearing Heavy Armor, for instance.")
+        SetInfoText("$NUP_Help_ForifyChance")
     elseif (option == PI_EnablePoisons)
-        SetInfoText("NPCs use appropiate poisons in combat. Poisons are considered appropiate, if they can harm the enemy. For instance, damaging Magicka of an enemy that does not use spells, is not appropiate.")
+        SetInfoText("$NUP_Help_EnablePoisons")
     elseif (option == PI_AllowPositive)
-        SetInfoText("This allows NPCs to use poisons that apply positive effects to their opponents.")
+        SetInfoText("$NUP_Help_PoisonsAllowPositive")
     elseif (option == PI_WeaponsSheathed)
-        SetInfoText("If the weapons are sheathed, poisons will not be used.")
+        SetInfoText("$NUP_Help_PoisonsWeaponsSheathed")
     elseif (option == PI_PoisonResist)
-        SetInfoText("NPCs and the player will not use Poisons against those that have 100% poison resistance anymore.")
+        SetInfoText("$NUP_Help_PoisonsDontUseAgainstFullPoisonResist")
     elseif (option == PI_LevelScale)
-        SetInfoText("If the enemy they are facing has a level greater equal 'this value' * PlayerLevel followers use poisons.")
+        SetInfoText("$NUP_Help_PoisonsLevelScaling.")
     elseif (option == PI_NumberThreshold)
-        SetInfoText("When the number of NPCs in a fight is at least at this value, followers start to use poisons regardless of the enemies level, to faster help out the player. This includes hostile and non-hostile NPCs.")
+        SetInfoText("$NUP_Help_PoisonsNumberThreshold")
     elseif (option == PI_PoisonChance)
-        SetInfoText("Chance that an NPC will use a poison if they possess one with an \n// appropiate effect.")
+        SetInfoText("$NUP_Help_PoisonsChanceToUse")
     elseif (option == PI_Dosage)
-        SetInfoText("// The dosage describes the number of hits a poison lasts on your weapons. The dosage for specific poisons, or alchemic effects can also be defined by distribution rules and may outrule this setting.")
+        SetInfoText("$NUP_Help_PoisonDosage")
     elseif (option == PO_EnableMagicka)
-        SetInfoText("NPCs use magicka potions to restore their missing magicka in combat.")
+        SetInfoText("$NUP_Help_PotionsEnableMagicka")
     elseif (option == PO_EnableStamina)
-        SetInfoText("NPCs use stamina potions to restore their missing stamina in combat.")
+        SetInfoText("$NUP_Help_PotionsEnableStamina")
     elseif (option == PO_EnableHealth)
-        SetInfoText("NPCs use health potions to restore their missing hp in combat.")
+        SetInfoText("$NUP_Help_PotionsEnableHealth")
     elseif (option == PO_AllowDetrimental)
-        SetInfoText("If this is enabled NPCs will use potions that contain detrimental effects. For instance, impure potions, that restore health and damage magicka. !!!This setting also affects fortify potions.")
+        SetInfoText("$NUP_Help_PotionsAllowDetrimental")
     elseif (option == PO_SheathedAsOOC)
-        SetInfoText("")
+        SetInfoText("$NUP_Help_PotionsTreatSheathedAsOOC")
     elseif (option == PO_HealthThreshold)
-        SetInfoText("Upon reaching this threshold, NPCs will start to use health potions")
+        SetInfoText("$NUP_Help_PotionsHealthThreshold")
     elseif (option == PO_MagickaThreshold)
-        SetInfoText("Upon reaching this threshold, NPCs will start to use magicka potions")
+        SetInfoText("$NUP_Help_PotionsMagickaThreshold")
     elseif (option == PO_StaminaThreshold)
-        SetInfoText("Upon reaching this threshold, NPCs will start to use stamina potions")
+        SetInfoText("$NUP_Help_PotionsStaminaThreshold)
     elseif (option == PO_Chance)
-        SetInfoText("Chance that an NPC will use a potion if they can. Set to 100 to always take a potion, when appropiate. An NPC can use a potion if they (1) have a potion in their inventory, and (2) when the respective value falls below the threshold.")
+        SetInfoText("$NUP_Help_PotionsChance")
     elseif (option == PL_PlayerPotions)
-        SetInfoText("All activated restoration features are applied to the player, while they are in Combat.")
+        SetInfoText("$NUP_Help_PlayerPotions")
     elseif (option == PL_PlayerPoisons)
-        SetInfoText("Player will automatically use poisons.")
+        SetInfoText("$NUP_Help_PlayerPoisons")
     elseif (option == PL_PLayerFortify)
-        SetInfoText("Player will use fortify potions the way followers do.")
+        SetInfoText("$NUP_Help_PlayerFortify")
     elseif (option == PL_PLayerFood)
-        SetInfoText("Player will use food the way npcs do.")
+        SetInfoText("$NUP_Help_PlayerFood")
     elseif (option == PL_UseFavoritedOnly)
-        SetInfoText("Player will only use items that have been added to the favorites.")
+        SetInfoText("$NUP_Help_PlayerFavoritedOnly.")
     elseif (option == PL_DontUseFavorited)
-        SetInfoText("Player will not use any items that have been added to the favorites. If both UseFavoritedItemsOnly and DontUseFavoritedItems are set to true UseFavoritedItemsOnly = false will be set automatically upon loading the game.")
+        SetInfoText("$NUP_Help_PlayerDontUseFavorited")
     elseif (option == PL_DontEatRawFood)
-        SetInfoText("If enabled, the player will not consume food with the Keyword VendorItemFoodRaw.")
+        SetInfoText("$NUP_Help_PlayerNoRawFood")
     elseif (option == PL_DontDrinkAlcohol)
-        SetInfoText("If enabled, the player will not consume anything regarded as alcohol")
+        SetInfoText("$NUP_Help_PlayerNoAlcohol")
     elseif (option == G_GlobalCooldown)
-        SetInfoText("Cooldown in milliseconds for item usage (potions, poisons, food, etc.). 0 means that items will be used according to the CycleWaitTime defined in [System] (one potion and one poison per cycle)")
+        SetInfoText("$NUP_Help_GlobalCooldown")
     elseif (option == G_MaxDuration)
-        SetInfoText("Maximum duration restoration potions (health, magicka, stamina) are accounted for, idependent from their actual duration.")
+        SetInfoText("$NUP_Help_MaxDuration")
     elseif (option == G_MaxFortifyDuration)
-        SetInfoText("Maximum duration fortification potions are accounted for, idependent from their actual duration.")
+        SetInfoText("$NUP_Help_MaxFortifyDuration")
     elseif (option == G_CycleTime)
-        SetInfoText("Time between two periods in milliseconds. Set to smaller values to increase reactivity. Set to larger values to decrease performance impact.")
+        SetInfoText("$NUP_Help_CycleTime")
     elseif (option == G_DisableNonFollowerNPCs)
-        SetInfoText("NPCs that are not currently followers of the player won't use potions, etc.")
+        SetInfoText("$NUP_Help_DisableNonFollowerNPCs")
     elseif (option == G_DisableOutOfCombatProcessing)
-        SetInfoText("PCs are only handled when they are fighting -> Old handling method until version 3. If disabled, NPCs will use Health potions outside of combat. For instance, if they run into traps.")
+        SetInfoText("$NUP_Help_DisableOOCProcessing")
     elseif (option == G_DisableItemUsageWhileStaggered)
-        SetInfoText("NPCs that are staggered, unconcious,ragdolling or in a kill-move aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
+        SetInfoText("$NUP_Help_DisableWhileStaggered"9)
     elseif (option == G_DisableItemUsageWhileFlying)
-        SetInfoText("NPCs that are in mid-air or flying aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
+        SetInfoText("$NUP_Help_DisableWhileFlying")
     elseif (option == G_DisableItemUsageWhileBleedingOut)
-        SetInfoText("NPCs that are bleeding-out aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
+        SetInfoText(""$NUP_Help_DisableWhileBleedingOut)
     elseif (option == G_DisableItemUsageWhileSleeping)
-        SetInfoText("NPCs that are sleeping aren't able to use any potions and poisons. [Automatically enabled if you use potion animations]")
+        SetInfoText("$NUP_Help_DisableWhileSleeping")
     elseif (option == G_DisableItemUsageForExcludedNPCs)
-        SetInfoText("NPCs that are excluded from item distribution, will not use any Potions, Fortifypotions, Poisons or Food from any other in-game source.")
+        SetInfoText("$NUP_Help_DisableForExcludedNPCs")
     elseif (option == D_EnableLog)
-        SetInfoText("Enables logging output. Use with care as logs may get very large.")
+        SetInfoText("$NUP_Help_EnableLog")
     elseif (option == D_EnableLoadLog)
-        SetInfoText("Enables logging output for plugin load, use if you want to log rule issues")
+        SetInfoText("$NUP_Help_EnableLoadLog")
     elseif (option == D_LogLevel)
-        SetInfoText("0 - layer 0 log entries, 1 - layer 1 log entries, 2 - layer 3 log entries, 3 - layer 4 log entries. Affects which functions write log entries, as well as what is written by those functions.")
+        SetInfoText("$NUP_Help_LogLevel")
     elseif (option == D_EnableProfiling)
-        SetInfoText("Enables profiling output.")
+        SetInfoText("$NUP_Help_EnableProfiling")
     elseif (option == D_ProfileLevel)
-        SetInfoText("0 - only highest level functions write their executions times to the profile log, 1 - lower level functions are written, 2 - lowest level functions are written. Be aware that not all functions are supported as Profiling costs execution time.")
+        SetInfoText("$NUP_Help_ProfileLevel")
     else
         SetInfoText("")
     endif
@@ -1402,6 +1626,12 @@ Function Distr_SetProbabilityScaling(float value) global native
 bool Function Distr_GetDoNotDistributeMixedInvisPotions() global native
 ; Sets wether potions mixed with invisibility are allowed
 Function Distr_SetDoNotDistributeMixedInvisPotions(bool value) global native
+
+; Returns the probability adjuster for the given effect and item type. If the adjuster doesn't exist returns 1
+float Function Distr_GetProbabilityAdjuster(int effect, int itemtype) global native
+
+; Sets the probability adjuster for the given effect and item type. If the value is one, the adjuster is deleted
+Function Distr_SetProbabilityAdjuster(int effect, int itemtype, float value) global native
 
 ; --------- Removal ---------
 
