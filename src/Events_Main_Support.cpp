@@ -667,8 +667,8 @@ namespace Events
 	{
 		return dur == 0 ?
 		           1000 :
-		       dur * 1000 > Settings::_MaxDuration ?
-		           Settings::_MaxDuration :
+		       dur * 1000 > Settings::system._MaxDuration ?
+		           Settings::system._MaxDuration :
 		           dur * 1000;
 	}
 
@@ -676,8 +676,8 @@ namespace Events
 	{
 		return dur == 0 ?
 		           1000 :
-		       dur * 1000 > Settings::_MaxFortifyDuration ?
-		           Settings::_MaxFortifyDuration :
+		       dur * 1000 > Settings::system._MaxFortifyDuration ?
+		           Settings::system._MaxFortifyDuration :
 		           dur * 1000;
 	}
 
@@ -685,8 +685,8 @@ namespace Events
 	{
 		return dur == 0 ?
 		           1000 :
-		       dur * 1000 > Settings::_MaxFortifyDuration ?
-		           Settings::_MaxFortifyDuration :
+		       dur * 1000 > Settings::system._MaxFortifyDuration ?
+		           Settings::system._MaxFortifyDuration :
 		           dur * 1000;
 	}
 

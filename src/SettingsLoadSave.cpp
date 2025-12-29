@@ -364,10 +364,10 @@ void Settings::Load()
 			if (Settings::system._cycletime < 500)
 				Settings::system._cycletime = 500;
 			loginfo("Setting: {} {}", "System:            CycleWaitTime", std::to_string(Settings::system._cycletime));
-			_MaxDuration = ini.GetLongValue("System", "MaxDuration", _MaxDuration);
-			loginfo("Setting: {} {}", "System:            MaxDuration", std::to_string(_MaxDuration));
-			_MaxFortifyDuration = ini.GetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration);
-			loginfo("Setting: {} {}", "System:            MaxFortifyDuration", std::to_string(_MaxFortifyDuration));
+			Settings::system._MaxDuration = ini.GetLongValue("System", "MaxDuration", Settings::system._MaxDuration);
+			loginfo("Setting: {} {}", "System:            MaxDuration", std::to_string(Settings::system._MaxDuration));
+			Settings::system._MaxFortifyDuration = ini.GetLongValue("System", "MaxFortifyDuration", Settings::system._MaxFortifyDuration);
+			loginfo("Setting: {} {}", "System:            MaxFortifyDuration", std::to_string(Settings::system._MaxFortifyDuration));
 			//Settings::system._alternateNPCRegistration = ini.GetBoolValue("System", "AlternateNPCRegistration", Settings::system._alternateNPCRegistration);
 			//loginfo("Setting: {} {}", "System:            AlternateNPCRegistration", std::to_string(Settings::system._alternateNPCRegistration));
 			Settings::system._killSwitch = ini.GetBoolValue("System", "KillSwitch", Settings::system._killSwitch);
@@ -631,8 +631,8 @@ void Settings::Save()
 	ini.SetLongValue("System", "CycleWaitTime", Settings::system._cycletime, "// Time between two periods in milliseconds.\n"
 																	"// Set to smaller values to increase reactivity. Set to larger \n"
 																	"// values to decrease performance impact.");
-	ini.SetLongValue("System", "MaxDuration", _MaxDuration, "// Maximum duration restoration potions (health, magicka, stamina) are accounted for, idependent from their actual duration.");
-	ini.SetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration, "// Maximum duration fortification potions are accounted for, idependent from their actual duration.");
+	ini.SetLongValue("System", "MaxDuration", Settings::system._MaxDuration, "// Maximum duration restoration potions (health, magicka, stamina) are accounted for, idependent from their actual duration.");
+	ini.SetLongValue("System", "MaxFortifyDuration", Settings::system._MaxFortifyDuration, "// Maximum duration fortification potions are accounted for, idependent from their actual duration.");
 	//if (Settings::system._alternateNPCRegistration)
 	//	ini.SetBoolValue("System", "AlternateNPCRegistration", Settings::system._alternateNPCRegistration, "Switches NPC registration from immediate, to registration on next cycle.");
 	ini.SetBoolValue("System", "KillSwitch", Settings::system._killSwitch, "Switches actors handling to main thread");

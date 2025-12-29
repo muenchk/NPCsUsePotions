@@ -108,15 +108,6 @@ public:
 	static void FixConsumables();
 
 	/// <summary>
-	/// Max duration tracked for potions in milliseconds
-	/// </summary>
-	static inline int _MaxDuration = 10000;
-	/// <summary>
-	/// Maximum duration tracked for fortify potions in milliseconds
-	/// </summary>
-	static inline int _MaxFortifyDuration = 180000;
-
-	/// <summary>
 	/// Settings for the system, can be ignored by user
 	/// </summary>
 	struct System
@@ -125,6 +116,15 @@ public:
 		/// [Settings] period for actor handling
 		/// </summary>
 		long _cycletime = 1000;
+
+		/// <summary>
+		/// Max duration tracked for potions in milliseconds
+		/// </summary>
+		int _MaxDuration = 10000;
+		/// <summary>
+		/// Maximum duration tracked for fortify potions in milliseconds
+		/// </summary>
+		int _MaxFortifyDuration = 180000;
 
 		/// <summary>
 		/// [Settings] switches NPC registration from direct registration, to registration on next cycle

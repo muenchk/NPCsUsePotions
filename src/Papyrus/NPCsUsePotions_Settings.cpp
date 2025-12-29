@@ -279,27 +279,27 @@ namespace Papyrus
 
 		int Get_MaxDuration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 		{
-			return Settings::_MaxDuration;
+			return Settings::system._MaxDuration;
 		}
 
 		void Set_MaxDuration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int milliseconds)
 		{
 			if (milliseconds < 0)
 				milliseconds = 0;
-			Settings::_MaxDuration = milliseconds;
+			Settings::system._MaxDuration = milliseconds;
 			Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 		}
 
 		int Get_MaxFortifyDuration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 		{
-			return Settings::_MaxFortifyDuration;
+			return Settings::system._MaxFortifyDuration;
 		}
 
 		void Set_MaxFortifyDuration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int milliseconds)
 		{
 			if (milliseconds < 0)
 				milliseconds = 0;
-			Settings::_MaxFortifyDuration = milliseconds;
+			Settings::system._MaxFortifyDuration = milliseconds;
 			Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 		}
 
