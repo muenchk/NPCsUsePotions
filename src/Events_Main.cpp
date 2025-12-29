@@ -41,17 +41,17 @@ namespace Events
 		if (!acinfo->IsValid())
 			return;
 		if (acinfo->GetDurHealth() >= 0)
-			acinfo->DecDurHealth(Settings::System::_cycletime);
+			acinfo->DecDurHealth(Settings::system._cycletime);
 		if (acinfo->GetDurMagicka() >= 0)
-			acinfo->DecDurMagicka(Settings::System::_cycletime);
+			acinfo->DecDurMagicka(Settings::system._cycletime);
 		if (acinfo->GetDurStamina() >= 0)
-			acinfo->DecDurStamina(Settings::System::_cycletime);
+			acinfo->DecDurStamina(Settings::system._cycletime);
 		if (acinfo->GetDurFortify() >= 0)
-			acinfo->DecDurFortify(Settings::System::_cycletime);
+			acinfo->DecDurFortify(Settings::system._cycletime);
 		if (acinfo->GetDurRegeneration() >= 0)
-			acinfo->DecDurRegeneration(Settings::System::_cycletime);
+			acinfo->DecDurRegeneration(Settings::system._cycletime);
 		if (acinfo->GetGlobalCooldownTimer() >= 0)
-			acinfo->DecGlobalCooldownTimer(Settings::System::_cycletime);
+			acinfo->DecGlobalCooldownTimer(Settings::system._cycletime);
 	}
 
 	void Main::HandleActorPotions(std::shared_ptr<ActorInfo> acinfo)
@@ -64,7 +64,7 @@ namespace Events
 			LOG_2("{} out-of-combat or not to be handled", Utility::PrintForm(acinfo));
 			return;
 		}
-		if (Settings::Potions::_HandleWeaponSheathedAsOutOfCombat && !acinfo->IsWeaponDrawn()) {
+		if (Settings::potions._HandleWeaponSheathedAsOutOfCombat && !acinfo->IsWeaponDrawn()) {
 			LOG_2("{} weapon sheathed", Utility::PrintForm(acinfo));
 			return;
 		}
@@ -72,18 +72,18 @@ namespace Events
 		AlchemicEffect alch = 0;
 		AlchemicEffect alch2 = 0;
 		AlchemicEffect alch3 = 0;
-		if (acinfo->GetGlobalCooldownTimer() <= tolerance && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
+		if (acinfo->GetGlobalCooldownTimer() <= tolerance && (!acinfo->IsPlayer() || Settings::player._playerPotions)) {
 			LOG_2("usage allowed")
 			// get combined effect for magicka, health, and stamina
-			if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold)
+			if (Settings::potions._enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetDurHealth() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::potions._healthThreshold)
 				alch = AlchemicEffect::kHealth;
 			else
 				alch = 0;
-			if (Settings::Potions::_enableMagickaRestoration && !comp->CannotRestoreMagicka(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kMagicka) < Settings::Potions::_magickaThreshold)
+			if (Settings::potions._enableMagickaRestoration && !comp->CannotRestoreMagicka(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kMagicka) < Settings::potions._magickaThreshold)
 				alch2 = AlchemicEffect::kMagicka;
 			else
 				alch2 = 0;
-			if (Settings::Potions::_enableStaminaRestoration && !comp->CannotRestoreStamina(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kStamina) < Settings::Potions::_staminaThreshold)
+			if (Settings::potions._enableStaminaRestoration && !comp->CannotRestoreStamina(acinfo) && acinfo->GetDurMagicka() < tolerance && ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kStamina) < Settings::potions._staminaThreshold)
 				alch3 = AlchemicEffect::kStamina;
 			else
 				alch3 = 0;
@@ -96,7 +96,7 @@ namespace Events
 			LOG_4("check for alchemyeffect {} with current dur health {} dur mag {} dur stam {} ", alch.string(), acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina());
 			// use potions
 			// do the first round
-			if (alch != 0 && (Settings::Potions::_UsePotionChance == 100 || rand100(rand) < Settings::Potions::_UsePotionChance)) {
+			if (alch != 0 && (Settings::potions._UsePotionChance == 100 || rand100(rand) < Settings::potions._UsePotionChance)) {
 				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, alch, false);
 				LOG_2("used potion with duration {}, magnitude {} and Alchemy Effect {}", dur, mag, Utility::ToString(eff));
 				// check if we have a valid effect
@@ -114,18 +114,18 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false)
 			return;
-		if (Settings::FortifyPotions::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
+		if (Settings::fortifyPotions._DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return;
 		LOG_1("{}", Utility::PrintForm(acinfo));
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance &&
-			Settings::FortifyPotions::_enableFortifyPotions &&
-			(!(acinfo->IsPlayer()) || Settings::Player::_playerFortifyPotions)) {
+			Settings::fortifyPotions._enableFortifyPotions &&
+			(!(acinfo->IsPlayer()) || Settings::player._playerFortifyPotions)) {
 
-			if ((acinfo->IsFollower() || acinfo->IsPlayer()) && !(Settings::FortifyPotions::_EnemyNumberThresholdFortify < hostileactors || (acinfo->GetTargetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify))) {
+			if ((acinfo->IsFollower() || acinfo->IsPlayer()) && !(Settings::fortifyPotions._EnemyNumberThresholdFortify < hostileactors || (acinfo->GetTargetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::fortifyPotions._EnemyLevelScalePlayerLevelFortify))) {
 				return;
 			}
 			// handle fortify potions
-			if ((Settings::FortifyPotions::_UseFortifyPotionChance == 100 || rand100(rand) < Settings::FortifyPotions::_UseFortifyPotionChance)) {
+			if ((Settings::fortifyPotions._UseFortifyPotionChance == 100 || rand100(rand) < Settings::fortifyPotions._UseFortifyPotionChance)) {
 				// general stuff
 				AlchemicEffect effects = 0;
 
@@ -155,14 +155,14 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false)
 			return;
-		if (Settings::Poisons::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
+		if (Settings::poisons._DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return;
 		LOG_1("{}", Utility::PrintForm(acinfo));
 		if (acinfo->GetDurCombat() > 1000 &&
 			acinfo->GetGlobalCooldownTimer() <= tolerance &&
-			Settings::Poisons::_enablePoisons &&
-			(Settings::Poisons::_UsePoisonChance == 100 || rand100(rand) < Settings::Poisons::_UsePoisonChance) &&
-			(!acinfo->IsPlayer() || Settings::Player::_playerPoisons)) {
+			Settings::poisons._enablePoisons &&
+			(Settings::poisons._UsePoisonChance == 100 || rand100(rand) < Settings::poisons._UsePoisonChance) &&
+			(!acinfo->IsPlayer() || Settings::player._playerPoisons)) {
 			LOG_2("usage allowed");
 			// handle poisons
 			auto combatdata = acinfo->GetCombatData();
@@ -175,7 +175,7 @@ namespace Events
 				// they only use poisons if there are many npcs in the fight, or if the enemies they are targetting
 				// have a high enough level, like starting at PlayerLevel*0.8 or so
 				if (((acinfo->IsFollower() || acinfo->IsPlayer()) &&
-						(Settings::Poisons::_EnemyNumberThreshold < hostileactors || (acinfo->GetTargetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::Poisons::_EnemyLevelScalePlayerLevel))) ||
+						(Settings::poisons._EnemyNumberThreshold < hostileactors || (acinfo->GetTargetLevel() >= RE::PlayerCharacter::GetSingleton()->GetLevel() * Settings::poisons._EnemyLevelScalePlayerLevel))) ||
 					acinfo->IsFollower() == false && acinfo->IsPlayer() == false) {
 					// time to use some poisons
 					AlchemicEffect effects = 0;
@@ -198,7 +198,7 @@ namespace Events
 					if (tar)
 						target = tar->GetActor();
 					if (target) {
-						if (Settings::Poisons::_DontUseAgainst100PoisonResist && tar->GetPermanentPoisonResist() >= 100) {
+						if (Settings::poisons._DontUseAgainst100PoisonResist && tar->GetPermanentPoisonResist() >= 100) {
 							return;
 						}
 						// we can make the usage dependent on the target
@@ -228,16 +228,16 @@ namespace Events
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false)
 			return;
-		if (Settings::Food::_DisableFollowers && acinfo->IsFollower())
+		if (Settings::food._DisableFollowers && acinfo->IsFollower())
 			return;
-		if (Settings::Food::_DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
+		if (Settings::food._DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return;
 		LOG_1("{}", Utility::PrintForm(acinfo));
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance &&
-			Settings::Food::_enableFood &&
+			Settings::food._enableFood &&
 			RE::Calendar::GetSingleton()->GetDaysPassed() >= acinfo->GetNextFoodTime() &&
-			(!acinfo->IsPlayer() || Settings::Player::_playerFood) &&
-			(Settings::Food::_RestrictFoodToCombatStart == false || acinfo->GetDurCombat() < 2000)) {
+			(!acinfo->IsPlayer() || Settings::player._playerFood) &&
+			(Settings::food._RestrictFoodToCombatStart == false || acinfo->GetDurCombat() < 2000)) {
 			// use food at the beginning of the fight to simulate acinfo npc having eaten
 			// calc effects that we want to be applied
 			AlchemicEffect effects = 0;
@@ -245,7 +245,7 @@ namespace Events
 			effects |= CalcRegenEffects(acinfo, acinfo->GetCombatData());
 			auto [dur, effect] = ACM::ActorUseFood(acinfo, effects, false);
 			if (effect == 0 && dur == -1) {  // nothing found
-				auto tup = acinfo->IsPlayer() && Settings::Player::_DontEatRawFood ? ACM::ActorUseFood(acinfo, false) : ACM::ActorUseFood(acinfo, true);
+				auto tup = acinfo->IsPlayer() && Settings::player._DontEatRawFood ? ACM::ActorUseFood(acinfo, false) : ACM::ActorUseFood(acinfo, true);
 				dur = std::get<0>(tup);
 				effect = std::get<1>(tup);
 			}
@@ -262,14 +262,14 @@ namespace Events
 		if (!acinfo->IsValid())
 			return;
 		if (acinfo->IsInCombat() == true &&
-				(Settings::Potions::_HandleWeaponSheathedAsOutOfCombat == false /*if disabled we always use the combat handler*/ ||
-					Settings::Potions::_HandleWeaponSheathedAsOutOfCombat == true && acinfo->IsWeaponDrawn() == true /*if weapons are drawn we use the combat handler*/) ||
+				(Settings::potions._HandleWeaponSheathedAsOutOfCombat == false /*if disabled we always use the combat handler*/ ||
+					Settings::potions._HandleWeaponSheathedAsOutOfCombat == true && acinfo->IsWeaponDrawn() == true /*if weapons are drawn we use the combat handler*/) ||
 			acinfo->GetHandleActor() == false)
 			return;
 		LOG_1("{}", Utility::PrintForm(acinfo));
 		// we are only checking for health here
-		if (Settings::Potions::_enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
-			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::Potions::_healthThreshold && (!acinfo->IsPlayer() || Settings::Player::_playerPotions)) {
+		if (Settings::potions._enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
+			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::potions._healthThreshold && (!acinfo->IsPlayer() || Settings::player._playerPotions)) {
 			// construct combined effect
 			AlchemicEffect alch = AlchemicEffect::kHealth;
 			if (acinfo->IsVampire())
@@ -345,7 +345,7 @@ namespace Events
 			}
 		}
 		// check for non-follower option
-		if (Settings::Usage::_DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->IsPlayer() == false) {
+		if (Settings::usage._DisableNonFollowerNPCs && acinfo->IsFollower() == false && acinfo->IsPlayer() == false) {
 			LOG_2("Actor is not a follower, and non-follower processing has been disabled");
 			acinfo->SetHandleActor(false);
 			return;
@@ -453,7 +453,7 @@ namespace Events
 		playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
 		// tolerance for potion drinking, to diminish effects of computation times
 		// on cycle time
-		tolerance = Settings::System::_cycletime / 5;
+		tolerance = Settings::system._cycletime / 5;
 
 		StartProfiling;
 		// find all actors that are forbidden from handling in this round
@@ -468,7 +468,7 @@ namespace Events
 			}
 		}
 		// handle alternate npc registration
-		if (Settings::System::_alternateNPCRegistration) {
+		if (Settings::system._alternateNPCRegistration) {
 			LOG_1("Register {} NPCs and Unregister {} NPCs", alternateregistration.size(), alternateunregistration.size());
 			while (alternateregistration.size() > 0) {
 				RE::ActorHandle handle;
@@ -560,7 +560,7 @@ namespace Events
 					if (Game::IsFastTravelling())
 						return;
 					// handle potions out-of-combat
-					if (Settings::Usage::_DisableOutOfCombatProcessing == false) {
+					if (Settings::usage._DisableOutOfCombatProcessing == false) {
 						HandleActorOOCPotions(acinfo);
 					}
 					// handle potions
@@ -606,10 +606,10 @@ namespace Events
 			return;
 
 		// main actor handling
-		if (Settings::System::_killSwitch)
+		if (Settings::system._killSwitch)
 		{
 			// if cycle has not passed since the last cycle began
-			if (_lastcyclebegin + std::chrono::milliseconds(Settings::System::_cycletime) > std::chrono::steady_clock::now())
+			if (_lastcyclebegin + std::chrono::milliseconds(Settings::system._cycletime) > std::chrono::steady_clock::now())
 				goto OnFrameAfterActor;
 			_lastcyclebegin = std::chrono::steady_clock::now();
 
@@ -713,7 +713,7 @@ CheckActorsSkipIteration:
 			combatants.clear();
 			actorhandlerworking = false;
 			if (!stopactorhandler)
-				std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::System::_cycletime));
+				std::this_thread::sleep_for(std::chrono::duration<int, std::milli>(Settings::system._cycletime));
 		}
 		LOG_1("Exit.");
 		stopactorhandler = false;
@@ -745,10 +745,10 @@ CheckActorsSkipIteration:
 			loaded = true;
 
 		// checking if player should be handled
-		//if ((Settings::Player::_playerPotions ||
-		//		Settings::Player::_playerFortifyPotions ||
-		//		Settings::Player::_playerPoisons ||
-		//		Settings::Player::_playerFood)) {
+		//if ((Settings::player._playerPotions ||
+		//		Settings::player._playerFortifyPotions ||
+		//		Settings::player._playerPoisons ||
+		//		Settings::player._playerFood)) {
 			// inject player into the list and remove him later
 			ACSetRegister(data->FindActor(RE::PlayerCharacter::GetSingleton()));
 			LOG_3("Adding player to the list");
@@ -759,8 +759,8 @@ CheckActorsSkipIteration:
 		
 		// vr will use the OnFrame method permanently
 		if (REL::Module::IsVR() == true)
-			Settings::System::_killSwitch = true;
-		if (Settings::System::_killSwitch == false) {
+			Settings::system._killSwitch = true;
+		if (Settings::system._killSwitch == false) {
 			if (actorhandlerrunning == false) {
 				if (actorhandler != nullptr) {
 					// if the thread is there, then destroy and delete it
@@ -792,7 +792,7 @@ CheckActorsSkipIteration:
 		static std::thread* testhandler = nullptr;
 		static std::thread* removeitemshandler = nullptr;
 
-		if (Settings::Debug::_Test) {
+		if (Settings::debug._Test) {
 			if (testhandler == nullptr) {
 				testhandler = new std::thread(Tests::TestAllCells);
 				testhandler->detach();
@@ -800,7 +800,7 @@ CheckActorsSkipIteration:
 			}
 		}
 
-		if (Settings::Debug::_CompatibilityRemoveItemsStartup) {
+		if (Settings::debug._CompatibilityRemoveItemsStartup) {
 			if (removeitemshandler == nullptr) {
 				removeitemshandler = new std::thread(RemoveItemsOnStartup);
 				removeitemshandler->detach();
@@ -873,7 +873,7 @@ CheckActorsSkipIteration:
 
 	void Main::InitThreads()
 	{
-		if (Settings::System::_killSwitch == false) {
+		if (Settings::system._killSwitch == false) {
 			if (actorhandler != nullptr) {
 				// if the thread is there, then destroy and delete it
 				// if it is joinable and not running it has already finished, but needs to be joined before

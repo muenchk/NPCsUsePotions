@@ -124,18 +124,20 @@ public:
 		/// <summary>
 		/// [Settings] period for actor handling
 		/// </summary>
-		static inline long _cycletime = 1000;
+		long _cycletime = 1000;
 
 		/// <summary>
 		/// [Settings] switches NPC registration from direct registration, to registration on next cycle
 		/// </summary>
-		static inline bool _alternateNPCRegistration = true;
+		bool _alternateNPCRegistration = true;
 
 		/// <summary>
 		/// [Settings] switches to handling actors on main thread
 		/// </summary>
-		static inline bool _killSwitch = false;
+		bool _killSwitch = false;
 	};
+
+	static inline System system;
 
 	/// <summary>
 	/// General settings
@@ -145,36 +147,38 @@ public:
 		/// <summary>
 		/// [Settings] Global cooldown of using items in milliseconds
 		/// </summary>
-		static inline long _globalCooldown = 1000;
+		long _globalCooldown = 1000;
 		/// <summary>
 		/// [Settings] Whether to disable item usage while an actor is staggered (or otherwise indisponated)
 		/// </summary>
-		static inline bool _DisableItemUsageWhileStaggered = false;  // disables potion and poison usage while the npc is staggered
+		bool _DisableItemUsageWhileStaggered = false;  // disables potion and poison usage while the npc is staggered
 		/// <summary>
 		/// [Settings] Whether to disable item usage while an actor is in the air
 		/// </summary>
-		static inline bool _DisableItemUsageWhileFlying = false;
+		bool _DisableItemUsageWhileFlying = false;
 		/// <summary>
 		/// [Settings] Whether to disable item usage while an actor is bleeding out
 		/// </summary>
-		static inline bool _DisableItemUsageWhileBleedingOut = false;
+		bool _DisableItemUsageWhileBleedingOut = false;
 		/// <summary>
 		/// [Settings] Whether to disable item usage while an actor is sleeping
 		/// </summary>
-		static inline bool _DisableItemUsageWhileSleeping = false;
+		bool _DisableItemUsageWhileSleeping = false;
 		/// <summary>
 		/// [Settings] Disables all actors that are neither followers nor the player
 		/// </summary>
-		static inline bool _DisableNonFollowerNPCs = false;          // disable item usage for npcs that aren't followers or the player.
+		bool _DisableNonFollowerNPCs = false;          // disable item usage for npcs that aren't followers or the player.
 		/// <summary>
 		/// [Settings] Disables the processing of actors out-of-combat
 		/// </summary>
-		static inline bool _DisableOutOfCombatProcessing = false;    // disables npc processing if they are out-of-combat
+		bool _DisableOutOfCombatProcessing = false;    // disables npc processing if they are out-of-combat
 		/// <summary>
 		/// [Settings] Disables the usage of items for NPCs that are excluded from distribution
 		/// </summary>
-		static inline bool _DisableItemUsageForExcludedNPCs = false; // disables the usage of items for NPCs that are excluded from distribution
+		bool _DisableItemUsageForExcludedNPCs = false; // disables the usage of items for NPCs that are excluded from distribution
 	};
+
+	static inline Usage usage;
 
 	/// <summary>
 	/// Settings related to potions
@@ -184,46 +188,48 @@ public:
 		/// <summary>
 		/// [Settings] Whether the usage of magicka potions is enabled
 		/// </summary>
-		static inline bool _enableMagickaRestoration = true;  // enables automatic usage of magicka potions
+		bool _enableMagickaRestoration = true;  // enables automatic usage of magicka potions
 		/// <summary>
 		/// [Settings] Whether the usage of stamina potions is enabled
 		/// </summary>
-		static inline bool _enableStaminaRestoration = true;  // enables automatic usage of stamina potions
+		bool _enableStaminaRestoration = true;  // enables automatic usage of stamina potions
 		/// <summary>
 		/// [Settings] Whether the usage of health potions is enabled
 		/// </summary>
-		static inline bool _enableHealthRestoration = true;   // enables automatic usage of health potions
+		bool _enableHealthRestoration = true;   // enables automatic usage of health potions
 		/// <summary>
 		/// [Settings] Whether to allow potions with detrimental effects
 		/// </summary>
-		static inline bool _AllowDetrimentalEffects = false;  // allows / disallows npcs to use potions with detrimental effects
+		bool _AllowDetrimentalEffects = false;  // allows / disallows npcs to use potions with detrimental effects
 		/// <summary>
 		/// [Settings] When weapons are sheathed, potion handling for out of combat is applied
 		/// </summary>
-		static inline bool _HandleWeaponSheathedAsOutOfCombat = true;
+		bool _HandleWeaponSheathedAsOutOfCombat = true;
 
 		/// <summary>
 		/// [Settings] Health threshold at which NPCs will begin using health potions
 		/// </summary>
-		static inline float _healthThreshold = 0.5f;
+		float _healthThreshold = 0.5f;
 		/// <summary>
 		/// [Settings] Magicka threshold at which NPCs will begin using magicka potions
 		/// </summary>
-		static inline float _magickaThreshold = 0.5f;
+		float _magickaThreshold = 0.5f;
 		/// <summary>
 		/// [Settings] Stamina threshold at which NPCs will begin using stamina potions
 		/// </summary>
-		static inline float _staminaThreshold = 0.5f;
+		float _staminaThreshold = 0.5f;
 		/// <summary>
 		/// [Settings] Chance that a NPC will use a health, magicka, or stamina potions if they can
 		/// </summary>
-		static inline int _UsePotionChance = 100;  // Chance that a potion will be used when appropiate
+		int _UsePotionChance = 100;  // Chance that a potion will be used when appropiate
 
 		/// <summary>
 		/// [Settings] effects that are forbidden from being distributed
 		/// </summary>
-		static inline AlchemicEffect _prohibitedEffects;
+		AlchemicEffect _prohibitedEffects;
 	};
+
+	static inline Potions potions;
 
 	/// <summary>
 	/// Settings related to poisons
@@ -233,32 +239,32 @@ public:
 		/// <summary>
 		/// [Settings] Whether the usage of poisons is enabled
 		/// </summary>
-		static inline bool _enablePoisons = true;  // enables automatic usage of poisons for npcs
+		bool _enablePoisons = true;  // enables automatic usage of poisons for npcs
 		/// <summary>
 		/// [Settings] Whether to allow poisons with positive effects
 		/// </summary>
-		static inline bool _AllowPositiveEffects = false;  // allows / disallows npcs to use poisons with positive effects
+		bool _AllowPositiveEffects = false;  // allows / disallows npcs to use poisons with positive effects
 		/// <summary>
 		/// [Settings] Disallows the usage of poisons, while the weapons are sheathed
 		/// </summary>
-		static inline bool _DontUseWithWeaponsSheathed = true;
+		bool _DontUseWithWeaponsSheathed = true;
 		/// <summary>
 		/// [Settings] NPCs and the player will not use Poisons against those that have 100% poison resistance anymore
 		/// </summary>
-		static inline bool _DontUseAgainst100PoisonResist = true;
+		bool _DontUseAgainst100PoisonResist = true;
 
 		/// <summary>
 		/// [Settings] Scaling factor for when an NPC is considered powerful enough to warrant the usage of poisons
 		/// </summary>
-		static inline float _EnemyLevelScalePlayerLevel = 0.8f;  // how high the level of an enemy must be for followers to use poisons
+		float _EnemyLevelScalePlayerLevel = 0.8f;  // how high the level of an enemy must be for followers to use poisons
 		/// <summary>
 		/// [Settings]  Number of NPCs that must be in combat, to disable the level scaling
 		/// </summary>
-		static inline int _EnemyNumberThreshold = 5;             // how many npcs must be fighting, for followers to use poisons regardless of the enemies level
+		int _EnemyNumberThreshold = 5;             // how many npcs must be fighting, for followers to use poisons regardless of the enemies level
 		/// <summary>
 		/// [Settings] Chance that an NPC will use a poison if they can
 		/// </summary>
-		static inline int _UsePoisonChance = 100;                // Chance that a poison will be used when possible
+		int _UsePoisonChance = 100;                // Chance that a poison will be used when possible
 
 		/// <summary>
 		/// [Internal] Static base dosage of poisons
@@ -267,13 +273,15 @@ public:
 		/// <summary>
 		/// [Settings] Base dosage all poisons should have
 		/// </summary>
-		static inline int _Dosage = _BaseDosage;  //  dosage applied to poisons
+		int _Dosage = _BaseDosage;  //  dosage applied to poisons
 
 		/// <summary>
 		/// [Settings] effects that are forbidden from being distributed
 		/// </summary>
-		static inline AlchemicEffect _prohibitedEffects;
+		AlchemicEffect _prohibitedEffects;
 	};
+
+	static inline Poisons poisons;
 
 	/// <summary>
 	/// Settings related to fortify potions
@@ -283,25 +291,27 @@ public:
 		/// <summary>
 		/// [Settings] Whether the usage of fortify potions is enabled
 		/// </summary>
-		static inline bool _enableFortifyPotions = true;  // enables automatic usage of fortify potions for npcs
+		bool _enableFortifyPotions = true;  // enables automatic usage of fortify potions for npcs
 		/// <summary>
 		/// [Settings] Disallows the usage of fortify potions, while the weapons are sheathed
 		/// </summary>
-		static inline bool _DontUseWithWeaponsSheathed = true;
+		bool _DontUseWithWeaponsSheathed = true;
 
 		/// <summary>
 		/// [Settings] Scaling factor for when an NPC is considered powerful enough to warrant the usage of fortify potions
 		/// </summary>
-		static inline float _EnemyLevelScalePlayerLevelFortify = 0.8f;  // how high the level of an enemy must be for followers to use fortify potions
+		float _EnemyLevelScalePlayerLevelFortify = 0.8f;  // how high the level of an enemy must be for followers to use fortify potions
 		/// <summary>
 		/// [Settings] Number of NPCs that must be in combat, to disable the level scaling
 		/// </summary>
-		static inline int _EnemyNumberThresholdFortify = 5;             // how many npcs must be fighting, for followers to use fortify potions regardless of the enemies level
+		int _EnemyNumberThresholdFortify = 5;             // how many npcs must be fighting, for followers to use fortify potions regardless of the enemies level
 		/// <summary>
 		/// [Settings] Chance that an NPC will use a fortify potion if they can
 		/// </summary>
-		static inline int _UseFortifyPotionChance = 100;                // Chance that a fortify potion will be used when possible
+		int _UseFortifyPotionChance = 100;                // Chance that a fortify potion will be used when possible
 	};
+
+	static inline FortifyPotions fortifyPotions;
 
 	/// <summary>
 	/// Settings related to food
@@ -311,29 +321,30 @@ public:
 		/// <summary>
 		/// [Settings] Whether the usage of food items is enabled
 		/// </summary>
-		static inline bool _enableFood = true;				// enables automatic usage of food for npcs
+		bool _enableFood = true;				// enables automatic usage of food for npcs
 		/// <summary>
 		/// [Settings] Whether to allow food with detrimental effects
 		/// </summary>
-		static inline bool _AllowDetrimentalEffects = false;
+		bool _AllowDetrimentalEffects = false;
 		/// <summary>
 		/// [Settings] Whether to restrict food usage to the beginning of combat
 		/// </summary>
-		static inline bool _RestrictFoodToCombatStart = false;  // restricts the usage of food to the beginning of the combat
+		bool _RestrictFoodToCombatStart = false;  // restricts the usage of food to the beginning of the combat
 		/// <summary>
 		/// [Settings] Disables food usage for followers | used for survival mods
 		/// </summary>
-		static inline bool _DisableFollowers = false;
+		bool _DisableFollowers = false;
 		/// <summary>
 		/// [Settings] Disallows the usage of fortify potions, while the weapons are sheathed
 		/// </summary>
-		static inline bool _DontUseWithWeaponsSheathed = false;
+		bool _DontUseWithWeaponsSheathed = false;
 
 		/// <summary>
 		/// [Settings] effects that are forbidden from being distributed
 		/// </summary>
-		static inline AlchemicEffect _prohibitedEffects;
+		AlchemicEffect _prohibitedEffects;
 	};
+	static inline Food food;
 
 	/// <summary>
 	/// settings related to the player character
@@ -343,36 +354,37 @@ public:
 		/// <summary>
 		/// [Settings] Whether the player will automatically consume potions
 		/// </summary>
-		static inline bool _playerPotions = false;  // enables automatic usage of potions for the player
+		bool _playerPotions = false;  // enables automatic usage of potions for the player
 		/// <summary>
 		/// [Settings] Whether the player will automatically use poisons
 		/// </summary>
-		static inline bool _playerPoisons = false;          // enables automatic usage of poisons for player
+		bool _playerPoisons = false;          // enables automatic usage of poisons for player
 		/// <summary>
 		/// [Settings] Whether the player will automatically consume fortify potions
 		/// </summary>
-		static inline bool _playerFortifyPotions = false;   // enables automatic usage of fortify potions for player
+		bool _playerFortifyPotions = false;   // enables automatic usage of fortify potions for player
 		/// <summary>
 		/// [Settings] Whether the player will automatically consume food
 		/// </summary>
-		static inline bool _playerFood = false;             // enables automatic usage of food for player
+		bool _playerFood = false;             // enables automatic usage of food for player
 		/// <summary>
 		/// [Settings] The player will only use items that have been marked as favorite
 		/// </summary>
-		static inline bool _UseFavoritedItemsOnly = false;
+		bool _UseFavoritedItemsOnly = false;
 		/// <summary>
 		/// [Settings] The player will not use favorited items
 		/// </summary>
-		static inline bool _DontUseFavoritedItems = false;
+		bool _DontUseFavoritedItems = false;
 		/// <summary>
 		/// [Settings] The player will not consume food with the Keyword VendorItemFoodRaw
 		/// </summary>
-		static inline bool _DontEatRawFood = false;
+		bool _DontEatRawFood = false;
 		/// <summary>
 		/// [Settings] The player will not consume anything regarded as alcohol
 		/// </summary>
-		static inline bool _DontDrinkAlcohol = false;
+		bool _DontDrinkAlcohol = false;
 	};
+	static inline Player player;
 
 	/// <summary>
 	/// Settings related to distribution
@@ -382,79 +394,80 @@ public:
 		/// <summary>
 		/// [Settings] Whether poisons should be distributed [player excluded]
 		/// </summary>
-		static inline bool _DistributePoisons = true;         // player is excluded from distribution options, as well as followers
+		bool _DistributePoisons = true;         // player is excluded from distribution options, as well as followers
 		/// <summary>
 		/// [Settings] Whether potions should be distributed [player excluded]
 		/// </summary>
-		static inline bool _DistributePotions = true;         // player is excluded from distribution options, as well as followers
+		bool _DistributePotions = true;         // player is excluded from distribution options, as well as followers
 		/// <summary>
 		/// [Settings] Whether fortify potions should be distributed [player excluded]
 		/// </summary>
-		static inline bool _DistributeFortifyPotions = true;  // player is excluded from distribution options, as well as followers
+		bool _DistributeFortifyPotions = true;  // player is excluded from distribution options, as well as followers
 		/// <summary>
 		/// [Settings] Whether food should be distributed [player excluded]
 		/// </summary>
-		static inline bool _DistributeFood = true;            // player is excluded from distribution options, as well as followers
+		bool _DistributeFood = true;            // player is excluded from distribution options, as well as followers
 		/// <summary>
 		/// [Settings] Whether custom items should be distribtued [player excluded]
 		/// </summary>
-		static inline bool _DistributeCustomItems = true;     // distributes custom items/death items to actor, does not affect custom potions etc.
+		bool _DistributeCustomItems = true;     // distributes custom items/death items to actor, does not affect custom potions etc.
 
 		/// <summary>
 		/// [Settings] Level of an NPC to be considered Weak
 		/// </summary>
-		static inline int _LevelEasy = 20;       // only distribute "weak" potions and poisons
+		int _LevelEasy = 20;       // only distribute "weak" potions and poisons
 		/// <summary>
 		/// [Settings] Level of an NPC to be considered Normal
 		/// </summary>
-		static inline int _LevelNormal = 35;     // may distribute "standard" potions and poisons
+		int _LevelNormal = 35;     // may distribute "standard" potions and poisons
 		/// <summary>
 		/// [Settings] Level of an NPC to be considered Difficult
 		/// </summary>
-		static inline int _LevelDifficult = 50;  // may distribute "potent" potions and poisons
+		int _LevelDifficult = 50;  // may distribute "potent" potions and poisons
 		/// <summary>
 		/// [Settings] Level of an NPC to be considered Insane
 		/// </summary>
-		static inline int _LevelInsane = 70;     // may have Insane tear potions
+		int _LevelInsane = 70;     // may have Insane tear potions
 
 		/// <summary>
 		/// [Settings] NPC difficulty scaling is bound to game difficulty
 		/// </summary>
-		static inline bool _GameDifficultyScaling = false;  // ties the strength of the actors not to levels, but the game difficulty
+		bool _GameDifficultyScaling = false;  // ties the strength of the actors not to levels, but the game difficulty
 
 		/// <summary>
 		/// [Settings] Maximum magnitude of weak potions
 		/// </summary>
-		static inline int _MaxMagnitudeWeak = 30;      // max potion / poison magnitude to be considered "weak"
+		int _MaxMagnitudeWeak = 30;      // max potion / poison magnitude to be considered "weak"
 		/// <summary>
 		/// [Settings] Maximum magnitude of Standard potions
 		/// </summary>
-		static inline int _MaxMagnitudeStandard = 60;  // max potion / poison magnitude to be considered "standard"
+		int _MaxMagnitudeStandard = 60;  // max potion / poison magnitude to be considered "standard"
 		/// <summary>
 		/// [Settings] Maximum magnitude of potent potions
 		/// </summary>
-		static inline int _MaxMagnitudePotent = 150;   // max potion / poison magnitude to be considered "potent"
+		int _MaxMagnitudePotent = 150;   // max potion / poison magnitude to be considered "potent"
 													   // anything above this won't be distributed
 
 		/// <summary>
 		/// [Settings] Scaling factor for Alchemy Effects matching primary combat style of an NPC
 		/// </summary>
-		static inline float _StyleScalingPrimary = 1.20f;    // base scaling factor applied to potions etc. that are considered useful for the the primary combattype of an actor
+		float _StyleScalingPrimary = 1.20f;    // base scaling factor applied to potions etc. that are considered useful for the the primary combattype of an actor
 		/// <summary>
 		/// [Settings] Scaling factor for Alchemy Effects matching secondary combat style of an NPC
 		/// </summary>
-		static inline float _StyleScalingSecondary = 1.10f;  // base scaling factor applied to potions etc. that are considered useful for the secondary combattype of an actor
+		float _StyleScalingSecondary = 1.10f;  // base scaling factor applied to potions etc. that are considered useful for the secondary combattype of an actor
 
 		/// <summary>
 		/// [Settings] general probability scaling
 		/// </summary>
-		static inline float _ProbabilityScaling = 1.0f;
+		float _ProbabilityScaling = 1.0f;
 
 		/// <summary>
 		/// [Settings] potions that have invisibility as one of their effects may not be distributed as other kinds of potions
 		/// </summary>
-		static inline bool _DoNotDistributeMixedInvisPotions = false;
+		bool _DoNotDistributeMixedInvisPotions = false;
 	};
+	static inline Distr distr;
 
 	/// <summary>
 	/// Settings related to removal options
@@ -464,17 +477,18 @@ public:
 		/// <summary>
 		/// [Settings] Whether AlchemyItems should be removed from actors upon their death
 		/// </summary>
-		static inline bool _RemoveItemsOnDeath = true;  // remove unused items on death, if activated chances for removal can be set
+		bool _RemoveItemsOnDeath = true;  // remove unused items on death, if activated chances for removal can be set
 
 		/// <summary>
 		/// [Settings] The Chance that a single item is removed from an actor
 		/// </summary>
-		static inline int _ChanceToRemoveItem = 90;         // chance for an item to be removed
+		int _ChanceToRemoveItem = 90;         // chance for an item to be removed
 		/// <summary>
 		/// [Settings] The maximum number of alchemy items that may remain of an actor after their death
 		/// </summary>
-		static inline int _MaxItemsLeft = 2;                // maximum number of items that may remain, from those to be removed
+		int _MaxItemsLeft = 2;                // maximum number of items that may remain, from those to be removed
 	};
+	static inline Removal removal;
 
 	/// <summary>
 	/// Settings for the whitelist mode
@@ -484,13 +498,14 @@ public:
 		/// <summary>
 		/// [Settings] Enables whitelist mode for Items
 		/// </summary>
-		static inline bool EnabledItems = false;
+		bool EnabledItems = false;
 
 		/// <summary>
 		/// [Settings] Enables whitelist mode for NPCs
 		/// </summary>
-		static inline bool EnabledNPCs = false;
+		bool EnabledNPCs = false;
 	};
+	static inline Whitelist whitelist;
 
 	/// <summary>
 	/// Settings related to fixes
@@ -500,12 +515,13 @@ public:
 		/// <summary>
 		/// [Settings] Distributes the Skill Boost perks to all valid NPCs
 		/// </summary>
-		static inline bool _ApplySkillBoostPerks = true;  // Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
+		bool _ApplySkillBoostPerks = true;  // Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
 		/// <summary>
 		/// [Settings] Forciblx fixes all potion, poison and food sounds for third person usage
 		/// </summary>
-		static inline bool _ForceFixPotionSounds = true;
+		bool _ForceFixPotionSounds = true;
 	};
+	static inline Fixes fixes;
 
 	/// <summary>
 	/// General settings for compatibility
@@ -515,28 +531,32 @@ public:
 		/// <summary>
 		/// [Settings] Disables all npcs with the ActorTypeCreature or ActorTypeAnimal keywords, if they do not have a dedicated rule. May cause npcs to be disabled, that should not be
 		/// </summary>
-		static inline bool _DisableCreaturesWithoutRules = true;
+		bool _DisableCreaturesWithoutRules = true;
 
 		struct AnimatedPoisons
 		{
 			/// <summary>
 			/// [Setting] Whether the usage of Animated Poisons is enabled
 			/// </summary>
-			static inline bool _Enable = true;
+			bool _Enable = true;
 			/// <summary>
 			/// [Setting] enables the poison dosage mechanic of Animated Poisons if the mod is found
 			/// </summary>
-			static inline bool _UsePoisonDosage = false;
+			bool _UsePoisonDosage = false;
 		};
+
+		AnimatedPoisons animatedPoisons;
 
 		struct AnimatedPotions
 		{
 			/// <summary>
 			/// [Setting] Whether the usage of Animated Potions is enabled
 			/// </summary>
-			static inline bool _Enable = true;
+			bool _Enable = true;
 		};
+		AnimatedPotions animatedPotions;
 	};
+	static inline Compatibility compatibility;
 
 	/// <summary>
 	/// Settings for debug features
@@ -546,24 +566,24 @@ public:
 		/// <summary>
 		/// [Setting] Removes all Excluded items from actors before the distribution of new items
 		/// </summary>
-		static inline bool _CompatibilityRemoveItemsBeforeDist = false;
+		bool _CompatibilityRemoveItemsBeforeDist = false;
 		/// <summary>
 		/// [Setting] Removes all excluded items from actors at startup
 		/// </summary>
-		static inline bool _CompatibilityRemoveItemsStartup = false;
+		bool _CompatibilityRemoveItemsStartup = false;
 		/// <summary>
 		/// [Setting] Removes all excluded items from all actors shortly after loading a game
 		/// </summary>
-		static inline bool _CompatibilityRemoveItemsStartup_OnlyExcluded = false;  
+		bool _CompatibilityRemoveItemsStartup_OnlyExcluded = false;  
 
 		/// <summary>
 		/// [Setting] Enables general logging
 		/// </summary>
-		static inline bool EnableLog = false;      
+		bool EnableLog = false;      
 		/// <summary>
 		/// [Setting] Enables logging for plugin load
 		/// </summary>
-		static inline bool EnableLoadLog = false;  
+		bool EnableLoadLog = false;  
 
 		/// <summary>
 		/// [Setting] log level
@@ -572,32 +592,34 @@ public:
 		/// 2 - highest to layer 2 function logging
 		/// 3 - highest to layer 3 function logging
 		/// </summary>
-		static inline int LogLevel = 0;        
+		int LogLevel = 0;        
 		/// <summary>
 		/// [Setting] profiling level
 		/// 0 - highest level only
 		/// 1 - highest and layer 1
 		/// 2 - highest and layer 2
 		/// </summary>
-		static inline int ProfileLevel = 0;       
+		int ProfileLevel = 0;       
 		/// <summary>
 		/// [Setting] Enables profiling
 		/// </summary>
-		static inline bool EnableProfiling = false;
+		bool EnableProfiling = false;
 		/// <summary>
 		/// [Setting] Calculates the Rules of all actors in a cell, on cell change
 		/// </summary>
-		static inline bool _CalculateCellRules = false;
+		bool _CalculateCellRules = false;
 
 		/// <summary>
 		/// [Setting] checks for actors which do not have any rules, and prints their information to the, logfile
 		/// </summary>
-		static inline bool _CheckActorsWithoutRules = false;
+		bool _CheckActorsWithoutRules = false;
 		/// <summary>
 		/// [Setting] tests the rules assigned to actors for all cells in game
 		/// </summary>
-		static inline bool _Test = false;
+		bool _Test = false;
 	};
+
+	static inline Debug debug;
 
 	class Internal
 	{
@@ -605,8 +627,10 @@ public:
 		/// <summary>
 		/// whether the cure disease effect is activated
 		/// </summary>
-		static inline bool _useCureDiseaseEffect = true;
+		bool _useCureDiseaseEffect = true;
 	};
+	static inline Internal internal;
+
 
 	class Interfaces
 	{
@@ -893,9 +917,9 @@ public:
 		std::vector<RE::AlchemyItem*> ret;
 		for (auto entry : list) {
 			//if ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid()) {
-			//	logusage("Has InvisibilityEffect, DoNot {}, haseff {}", Settings::Distr::_DoNotDistributeMixedInvisPotions, (std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid());
+			//	logusage("Has InvisibilityEffect, DoNot {}, haseff {}", Settings::distr._DoNotDistributeMixedInvisPotions, (std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid());
 			//}
-			if ((std::get<0>(entry) & effect) > 0 && (Settings::Distr::_DoNotDistributeMixedInvisPotions == false || Settings::Distr::_DoNotDistributeMixedInvisPotions && ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid() == false || (effect & AlchemicEffect::kInvisibility).IsValid()))) {
+			if ((std::get<0>(entry) & effect) > 0 && (Settings::distr._DoNotDistributeMixedInvisPotions == false || Settings::distr._DoNotDistributeMixedInvisPotions && ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid() == false || (effect & AlchemicEffect::kInvisibility).IsValid()))) {
 				ret.push_back(std::get<1>(entry));
 			}
 		}

@@ -222,11 +222,11 @@ namespace Papyrus
 			{
 			case Settings::ItemType::kPotion:
 			case Settings::ItemType::kFortifyPotion:
-				return (AlchemicEffect::GetFromBaseValue(value) & Settings::Potions::_prohibitedEffects).IsValid();
+				return (AlchemicEffect::GetFromBaseValue(value) & Settings::potions._prohibitedEffects).IsValid();
 			case Settings::ItemType::kPoison:
-				return (AlchemicEffect::GetFromBaseValue(value) & Settings::Poisons::_prohibitedEffects).IsValid();
+				return (AlchemicEffect::GetFromBaseValue(value) & Settings::poisons._prohibitedEffects).IsValid();
 			case Settings::ItemType::kFood:
-				return (AlchemicEffect::GetFromBaseValue(value) & Settings::Food::_prohibitedEffects).IsValid();
+				return (AlchemicEffect::GetFromBaseValue(value) & Settings::food._prohibitedEffects).IsValid();
 			}
 			return false;
 		}
@@ -239,11 +239,11 @@ namespace Papyrus
 			case Settings::ItemType::kFortifyPotion:
 				{
 					LOG_4("potion");
-					if (!Settings::Potions::_prohibitedEffects.HasEffect(value)) {
-						Settings::Potions::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+					if (!Settings::potions._prohibitedEffects.HasEffect(value)) {
+						Settings::potions._prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
 						LOG_4("Added effect");
 					} else {
-						Settings::Potions::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						Settings::potions._prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
 						LOG_4("Removed Effect");
 					}
 				}
@@ -251,11 +251,11 @@ namespace Papyrus
 			case Settings::ItemType::kPoison:
 				{
 					LOG_4("poison");
-					if (!Settings::Poisons::_prohibitedEffects.HasEffect(value)) {
-						Settings::Poisons::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+					if (!Settings::poisons._prohibitedEffects.HasEffect(value)) {
+						Settings::poisons._prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
 						LOG_4("Added effect");
 					} else {
-						Settings::Poisons::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						Settings::poisons._prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
 						LOG_4("Removed Effect");
 					}
 				}
@@ -263,11 +263,11 @@ namespace Papyrus
 			case Settings::ItemType::kFood:
 				{
 					LOG_4("food");
-					if (!Settings::Food::_prohibitedEffects.HasEffect(value)) {
-						Settings::Food::_prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
+					if (!Settings::food._prohibitedEffects.HasEffect(value)) {
+						Settings::food._prohibitedEffects |= AlchemicEffect::GetFromBaseValue(value);
 						LOG_4("Added effect");
 					} else {
-						Settings::Food::_prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
+						Settings::food._prohibitedEffects &= ~AlchemicEffect::GetFromBaseValue(value);
 						LOG_4("Removed Effect");
 					}
 				}
@@ -312,7 +312,7 @@ namespace Papyrus
 		{
 			int Get_CycleTime(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return (int)Settings::System::_cycletime;
+				return (int)Settings::system._cycletime;
 			}
 
 			void Set_CycleTime(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int milliseconds)
@@ -321,7 +321,7 @@ namespace Papyrus
 					milliseconds = 100;
 				if (milliseconds > 10000)
 					milliseconds = 10000;
-				Settings::System::_cycletime = milliseconds;
+				Settings::system._cycletime = milliseconds;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
@@ -330,14 +330,14 @@ namespace Papyrus
 		{
 			int Get_GlobalCooldown(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return (int)Settings::Usage::_globalCooldown;
+				return (int)Settings::usage._globalCooldown;
 			}
 
 			void Set_GlobalCooldown(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int milliseconds)
 			{
 				if (milliseconds < 500)
 					milliseconds = 500;
-				Settings::Usage::_globalCooldown = milliseconds;
+				Settings::usage._globalCooldown = milliseconds;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 				Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kCompatibility;
 			}
@@ -359,78 +359,78 @@ namespace Papyrus
 
 			bool Get_DisableItemUsageWhileStaggered(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Usage::_DisableItemUsageWhileStaggered;
+				return Settings::usage._DisableItemUsageWhileStaggered;
 			}
 
 			void Set_DisableItemUsageWhileStaggered(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Usage::_DisableItemUsageWhileStaggered = disabled;
+				Settings::usage._DisableItemUsageWhileStaggered = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DisableItemUsageWhileFlying(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Usage::_DisableItemUsageWhileFlying;
+				return Settings::usage._DisableItemUsageWhileFlying;
 			}
 
 			void Set_DisableItemUsageWhileFlying(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Usage::_DisableItemUsageWhileFlying = disabled;
+				Settings::usage._DisableItemUsageWhileFlying = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DisableItemUsageWhileBleedingOut(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Usage::_DisableItemUsageWhileBleedingOut;
+				return Settings::usage._DisableItemUsageWhileBleedingOut;
 			}
 
 			void Set_DisableItemUsageWhileBleedingOut(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Usage::_DisableItemUsageWhileBleedingOut = disabled;
+				Settings::usage._DisableItemUsageWhileBleedingOut = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DisableItemUsageWhileSleeping(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Usage::_DisableItemUsageWhileSleeping;
+				return Settings::usage._DisableItemUsageWhileSleeping;
 			}
 
 			void Set_DisableItemUsageWhileSleeping(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Usage::_DisableItemUsageWhileSleeping = disabled;
+				Settings::usage._DisableItemUsageWhileSleeping = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DisableNonFollowerNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Usage::_DisableNonFollowerNPCs;
+				return Settings::usage._DisableNonFollowerNPCs;
 			}
 
 			void Set_DisableNonFollowerNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disable)
 			{
-				Settings::Usage::_DisableNonFollowerNPCs = disable;
+				Settings::usage._DisableNonFollowerNPCs = disable;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DisableOutOfCombatProcessing(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Usage::_DisableOutOfCombatProcessing;
+				return Settings::usage._DisableOutOfCombatProcessing;
 			}
 
 			void Set_DisableOutOfCombatProcessing(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Usage::_DisableOutOfCombatProcessing = disabled;
+				Settings::usage._DisableOutOfCombatProcessing = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DisableItemUsageForExcludedNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Usage::_DisableItemUsageForExcludedNPCs;
+				return Settings::usage._DisableItemUsageForExcludedNPCs;
 			}
 
 			void Set_DisableItemUsageForExcludedNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Usage::_DisableItemUsageForExcludedNPCs = disabled;
+				Settings::usage._DisableItemUsageForExcludedNPCs = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
@@ -440,62 +440,62 @@ namespace Papyrus
 
 			bool Get_Potions_EnableMagickaRestoration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_enableMagickaRestoration;
+				return Settings::potions._enableMagickaRestoration;
 			}
 
 			void Set_Potions_EnableMagickaRestoration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Potions::_enableMagickaRestoration = enabled;
+				Settings::potions._enableMagickaRestoration = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_Potions_EnableStaminaRestoration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_enableStaminaRestoration;
+				return Settings::potions._enableStaminaRestoration;
 			}
 
 			void Set_Potions_EnableStaminaRestoration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Potions::_enableStaminaRestoration = enabled;
+				Settings::potions._enableStaminaRestoration = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_Potions_EnableHealthRestoration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_enableHealthRestoration;
+				return Settings::potions._enableHealthRestoration;
 			}
 
 			void Set_Potions_EnableHealthRestoration(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Potions::_enableHealthRestoration = enabled;
+				Settings::potions._enableHealthRestoration = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_AllowDetrimentalEffects(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_AllowDetrimentalEffects;
+				return Settings::potions._AllowDetrimentalEffects;
 			}
 
 			void Set_AllowDetrimentalEffects(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool allow)
 			{
-				Settings::Potions::_AllowDetrimentalEffects = allow;
+				Settings::potions._AllowDetrimentalEffects = allow;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_HandleWeaponSheathedAsOutOfCombat(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_HandleWeaponSheathedAsOutOfCombat;
+				return Settings::potions._HandleWeaponSheathedAsOutOfCombat;
 			}
 
 			void Set_HandleWeaponSheathedAsOutOfCombat(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Potions::_HandleWeaponSheathedAsOutOfCombat = enabled;
+				Settings::potions._HandleWeaponSheathedAsOutOfCombat = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_HealthThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_healthThreshold;
+				return Settings::potions._healthThreshold;
 			}
 
 			void Set_HealthThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
@@ -504,13 +504,13 @@ namespace Papyrus
 					value = 0.95f;
 				if (value < 0.05f)
 					value = 0.05f;
-				Settings::Potions::_healthThreshold = value;
+				Settings::potions._healthThreshold = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_MagickaThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_magickaThreshold;
+				return Settings::potions._magickaThreshold;
 			}
 
 			void Set_MagickaThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
@@ -519,13 +519,13 @@ namespace Papyrus
 					value = 0.95f;
 				if (value < 0.05f)
 					value = 0.05f;
-				Settings::Potions::_magickaThreshold = value;
+				Settings::potions._magickaThreshold = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_StaminaThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_staminaThreshold;
+				return Settings::potions._staminaThreshold;
 			}
 
 			void Set_StaminaThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
@@ -534,18 +534,18 @@ namespace Papyrus
 					value = 0.95f;
 				if (value < 0.05f)
 					value = 0.05f;
-				Settings::Potions::_staminaThreshold = value;
+				Settings::potions._staminaThreshold = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_UsePotionChance(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Potions::_UsePotionChance;
+				return Settings::potions._UsePotionChance;
 			}
 
 			void Set_UsePotionChance(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
-				Settings::Potions::_UsePotionChance = value;
+				Settings::potions._UsePotionChance = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
@@ -564,51 +564,51 @@ namespace Papyrus
 		{
 			bool Get_EnablePoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_enablePoisons;
+				return Settings::poisons._enablePoisons;
 			}
 
 			void Set_EnablePoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Poisons::_enablePoisons = enabled;
+				Settings::poisons._enablePoisons = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_AllowPositiveEffects(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_AllowPositiveEffects; 
+				return Settings::poisons._AllowPositiveEffects; 
 			}
 
 			void Set_AllowPositiveEffects(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool allow)
 			{
-				Settings::Poisons::_AllowPositiveEffects = allow;
+				Settings::poisons._AllowPositiveEffects = allow;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DontUseWithWeaponsSheathed(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_DontUseWithWeaponsSheathed;
+				return Settings::poisons._DontUseWithWeaponsSheathed;
 			}
 
 			void Set_DontUseWithWeaponsSheathed(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Poisons::_DontUseWithWeaponsSheathed = disabled;
+				Settings::poisons._DontUseWithWeaponsSheathed = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DontUseAgainst100PoisonResist(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_DontUseAgainst100PoisonResist;
+				return Settings::poisons._DontUseAgainst100PoisonResist;
 			}
 
 			void Set_DontUseAgainst100PoisonResist(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Poisons::_DontUseAgainst100PoisonResist = disabled;
+				Settings::poisons._DontUseAgainst100PoisonResist = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_EnemyLevelScalePlayerLevel(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_EnemyLevelScalePlayerLevel;
+				return Settings::poisons._EnemyLevelScalePlayerLevel;
 			}
 
 			void Set_EnemyLevelScalePLayerLevel(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
@@ -617,26 +617,26 @@ namespace Papyrus
 					value = 0.0f;
 				if (value > 100.0f)
 					value = 100.0f;
-				Settings::Poisons::_EnemyLevelScalePlayerLevel = value;
+				Settings::poisons._EnemyLevelScalePlayerLevel = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_EnemyNumberThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_EnemyNumberThreshold;
+				return Settings::poisons._EnemyNumberThreshold;
 			}
 
 			void Set_EnemyNumberThreshold(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
 				if (value < 1)
 					value = 1;
-				Settings::Poisons::_EnemyNumberThreshold = value;
+				Settings::poisons._EnemyNumberThreshold = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_UsePoisonChance(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_UsePoisonChance;
+				return Settings::poisons._UsePoisonChance;
 			}
 
 			void Set_UsePoisonChance(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
@@ -645,13 +645,13 @@ namespace Papyrus
 					value = 0;
 				if (value > 100)
 					value = 100;
-				Settings::Poisons::_UsePoisonChance = value;
+				Settings::poisons._UsePoisonChance = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_Dosage(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Poisons::_Dosage;
+				return Settings::poisons._Dosage;
 			}
 
 			void Set_Dosage(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
@@ -660,7 +660,7 @@ namespace Papyrus
 					value = 1;
 				if (value > 1000)
 					value = 1000;
-				Settings::Poisons::_Dosage = value;
+				Settings::poisons._Dosage = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
@@ -679,29 +679,29 @@ namespace Papyrus
 		{
 			bool Get_EnableFortifyPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::FortifyPotions::_enableFortifyPotions;
+				return Settings::fortifyPotions._enableFortifyPotions;
 			}
 
 			void Set_EnableFortifyPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::FortifyPotions::_enableFortifyPotions = enabled;
+				Settings::fortifyPotions._enableFortifyPotions = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DontUseWithWeaponsSheathed(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::FortifyPotions::_DontUseWithWeaponsSheathed;
+				return Settings::fortifyPotions._DontUseWithWeaponsSheathed;
 			}
 
 			void Set_DontUseWithWeaponsSheathed(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::FortifyPotions::_DontUseWithWeaponsSheathed = disabled;
+				Settings::fortifyPotions._DontUseWithWeaponsSheathed = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_EnemyLevelScalePlayerLevelFortify(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify;
+				return Settings::fortifyPotions._EnemyLevelScalePlayerLevelFortify;
 			}
 
 			void Set_EnemyLevelScalePlayerLevelFortify(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
@@ -710,24 +710,24 @@ namespace Papyrus
 					value = 0.0f;
 				if (value > 100.0f)
 					value = 100.0f;
-				Settings::FortifyPotions::_EnemyLevelScalePlayerLevelFortify = value;
+				Settings::fortifyPotions._EnemyLevelScalePlayerLevelFortify = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_EnemyNumberThresholdFortify(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::FortifyPotions::_EnemyNumberThresholdFortify;
+				return Settings::fortifyPotions._EnemyNumberThresholdFortify;
 			}
 
 			void Set_EnemyNumberThresholdFortify(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
-				Settings::FortifyPotions::_EnemyNumberThresholdFortify = value;
+				Settings::fortifyPotions._EnemyNumberThresholdFortify = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_UseFortifyPotionChance(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::FortifyPotions::_UseFortifyPotionChance;
+				return Settings::fortifyPotions._UseFortifyPotionChance;
 			}
 
 			void Set_UseFortifyPotionChance(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
@@ -736,7 +736,7 @@ namespace Papyrus
 					value = 0;
 				if (value > 100)
 					value = 100;
-				Settings::FortifyPotions::_UseFortifyPotionChance = value;
+				Settings::fortifyPotions._UseFortifyPotionChance = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
@@ -745,56 +745,56 @@ namespace Papyrus
 		{
 			bool Get_EnableFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Food::_enableFood;
+				return Settings::food._enableFood;
 			}
 
 			void Set_EnableFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Food::_enableFood = enabled;
+				Settings::food._enableFood = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_AllowDetrimentalEffects(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Food::_AllowDetrimentalEffects;
+				return Settings::food._AllowDetrimentalEffects;
 			}
 
 			void Set_AllowDetrimentalEffects(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool allow)
 			{
-				Settings::Food::_AllowDetrimentalEffects = allow;
+				Settings::food._AllowDetrimentalEffects = allow;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_RestrictFoodToCombatStart(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Food::_RestrictFoodToCombatStart;
+				return Settings::food._RestrictFoodToCombatStart;
 			}
 
 			void Set_RestrictFoodToCombatStart(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Food::_RestrictFoodToCombatStart = enabled;
+				Settings::food._RestrictFoodToCombatStart = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DisableFollowers(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Food::_DisableFollowers;
+				return Settings::food._DisableFollowers;
 			}
 
 			void Set_DisableFollowers(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Food::_DisableFollowers = disabled;
+				Settings::food._DisableFollowers = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DontUseWithWeaponsSheathed(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Food::_DontUseWithWeaponsSheathed;
+				return Settings::food._DontUseWithWeaponsSheathed;
 			}
 
 			void Set_DontUseWithWeaponsSheathed(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Food::_DontUseWithWeaponsSheathed = disabled;
+				Settings::food._DontUseWithWeaponsSheathed = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
@@ -813,89 +813,89 @@ namespace Papyrus
 		{
 			bool Get_PlayerPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_playerPotions;
+				return Settings::player._playerPotions;
 			}
 
 			void Set_PlayerPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Player::_playerPotions = enabled;
+				Settings::player._playerPotions = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_PlayerPoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_playerPoisons;
+				return Settings::player._playerPoisons;
 			}
 
 			void Set_PlayerPoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Player::_playerPoisons = enabled;
+				Settings::player._playerPoisons = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_PlayerFortifyPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_playerFortifyPotions;
+				return Settings::player._playerFortifyPotions;
 			}
 
 			void Set_PlayerFortifyPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Player::_playerFortifyPotions = enabled;
+				Settings::player._playerFortifyPotions = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_PlayerFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_playerFood;
+				return Settings::player._playerFood;
 			}
 
 			void Set_PlayerFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Player::_playerFood = enabled;
+				Settings::player._playerFood = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_UseFavoritedItemsOnly(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_UseFavoritedItemsOnly;
+				return Settings::player._UseFavoritedItemsOnly;
 			}
 
 			void Set_UseFavoritedItemsOnly(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Player::_UseFavoritedItemsOnly = enabled;
+				Settings::player._UseFavoritedItemsOnly = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DontUseFavoritedItems(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_DontUseFavoritedItems;
+				return Settings::player._DontUseFavoritedItems;
 			}
 
 			void Set_DontUseFavoritedItems(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Player::_DontUseFavoritedItems = disabled;
+				Settings::player._DontUseFavoritedItems = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DontEatRawFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_DontEatRawFood;
+				return Settings::player._DontEatRawFood;
 			}
 
 			void Set_DontEatRawFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Player::_DontEatRawFood = disabled;
+				Settings::player._DontEatRawFood = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DontDrinkAlcohol(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Player::_DontDrinkAlcohol;
+				return Settings::player._DontDrinkAlcohol;
 			}
 
 			void Set_DontDrinkAlcohol(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Player::_DontDrinkAlcohol = disabled;
+				Settings::player._DontDrinkAlcohol = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
@@ -904,181 +904,181 @@ namespace Papyrus
 		{
 			bool Get_DistributePoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_DistributePoisons;
+				return Settings::distr._DistributePoisons;
 			}
 
 			void Set_DistributePoisons(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Distr::_DistributePoisons = enabled;
+				Settings::distr._DistributePoisons = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DistributePotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_DistributePotions;
+				return Settings::distr._DistributePotions;
 			}
 
 			void Set_DistributePotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Distr::_DistributePotions = enabled;
+				Settings::distr._DistributePotions = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DistributeFortifyPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_DistributeFortifyPotions;
+				return Settings::distr._DistributeFortifyPotions;
 			}
 
 			void Set_DistributeFortifyPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Distr::_DistributeFortifyPotions = enabled;
+				Settings::distr._DistributeFortifyPotions = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DistributeFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_DistributeFood;
+				return Settings::distr._DistributeFood;
 			}
 
 			void Set_DistributeFood(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Distr::_DistributeFood = enabled;
+				Settings::distr._DistributeFood = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DistributeCustomItems(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_DistributeCustomItems;
+				return Settings::distr._DistributeCustomItems;
 			}
 
 			void Set_DistributeCustomItems(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Distr::_DistributeCustomItems = enabled;
+				Settings::distr._DistributeCustomItems = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_LevelEasy(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_LevelEasy;
+				return Settings::distr._LevelEasy;
 			}
 
 			void Set_LevelEasy(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
 				if (value < 1)
 					value = 1;
-				if (value >= Settings::Distr::_LevelNormal)
-					value = Settings::Distr::_LevelNormal - 1;
-				Settings::Distr::_LevelEasy = value;
+				if (value >= Settings::distr._LevelNormal)
+					value = Settings::distr._LevelNormal - 1;
+				Settings::distr._LevelEasy = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_LevelNormal(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_LevelNormal;
+				return Settings::distr._LevelNormal;
 			}
 
 			void Set_LevelNormal(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
-				if (value < Settings::Distr::_LevelEasy)
-					value = Settings::Distr::_LevelEasy + 1;
-				if (value >= Settings::Distr::_LevelDifficult)
-					value = Settings::Distr::_LevelDifficult - 1;
-				Settings::Distr::_LevelNormal = value;
+				if (value < Settings::distr._LevelEasy)
+					value = Settings::distr._LevelEasy + 1;
+				if (value >= Settings::distr._LevelDifficult)
+					value = Settings::distr._LevelDifficult - 1;
+				Settings::distr._LevelNormal = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_LevelDifficult(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_LevelDifficult;
+				return Settings::distr._LevelDifficult;
 			}
 
 			void Set_LevelDifficult(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
-				if (value < Settings::Distr::_LevelNormal)
-					value = Settings::Distr::_LevelNormal + 1;
-				if (value >= Settings::Distr::_LevelInsane)
-					value = Settings::Distr::_LevelInsane - 1;
-				Settings::Distr::_LevelDifficult = value;
+				if (value < Settings::distr._LevelNormal)
+					value = Settings::distr._LevelNormal + 1;
+				if (value >= Settings::distr._LevelInsane)
+					value = Settings::distr._LevelInsane - 1;
+				Settings::distr._LevelDifficult = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_LevelInsane(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_LevelInsane;
+				return Settings::distr._LevelInsane;
 			}
 
 			void Set_LevelInsane(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
-				if (value < Settings::Distr::_LevelDifficult)
-					value = Settings::Distr::_LevelDifficult + 1;
+				if (value < Settings::distr._LevelDifficult)
+					value = Settings::distr._LevelDifficult + 1;
 				if (value > 200)
 					value = 200;
-				Settings::Distr::_LevelInsane = value;
+				Settings::distr._LevelInsane = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_GameDifficultyScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_GameDifficultyScaling;
+				return Settings::distr._GameDifficultyScaling;
 			}
 
 			void Set_GameDifficultyScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Distr::_GameDifficultyScaling = enabled;
+				Settings::distr._GameDifficultyScaling = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_MaxMagnitudeWeak(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_MaxMagnitudeWeak;
+				return Settings::distr._MaxMagnitudeWeak;
 			}
 
 			void Set_MaxMagnitudeWeak(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
 				if (value < 1)
 					value = 1;
-				if (value >= Settings::Distr::_MaxMagnitudeStandard)
-					value = Settings::Distr::_MaxMagnitudeStandard - 1;
-				Settings::Distr::_MaxMagnitudeWeak = value;
+				if (value >= Settings::distr._MaxMagnitudeStandard)
+					value = Settings::distr._MaxMagnitudeStandard - 1;
+				Settings::distr._MaxMagnitudeWeak = value;
 				Settings::_updateSettings &= (uint32_t)Settings::UpdateFlag::kMagnitude;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_MaxMagnitudeStandard(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_MaxMagnitudeStandard;
+				return Settings::distr._MaxMagnitudeStandard;
 			}
 
 			void Set_MaxMagnitudeStandard(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
-				if (value < Settings::Distr::_MaxMagnitudeWeak)
-					value = Settings::Distr::_MaxMagnitudeWeak + 1;
-				if (value >= Settings::Distr::_MaxMagnitudePotent)
-					value = Settings::Distr::_MaxMagnitudePotent - 1;
-				Settings::Distr::_MaxMagnitudeStandard = value;
+				if (value < Settings::distr._MaxMagnitudeWeak)
+					value = Settings::distr._MaxMagnitudeWeak + 1;
+				if (value >= Settings::distr._MaxMagnitudePotent)
+					value = Settings::distr._MaxMagnitudePotent - 1;
+				Settings::distr._MaxMagnitudeStandard = value;
 				Settings::_updateSettings &= (uint32_t)Settings::UpdateFlag::kMagnitude;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_MaxMagnitudePotent(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_MaxMagnitudePotent;
+				return Settings::distr._MaxMagnitudePotent;
 			}
 
 			void Set_MaxMagnitudePotent(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
 			{
-				if (value < Settings::Distr::_MaxMagnitudeStandard)
-					value = Settings::Distr::_MaxMagnitudeStandard - 1;
+				if (value < Settings::distr._MaxMagnitudeStandard)
+					value = Settings::distr._MaxMagnitudeStandard - 1;
 				if (value > 100000)
 					value = 100000;
-				Settings::Distr::_MaxMagnitudePotent = value;
+				Settings::distr._MaxMagnitudePotent = value;
 				Settings::_updateSettings &= (uint32_t)Settings::UpdateFlag::kMagnitude;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_StyleScalingPrimary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_StyleScalingPrimary;
+				return Settings::distr._StyleScalingPrimary;
 			}
 
 			void Set_StyleScalingPrimary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
@@ -1087,13 +1087,13 @@ namespace Papyrus
 					value = 0.05f;
 				if (value > 20.0f)
 					value = 20.0f;
-				Settings::Distr::_StyleScalingPrimary = value;
+				Settings::distr._StyleScalingPrimary = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_StyleScalingSecondary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_StyleScalingSecondary;
+				return Settings::distr._StyleScalingSecondary;
 			}
 
 			void Set_StyleScalingSecondary(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
@@ -1102,28 +1102,28 @@ namespace Papyrus
 					value = 0.05f;
 				if (value > 20.0f)
 					value = 20.0f;
-				Settings::Distr::_StyleScalingSecondary = value;
+				Settings::distr._StyleScalingSecondary = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			float Get_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_ProbabilityScaling;
+				return Settings::distr._ProbabilityScaling;
 			}
 
 			void Set_ProbabilityScaling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, float value)
 			{
-				Settings::Distr::_ProbabilityScaling = value;
+				Settings::distr._ProbabilityScaling = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_DoNotDistributeMixedInvisPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Distr::_DoNotDistributeMixedInvisPotions;
+				return Settings::distr._DoNotDistributeMixedInvisPotions;
 			}
 			void Set_DoNotDistributeMixedInvisPotions(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool value)
 			{
-				Settings::Distr::_DoNotDistributeMixedInvisPotions = value;
+				Settings::distr._DoNotDistributeMixedInvisPotions = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
@@ -1210,18 +1210,18 @@ namespace Papyrus
 		{
 			bool Get_RemoveItemsOnDeath(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Removal::_RemoveItemsOnDeath;
+				return Settings::removal._RemoveItemsOnDeath;
 			}
 
 			void Set_RemoveItemsOnDeath(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Removal::_RemoveItemsOnDeath = enabled;
+				Settings::removal._RemoveItemsOnDeath = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_ChanceToRemoveItem(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Removal::_ChanceToRemoveItem;
+				return Settings::removal._ChanceToRemoveItem;
 			}
 
 			void Set_ChanceToRemoveItem(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
@@ -1230,13 +1230,13 @@ namespace Papyrus
 					value = 0;
 				if (value > 100)
 					value = 100;
-				Settings::Removal::_ChanceToRemoveItem = value;
+				Settings::removal._ChanceToRemoveItem = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_MaxItemsLeft(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Removal::_MaxItemsLeft;
+				return Settings::removal._MaxItemsLeft;
 			}
 
 			void Set_MaxItemsLeft(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
@@ -1245,7 +1245,7 @@ namespace Papyrus
 					value = 0;
 				if (value > 1000)
 					value = 1000;
-				Settings::Removal::_MaxItemsLeft = value;
+				Settings::removal._MaxItemsLeft = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
@@ -1254,23 +1254,23 @@ namespace Papyrus
 		{
 			bool Get_EnabledItems(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Whitelist::EnabledItems;
+				return Settings::whitelist.EnabledItems;
 			}
 
 			void Set_EnabledItems(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Whitelist::EnabledItems = enabled;
+				Settings::whitelist.EnabledItems = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_EnabledNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Whitelist::EnabledNPCs;
+				return Settings::whitelist.EnabledNPCs;
 			}
 
 			void Set_EnabledNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Whitelist::EnabledNPCs = enabled;
+				Settings::whitelist.EnabledNPCs = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
@@ -1279,23 +1279,23 @@ namespace Papyrus
 		{
 			bool Get_ApplySkillBoostPerks(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Fixes::_ApplySkillBoostPerks;
+				return Settings::fixes._ApplySkillBoostPerks;
 			}
 
 			void Set_ApplySkillBosstPerks(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Fixes::_ApplySkillBoostPerks = enabled;
+				Settings::fixes._ApplySkillBoostPerks = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_ForceFixPotionSounds(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Fixes::_ForceFixPotionSounds;
+				return Settings::fixes._ForceFixPotionSounds;
 			}
 
 			void Set_ForceFixPotionSounds(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Fixes::_ForceFixPotionSounds = enabled;
+				Settings::fixes._ForceFixPotionSounds = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}
@@ -1305,46 +1305,46 @@ namespace Papyrus
 
 			bool Get_DisableCreaturesWithoutRules(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Compatibility::_DisableCreaturesWithoutRules;
+				return Settings::compatibility._DisableCreaturesWithoutRules;
 			}
 
 			void Set_DisableCreaturesWithoutRules(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool disabled)
 			{
-				Settings::Compatibility::_DisableCreaturesWithoutRules = disabled;
+				Settings::compatibility._DisableCreaturesWithoutRules = disabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_AnimatedPoisons_Enabled(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Compatibility::AnimatedPoisons::_Enable;
+				return Settings::compatibility.animatedPoisons._Enable;
 			}
 
 			void Set_AnimatedPoisons_Enabled(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Compatibility::AnimatedPoisons::_Enable = enabled;
+				Settings::compatibility.animatedPoisons._Enable = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 				Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kCompatibility;
 			}
 
 			bool Get_AnimatedPoisons_UsePoisonDosage(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Compatibility::AnimatedPoisons::_UsePoisonDosage;
+				return Settings::compatibility.animatedPoisons._UsePoisonDosage;
 			}
 
 			void Set_AnimatedPoisons_UsePoisonDosage(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Compatibility::AnimatedPoisons::_UsePoisonDosage = enabled;
+				Settings::compatibility.animatedPoisons._UsePoisonDosage = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_AnimatedPotions_Enabled(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Compatibility::AnimatedPotions::_Enable;
+				return Settings::compatibility.animatedPotions._Enable;
 			}
 
 			void Set_AnimatedPotions_Enable(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Compatibility::AnimatedPotions::_Enable = enabled;
+				Settings::compatibility.animatedPotions._Enable = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 				Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kCompatibility;
 			}
@@ -1389,31 +1389,31 @@ namespace Papyrus
 		{
 			bool Get_EnableLog(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Debug::EnableLog;
+				return Settings::debug.EnableLog;
 			}
 
 			void Set_EnableLog(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Debug::EnableLog = enabled;
+				Settings::debug.EnableLog = enabled;
 				Logging::EnableLog = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_EnableLoadLog(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Debug::EnableLoadLog;
+				return Settings::debug.EnableLoadLog;
 			}
 
 			void Set_EnableLoadLog(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Debug::EnableLoadLog = enabled;
+				Settings::debug.EnableLoadLog = enabled;
 				Logging::EnableLoadLog = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_LogLevel(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Debug::LogLevel;
+				return Settings::debug.LogLevel;
 			}
 
 			void Set_LogLevel(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
@@ -1422,14 +1422,14 @@ namespace Papyrus
 					value = 0;
 				if (value > 5)
 					value = 5;
-				Settings::Debug::LogLevel = value;
+				Settings::debug.LogLevel = value;
 				Logging::LogLevel = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			int Get_ProfileLevel(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Debug::ProfileLevel;
+				return Settings::debug.ProfileLevel;
 			}
 
 			void Set_ProfileLevel(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int value)
@@ -1438,19 +1438,19 @@ namespace Papyrus
 					value = 0;
 				if (value > 5)
 					value = 5;
-				Settings::Debug::ProfileLevel = value;
+				Settings::debug.ProfileLevel = value;
 				Logging::ProfileLevel = value;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 
 			bool Get_EnableProfiling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
-				return Settings::Debug::EnableProfiling;
+				return Settings::debug.EnableProfiling;
 			}
 
 			void Set_EnableProfiling(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
-				Settings::Debug::EnableProfiling = enabled;
+				Settings::debug.EnableProfiling = enabled;
 				Logging::EnableProfiling = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}

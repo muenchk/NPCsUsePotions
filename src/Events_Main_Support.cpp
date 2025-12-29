@@ -487,7 +487,7 @@ namespace Events
 		if (acinfo->GetLastDistrTime() == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->GetLastDistrTime() > 1) {
 			if (!Distribution::ExcludedNPC(acinfo) && acinfo->IsDead() == false) {
 				// begin with compatibility mode removing items before distributing new ones
-				if (Settings::Debug::_CompatibilityRemoveItemsBeforeDist) {
+				if (Settings::debug._CompatibilityRemoveItemsBeforeDist) {
 					auto items = ACM::GetAllPotions(acinfo);
 					auto it = items.begin();
 					while (it != items.end()) {
@@ -586,7 +586,7 @@ namespace Events
 		while (!toregister.empty()) {
 			reg = toregister.front().get().get();
 			toregister.pop_front();
-			Settings::System::_alternateNPCRegistration ? RegisterNPCAlternate(reg) : RegisterNPC(reg);
+			Settings::system._alternateNPCRegistration ? RegisterNPCAlternate(reg) : RegisterNPC(reg);
 		}
 		
 	}
@@ -729,7 +729,7 @@ namespace Events
 							auto items = ACM::GetAllPotions(acinfo);
 							auto it = items.begin();
 							while (it != items.end()) {
-								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+								if (Settings::debug._CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
 									it++;
 									continue;
 								}
@@ -740,7 +740,7 @@ namespace Events
 							items = ACM::GetAllPoisons(acinfo);
 							it = items.begin();
 							while (it != items.end()) {
-								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+								if (Settings::debug._CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
 									it++;
 									continue;
 								}
@@ -751,7 +751,7 @@ namespace Events
 							items = ACM::GetAllFood(acinfo);
 							it = items.begin();
 							while (it != items.end()) {
-								if (Settings::Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
+								if (Settings::debug._CompatibilityRemoveItemsStartup_OnlyExcluded && !(Distribution::excludedItems()->contains((*it)->GetFormID()))) {
 									it++;
 									continue;
 								}

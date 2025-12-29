@@ -37,7 +37,7 @@ namespace Papyrus
 			comp->AnPois_RemoveActorPoison(actor->GetFormID());
 
 			int dosage = poisonDosage;
-			if (!Settings::Compatibility::AnimatedPoisons::_UsePoisonDosage || dosage == 0)
+			if (!Settings::compatibility.animatedPoisons._UsePoisonDosage || dosage == 0)
 				dosage = data->GetPoisonDosage(poison);
 
 			// save statistics

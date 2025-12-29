@@ -249,7 +249,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPotions()
 	{
-		return Settings::Compatibility::AnimatedPotions::_Enable &&
+		return Settings::compatibility.animatedPotions._Enable &&
 		       _loadedAnimatedPotions &&
 		       (AnPoti_TogglePlayerPotionAnimation && AnPoti_TogglePlayerPotionAnimation->value == 1);
 	}
@@ -260,7 +260,7 @@ public:
 	/// <returns></returns>
 	bool LoadedAnimatedPoisons()
 	{
-		return Settings::Compatibility::AnimatedPoisons::_Enable && _loadedAnimatedPoisons;
+		return Settings::compatibility.animatedPoisons._Enable && _loadedAnimatedPoisons;
 	}
 
 	/// <summary>
@@ -341,7 +341,7 @@ public:
 	/// <returns></returns>
 	bool DisableItemUsageWhileParalyzed()
 	{
-		return Settings::Usage::_DisableItemUsageWhileStaggered || _disableParalyzedItems;
+		return Settings::usage._DisableItemUsageWhileStaggered || _disableParalyzedItems;
 	}
 
 	/// <summary>
@@ -350,7 +350,7 @@ public:
 	/// <returns></returns>
 	bool DisableItemUsageWhileFlying()
 	{
-		return Settings::Usage::_DisableItemUsageWhileFlying || _disableParalyzedItems;
+		return Settings::usage._DisableItemUsageWhileFlying || _disableParalyzedItems;
 	}
 
 	/// <summary>
@@ -359,7 +359,7 @@ public:
 	/// <returns></returns>
 	bool DisableItemUsageWhileBleedingOut()
 	{
-		return Settings::Usage::_DisableItemUsageWhileBleedingOut || _disableParalyzedItems;
+		return Settings::usage._DisableItemUsageWhileBleedingOut || _disableParalyzedItems;
 	}
 
 	/// <summary>
@@ -368,7 +368,7 @@ public:
 	/// <returns></returns>
 	bool DisableItemUsageWhileSleeping()
 	{
-		return Settings::Usage::_DisableItemUsageWhileSleeping || _disableParalyzedItems;
+		return Settings::usage._DisableItemUsageWhileSleeping || _disableParalyzedItems;
 	}
 
 	/// <summary>

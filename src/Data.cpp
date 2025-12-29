@@ -562,5 +562,5 @@ int Data::GetPoisonDosage(RE::AlchemyItem* poison)
 			return dosage;
 		}
 	}
-	return Settings::Poisons::_Dosage;
+	return Settings::poisons._Dosage;
 }

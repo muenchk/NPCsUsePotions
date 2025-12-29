@@ -122,23 +122,23 @@ namespace Events
 					// as with potion distribution, exlude excluded actors and potential followers
 					if (!excluded) {
 						// create and insert new event
-						if (Settings::Removal::_RemoveItemsOnDeath) {
+						if (Settings::removal._RemoveItemsOnDeath) {
 							LOG_1("[TESDeathEvent] Removing items from actor {}", std::to_string(acinfo->GetFormID()));
 							auto items = Distribution::GetAllInventoryItems(acinfo);
 							Distribution::FilterDistributionExcludedItems(items);
 							LOG_1("[TESDeathEvent] found {} items", items.size());
 							if (items.size() > 0) {
 								// remove items that are too much
-								while (items.size() > Settings::Removal::_MaxItemsLeft) {
+								while (items.size() > Settings::removal._MaxItemsLeft) {
 									acinfo->RemoveItem(items.back(), 1);
 									LOG_1("[TESDeathEvent] Removed item {}", Utility::PrintForm(items.back()));
 									items.pop_back();
 								}
 								//loginfo("[Events] [TESDeathEvent] 3");
 								// remove the rest of the items per chance
-								if (Settings::Removal::_ChanceToRemoveItem > 0) {
+								if (Settings::removal._ChanceToRemoveItem > 0) {
 									for (int i = (int)items.size() - 1; i >= 0; i--) {
-										if (rand100(rand) <= Settings::Removal::_ChanceToRemoveItem) {
+										if (rand100(rand) <= Settings::removal._ChanceToRemoveItem) {
 											acinfo->RemoveItem(items[i], 100 /*remove all there are*/);
 											LOG_1("[TESDeathEvent] Removed item {}", Utility::PrintForm(items[i]));
 										} else {
@@ -235,10 +235,10 @@ TESDeathEventEnd:
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				// register for tracking
 				if (Distribution::ExcludedNPCFromHandling(actor) == false)
-					Settings::System::_alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
+					Settings::system._alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
 			} else {
-				if (Settings::Usage::_DisableOutOfCombatProcessing)
-					Settings::System::_alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
+				if (Settings::usage._DisableOutOfCombatProcessing)
+					Settings::system._alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
 			}
 
 			// save combat state of npc
@@ -268,7 +268,7 @@ TESDeathEventEnd:
 		EvalProcessingEvent();
 		StartProfiling;
 		// return if feature disabled
-		if (Settings::Usage::_DisableOutOfCombatProcessing)
+		if (Settings::usage._DisableOutOfCombatProcessing)
 			return EventResult::kContinue;
 		Main::PlayerDied((bool)(RE::PlayerCharacter::GetSingleton()->GetActorRuntimeData().boolBits & RE::Actor::BOOL_BITS::kDead));
 
@@ -278,9 +278,9 @@ TESDeathEventEnd:
 				LOG_1("[TESCellAttachDetachEvent]");
 				if (a_event->attached) {
 					if (Distribution::ExcludedNPCFromHandling(actor) == false)
-						Settings::System::_alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
+						Settings::system._alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
 				} else {
-					Settings::System::_alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
+					Settings::system._alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
 				}
 				PROF_2(TimeProfiling, "[TESCellAttachDetachEvent] event execution time.");
 			}
@@ -543,7 +543,7 @@ TESDeathEventEnd:
 		LOG_1("Registered {}", typeid(RE::TESEquipEvent).name());
 		scriptEventSourceHolder->GetEventSource<RE::TESDeathEvent>()->AddEventSink(EventHandler::GetSingleton());
 		LOG_1("Registered {}", typeid(RE::TESDeathEvent).name());
-		if (REL::Module::IsVR() == false && Settings::Debug::_CalculateCellRules) {
+		if (REL::Module::IsVR() == false && Settings::debug._CalculateCellRules) {
 			RE::PlayerCharacter::GetSingleton()->AsBGSActorCellEventSource()->AddEventSink(EventHandler::GetSingleton());
 			LOG_1("Registered {}", typeid(RE::BGSActorCellEvent).name());
 		}

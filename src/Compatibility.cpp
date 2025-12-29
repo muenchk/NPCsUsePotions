@@ -201,7 +201,7 @@ void Compatibility::Load()
 
 				AnPois_PoisonSound) {
 				_loadedAnimatedPoisons = true;
-				if (Settings::Compatibility::AnimatedPoisons::_Enable) {
+				if (Settings::compatibility.animatedPoisons._Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
 					LOG_1("Enabled Animated Poisons.");
 				}
@@ -213,7 +213,7 @@ void Compatibility::Load()
 			LOG_1("[AnPois] {}", Utility::PrintForm(AnPois_AnimatedPoisonsMCM));
 			if (AnPois_AnimatedPoisonsMCM) {
 				_loadedAnimatedPoisons = true;
-				if (Settings::Compatibility::AnimatedPoisons::_Enable) {
+				if (Settings::compatibility.animatedPoisons._Enable) {
 					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons 5 compatibility", 0, false);
 					LOG_1("Enabled Animated Poisons.");
 				}
@@ -245,7 +245,7 @@ void Compatibility::Load()
 
 	if (AnPoti_TogglePlayerPotionAnimation) {
 		_loadedAnimatedPotions = true;
-		if (Settings::Compatibility::AnimatedPotions::_Enable) {
+		if (Settings::compatibility.animatedPotions._Enable) {
 			RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
 			LOG_1("Enabled Animated Potions.");
 		}
@@ -308,7 +308,7 @@ void Compatibility::Load()
 
 	// global
 
-	_globalCooldown = std::max((long)_globalCooldown, Settings::Usage::_globalCooldown);
+	_globalCooldown = std::max((long)_globalCooldown, Settings::usage._globalCooldown);
 	_globalCooldownPotions = _globalCooldown;
 	_globalCooldownPoisons = _globalCooldown;
 	_globalCooldownFood = _globalCooldown;

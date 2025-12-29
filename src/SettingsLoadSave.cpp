@@ -20,7 +20,7 @@ void Settings::FixConsumables()
 	// ITMFoodEat
 	FoodEat = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0xCAF94);
 
-	if (!Settings::Fixes::_ForceFixPotionSounds)
+	if (!Settings::fixes._ForceFixPotionSounds)
 		return;
 
 	RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
@@ -139,41 +139,41 @@ void Settings::Load()
 		// read settings
 		{
 			// potions
-			Potions::_enableHealthRestoration = ini.GetBoolValue("Potions", "EnableHealthRestoration", Potions::_enableHealthRestoration);
-			loginfo("Setting: {} {}", "Potions:           EnableHealthRestoration", std::to_string(Potions::_enableHealthRestoration));
-			Potions::_enableMagickaRestoration = ini.GetBoolValue("Potions", "EnableMagickaRestoration", Potions::_enableMagickaRestoration);
-			loginfo("Setting: {} {}", "Potions:           EnableMagickaRestoration", std::to_string(Potions::_enableMagickaRestoration));
-			Potions::_enableStaminaRestoration = ini.GetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration);
-			loginfo("Setting: {} {}", "Potions:           EnableStaminaRestoration", std::to_string(Potions::_enableStaminaRestoration));
-			Potions::_AllowDetrimentalEffects = ini.GetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects);
-			loginfo("Setting: {} {}", "Potions:           AllowDetrimentalEffects", std::to_string(Potions::_AllowDetrimentalEffects));
-			Potions::_HandleWeaponSheathedAsOutOfCombat = ini.GetBoolValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Potions::_HandleWeaponSheathedAsOutOfCombat);
-			loginfo("Setting: {} {}", "Potions:           HandleWeaponSheathedAsOutOfCombat", std::to_string(Potions::_HandleWeaponSheathedAsOutOfCombat));
+			Settings::potions._enableHealthRestoration = ini.GetBoolValue("Potions", "EnableHealthRestoration", Settings::potions._enableHealthRestoration);
+			loginfo("Setting: {} {}", "Potions:           EnableHealthRestoration", std::to_string(Settings::potions._enableHealthRestoration));
+			Settings::potions._enableMagickaRestoration = ini.GetBoolValue("Potions", "EnableMagickaRestoration", Settings::potions._enableMagickaRestoration);
+			loginfo("Setting: {} {}", "Potions:           EnableMagickaRestoration", std::to_string(Settings::potions._enableMagickaRestoration));
+			Settings::potions._enableStaminaRestoration = ini.GetBoolValue("Potions", "EnableStaminaRestoration", Settings::potions._enableStaminaRestoration);
+			loginfo("Setting: {} {}", "Potions:           EnableStaminaRestoration", std::to_string(Settings::potions._enableStaminaRestoration));
+			Settings::potions._AllowDetrimentalEffects = ini.GetBoolValue("Potions", "AllowDetrimentalEffects", Settings::potions._AllowDetrimentalEffects);
+			loginfo("Setting: {} {}", "Potions:           AllowDetrimentalEffects", std::to_string(Settings::potions._AllowDetrimentalEffects));
+			Settings::potions._HandleWeaponSheathedAsOutOfCombat = ini.GetBoolValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Settings::potions._HandleWeaponSheathedAsOutOfCombat);
+			loginfo("Setting: {} {}", "Potions:           HandleWeaponSheathedAsOutOfCombat", std::to_string(Settings::potions._HandleWeaponSheathedAsOutOfCombat));
 
-			Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold));
-			Potions::_healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdLowerPercent", Potions::_healthThreshold));
-			if (Potions::_healthThreshold > 0.95f)
-				Potions::_healthThreshold = 0.95f;
-			loginfo("Setting: {} {}", "Potions:           HealthThresholdPercent", std::to_string(Potions::_healthThreshold));
-			Potions::_magickaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold));
-			Potions::_magickaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "MagickaThresholdLowerPercent", Potions::_magickaThreshold));
-			if (Potions::_magickaThreshold > 0.95f)
-				Potions::_magickaThreshold = 0.95f;
-			loginfo("Setting: {} {}", "Potions:           MagickaThresholdPercent", std::to_string(Potions::_magickaThreshold));
-			Potions::_staminaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold));
-			Potions::_staminaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "StaminaThresholdLowerPercent", Potions::_staminaThreshold));
-			if (Potions::_staminaThreshold > 0.95f)
-				Potions::_staminaThreshold = 0.95f;
-			loginfo("Setting: {} {}", "Potions:           StaminaThresholdPercent", std::to_string(Potions::_staminaThreshold));
-			Potions::_UsePotionChance = static_cast<int>(ini.GetLongValue("Potions", "UsePotionChance", Potions::_UsePotionChance));
-			loginfo("Setting: {} {}", "Potions:           UsePotionChance", std::to_string(Potions::_UsePotionChance));
+			Settings::potions._healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdPercent", Settings::potions._healthThreshold));
+			Settings::potions._healthThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "HealthThresholdLowerPercent", Settings::potions._healthThreshold));
+			if (Settings::potions._healthThreshold > 0.95f)
+				Settings::potions._healthThreshold = 0.95f;
+			loginfo("Setting: {} {}", "Potions:           HealthThresholdPercent", std::to_string(Settings::potions._healthThreshold));
+			Settings::potions._magickaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "MagickaThresholdPercent", Settings::potions._magickaThreshold));
+			Settings::potions._magickaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "MagickaThresholdLowerPercent", Settings::potions._magickaThreshold));
+			if (Settings::potions._magickaThreshold > 0.95f)
+				Settings::potions._magickaThreshold = 0.95f;
+			loginfo("Setting: {} {}", "Potions:           MagickaThresholdPercent", std::to_string(Settings::potions._magickaThreshold));
+			Settings::potions._staminaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "StaminaThresholdPercent", Settings::potions._staminaThreshold));
+			Settings::potions._staminaThreshold = static_cast<float>(ini.GetDoubleValue("Potions", "StaminaThresholdLowerPercent", Settings::potions._staminaThreshold));
+			if (Settings::potions._staminaThreshold > 0.95f)
+				Settings::potions._staminaThreshold = 0.95f;
+			loginfo("Setting: {} {}", "Potions:           StaminaThresholdPercent", std::to_string(Settings::potions._staminaThreshold));
+			Settings::potions._UsePotionChance = static_cast<int>(ini.GetLongValue("Potions", "UsePotionChance", Settings::potions._UsePotionChance));
+			loginfo("Setting: {} {}", "Potions:           UsePotionChance", std::to_string(Settings::potions._UsePotionChance));
 			try {
 				std::string prohib = ini.GetValue("Potions", "ProhibitedEffects", "");
 				if (prohib.empty() == false)
-					Potions::_prohibitedEffects = AlchemicEffect(std::string(prohib));
+					Settings::potions._prohibitedEffects = AlchemicEffect(std::string(prohib));
 			} catch (std::exception) {
 			}
-			loginfo("Setting: {} {}", "Potions:           ProhibitedEffects", Potions::_prohibitedEffects.string());
+			loginfo("Setting: {} {}", "Potions:           ProhibitedEffects", Settings::potions._prohibitedEffects.string());
 			Distribution::_probabilityAdjustersPotion.clear();
 			Utility::ReadAdjusters(ini.GetValue("Potions", "PotionProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersPotion, error);
 			if (error) {
@@ -183,28 +183,28 @@ void Settings::Load()
 			loginfo("Setting: {} {}", "Potions:           PotionProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPotion));
 
 			// poisons
-			Poisons::_enablePoisons = ini.GetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons);
-			loginfo("Setting: {} {}", "Poisons:           EnablePoisonUsage", std::to_string(Poisons::_enablePoisons));
-			Poisons::_AllowPositiveEffects = ini.GetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects);
-			loginfo("Setting: {} {}", "Poisons:           AllowPositiveEffects", std::to_string(Poisons::_AllowPositiveEffects));
-			Poisons::_DontUseWithWeaponsSheathed = ini.GetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed);
-			loginfo("Setting: {} {}", "Poisons:           DontUseWithWeaponsSheathed", std::to_string(Poisons::_DontUseWithWeaponsSheathed));
-			Poisons::_DontUseAgainst100PoisonResist = ini.GetBoolValue("Poisons", "DontUseAgainst100PoisonResist", Poisons::_DontUseAgainst100PoisonResist);
-			loginfo("Setting: {} {}", "Poisons:           DontUseAgainst100PoisonResist", std::to_string(Poisons::_DontUseAgainst100PoisonResist));
-			Poisons::_EnemyLevelScalePlayerLevel = static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel));
-			loginfo("Setting: {} {}", "Poisons:           EnemyLevelScalePlayerLevel", std::to_string(Poisons::_EnemyLevelScalePlayerLevel));
-			Poisons::_EnemyNumberThreshold = ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold);
-			loginfo("Setting: {} {}", "Poisons:           FightingNPCsNumberThreshold", std::to_string(Poisons::_EnemyNumberThreshold));
-			Poisons::_UsePoisonChance = static_cast<int>(ini.GetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance));
-			loginfo("Setting: {} {}", "Poisons:           UsePoisonChance", std::to_string(Poisons::_UsePoisonChance));
-			Poisons::_Dosage = static_cast<int>(ini.GetLongValue("Poisons", "Dosage", Poisons::_Dosage));
-			loginfo("Setting: {} {}", "Poisons:           Dosage", std::to_string(Poisons::_Dosage));
+			Settings::poisons._enablePoisons = ini.GetBoolValue("Poisons", "EnablePoisonUsage", Settings::poisons._enablePoisons);
+			loginfo("Setting: {} {}", "Poisons:           EnablePoisonUsage", std::to_string(Settings::poisons._enablePoisons));
+			Settings::poisons._AllowPositiveEffects = ini.GetBoolValue("Poisons", "AllowPositiveEffects", Settings::poisons._AllowPositiveEffects);
+			loginfo("Setting: {} {}", "Poisons:           AllowPositiveEffects", std::to_string(Settings::poisons._AllowPositiveEffects));
+			Settings::poisons._DontUseWithWeaponsSheathed = ini.GetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Settings::poisons._DontUseWithWeaponsSheathed);
+			loginfo("Setting: {} {}", "Poisons:           DontUseWithWeaponsSheathed", std::to_string(Settings::poisons._DontUseWithWeaponsSheathed));
+			Settings::poisons._DontUseAgainst100PoisonResist = ini.GetBoolValue("Poisons", "DontUseAgainst100PoisonResist", Settings::poisons._DontUseAgainst100PoisonResist);
+			loginfo("Setting: {} {}", "Poisons:           DontUseAgainst100PoisonResist", std::to_string(Settings::poisons._DontUseAgainst100PoisonResist));
+			Settings::poisons._EnemyLevelScalePlayerLevel = static_cast<float>(ini.GetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Settings::poisons._EnemyLevelScalePlayerLevel));
+			loginfo("Setting: {} {}", "Poisons:           EnemyLevelScalePlayerLevel", std::to_string(Settings::poisons._EnemyLevelScalePlayerLevel));
+			Settings::poisons._EnemyNumberThreshold = ini.GetLongValue("Poisons", "FightingNPCsNumberThreshold", Settings::poisons._EnemyNumberThreshold);
+			loginfo("Setting: {} {}", "Poisons:           FightingNPCsNumberThreshold", std::to_string(Settings::poisons._EnemyNumberThreshold));
+			Settings::poisons._UsePoisonChance = static_cast<int>(ini.GetLongValue("Poisons", "UsePoisonChance", Settings::poisons._UsePoisonChance));
+			loginfo("Setting: {} {}", "Poisons:           UsePoisonChance", std::to_string(Settings::poisons._UsePoisonChance));
+			Settings::poisons._Dosage = static_cast<int>(ini.GetLongValue("Poisons", "Dosage", Settings::poisons._Dosage));
+			loginfo("Setting: {} {}", "Poisons:           Dosage", std::to_string(Settings::poisons._Dosage));
 			try {
 				std::string prohib = ini.GetValue("Poisons", "ProhibitedEffects", "");
 				if (prohib.empty() == false)
-					Poisons::_prohibitedEffects = AlchemicEffect(prohib);
+					Settings::poisons._prohibitedEffects = AlchemicEffect(prohib);
 			} catch (std::exception) {}
-			loginfo("Setting: {} {}", "Poisons:           ProhibitedEffects", Poisons::_prohibitedEffects.string());
+			loginfo("Setting: {} {}", "Poisons:           ProhibitedEffects", Settings::poisons._prohibitedEffects.string());
 			Distribution::_probabilityAdjustersPoison.clear();
 			Utility::ReadAdjusters(ini.GetValue("Poisons", "PoisonProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersPoison, error);
 			if (error) {
@@ -214,16 +214,16 @@ void Settings::Load()
 			loginfo("Setting: {} {}", "Poisons:           PoisonProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPoison));
 
 			// fortify potions
-			FortifyPotions::_enableFortifyPotions = ini.GetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions);
-			loginfo("Setting: {} {}", "Fortify Potions:   EnableFortifyPotionUsage", std::to_string(FortifyPotions::_enableFortifyPotions));
-			FortifyPotions::_DontUseWithWeaponsSheathed = ini.GetBoolValue("FortifyPotions", "DontUseWithWeaponsSheathed", FortifyPotions::_DontUseWithWeaponsSheathed);
-			loginfo("Setting: {} {}", "Fortify Potions:   DontUseWithWeaponsSheathed", std::to_string(FortifyPotions::_DontUseWithWeaponsSheathed));
-			FortifyPotions::_EnemyLevelScalePlayerLevelFortify = static_cast<float>(ini.GetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", FortifyPotions::_EnemyLevelScalePlayerLevelFortify));
-			loginfo("Setting: {} {}", "Fortify Potions:   EnemyLevelScalePlayerLevelFortify", std::to_string(FortifyPotions::_EnemyLevelScalePlayerLevelFortify));
-			FortifyPotions::_EnemyNumberThresholdFortify = ini.GetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", FortifyPotions::_EnemyNumberThresholdFortify);
-			loginfo("Setting: {} {}", "Fortify Potions:   FightingNPCsNumberThresholdFortify", std::to_string(FortifyPotions::_EnemyNumberThresholdFortify));
-			FortifyPotions::_UseFortifyPotionChance = static_cast<int>(ini.GetLongValue("FortifyPotions", "UseFortifyPotionChance", FortifyPotions::_UseFortifyPotionChance));
-			loginfo("Setting: {} {}", "Fortify Potions:   UseFortifyPotionChance", std::to_string(FortifyPotions::_UseFortifyPotionChance));
+			Settings::fortifyPotions._enableFortifyPotions = ini.GetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", Settings::fortifyPotions._enableFortifyPotions);
+			loginfo("Setting: {} {}", "Fortify Potions:   EnableFortifyPotionUsage", std::to_string(Settings::fortifyPotions._enableFortifyPotions));
+			Settings::fortifyPotions._DontUseWithWeaponsSheathed = ini.GetBoolValue("FortifyPotions", "DontUseWithWeaponsSheathed", Settings::fortifyPotions._DontUseWithWeaponsSheathed);
+			loginfo("Setting: {} {}", "Fortify Potions:   DontUseWithWeaponsSheathed", std::to_string(Settings::fortifyPotions._DontUseWithWeaponsSheathed));
+			Settings::fortifyPotions._EnemyLevelScalePlayerLevelFortify = static_cast<float>(ini.GetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", Settings::fortifyPotions._EnemyLevelScalePlayerLevelFortify));
+			loginfo("Setting: {} {}", "Fortify Potions:   EnemyLevelScalePlayerLevelFortify", std::to_string(Settings::fortifyPotions._EnemyLevelScalePlayerLevelFortify));
+			Settings::fortifyPotions._EnemyNumberThresholdFortify = ini.GetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", Settings::fortifyPotions._EnemyNumberThresholdFortify);
+			loginfo("Setting: {} {}", "Fortify Potions:   FightingNPCsNumberThresholdFortify", std::to_string(Settings::fortifyPotions._EnemyNumberThresholdFortify));
+			Settings::fortifyPotions._UseFortifyPotionChance = static_cast<int>(ini.GetLongValue("FortifyPotions", "UseFortifyPotionChance", Settings::fortifyPotions._UseFortifyPotionChance));
+			loginfo("Setting: {} {}", "Fortify Potions:   UseFortifyPotionChance", std::to_string(Settings::fortifyPotions._UseFortifyPotionChance));
 			Distribution::_probabilityAdjustersFortify.clear();
 			Utility::ReadAdjusters(ini.GetValue("FortifyPotions", "FortifyProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersFortify, error);
 			if (error) {
@@ -233,22 +233,22 @@ void Settings::Load()
 			loginfo("Setting: {} {}", "Fortify Potions:           FortifyProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersFortify));
 
 			// food
-			Food::_enableFood = ini.GetBoolValue("Food", "EnableFoodUsage", Food::_enableFood);
-			loginfo("Setting: {} {}", "Food:              EnableFoodUsage", std::to_string(Food::_enableFood));
-			Food::_AllowDetrimentalEffects = ini.GetBoolValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects);
-			loginfo("Setting: {} {}", "Food:              AllowDetrimentalEffects", std::to_string(Food::_AllowDetrimentalEffects));
-			Food::_RestrictFoodToCombatStart = ini.GetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart);
-			loginfo("Setting: {} {}", "Food:              OnlyAllowFoodAtCombatStart", std::to_string(Food::_RestrictFoodToCombatStart));
-			Food::_DisableFollowers = ini.GetBoolValue("Food", "DisableFollowers", Food::_DisableFollowers);
-			loginfo("Setting: {} {}", "Food:              DisableFollowers", std::to_string(Food::_DisableFollowers));
-			Food::_DontUseWithWeaponsSheathed = ini.GetBoolValue("Food", "DontUseWithWeaponsSheathed", Food::_DontUseWithWeaponsSheathed);
-			loginfo("Setting: {} {}", "Food:              DontUseWithWeaponsSheathed", std::to_string(Food::_DontUseWithWeaponsSheathed));
+			Settings::food._enableFood = ini.GetBoolValue("Food", "EnableFoodUsage", Settings::food._enableFood);
+			loginfo("Setting: {} {}", "Food:              EnableFoodUsage", std::to_string(Settings::food._enableFood));
+			Settings::food._AllowDetrimentalEffects = ini.GetBoolValue("Food", "AllowDetrimentalEffects", Settings::food._AllowDetrimentalEffects);
+			loginfo("Setting: {} {}", "Food:              AllowDetrimentalEffects", std::to_string(Settings::food._AllowDetrimentalEffects));
+			Settings::food._RestrictFoodToCombatStart = ini.GetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Settings::food._RestrictFoodToCombatStart);
+			loginfo("Setting: {} {}", "Food:              OnlyAllowFoodAtCombatStart", std::to_string(Settings::food._RestrictFoodToCombatStart));
+			Settings::food._DisableFollowers = ini.GetBoolValue("Food", "DisableFollowers", Settings::food._DisableFollowers);
+			loginfo("Setting: {} {}", "Food:              DisableFollowers", std::to_string(Settings::food._DisableFollowers));
+			Settings::food._DontUseWithWeaponsSheathed = ini.GetBoolValue("Food", "DontUseWithWeaponsSheathed", Settings::food._DontUseWithWeaponsSheathed);
+			loginfo("Setting: {} {}", "Food:              DontUseWithWeaponsSheathed", std::to_string(Settings::food._DontUseWithWeaponsSheathed));
 			try {
 				std::string prohib = ini.GetValue("Food", "ProhibitedEffects", "");
 				if (prohib.empty() == false)
-					Food::_prohibitedEffects = AlchemicEffect(prohib);
+					Settings::food._prohibitedEffects = AlchemicEffect(prohib);
 			} catch (std::exception) {}
-			loginfo("Setting: {} {}", "Food:           ProhibitedEffects", Food::_prohibitedEffects.string());
+			loginfo("Setting: {} {}", "Food:           ProhibitedEffects", Settings::food._prohibitedEffects.string());
 			Distribution::_probabilityAdjustersFood.clear();
 			Utility::ReadAdjusters(ini.GetValue("Food", "FoodProbabilityAdjusters", ""), &Distribution::_probabilityAdjustersFood, error);
 			if (error) {
@@ -258,170 +258,170 @@ void Settings::Load()
 			loginfo("Setting: {} {}", "Food:           FoodProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersFood));
 
 			// player
-			Player::_playerPotions = ini.GetBoolValue("Player", "EnablePlayerPotions", Player::_playerPotions);
-			loginfo("Setting: {} {}", "Player:            EnablePlayerPotions", std::to_string(Player::_playerPotions));
-			Player::_playerPoisons = ini.GetBoolValue("Player", "EnablePlayerPoisonUsage", Player::_playerPoisons);
-			loginfo("Setting: {} {}", "Player:            EnablePlayerPoisonUsage", std::to_string(Player::_playerPoisons));
-			Player::_playerFortifyPotions = ini.GetBoolValue("Player", "EnablePlayerFortifyPotionUsage", Player::_playerFortifyPotions);
-			loginfo("Setting: {} {}", "Player:            EnablePlayerFortifyPotionUsage", std::to_string(Player::_playerFortifyPotions));
-			Player::_playerFood = ini.GetBoolValue("Player", "EnablePlayerFoodUsage", Player::_playerFood);
-			loginfo("Setting: {} {}", "Player:            EnablePlayerFoodUsage", std::to_string(Player::_playerFood));
+			Settings::player._playerPotions = ini.GetBoolValue("Player", "EnablePlayerPotions", Settings::player._playerPotions);
+			loginfo("Setting: {} {}", "Player:            EnablePlayerPotions", std::to_string(Settings::player._playerPotions));
+			Settings::player._playerPoisons = ini.GetBoolValue("Player", "EnablePlayerPoisonUsage", Settings::player._playerPoisons);
+			loginfo("Setting: {} {}", "Player:            EnablePlayerPoisonUsage", std::to_string(Settings::player._playerPoisons));
+			Settings::player._playerFortifyPotions = ini.GetBoolValue("Player", "EnablePlayerFortifyPotionUsage", Settings::player._playerFortifyPotions);
+			loginfo("Setting: {} {}", "Player:            EnablePlayerFortifyPotionUsage", std::to_string(Settings::player._playerFortifyPotions));
+			Settings::player._playerFood = ini.GetBoolValue("Player", "EnablePlayerFoodUsage", Settings::player._playerFood);
+			loginfo("Setting: {} {}", "Player:            EnablePlayerFoodUsage", std::to_string(Settings::player._playerFood));
 
-			Player::_UseFavoritedItemsOnly = ini.GetBoolValue("Player", "UseFavoritedItemsOnly", Player::_UseFavoritedItemsOnly);
-			loginfo("Setting: {} {}", "Player:            UseFavoritedItemsOnly", std::to_string(Player::_UseFavoritedItemsOnly));
-			Player::_DontUseFavoritedItems = ini.GetBoolValue("Player", "DontUseFavoritedItems", Player::_DontUseFavoritedItems);
-			loginfo("Setting: {} {}", "Player:            DontUseFavoritedItems", std::to_string(Player::_DontUseFavoritedItems));
-			if (Player::_UseFavoritedItemsOnly && Player::_DontUseFavoritedItems)
-				Player::_UseFavoritedItemsOnly = false;
-			Player::_DontEatRawFood = ini.GetBoolValue("Player", "DontEatRawFood", Player::_DontEatRawFood);
-			loginfo("Setting: {} {}", "Player:            DontEatRawFood", std::to_string(Player::_DontEatRawFood));
-			Player::_DontDrinkAlcohol = ini.GetBoolValue("Player", "DontDrinkAlcohol", Player::_DontDrinkAlcohol);
-			loginfo("Setting: {} {}", "Player:            DontDrinkAlcohol", std::to_string(Player::_DontDrinkAlcohol));
+			Settings::player._UseFavoritedItemsOnly = ini.GetBoolValue("Player", "UseFavoritedItemsOnly", Settings::player._UseFavoritedItemsOnly);
+			loginfo("Setting: {} {}", "Player:            UseFavoritedItemsOnly", std::to_string(Settings::player._UseFavoritedItemsOnly));
+			Settings::player._DontUseFavoritedItems = ini.GetBoolValue("Player", "DontUseFavoritedItems", Settings::player._DontUseFavoritedItems);
+			loginfo("Setting: {} {}", "Player:            DontUseFavoritedItems", std::to_string(Settings::player._DontUseFavoritedItems));
+			if (Settings::player._UseFavoritedItemsOnly && Settings::player._DontUseFavoritedItems)
+				Settings::player._UseFavoritedItemsOnly = false;
+			Settings::player._DontEatRawFood = ini.GetBoolValue("Player", "DontEatRawFood", Settings::player._DontEatRawFood);
+			loginfo("Setting: {} {}", "Player:            DontEatRawFood", std::to_string(Settings::player._DontEatRawFood));
+			Settings::player._DontDrinkAlcohol = ini.GetBoolValue("Player", "DontDrinkAlcohol", Settings::player._DontDrinkAlcohol);
+			loginfo("Setting: {} {}", "Player:            DontDrinkAlcohol", std::to_string(Settings::player._DontDrinkAlcohol));
 
 			// usage
-			Usage::_DisableItemUsageWhileStaggered = ini.GetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered);
-			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileStaggered", std::to_string(Usage::_DisableItemUsageWhileStaggered));
-			Usage::_DisableItemUsageWhileFlying = ini.GetBoolValue("Usage", "DisableItemUsageWhileFlying", Usage::_DisableItemUsageWhileFlying);
-			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileFlying", std::to_string(Usage::_DisableItemUsageWhileFlying));
-			Usage::_DisableItemUsageWhileBleedingOut = ini.GetBoolValue("Usage", "DisableItemUsageWhileBleedingOut", Usage::_DisableItemUsageWhileBleedingOut);
-			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileBleedingOut", std::to_string(Usage::_DisableItemUsageWhileBleedingOut));
-			Usage::_DisableItemUsageWhileSleeping = ini.GetBoolValue("Usage", "DisableItemUsageWhileSleeping", Usage::_DisableItemUsageWhileSleeping);
-			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileSleeping", std::to_string(Usage::_DisableItemUsageWhileSleeping));
-			Usage::_DisableNonFollowerNPCs = ini.GetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs);
-			loginfo("Setting: {} {}", "usage:             DisableNonFollowerNPCs", std::to_string(Usage::_DisableNonFollowerNPCs));
-			Usage::_DisableOutOfCombatProcessing = ini.GetBoolValue("Usage", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing);
-			loginfo("Setting: {} {}", "usage:             DisableOutOfCombatProcessing", std::to_string(Usage::_DisableOutOfCombatProcessing));
-			Usage::_DisableItemUsageForExcludedNPCs = ini.GetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Usage::_DisableItemUsageForExcludedNPCs);
-			loginfo("Setting: {} {}", "usage:             DisableItemUsageForExcludedNPCs", std::to_string(Usage::_DisableItemUsageForExcludedNPCs));
-			Usage::_globalCooldown = ini.GetLongValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown);
-			loginfo("Setting: {} {}", "usage:             GlobalItemCooldown", std::to_string(Usage::_globalCooldown));
+			Settings::usage._DisableItemUsageWhileStaggered = ini.GetBoolValue("Usage", "DisableItemUsageWhileStaggered", Settings::usage._DisableItemUsageWhileStaggered);
+			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileStaggered", std::to_string(Settings::usage._DisableItemUsageWhileStaggered));
+			Settings::usage._DisableItemUsageWhileFlying = ini.GetBoolValue("Usage", "DisableItemUsageWhileFlying", Settings::usage._DisableItemUsageWhileFlying);
+			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileFlying", std::to_string(Settings::usage._DisableItemUsageWhileFlying));
+			Settings::usage._DisableItemUsageWhileBleedingOut = ini.GetBoolValue("Usage", "DisableItemUsageWhileBleedingOut", Settings::usage._DisableItemUsageWhileBleedingOut);
+			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileBleedingOut", std::to_string(Settings::usage._DisableItemUsageWhileBleedingOut));
+			Settings::usage._DisableItemUsageWhileSleeping = ini.GetBoolValue("Usage", "DisableItemUsageWhileSleeping", Settings::usage._DisableItemUsageWhileSleeping);
+			loginfo("Setting: {} {}", "usage:             DisableItemUsageWhileSleeping", std::to_string(Settings::usage._DisableItemUsageWhileSleeping));
+			Settings::usage._DisableNonFollowerNPCs = ini.GetBoolValue("Usage", "DisableNonFollowerNPCs", Settings::usage._DisableNonFollowerNPCs);
+			loginfo("Setting: {} {}", "usage:             DisableNonFollowerNPCs", std::to_string(Settings::usage._DisableNonFollowerNPCs));
+			Settings::usage._DisableOutOfCombatProcessing = ini.GetBoolValue("Usage", "DisableOutOfCombatProcessing", Settings::usage._DisableOutOfCombatProcessing);
+			loginfo("Setting: {} {}", "usage:             DisableOutOfCombatProcessing", std::to_string(Settings::usage._DisableOutOfCombatProcessing));
+			Settings::usage._DisableItemUsageForExcludedNPCs = ini.GetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Settings::usage._DisableItemUsageForExcludedNPCs);
+			loginfo("Setting: {} {}", "usage:             DisableItemUsageForExcludedNPCs", std::to_string(Settings::usage._DisableItemUsageForExcludedNPCs));
+			Settings::usage._globalCooldown = ini.GetLongValue("Usage", "GlobalItemCooldown", Settings::usage._globalCooldown);
+			loginfo("Setting: {} {}", "usage:             GlobalItemCooldown", std::to_string(Settings::usage._globalCooldown));
 
 			// distribution
 
-			Distr::_DistributePotions = ini.GetBoolValue("Distribution", "DistributePotions", Distr::_DistributePotions);
-			loginfo("Setting: {} {}", "Distribution:      DistributePotions", std::to_string(Distr::_DistributePotions));
-			Distr::_DistributePoisons = ini.GetBoolValue("Distribution", "DistributePoisons", Distr::_DistributePoisons);
-			loginfo("Setting: {} {}", "Distribution:      DistributePoisons", std::to_string(Distr::_DistributePoisons));
-			Distr::_DistributeFood = ini.GetBoolValue("Distribution", "DistributeFood", Distr::_DistributeFood);
-			loginfo("Setting: {} {}", "Distribution:      DistributeFood", std::to_string(Distr::_DistributeFood));
-			Distr::_DistributeFortifyPotions = ini.GetBoolValue("Distribution", "DistributeFortifyPotions", Distr::_DistributeFortifyPotions);
-			loginfo("Setting: {} {}", "Distribution:      DistributeFortifyPotions", std::to_string(Distr::_DistributeFortifyPotions));
-			Distr::_DistributeCustomItems = ini.GetBoolValue("Distribution", "DistributeCustomItems", Distr::_DistributeCustomItems);
-			loginfo("Setting: {} {}", "Distribution:      DistributeCustomItems", std::to_string(Distr::_DistributeCustomItems));
+			Settings::distr._DistributePotions = ini.GetBoolValue("Distribution", "DistributePotions", Settings::distr._DistributePotions);
+			loginfo("Setting: {} {}", "Distribution:      DistributePotions", std::to_string(Settings::distr._DistributePotions));
+			Settings::distr._DistributePoisons = ini.GetBoolValue("Distribution", "DistributePoisons", Settings::distr._DistributePoisons);
+			loginfo("Setting: {} {}", "Distribution:      DistributePoisons", std::to_string(Settings::distr._DistributePoisons));
+			Settings::distr._DistributeFood = ini.GetBoolValue("Distribution", "DistributeFood", Settings::distr._DistributeFood);
+			loginfo("Setting: {} {}", "Distribution:      DistributeFood", std::to_string(Settings::distr._DistributeFood));
+			Settings::distr._DistributeFortifyPotions = ini.GetBoolValue("Distribution", "DistributeFortifyPotions", Settings::distr._DistributeFortifyPotions);
+			loginfo("Setting: {} {}", "Distribution:      DistributeFortifyPotions", std::to_string(Settings::distr._DistributeFortifyPotions));
+			Settings::distr._DistributeCustomItems = ini.GetBoolValue("Distribution", "DistributeCustomItems", Settings::distr._DistributeCustomItems);
+			loginfo("Setting: {} {}", "Distribution:      DistributeCustomItems", std::to_string(Settings::distr._DistributeCustomItems));
 
-			Distr::_LevelEasy = ini.GetLongValue("Distribution", "LevelEasy", Distr::_LevelEasy);
-			loginfo("Setting: {} {}", "Distribution:      LevelEasy", std::to_string(Distr::_LevelEasy));
-			Distr::_LevelNormal = ini.GetLongValue("Distribution", "LevelNormal", Distr::_LevelNormal);
-			loginfo("Setting: {} {}", "Distribution:      LevelNormal", std::to_string(Distr::_LevelNormal));
-			Distr::_LevelDifficult = ini.GetLongValue("Distribution", "LevelDifficult", Distr::_LevelDifficult);
-			loginfo("Setting: {} {}", "Distribution:      LevelDifficult", std::to_string(Distr::_LevelDifficult));
-			Distr::_LevelInsane = ini.GetLongValue("Distribution", "LevelInsane", Distr::_LevelInsane);
-			loginfo("Setting: {} {}", "Distribution:      LevelInsane", std::to_string(Distr::_LevelInsane));
+			Settings::distr._LevelEasy = ini.GetLongValue("Distribution", "LevelEasy", Settings::distr._LevelEasy);
+			loginfo("Setting: {} {}", "Distribution:      LevelEasy", std::to_string(Settings::distr._LevelEasy));
+			Settings::distr._LevelNormal = ini.GetLongValue("Distribution", "LevelNormal", Settings::distr._LevelNormal);
+			loginfo("Setting: {} {}", "Distribution:      LevelNormal", std::to_string(Settings::distr._LevelNormal));
+			Settings::distr._LevelDifficult = ini.GetLongValue("Distribution", "LevelDifficult", Settings::distr._LevelDifficult);
+			loginfo("Setting: {} {}", "Distribution:      LevelDifficult", std::to_string(Settings::distr._LevelDifficult));
+			Settings::distr._LevelInsane = ini.GetLongValue("Distribution", "LevelInsane", Settings::distr._LevelInsane);
+			loginfo("Setting: {} {}", "Distribution:      LevelInsane", std::to_string(Settings::distr._LevelInsane));
 
-			Distr::_GameDifficultyScaling = ini.GetBoolValue("Distribution", "GameDifficultyScaling", Distr::_GameDifficultyScaling);
-			loginfo("Setting: {} {}", "Distribution:      GameDifficultyScaling", std::to_string(Distr::_GameDifficultyScaling));
+			Settings::distr._GameDifficultyScaling = ini.GetBoolValue("Distribution", "GameDifficultyScaling", Settings::distr._GameDifficultyScaling);
+			loginfo("Setting: {} {}", "Distribution:      GameDifficultyScaling", std::to_string(Settings::distr._GameDifficultyScaling));
 
-			Distr::_MaxMagnitudeWeak = ini.GetLongValue("Distribution", "MaxMagnitudeWeak", Distr::_MaxMagnitudeWeak);
-			loginfo("Setting: {} {}", "Distribution:      MaxMagnitudeWeak", std::to_string(Distr::_MaxMagnitudeWeak));
-			Distr::_MaxMagnitudeStandard = ini.GetLongValue("Distribution", "MaxMagnitudeStandard", Distr::_MaxMagnitudeStandard);
-			loginfo("Setting: {} {}", "Distribution:      MaxMagnitudeStandard", std::to_string(Distr::_MaxMagnitudeStandard));
-			Distr::_MaxMagnitudePotent = ini.GetLongValue("Distribution", "MaxMagnitudePotent", Distr::_MaxMagnitudePotent);
-			loginfo("Setting: {} {}", "Distribution:      MaxMagnitudePotent", std::to_string(Distr::_MaxMagnitudePotent));
+			Settings::distr._MaxMagnitudeWeak = ini.GetLongValue("Distribution", "MaxMagnitudeWeak", Settings::distr._MaxMagnitudeWeak);
+			loginfo("Setting: {} {}", "Distribution:      MaxMagnitudeWeak", std::to_string(Settings::distr._MaxMagnitudeWeak));
+			Settings::distr._MaxMagnitudeStandard = ini.GetLongValue("Distribution", "MaxMagnitudeStandard", Settings::distr._MaxMagnitudeStandard);
+			loginfo("Setting: {} {}", "Distribution:      MaxMagnitudeStandard", std::to_string(Settings::distr._MaxMagnitudeStandard));
+			Settings::distr._MaxMagnitudePotent = ini.GetLongValue("Distribution", "MaxMagnitudePotent", Settings::distr._MaxMagnitudePotent);
+			loginfo("Setting: {} {}", "Distribution:      MaxMagnitudePotent", std::to_string(Settings::distr._MaxMagnitudePotent));
 
-			Distr::_StyleScalingPrimary = (float)ini.GetDoubleValue("Distribution", "StyleScalingPrimary", Distr::_StyleScalingPrimary);
-			loginfo("Setting: {} {}", "Distribution:      StyleScalingPrimary", std::to_string(Distr::_StyleScalingPrimary));
-			Distr::_StyleScalingSecondary = (float)ini.GetDoubleValue("Distribution", "StyleScalingSecondary", Distr::_StyleScalingSecondary);
-			loginfo("Setting: {} {}", "Distribution:      StyleScalingSecondary", std::to_string(Distr::_StyleScalingSecondary));
+			Settings::distr._StyleScalingPrimary = (float)ini.GetDoubleValue("Distribution", "StyleScalingPrimary", Settings::distr._StyleScalingPrimary);
+			loginfo("Setting: {} {}", "Distribution:      StyleScalingPrimary", std::to_string(Settings::distr._StyleScalingPrimary));
+			Settings::distr._StyleScalingSecondary = (float)ini.GetDoubleValue("Distribution", "StyleScalingSecondary", Settings::distr._StyleScalingSecondary);
+			loginfo("Setting: {} {}", "Distribution:      StyleScalingSecondary", std::to_string(Settings::distr._StyleScalingSecondary));
 
-			Distr::_ProbabilityScaling = (float)ini.GetDoubleValue("Distribution", "ProbabilityScaling", Distr::_ProbabilityScaling);
-			loginfo("Setting: {} {}", "Distribution:      ProbabilityScaling", std::to_string(Distr::_ProbabilityScaling));
+			Settings::distr._ProbabilityScaling = (float)ini.GetDoubleValue("Distribution", "ProbabilityScaling", Settings::distr._ProbabilityScaling);
+			loginfo("Setting: {} {}", "Distribution:      ProbabilityScaling", std::to_string(Settings::distr._ProbabilityScaling));
 
-			Distr::_DoNotDistributeMixedInvisPotions = ini.GetBoolValue("Distribution", "DoNotDistributeMixedInvisPotions", Distr::_DoNotDistributeMixedInvisPotions);
-			loginfo("Setting: {} {}", "Distribution:      DoNotDistributeMixedInvisPotions", std::to_string(Distr::_DoNotDistributeMixedInvisPotions));
+			Settings::distr._DoNotDistributeMixedInvisPotions = ini.GetBoolValue("Distribution", "DoNotDistributeMixedInvisPotions", Settings::distr._DoNotDistributeMixedInvisPotions);
+			loginfo("Setting: {} {}", "Distribution:      DoNotDistributeMixedInvisPotions", std::to_string(Settings::distr._DoNotDistributeMixedInvisPotions));
 
 			// removal
-			Removal::_RemoveItemsOnDeath = ini.GetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath);
-			loginfo("Setting: {} {}", "Removal:           RemoveItemsOnDeath", std::to_string(Removal::_RemoveItemsOnDeath));
-			Removal::_ChanceToRemoveItem = ini.GetLongValue("Removal", "ChanceToRemoveItem", Removal::_ChanceToRemoveItem);
-			loginfo("Setting: {} {}", "Removal:           ChanceToRemoveItem", std::to_string(Removal::_ChanceToRemoveItem));
-			Removal::_MaxItemsLeft = ini.GetLongValue("Removal", "MaxItemsLeftAfterRemoval", Removal::_MaxItemsLeft);
-			loginfo("Setting: {} {}", "Removal:           MaxItemsLeftAfterRemoval", std::to_string(Removal::_MaxItemsLeft));
+			Settings::removal._RemoveItemsOnDeath = ini.GetBoolValue("Removal", "RemoveItemsOnDeath", Settings::removal._RemoveItemsOnDeath);
+			loginfo("Setting: {} {}", "Removal:           RemoveItemsOnDeath", std::to_string(Settings::removal._RemoveItemsOnDeath));
+			Settings::removal._ChanceToRemoveItem = ini.GetLongValue("Removal", "ChanceToRemoveItem", Settings::removal._ChanceToRemoveItem);
+			loginfo("Setting: {} {}", "Removal:           ChanceToRemoveItem", std::to_string(Settings::removal._ChanceToRemoveItem));
+			Settings::removal._MaxItemsLeft = ini.GetLongValue("Removal", "MaxItemsLeftAfterRemoval", Settings::removal._MaxItemsLeft);
+			loginfo("Setting: {} {}", "Removal:           MaxItemsLeftAfterRemoval", std::to_string(Settings::removal._MaxItemsLeft));
 
 			// whitelist mode
-			Whitelist::EnabledItems = ini.GetBoolValue("Whitelist Mode", "EnableWhitelistItems", Whitelist::EnabledItems);
-			loginfo("Setting: {} {}", "Whitelist Mode:    EnableWhitelistItems", std::to_string(Whitelist::EnabledItems));
-			Whitelist::EnabledNPCs = ini.GetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Whitelist::EnabledNPCs);
-			loginfo("Setting: {} {}", "Whitelist Mode:    EnableWhitelistNPCs", std::to_string(Whitelist::EnabledNPCs));
+			Settings::whitelist.EnabledItems = ini.GetBoolValue("Whitelist Mode", "EnableWhitelistItems", Settings::whitelist.EnabledItems);
+			loginfo("Setting: {} {}", "Whitelist Mode:    EnableWhitelistItems", std::to_string(Settings::whitelist.EnabledItems));
+			Settings::whitelist.EnabledNPCs = ini.GetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Settings::whitelist.EnabledNPCs);
+			loginfo("Setting: {} {}", "Whitelist Mode:    EnableWhitelistNPCs", std::to_string(Settings::whitelist.EnabledNPCs));
 
 			// fixes
-			Fixes::_ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", Fixes::_ApplySkillBoostPerks);
-			loginfo("Setting: {} {}", "Fixes:             ApplySkillBoostPerks", std::to_string(Fixes::_ApplySkillBoostPerks));
-			Fixes::_ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", Fixes::_ForceFixPotionSounds);
-			loginfo("Setting: {} {}", "Fixes:             ForceFixPotionSounds", std::to_string(Fixes::_ForceFixPotionSounds));
+			Settings::fixes._ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", Settings::fixes._ApplySkillBoostPerks);
+			loginfo("Setting: {} {}", "Fixes:             ApplySkillBoostPerks", std::to_string(Settings::fixes._ApplySkillBoostPerks));
+			Settings::fixes._ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", Settings::fixes._ForceFixPotionSounds);
+			loginfo("Setting: {} {}", "Fixes:             ForceFixPotionSounds", std::to_string(Settings::fixes._ForceFixPotionSounds));
 
 			// system
-			System::_cycletime = ini.GetLongValue("System", "CycleWaitTime", System::_cycletime);
-			if (System::_cycletime < 500)
-				System::_cycletime = 500;
-			loginfo("Setting: {} {}", "System:            CycleWaitTime", std::to_string(System::_cycletime));
+			Settings::system._cycletime = ini.GetLongValue("System", "CycleWaitTime", Settings::system._cycletime);
+			if (Settings::system._cycletime < 500)
+				Settings::system._cycletime = 500;
+			loginfo("Setting: {} {}", "System:            CycleWaitTime", std::to_string(Settings::system._cycletime));
 			_MaxDuration = ini.GetLongValue("System", "MaxDuration", _MaxDuration);
 			loginfo("Setting: {} {}", "System:            MaxDuration", std::to_string(_MaxDuration));
 			_MaxFortifyDuration = ini.GetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration);
 			loginfo("Setting: {} {}", "System:            MaxFortifyDuration", std::to_string(_MaxFortifyDuration));
-			//System::_alternateNPCRegistration = ini.GetBoolValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration);
-			//loginfo("Setting: {} {}", "System:            AlternateNPCRegistration", std::to_string(System::_alternateNPCRegistration));
-			System::_killSwitch = ini.GetBoolValue("System", "KillSwitch", System::_killSwitch);
-			loginfo("Setting: {} {}", "System:            KillSwitch", std::to_string(System::_killSwitch));
+			//Settings::system._alternateNPCRegistration = ini.GetBoolValue("System", "AlternateNPCRegistration", Settings::system._alternateNPCRegistration);
+			//loginfo("Setting: {} {}", "System:            AlternateNPCRegistration", std::to_string(Settings::system._alternateNPCRegistration));
+			Settings::system._killSwitch = ini.GetBoolValue("System", "KillSwitch", Settings::system._killSwitch);
+			loginfo("Setting: {} {}", "System:            KillSwitch", std::to_string(Settings::system._killSwitch));
 
 			// compatibility
-			Compatibility::_DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules);
-			loginfo("Setting: {} {}", "Compatibility:     DisableCreaturesWithoutRules", std::to_string(Compatibility::_DisableCreaturesWithoutRules));
+			Settings::compatibility._DisableCreaturesWithoutRules = ini.GetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Settings::compatibility._DisableCreaturesWithoutRules);
+			loginfo("Setting: {} {}", "Compatibility:     DisableCreaturesWithoutRules", std::to_string(Settings::compatibility._DisableCreaturesWithoutRules));
 
 			// compatibility animated poisons
-			Compatibility::AnimatedPoisons::_Enable = ini.GetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable);
-			loginfo("Setting: {} {}", "Compatibility:     EnableAnimatedPoisons", std::to_string(Compatibility::AnimatedPoisons::_Enable));
-			Compatibility::AnimatedPoisons::_UsePoisonDosage = ini.GetBoolValue("Compatibility: Animated Poisons", "UseAnimatedPoisonsDosageSystem", Compatibility::AnimatedPoisons::_UsePoisonDosage);
-			loginfo("Setting: {} {}", "Compatibility:     UseAnimatedPoisonsDosageSystem", std::to_string(Compatibility::AnimatedPoisons::_UsePoisonDosage));
+			Settings::compatibility.animatedPoisons._Enable = ini.GetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Settings::compatibility.animatedPoisons._Enable);
+			loginfo("Setting: {} {}", "Compatibility:     EnableAnimatedPoisons", std::to_string(Settings::compatibility.animatedPoisons._Enable));
+			Settings::compatibility.animatedPoisons._UsePoisonDosage = ini.GetBoolValue("Compatibility: Animated Poisons", "UseAnimatedPoisonsDosageSystem", Settings::compatibility.animatedPoisons._UsePoisonDosage);
+			loginfo("Setting: {} {}", "Compatibility:     UseAnimatedPoisonsDosageSystem", std::to_string(Settings::compatibility.animatedPoisons._UsePoisonDosage));
 
 			// compatibility animated potions
-			Compatibility::AnimatedPotions::_Enable = ini.GetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Compatibility::AnimatedPotions::_Enable);
-			loginfo("Setting: {} {}", "Compatibility:     EnableAnimatedPotions", std::to_string(Compatibility::AnimatedPotions::_Enable));
+			Settings::compatibility.animatedPotions._Enable = ini.GetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Settings::compatibility.animatedPotions._Enable);
+			loginfo("Setting: {} {}", "Compatibility:     EnableAnimatedPotions", std::to_string(Settings::compatibility.animatedPotions._Enable));
 
 			// debug
-			Debug::EnableLog = ini.GetBoolValue("Debug", "EnableLogging", Debug::EnableLog);
-			Logging::EnableLog = Debug::EnableLog;
-			loginfo("Setting: {} {}", "Debug:             EnableLogging", std::to_string(Debug::EnableLog));
-			Debug::EnableLoadLog = ini.GetBoolValue("Debug", "EnableLoadLogging", Debug::EnableLoadLog);
-			Logging::EnableLoadLog = Debug::EnableLoadLog;
-			loginfo("Setting: {} {}", "Debug:             EnableLoadLogging", std::to_string(Debug::EnableLoadLog));
-			Debug::LogLevel = ini.GetLongValue("Debug", "LogLevel", Debug::LogLevel);
-			Logging::LogLevel = Debug::LogLevel;
-			loginfo("Setting: {} {}", "Debug:             LogLevel", std::to_string(Debug::LogLevel));
-			Debug::EnableProfiling = ini.GetBoolValue("Debug", "EnableProfiling", Debug::EnableProfiling);
-			Logging::EnableProfiling = Debug::EnableProfiling;
-			loginfo("Setting: {} {}", "Debug:             EnableProfiling", std::to_string(Debug::EnableProfiling));
-			Debug::ProfileLevel = ini.GetLongValue("Debug", "ProfileLevel", Debug::ProfileLevel);
-			Logging::ProfileLevel = Debug::ProfileLevel;
-			loginfo("Setting: {} {}", "Debug:             ProfileLevel", std::to_string(Debug::LogLevel));
+			Settings::debug.EnableLog = ini.GetBoolValue("Debug", "EnableLogging", Settings::debug.EnableLog);
+			Logging::EnableLog = Settings::debug.EnableLog;
+			loginfo("Setting: {} {}", "Debug:             EnableLogging", std::to_string(Settings::debug.EnableLog));
+			Settings::debug.EnableLoadLog = ini.GetBoolValue("Debug", "EnableLoadLogging", Settings::debug.EnableLoadLog);
+			Logging::EnableLoadLog = Settings::debug.EnableLoadLog;
+			loginfo("Setting: {} {}", "Debug:             EnableLoadLogging", std::to_string(Settings::debug.EnableLoadLog));
+			Settings::debug.LogLevel = ini.GetLongValue("Debug", "LogLevel", Settings::debug.LogLevel);
+			Logging::LogLevel = Settings::debug.LogLevel;
+			loginfo("Setting: {} {}", "Debug:             LogLevel", std::to_string(Settings::debug.LogLevel));
+			Settings::debug.EnableProfiling = ini.GetBoolValue("Debug", "EnableProfiling", Settings::debug.EnableProfiling);
+			Logging::EnableProfiling = Settings::debug.EnableProfiling;
+			loginfo("Setting: {} {}", "Debug:             EnableProfiling", std::to_string(Settings::debug.EnableProfiling));
+			Settings::debug.ProfileLevel = ini.GetLongValue("Debug", "ProfileLevel", Settings::debug.ProfileLevel);
+			Logging::ProfileLevel = Settings::debug.ProfileLevel;
+			loginfo("Setting: {} {}", "Debug:             ProfileLevel", std::to_string(Settings::debug.LogLevel));
 
-			Debug::_CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", Debug::_CheckActorsWithoutRules);
-			loginfo("Setting: {} {}", "Debug:             CheckActorWithoutRules", std::to_string(Debug::_CheckActorsWithoutRules));
+			Settings::debug._CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", Settings::debug._CheckActorsWithoutRules);
+			loginfo("Setting: {} {}", "Debug:             CheckActorWithoutRules", std::to_string(Settings::debug._CheckActorsWithoutRules));
 
-			Debug::_CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", Debug::_CalculateCellRules);
-			loginfo("Setting: {} {}", "Debug:             CalculateCellRules", std::to_string(Debug::_CalculateCellRules));
-			Debug::_Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", Debug::_Test);
-			loginfo("Setting: {} {}", "Debug:             CalculateAllCellOnStartup", std::to_string(Debug::_Test));
-			if (Debug::_CalculateCellRules && Debug::_Test == false) {
+			Settings::debug._CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", Settings::debug._CalculateCellRules);
+			loginfo("Setting: {} {}", "Debug:             CalculateCellRules", std::to_string(Settings::debug._CalculateCellRules));
+			Settings::debug._Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", Settings::debug._Test);
+			loginfo("Setting: {} {}", "Debug:             CalculateAllCellOnStartup", std::to_string(Settings::debug._Test));
+			if (Settings::debug._CalculateCellRules && Settings::debug._Test == false) {
 				std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv", std::ofstream::out);
 				out << "CellName;RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
 			}
 
-			Debug::_CompatibilityRemoveItemsBeforeDist = ini.GetBoolValue("Debug", "RemoveItemsBeforeDist", Debug::_CompatibilityRemoveItemsBeforeDist);
-			loginfo("Setting: {} {}", "Debug:             RemoveItemsBeforeDist", std::to_string(Debug::_CompatibilityRemoveItemsBeforeDist));
-			Debug::_CompatibilityRemoveItemsStartup = ini.GetBoolValue("Debug", "RemoveItemsStartup", Debug::_CompatibilityRemoveItemsStartup);
-			loginfo("Setting: {} {}", "Debug:             RemoveItemsStartup", std::to_string(Debug::_CompatibilityRemoveItemsStartup));
-			Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded = ini.GetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded);
-			loginfo("Setting: {} {}", "Debug:             RemoveItemsStartup_OnlyExcluded", std::to_string(Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded));
+			Settings::debug._CompatibilityRemoveItemsBeforeDist = ini.GetBoolValue("Debug", "RemoveItemsBeforeDist", Settings::debug._CompatibilityRemoveItemsBeforeDist);
+			loginfo("Setting: {} {}", "Debug:             RemoveItemsBeforeDist", std::to_string(Settings::debug._CompatibilityRemoveItemsBeforeDist));
+			Settings::debug._CompatibilityRemoveItemsStartup = ini.GetBoolValue("Debug", "RemoveItemsStartup", Settings::debug._CompatibilityRemoveItemsStartup);
+			loginfo("Setting: {} {}", "Debug:             RemoveItemsStartup", std::to_string(Settings::debug._CompatibilityRemoveItemsStartup));
+			Settings::debug._CompatibilityRemoveItemsStartup_OnlyExcluded = ini.GetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", Settings::debug._CompatibilityRemoveItemsStartup_OnlyExcluded);
+			loginfo("Setting: {} {}", "Debug:             RemoveItemsStartup_OnlyExcluded", std::to_string(Settings::debug._CompatibilityRemoveItemsStartup_OnlyExcluded));
 		}
 	}
 
@@ -446,61 +446,61 @@ void Settings::Save()
 	ini.SetUnicode();
 
 	// potions
-	ini.SetBoolValue("Potions", "EnableHealthRestoration", Potions::_enableHealthRestoration, "// NPCs use health potions to restore their missing hp in combat.");
-	ini.SetBoolValue("Potions", "EnableMagickaRestoration", Potions::_enableMagickaRestoration, "// NPCs use magicka potions to restore their missing magicka in combat.");
-	ini.SetBoolValue("Potions", "EnableStaminaRestoration", Potions::_enableStaminaRestoration, "// NPCs use stamina potions to restore their missing stamina in combat.");
-	ini.SetBoolValue("Potions", "AllowDetrimentalEffects", Potions::_AllowDetrimentalEffects, "// If this is enabled NPCs will use potions that contain detrimental\n"
+	ini.SetBoolValue("Potions", "EnableHealthRestoration", Settings::potions._enableHealthRestoration, "// NPCs use health potions to restore their missing hp in combat.");
+	ini.SetBoolValue("Potions", "EnableMagickaRestoration", Settings::potions._enableMagickaRestoration, "// NPCs use magicka potions to restore their missing magicka in combat.");
+	ini.SetBoolValue("Potions", "EnableStaminaRestoration", Settings::potions._enableStaminaRestoration, "// NPCs use stamina potions to restore their missing stamina in combat.");
+	ini.SetBoolValue("Potions", "AllowDetrimentalEffects", Settings::potions._AllowDetrimentalEffects, "// If this is enabled NPCs will use potions that contain detrimental\n"
 																								"// effects. For instance, impure potions, that restore health and damage magicka.\n"
 																								"// !!!This setting also affects fortify potions.");
-	ini.SetBoolValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Potions::_HandleWeaponSheathedAsOutOfCombat, "// If weapons are not drawn in combat, it will be treated as Out-of-Combat.\n"
+	ini.SetBoolValue("Potions", "HandleWeaponSheathedAsOutOfCombat", Settings::potions._HandleWeaponSheathedAsOutOfCombat, "// If weapons are not drawn in combat, it will be treated as Out-of-Combat.\n"
 																													"// This currently means only health potions will be used.");
 
-	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Potions::_healthThreshold, "// Upon reaching this threshold, NPCs will start to use health potions.");
-	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Potions::_magickaThreshold, "// Upon reaching this threshold, NPCs will start to use magicka potions.");
-	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Potions::_staminaThreshold, "// Upon reaching this threshold, NPCs will start to use stamina potions.");
-	ini.SetLongValue("Potions", "UsePotionChance", Potions::_UsePotionChance, "// Chance that an NPC will use a potion if they can. Set to 100 to always \n"
+	ini.SetDoubleValue("Potions", "HealthThresholdPercent", Settings::potions._healthThreshold, "// Upon reaching this threshold, NPCs will start to use health potions.");
+	ini.SetDoubleValue("Potions", "MagickaThresholdPercent", Settings::potions._magickaThreshold, "// Upon reaching this threshold, NPCs will start to use magicka potions.");
+	ini.SetDoubleValue("Potions", "StaminaThresholdPercent", Settings::potions._staminaThreshold, "// Upon reaching this threshold, NPCs will start to use stamina potions.");
+	ini.SetLongValue("Potions", "UsePotionChance", Settings::potions._UsePotionChance, "// Chance that an NPC will use a potion if they can. Set to 100 to always \n"
 																				"// take a potion, when appropiate.\n"
 																				"// An NPC can use a potion if they (1) have a potion in their inventory, \n"
 																				"// and (2) when the respective value falls below the threshold.");
-	ini.SetValue("Potions", "ProhibitedEffects", Potions::_prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
+	ini.SetValue("Potions", "ProhibitedEffects", Settings::potions._prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
 	ini.SetValue("Potions", "PotionProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPotion).c_str(),
 		"// Global probability adjusters for potion effects");
 
 
 	// poisons
-	ini.SetBoolValue("Poisons", "EnablePoisonUsage", Poisons::_enablePoisons, "// NPCs use appropiate poisons in combat. Poisons are considered appropiate,\n"
+	ini.SetBoolValue("Poisons", "EnablePoisonUsage", Settings::poisons._enablePoisons, "// NPCs use appropiate poisons in combat. Poisons are considered appropiate,\n"
 																				"// if they can harm the enemy. For instance, damaging Magicka of an enemy \n"
 																				"// that does not use spells, is not appropiate.");
-	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Poisons::_AllowPositiveEffects, "// This allows NPCs to use poisons that apply positive effects to their opponents.");
-	ini.SetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Poisons::_DontUseWithWeaponsSheathed, "// If the weapons are sheathed, poisons will not be used.");
-	ini.SetBoolValue("Poisons", "DontUseAgainst100PoisonResist", Poisons::_DontUseAgainst100PoisonResist, "// NPCs and the player will not use Poisons against those that have 100% poison resistance anymore.");
-	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Poisons::_EnemyLevelScalePlayerLevel, "// If the enemy they are facing has a level greater equal \n"
+	ini.SetBoolValue("Poisons", "AllowPositiveEffects", Settings::poisons._AllowPositiveEffects, "// This allows NPCs to use poisons that apply positive effects to their opponents.");
+	ini.SetBoolValue("Poisons", "DontUseWithWeaponsSheathed", Settings::poisons._DontUseWithWeaponsSheathed, "// If the weapons are sheathed, poisons will not be used.");
+	ini.SetBoolValue("Poisons", "DontUseAgainst100PoisonResist", Settings::poisons._DontUseAgainst100PoisonResist, "// NPCs and the player will not use Poisons against those that have 100% poison resistance anymore.");
+	ini.SetDoubleValue("Poisons", "EnemyLevelScalePlayerLevel", Settings::poisons._EnemyLevelScalePlayerLevel, "// If the enemy they are facing has a level greater equal \n"
 																										"// 'this value' * PlayerLevel followers use poisons.");
-	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Poisons::_EnemyNumberThreshold, "// When the number of NPCs in a fight is at least at this value, followers\n"
+	ini.SetLongValue("Poisons", "FightingNPCsNumberThreshold", Settings::poisons._EnemyNumberThreshold, "// When the number of NPCs in a fight is at least at this value, followers\n"
 																								"// start to use poisons regardless of the enemies level, to faster help out \n"
 																								"// the player.\n"
 																								"// This includes hostile and non-hostile NPCs.");
-	ini.SetLongValue("Poisons", "UsePoisonChance", Poisons::_UsePoisonChance, "// Chance that an NPC will use a poison if they possess one with an \n// appropiate effect.");
-	ini.SetLongValue("Poisons", "Dosage", Poisons::_Dosage,
+	ini.SetLongValue("Poisons", "UsePoisonChance", Settings::poisons._UsePoisonChance, "// Chance that an NPC will use a poison if they possess one with an \n// appropiate effect.");
+	ini.SetLongValue("Poisons", "Dosage", Settings::poisons._Dosage,
 		"// The dosage describes the number of hits a poison lasts on your weapons.\n"
 		"// The dosage for specific poisons, or alchemic effects can also be defined \n"
 		"// by distribution rules and may outrule this setting.");
-	ini.SetValue("Poisons", "ProhibitedEffects", Poisons::_prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
+	ini.SetValue("Poisons", "ProhibitedEffects", Settings::poisons._prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
 	ini.SetValue("Poisons", "PoisonProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersPoison).c_str(),
 		"// Global probability adjusters for poison effects");
 
 
 	// fortify potions
-	ini.SetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", FortifyPotions::_enableFortifyPotions, "// NPCs use fortify potions in combat.\n"
+	ini.SetBoolValue("FortifyPotions", "EnableFortifyPotionUsage", Settings::fortifyPotions._enableFortifyPotions, "// NPCs use fortify potions in combat.\n"
 																											"// Potions are used based on the equipped weapons and spells.");
-	ini.SetBoolValue("FortifyPotions", "DontUseWithWeaponsSheathed", FortifyPotions::_DontUseWithWeaponsSheathed, "// When weapons are sheathed, no fortify potions will be used.");
+	ini.SetBoolValue("FortifyPotions", "DontUseWithWeaponsSheathed", Settings::fortifyPotions._DontUseWithWeaponsSheathed, "// When weapons are sheathed, no fortify potions will be used.");
 
-	ini.SetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", FortifyPotions::_EnemyLevelScalePlayerLevelFortify, "// If the enemy they are facing has a level greater equal \n"
+	ini.SetDoubleValue("FortifyPotions", "EnemyLevelScalePlayerLevelFortify", Settings::fortifyPotions._EnemyLevelScalePlayerLevelFortify, "// If the enemy they are facing has a level greater equal \n"
 																																	"// 'this value' * PlayerLevel followers use fortify potions.");
-	ini.SetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", FortifyPotions::_EnemyNumberThresholdFortify, "// When the number of NPCs in a fight is at least at this value, followers \n"
+	ini.SetLongValue("FortifyPotions", "FightingNPCsNumberThresholdFortify", Settings::fortifyPotions._EnemyNumberThresholdFortify, "// When the number of NPCs in a fight is at least at this value, followers \n"
 																															"// start to use fortify potions regardless of the enemies level.\n"
 																															"// This includes hostile and non-hostile NPCs.");
-	ini.SetLongValue("FortifyPotions", "UseFortifyPotionChance", FortifyPotions::_UseFortifyPotionChance, "// Chance that an NPC will use a fortify potion if they can. They can use a \n"
+	ini.SetLongValue("FortifyPotions", "UseFortifyPotionChance", Settings::fortifyPotions._UseFortifyPotionChance, "// Chance that an NPC will use a fortify potion if they can. They can use a \n"
 																											"// potion, if they have one in their inventory, and its effects are \n"
 																											"// beneficial to their current choice of weapons.\n"
 																											"// An NPC will not use a Fortify Light Armor potion if they are wearing \n"
@@ -511,82 +511,82 @@ void Settings::Save()
 
 
 	// food
-	ini.SetBoolValue("Food", "EnableFoodUsage", Food::_enableFood, "// Allows NPCs to use food items, to gain beneficial effects.");
-	ini.SetBoolValue("Food", "AllowDetrimentalEffects", Food::_AllowDetrimentalEffects, "// This allows NPCs to use food that has detrimental effects.");
-	ini.SetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Food::_RestrictFoodToCombatStart, "// NPCs will only eat food at the beginning of combat. This is the way \n"
+	ini.SetBoolValue("Food", "EnableFoodUsage", Settings::food._enableFood, "// Allows NPCs to use food items, to gain beneficial effects.");
+	ini.SetBoolValue("Food", "AllowDetrimentalEffects", Settings::food._AllowDetrimentalEffects, "// This allows NPCs to use food that has detrimental effects.");
+	ini.SetBoolValue("Food", "OnlyAllowFoodAtCombatStart", Settings::food._RestrictFoodToCombatStart, "// NPCs will only eat food at the beginning of combat. This is the way \n"
 																							"// it worked until version 3.0.0\n"
 																							"// If disabled, NPCs will try to eat more food as soon as an existing \n"
 																							"// food buff runs out.");
-	ini.SetBoolValue("Food", "DisableFollowers", Food::_DisableFollowers, "// Disables food usage for followers only. You can use this to prevent your followers\n"
+	ini.SetBoolValue("Food", "DisableFollowers", Settings::food._DisableFollowers, "// Disables food usage for followers only. You can use this to prevent your followers\n"
 																			"// from eating food, if you are using survival mods, without impacting other NPCs.");
-	ini.SetBoolValue("Food", "DontUseWithWeaponsSheathed", Food::_DontUseWithWeaponsSheathed, "// When weapons are sheathed food will not be used.");
-	ini.SetValue("Food", "ProhibitedEffects", Food::_prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
+	ini.SetBoolValue("Food", "DontUseWithWeaponsSheathed", Settings::food._DontUseWithWeaponsSheathed, "// When weapons are sheathed food will not be used.");
+	ini.SetValue("Food", "ProhibitedEffects", Settings::food._prohibitedEffects.string().c_str(), "// Items with the listed effects will not be distributed to NPCs.");
 
 	ini.SetValue("Food", "FoodProbabilityAdjusters", Utility::WriteAdjusters(&Distribution::_probabilityAdjustersFood).c_str(), 
 		"// Global probability adjusters for food effects");
 
 
 	// player
-	ini.SetBoolValue("Player", "EnablePlayerPotions", Player::_playerPotions, "// All activated restoration features are applied to the player, while \n"
+	ini.SetBoolValue("Player", "EnablePlayerPotions", Settings::player._playerPotions, "// All activated restoration features are applied to the player, while \n"
 																				"// they are in Combat.");
-	ini.SetBoolValue("Player", "EnablePlayerPoisonUsage", Player::_playerPoisons, "// Player will automatically use poisons.");
-	ini.SetBoolValue("Player", "EnablePlayerFortifyPotionUsage", Player::_playerFortifyPotions, "// Player will use fortify potions the way followers do.");
-	ini.SetBoolValue("Player", "EnablePlayerFoodUsage", Player::_playerFood, "// Player will use food the way npcs do.");
+	ini.SetBoolValue("Player", "EnablePlayerPoisonUsage", Settings::player._playerPoisons, "// Player will automatically use poisons.");
+	ini.SetBoolValue("Player", "EnablePlayerFortifyPotionUsage", Settings::player._playerFortifyPotions, "// Player will use fortify potions the way followers do.");
+	ini.SetBoolValue("Player", "EnablePlayerFoodUsage", Settings::player._playerFood, "// Player will use food the way npcs do.");
 
-	ini.SetBoolValue("Player", "UseFavoritedItemsOnly", Player::_UseFavoritedItemsOnly, "// Player will only use items that have been added to the favorites.");
-	ini.SetBoolValue("Player", "DontUseFavoritedItems", Player::_DontUseFavoritedItems, "// Player will not use any items that have been added to the favorites.\n"
+	ini.SetBoolValue("Player", "UseFavoritedItemsOnly", Settings::player._UseFavoritedItemsOnly, "// Player will only use items that have been added to the favorites.");
+	ini.SetBoolValue("Player", "DontUseFavoritedItems", Settings::player._DontUseFavoritedItems, "// Player will not use any items that have been added to the favorites.\n"
 																						"// If both UseFavoritedItemsOnly and DontUseFavoritedItems are set to true\n"
 																						"// UseFavoritedItemsOnly = false will be set automatically upon loading the game.");
-	ini.SetBoolValue("Player", "DontEatRawFood", Player::_DontEatRawFood, "// If enabled, the player will not consume food with the Keyword VendorItemFoodRaw");
-	ini.SetBoolValue("Player", "DontDrinkAlcohol", Player::_DontDrinkAlcohol, "// If enabled, the player will not consume anything regarded as alcohol");
+	ini.SetBoolValue("Player", "DontEatRawFood", Settings::player._DontEatRawFood, "// If enabled, the player will not consume food with the Keyword VendorItemFoodRaw");
+	ini.SetBoolValue("Player", "DontDrinkAlcohol", Settings::player._DontDrinkAlcohol, "// If enabled, the player will not consume anything regarded as alcohol");
 	
 
 	// usage
-	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Usage::_DisableItemUsageWhileStaggered, "// NPCs that are staggered, unconcious, ragdolling or in a kill-move aren't able to use any potions and poisons.");
-	ini.SetBoolValue("Usage", "DisableItemUsageWhileFlying", Usage::_DisableItemUsageWhileFlying, "// NPCs that are in mid-air or flying aren't able to use any potions and poisons.");
-	ini.SetBoolValue("Usage", "DisableItemUsageWhileBleedingOut", Usage::_DisableItemUsageWhileBleedingOut, "// NPCs that are bleeding-out aren't able to use any potions and poisons.");
-	ini.SetBoolValue("Usage", "DisableItemUsageWhileSleeping", Usage::_DisableItemUsageWhileSleeping, "// NPCs that are sleeping aren't able to use any potions and poisons.");
-	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Usage::_DisableNonFollowerNPCs, "// NPCs that are not currently followers of the player won't use potions, etc.");
-	ini.SetBoolValue("Usage", "DisableOutOfCombatProcessing", Usage::_DisableOutOfCombatProcessing, "// NPCs are only handled when they are fighting -> Old handling method \n"
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileStaggered", Settings::usage._DisableItemUsageWhileStaggered, "// NPCs that are staggered, unconcious, ragdolling or in a kill-move aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileFlying", Settings::usage._DisableItemUsageWhileFlying, "// NPCs that are in mid-air or flying aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileBleedingOut", Settings::usage._DisableItemUsageWhileBleedingOut, "// NPCs that are bleeding-out aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableItemUsageWhileSleeping", Settings::usage._DisableItemUsageWhileSleeping, "// NPCs that are sleeping aren't able to use any potions and poisons.");
+	ini.SetBoolValue("Usage", "DisableNonFollowerNPCs", Settings::usage._DisableNonFollowerNPCs, "// NPCs that are not currently followers of the player won't use potions, etc.");
+	ini.SetBoolValue("Usage", "DisableOutOfCombatProcessing", Settings::usage._DisableOutOfCombatProcessing, "// NPCs are only handled when they are fighting -> Old handling method \n"
 																								"// until version 3.\n"
 																								"// If disabled, NPCs will use Health potions outside of combat. \n"
 																								"// For instance, if they run into traps.");
-	ini.SetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Usage::_DisableItemUsageForExcludedNPCs, "// NPCs that are excluded from item distribution, will not use \n// any Potions, Fortifypotions, Poisons or Food from any other in-game source.");
-	ini.SetLongValue("Usage", "GlobalItemCooldown", Usage::_globalCooldown, "// Cooldown in milliseconds for item usage (potions, poisons, food, etc.).\n"
+	ini.SetBoolValue("Usage", "DisableItemUsageForExcludedNPCs", Settings::usage._DisableItemUsageForExcludedNPCs, "// NPCs that are excluded from item distribution, will not use \n// any Potions, Fortifypotions, Poisons or Food from any other in-game source.");
+	ini.SetLongValue("Usage", "GlobalItemCooldown", Settings::usage._globalCooldown, "// Cooldown in milliseconds for item usage (potions, poisons, food, etc.).\n"
 																			"// 0 means that items will be used according to the \n"
 																			"// CycleWaitTime defined in [System] (one potion and one poison per cycle)");
 
 
 	// distribution
-	ini.SetBoolValue("Distribution", "DistributePotions", Distr::_DistributePotions, "// NPCs are given potions.");
-	ini.SetBoolValue("Distribution", "DistributePoisons", Distr::_DistributePoisons, "// NPCs are give poisons.");
-	ini.SetBoolValue("Distribution", "DistributeFood", Distr::_DistributeFood, "// NPCs are given food items.");
-	ini.SetBoolValue("Distribution", "DistributeFortifyPotions", Distr::_DistributeFortifyPotions, "// NPCs are given fortify potions.");
-	ini.SetBoolValue("Distribution", "DistributeCustomItems", Distr::_DistributeCustomItems, "// NPCs are given custom items definable with rules. This does not \n"
+	ini.SetBoolValue("Distribution", "DistributePotions", Settings::distr._DistributePotions, "// NPCs are given potions.");
+	ini.SetBoolValue("Distribution", "DistributePoisons", Settings::distr._DistributePoisons, "// NPCs are give poisons.");
+	ini.SetBoolValue("Distribution", "DistributeFood", Settings::distr._DistributeFood, "// NPCs are given food items.");
+	ini.SetBoolValue("Distribution", "DistributeFortifyPotions", Settings::distr._DistributeFortifyPotions, "// NPCs are given fortify potions.");
+	ini.SetBoolValue("Distribution", "DistributeCustomItems", Settings::distr._DistributeCustomItems, "// NPCs are given custom items definable with rules. This does not \n"
 																								"// affect custom potions, poisons, fortify potions and food. \n"
 																								"// They are affected by the above settings.");
 
-	ini.SetLongValue("Distribution", "LevelEasy", Distr::_LevelEasy, "// NPC lower or equal this level are considered weak.");
-	ini.SetLongValue("Distribution", "LevelNormal", Distr::_LevelNormal, "// NPC lower or equal this level are considered normal in terms of strength.");
-	ini.SetLongValue("Distribution", "LevelDifficult", Distr::_LevelDifficult, "// NPC lower or equal this level are considered difficult.");
-	ini.SetLongValue("Distribution", "LevelInsane", Distr::_LevelInsane, "// NPC lower or equal this level are considered insane. \n"
+	ini.SetLongValue("Distribution", "LevelEasy", Settings::distr._LevelEasy, "// NPC lower or equal this level are considered weak.");
+	ini.SetLongValue("Distribution", "LevelNormal", Settings::distr._LevelNormal, "// NPC lower or equal this level are considered normal in terms of strength.");
+	ini.SetLongValue("Distribution", "LevelDifficult", Settings::distr._LevelDifficult, "// NPC lower or equal this level are considered difficult.");
+	ini.SetLongValue("Distribution", "LevelInsane", Settings::distr._LevelInsane, "// NPC lower or equal this level are considered insane. \n"
 																			"// Everything above this is always treated as a boss.");
 
-	ini.SetBoolValue("Distribution", "GameDifficultyScaling", Distr::_GameDifficultyScaling, "// Disables NPC level scaling, but scales distribution according \n"
+	ini.SetBoolValue("Distribution", "GameDifficultyScaling", Settings::distr._GameDifficultyScaling, "// Disables NPC level scaling, but scales distribution according \n"
 																								"// to game difficulty.");
 
-	ini.SetLongValue("Distribution", "MaxMagnitudeWeak", Distr::_MaxMagnitudeWeak, "// Items with this or lower magnitude*duration are considered weak.");
-	ini.SetLongValue("Distribution", "MaxMagnitudeStandard", Distr::_MaxMagnitudeStandard, "// Items with this or lower magnitude*duration are considered normal.");
-	ini.SetLongValue("Distribution", "MaxMagnitudePotent", Distr::_MaxMagnitudePotent, "// Items with this or lower magnitude*duration are considered potent. \n"
+	ini.SetLongValue("Distribution", "MaxMagnitudeWeak", Settings::distr._MaxMagnitudeWeak, "// Items with this or lower magnitude*duration are considered weak.");
+	ini.SetLongValue("Distribution", "MaxMagnitudeStandard", Settings::distr._MaxMagnitudeStandard, "// Items with this or lower magnitude*duration are considered normal.");
+	ini.SetLongValue("Distribution", "MaxMagnitudePotent", Settings::distr._MaxMagnitudePotent, "// Items with this or lower magnitude*duration are considered potent. \n"
 																						"// Everything above this is considered Insane tier.");
 
-	ini.SetDoubleValue("Distribution", "StyleScalingPrimary", Distr::_StyleScalingPrimary, "// Scaling for the weight of different alchemic effects for the \n"
+	ini.SetDoubleValue("Distribution", "StyleScalingPrimary", Settings::distr._StyleScalingPrimary, "// Scaling for the weight of different alchemic effects for the \n"
 																							"// distribution of potions, poison, fortify potions and food \n"
 																							"// according to the primary combat type of an npc.");
-	ini.SetDoubleValue("Distribution", "StyleScalingSecondary", Distr::_StyleScalingSecondary, "// Scaling for the weight of different alchemic effects for the \n"
+	ini.SetDoubleValue("Distribution", "StyleScalingSecondary", Settings::distr._StyleScalingSecondary, "// Scaling for the weight of different alchemic effects for the \n"
 																								"// distribution of potions, poison, fortify potions and food \n"
 																								"// according to the secondary combat type of an npc.");
-	ini.SetDoubleValue("Distribution", "ProbabilityScaling", Distr::_ProbabilityScaling,
+	ini.SetDoubleValue("Distribution", "ProbabilityScaling", Settings::distr._ProbabilityScaling,
 		"// Modifies the chances for all items distributed to npcs.\n"
 		"// This does not really affect the number of item (potions) distributed,\n"
 		"// just the chances for the first 4 potions, poisons and fortify potions. \n"
@@ -594,7 +594,7 @@ void Settings::Save()
 		"// unlikely due to the small base-probabilities for anything beyond 4 items.\n"
 		"// Anything value around 2.0 might guarantee 3 or 4 potions and poisons for most npcs.");
 
-	ini.SetBoolValue("Distribution", "DoNotDistributeMixedInvisPotions", Distr::_DoNotDistributeMixedInvisPotions,
+	ini.SetBoolValue("Distribution", "DoNotDistributeMixedInvisPotions", Settings::distr._DoNotDistributeMixedInvisPotions,
 		"// Potions with Invisibility as one of their effects may not be distributed\n"
 		"// when they are chosen for one of their other effects.\n"
 		"// Example: [Setting: false] An NPC will be given a health potion. A health potion with\n"
@@ -603,43 +603,43 @@ void Settings::Save()
 		"// with arbitrary secondary effects except Invisibility might be chosen.");
 
 	// removal
-	ini.SetBoolValue("Removal", "RemoveItemsOnDeath", Removal::_RemoveItemsOnDeath, "// Remove items from NPCs after they died.");
-	ini.SetLongValue("Removal", "ChanceToRemoveItem", Removal::_ChanceToRemoveItem, "// Chance to remove items on death of NPC. (range: 0 to 100)");
-	ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", Removal::_MaxItemsLeft, "// Maximum number of items chances are rolled for during removal. \n"
+	ini.SetBoolValue("Removal", "RemoveItemsOnDeath", Settings::removal._RemoveItemsOnDeath, "// Remove items from NPCs after they died.");
+	ini.SetLongValue("Removal", "ChanceToRemoveItem", Settings::removal._ChanceToRemoveItem, "// Chance to remove items on death of NPC. (range: 0 to 100)");
+	ini.SetLongValue("Removal", "MaxItemsLeftAfterRemoval", Settings::removal._MaxItemsLeft, "// Maximum number of items chances are rolled for during removal. \n"
 																					"// Everything that goes above this value is always removed.");
 
 
 	// whitelist mode
-	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistItems", Whitelist::EnabledItems, "// Enables the whitelist mode for items. Items that shall be \n"
+	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistItems", Settings::whitelist.EnabledItems, "// Enables the whitelist mode for items. Items that shall be \n"
 																						"// distributed must be explicitly whitelisted in the rules. \n"
 																						"// This is the opposite to the standard (blacklist) behaviour.");
-	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Whitelist::EnabledNPCs, "// Enables the whitelist mode for NPCs. NPCs that shall be \n"
+	ini.SetBoolValue("Whitelist Mode", "EnableWhitelistNPCs", Settings::whitelist.EnabledNPCs, "// Enables the whitelist mode for NPCs. NPCs that shall be \n"
 																						"// given potions, etc. and shall use potions, etc. MUST be \n"
 																						"// explicitly whitelisted in the rules. This is the opposite \n"
 																						"// of the standard (blacklist) behaviour.");
 
 
 	// fixes
-	ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", Fixes::_ApplySkillBoostPerks, "// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts \n"
+	ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", Settings::fixes._ApplySkillBoostPerks, "// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts \n"
 																					"// to npcs which are needed for fortify etc. potions to apply.");
-	ini.SetBoolValue("Fixes", "ForceFixPotionSounds", Fixes::_ForceFixPotionSounds, "// Forcefully fixes all sounds used by consumables in the game \n"
+	ini.SetBoolValue("Fixes", "ForceFixPotionSounds", Settings::fixes._ForceFixPotionSounds, "// Forcefully fixes all sounds used by consumables in the game \n"
 																					"// without regard for other mods changes. If deactivate the changes \n"
 																					"// of other mods that should have the same effect are respected.");
 
 
 	// system
-	ini.SetLongValue("System", "CycleWaitTime", System::_cycletime, "// Time between two periods in milliseconds.\n"
+	ini.SetLongValue("System", "CycleWaitTime", Settings::system._cycletime, "// Time between two periods in milliseconds.\n"
 																	"// Set to smaller values to increase reactivity. Set to larger \n"
 																	"// values to decrease performance impact.");
 	ini.SetLongValue("System", "MaxDuration", _MaxDuration, "// Maximum duration restoration potions (health, magicka, stamina) are accounted for, idependent from their actual duration.");
 	ini.SetLongValue("System", "MaxFortifyDuration", _MaxFortifyDuration, "// Maximum duration fortification potions are accounted for, idependent from their actual duration.");
-	//if (System::_alternateNPCRegistration)
-	//	ini.SetBoolValue("System", "AlternateNPCRegistration", System::_alternateNPCRegistration, "Switches NPC registration from immediate, to registration on next cycle.");
-	ini.SetBoolValue("System", "KillSwitch", System::_killSwitch, "Switches actors handling to main thread");
+	//if (Settings::system._alternateNPCRegistration)
+	//	ini.SetBoolValue("System", "AlternateNPCRegistration", Settings::system._alternateNPCRegistration, "Switches NPC registration from immediate, to registration on next cycle.");
+	ini.SetBoolValue("System", "KillSwitch", Settings::system._killSwitch, "Switches actors handling to main thread");
 
 
 	// compatibility
-	ini.SetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Compatibility::_DisableCreaturesWithoutRules, "// Disables item distribution and item usage for NPCs that do not\n"
+	ini.SetBoolValue("Compatibility", "DisableCreaturesWithoutRules", Settings::compatibility._DisableCreaturesWithoutRules, "// Disables item distribution and item usage for NPCs that do not\n"
 																													"// not have any distribution rule and have the ActorTypeAnimal or\n"
 																													"// ActorTypeCreature keywords. The Skill Boost Perks are also not\n"
 																													"// distributed to these NPCs.\n"
@@ -659,37 +659,38 @@ void Settings::Save()
 
 
 	// compatibility animated poisons
-	ini.SetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Compatibility::AnimatedPoisons::_Enable, "// Enables the automatic usage of poison animations for npcs.");
-	ini.SetBoolValue("Compatibility: Animated Poisons", "UseAnimatedPoisonsDosageSystem", Compatibility::AnimatedPoisons::_UsePoisonDosage, "// Uses the dosage system introduced by Animated Poisons, over \n"
+	ini.SetBoolValue("Compatibility: Animated Poisons", "EnableAnimatedPoisons", Settings::compatibility.animatedPoisons._Enable, "// Enables the automatic usage of poison animations for npcs.");
+	ini.SetBoolValue("Compatibility: Animated Poisons", "UseAnimatedPoisonsDosageSystem", Settings::compatibility.animatedPoisons._UsePoisonDosage,
+		"// Uses the dosage system introduced by Animated Poisons, over \n"
 																																			"// the dosage system of this mod.");
 
 	// compatibility animated potions
-	ini.SetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Compatibility::AnimatedPotions::_Enable, "// Enables the automatic usage of potion animations for npcs.");
+	ini.SetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Settings::compatibility.animatedPotions._Enable, "// Enables the automatic usage of potion animations for npcs.");
 
 	
 	// debug
-	ini.SetBoolValue("Debug", "EnableLogging", Debug::EnableLog, "// Enables logging output. Use with care as logs may get very large.");
-	ini.SetBoolValue("Debug", "EnableLoadLogging", Debug::EnableLoadLog, "// Enables logging output for plugin load, use if you want to \n"
+	ini.SetBoolValue("Debug", "EnableLogging", Settings::debug.EnableLog, "// Enables logging output. Use with care as logs may get very large.");
+	ini.SetBoolValue("Debug", "EnableLoadLogging", Settings::debug.EnableLoadLog, "// Enables logging output for plugin load, use if you want to \n"
 																		 "// log rule issues");
-	ini.SetLongValue("Debug", "LogLevel", Debug::LogLevel, "// 1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, \n"
+	ini.SetLongValue("Debug", "LogLevel", Settings::debug.LogLevel, "// 1 - layer 0 log entries, 2 - layer 1 log entries, 3 - layer 3 log entries, \n"
 														   "// 4 - layer 4 log entries. Affects which functions write log entries, \n"
 														   "// as well as what is written by those functions. ");
-	ini.SetBoolValue("Debug", "EnableProfiling", Debug::EnableProfiling, "// Enables profiling output.");
-	ini.SetLongValue("Debug", "ProfileLevel", Debug::ProfileLevel, "// 1 - only highest level functions write their executions times to \n"
+	ini.SetBoolValue("Debug", "EnableProfiling", Settings::debug.EnableProfiling, "// Enables profiling output.");
+	ini.SetLongValue("Debug", "ProfileLevel", Settings::debug.ProfileLevel, "// 1 - only highest level functions write their executions times to \n"
 																	"// the profile log, 2 - lower level functions are written, 3 - lowest level \n"
 																	"// functions are written. Be aware that not all functions are supported \n"
 																	"// as Profiling costs execution time.");
 
-	ini.SetBoolValue("Debug", "CheckActorWithoutRules", Debug::_CheckActorsWithoutRules, "// Checks all actors in the game on game start whether they are applied the \n"
+	ini.SetBoolValue("Debug", "CheckActorWithoutRules", Settings::debug._CheckActorsWithoutRules, "// Checks all actors in the game on game start whether they are applied the \n"
 																							"// default distribution rule.");
-	ini.SetBoolValue("Debug", "CalculateCellRules", Debug::_CalculateCellRules, "// When entering a new cell in game, all distribution rules are calculatet once.\n"
+	ini.SetBoolValue("Debug", "CalculateCellRules", Settings::debug._CalculateCellRules, "// When entering a new cell in game, all distribution rules are calculatet once.\n"
 																				"// The result of the evaluation is written to a csv file, for rule debugging");
-	ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", Debug::_Test, "// 10 seconds after loading a save game the function for \"CalculateCellRules\" \n"
+	ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", Settings::debug._Test, "// 10 seconds after loading a save game the function for \"CalculateCellRules\" \n"
 																			"// is applied to all cells in the game");
 
-	ini.SetBoolValue("Debug", "RemoveItemsBeforeDist", Debug::_CompatibilityRemoveItemsBeforeDist, "// Removes all distributables items from npcs before distributing new items.");
-	ini.SetBoolValue("Debug", "RemoveItemsStartup", Debug::_CompatibilityRemoveItemsStartup, "// Removes all distributables items from npcs 5 seconds after loading a game");
-	ini.SetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", Debug::_CompatibilityRemoveItemsStartup_OnlyExcluded, "// Removes only excluded items from npcs");
+	ini.SetBoolValue("Debug", "RemoveItemsBeforeDist", Settings::debug._CompatibilityRemoveItemsBeforeDist, "// Removes all distributables items from npcs before distributing new items.");
+	ini.SetBoolValue("Debug", "RemoveItemsStartup", Settings::debug._CompatibilityRemoveItemsStartup, "// Removes all distributables items from npcs 5 seconds after loading a game");
+	ini.SetBoolValue("Debug", "RemoveItemsStartup_OnlyExcluded", Settings::debug._CompatibilityRemoveItemsStartup_OnlyExcluded, "// Removes only excluded items from npcs");
 
 	ini.SaveFile(path);
 }

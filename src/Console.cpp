@@ -198,7 +198,7 @@ bool Console::ReloadDist::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTI
 	Settings::LoadDistrConfig();
 	if (preproc)
 		Events::Main::UnlockProcessing();
-	if (Settings::Debug::_CheckActorsWithoutRules) {
+	if (Settings::debug._CheckActorsWithoutRules) {
 		console->Print("Calculating Actors without rules...");
 		Settings::CheckActorsForRules();
 	}

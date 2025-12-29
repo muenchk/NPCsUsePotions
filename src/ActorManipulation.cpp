@@ -172,9 +172,9 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 			std::get<1>(iter->second).get()->IsQuestObject() == false && 
 			(acinfo->IsPlayer() == false ||
 				acinfo->IsPlayer() &&
-					(Settings::Player::_UseFavoritedItemsOnly == false ||
+					(Settings::player._UseFavoritedItemsOnly == false ||
 						std::get<1>(iter->second).get()->IsFavorited()) &&
-					(Settings::Player::_DontUseFavoritedItems == false ||
+					(Settings::player._DontUseFavoritedItems == false ||
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
@@ -188,7 +188,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 						ret.insert(ret.begin(), { mag, dur, item, AlchemicEffect::kCustom });
 					} else if (res = HasAlchemyEffect(item, alchemyEffect, fortify);
 							   std::get<0>(res) &&
-							   (Settings::Potions::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
+							   (Settings::potions._AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 						//LOG_1("dur {} mag {} effect {}", std::get<2>(res), std::get<1>(res), std::get<3>(res));
 					}
@@ -237,9 +237,9 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 			std::get<1>(iter->second).get()->IsQuestObject() == false &&
 			(acinfo->IsPlayer() == false ||
 				acinfo->IsPlayer() &&
-					(Settings::Player::_UseFavoritedItemsOnly == false ||
+					(Settings::player._UseFavoritedItemsOnly == false ||
 						std::get<1>(iter->second).get()->IsFavorited()) &&
-					(Settings::Player::_DontUseFavoritedItems == false ||
+					(Settings::player._DontUseFavoritedItems == false ||
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
@@ -253,7 +253,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 						ret.insert(ret.begin(), { mag, dur, item, AlchemicEffect::kCustom });
 					} else if (res = HasAlchemyEffect(item, alchemyEffect);
 							   std::get<0>(res) &&
-							   (Settings::Poisons::_AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
+							   (Settings::poisons._AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
 						LOG_3("Adding Poison to list: {}", Utility::PrintForm(item));
 						ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 					}
@@ -302,9 +302,9 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 			std::get<1>(iter->second).get()->IsQuestObject() == false &&
 			(acinfo->IsPlayer() == false ||
 				acinfo->IsPlayer() &&
-					(Settings::Player::_UseFavoritedItemsOnly == false ||
+					(Settings::player._UseFavoritedItemsOnly == false ||
 						std::get<1>(iter->second).get()->IsFavorited()) &&
-					(Settings::Player::_DontUseFavoritedItems == false ||
+					(Settings::player._DontUseFavoritedItems == false ||
 						std::get<1>(iter->second).get()->IsFavorited() == false) &&
 					Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
 			item = iter->first->As<RE::AlchemyItem>();
@@ -322,7 +322,7 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 					ret.insert(ret.begin(), { mag, dur, item, AlchemicEffect::kCustom });
 				} else if (res = HasAlchemyEffect(item, alchemyEffect);
 						   std::get<0>(res) &&
-						   (Settings::Food::_AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
+						   (Settings::food._AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
 					ret.insert(ret.begin(), { std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
 				}
 			}
@@ -375,9 +375,9 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> ACM::GetRandomFood(std:
 			std::get<1>(iter->second).get()->IsQuestObject() == false &&
 			(acinfo->IsPlayer() == false ||
 				acinfo->IsPlayer() &&
-					(Settings::Player::_UseFavoritedItemsOnly == false ||
+					(Settings::player._UseFavoritedItemsOnly == false ||
 						std::get<1>(iter->second).get()->IsFavorited()) &&
-					(Settings::Player::_DontUseFavoritedItems == false ||
+					(Settings::player._DontUseFavoritedItems == false ||
 						std::get<1>(iter->second).get()->IsFavorited() == false))) {
 			item = iter->first->As<RE::AlchemyItem>();
 			LOG_5("checking item");

@@ -501,15 +501,15 @@ bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 					return false;
 				break;
 			case CustomItemConditionsAll::kHealthThreshold:
-				if (ACM::GetAVPercentage(reac, RE::ActorValue::kHealth) > Settings::Potions::_healthThreshold)  // over plugin health threshold
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kHealth) > Settings::potions._healthThreshold)  // over plugin health threshold
 					return false;
 				break;
 			case CustomItemConditionsAll::kMagickaThreshold:
-				if (ACM::GetAVPercentage(reac, RE::ActorValue::kMagicka) > Settings::Potions::_magickaThreshold)  // over plugin magicka threshold
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kMagicka) > Settings::potions._magickaThreshold)  // over plugin magicka threshold
 					return false;
 				break;
 			case CustomItemConditionsAll::kStaminaThreshold:
-				if (ACM::GetAVPercentage(reac, RE::ActorValue::kStamina) > Settings::Potions::_staminaThreshold)  // over plugin stamina threshold
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kStamina) > Settings::potions._staminaThreshold)  // over plugin stamina threshold
 					return false;
 				break;
 			case CustomItemConditionsAll::kHasMagicEffect:
@@ -555,15 +555,15 @@ bool ActorInfo::CalcUsageConditionsIntern(CustomItem* item)
 					return true;
 				break;
 			case CustomItemConditionsAny::kHealthThreshold:
-				if (ACM::GetAVPercentage(reac, RE::ActorValue::kHealth) <= Settings::Potions::_healthThreshold)  // under health threshold
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kHealth) <= Settings::potions._healthThreshold)  // under health threshold
 					return true;
 				break;
 			case CustomItemConditionsAny::kMagickaThreshold:
-				if (ACM::GetAVPercentage(reac, RE::ActorValue::kMagicka) <= Settings::Potions::_magickaThreshold)  // under magicka threshold
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kMagicka) <= Settings::potions._magickaThreshold)  // under magicka threshold
 					return true;
 				break;
 			case CustomItemConditionsAny::kStaminaThreshold:
-				if (ACM::GetAVPercentage(reac, RE::ActorValue::kStamina) <= Settings::Potions::_staminaThreshold)  // under stamina threshold
+				if (ACM::GetAVPercentage(reac, RE::ActorValue::kStamina) <= Settings::potions._staminaThreshold)  // under stamina threshold
 					return true;
 				break;
 			case CustomItemConditionsAny::kHasMagicEffect:

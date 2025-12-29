@@ -125,7 +125,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Settings::LoadDistrConfig();
 		loginfo("Distribution configuration loaded");
 		// Debug stuff
-		if (Settings::Debug::_CheckActorsWithoutRules)
+		if (Settings::debug._CheckActorsWithoutRules)
 			Settings::CheckActorsForRules();
 		// before classifying items make sure compatibility loads everything it can
 		Compatibility::GetSingleton()->Load();

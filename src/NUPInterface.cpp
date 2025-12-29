@@ -22,7 +22,7 @@ namespace NPCsUsePotions
 	void NUPInterface::EnableCureDiseasePotionUsage(bool enable)
 	{
 		loginfo("[NUPInterface] [EnableCureDiseasePotionUsage]");
-		Settings::Internal::_useCureDiseaseEffect = enable;
+		Settings::internal._useCureDiseaseEffect = enable;
 	}
 
 	std::binary_semaphore datalock{ 1 };

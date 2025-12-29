@@ -2576,7 +2576,7 @@ void Settings::LoadDistrConfig()
 
 	Distribution::initialised = true;
 
-	if (Settings::Fixes::_ApplySkillBoostPerks)
+	if (Settings::fixes._ApplySkillBoostPerks)
 		Settings::ApplySkillBoostPerks();
 
 	if (Logging::EnableLoadLog) {
@@ -3163,7 +3163,7 @@ void Settings::ApplySkillBoostPerks()
 			// some creatures have cause CTDs or other problems, if they get the perks, so try to filter some of them out
 			// if they are a creature and do not have any explicit rule, they will not get any perks
 			// at the same time, their id will be blacklisted for the rest of the plugin, to avoid any handling and distribution problems
-			if (Settings::Compatibility::_DisableCreaturesWithoutRules && (npc->GetRace()->HasKeyword(Settings::ActorTypeCreature) || npc->GetRace()->HasKeyword(ActorTypeAnimal))) {
+			if (Settings::compatibility._DisableCreaturesWithoutRules && (npc->GetRace()->HasKeyword(Settings::ActorTypeCreature) || npc->GetRace()->HasKeyword(ActorTypeAnimal))) {
 				ActorStrength acs;
 				ItemStrength is;
 				auto tplt = Utility::ExtractTemplateInfo(npc);
@@ -3283,7 +3283,7 @@ void Settings::ClassifyItems()
 						// check whether item is excluded, or whether it is not whitelisted when in whitelist mode
 						// if it is excluded and whitelisted it is still excluded
 						if (Distribution::excludedItems()->contains(item->GetFormID()) ||
-							Settings::Whitelist::EnabledItems &&
+							Settings::whitelist.EnabledItems &&
 								!Distribution::whitelistItems()->contains(item->GetFormID())) {
 							EXCL("[Excluded Item] Item:     {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							continue;
@@ -3363,7 +3363,7 @@ void Settings::ClassifyItems()
 						switch (type) {
 						case ItemType::kPotion:
 						case ItemType::kFortifyPotion:
-							if ((effects & Potions::_prohibitedEffects).IsValid()) {
+							if ((effects & Settings::potions._prohibitedEffects).IsValid()) {
 								// found effect that has been marked as excluded
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
@@ -3372,7 +3372,7 @@ void Settings::ClassifyItems()
 							}
 							break;
 						case ItemType::kPoison:
-							if ((effects & Poisons::_prohibitedEffects).IsValid()) {
+							if ((effects & Settings::poisons._prohibitedEffects).IsValid()) {
 								// found effect that has been marked as excluded
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
@@ -3381,7 +3381,7 @@ void Settings::ClassifyItems()
 							}
 							break;
 						case ItemType::kFood:
-							if ((effects & Food::_prohibitedEffects).IsValid()) {
+							if ((effects & Settings::food._prohibitedEffects).IsValid()) {
 								// found effect that has been marked as excluded
 								Distribution::_excludedItems.insert(item->GetFormID());
 								priorexcluded.insert(item->GetFormID());
@@ -3434,11 +3434,11 @@ void Settings::ClassifyItems()
 						if (item->CalculateTotalGoldValue(player) > 0) {
 							// determine the type of item
 							if (std::get<2>(clas) == ItemType::kFood &&
-								(Settings::Food::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
+								(Settings::food._AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
 								_foodall.insert(_foodall.end(), { std::get<0>(clas), item });
 								_foodEffectsFound |= std::get<0>(clas);
 							} else if (std::get<2>(clas) == ItemType::kPoison &&
-									   (Settings::Poisons::_AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
+									   (Settings::poisons._AllowPositiveEffects || std::get<5>(clas) == false /*either we allow positive effects or there are none*/)) {
 								switch (std::get<1>(clas)) {
 								case ItemStrength::kWeak:
 									_poisonsWeak.insert(_poisonsWeak.end(), { std::get<0>(clas), item });
@@ -3455,7 +3455,7 @@ void Settings::ClassifyItems()
 								}
 								_poisonEffectsFound |= std::get<0>(clas);
 							} else if (std::get<2>(clas) == ItemType::kPotion &&
-									   (Settings::Potions::_AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
+									   (Settings::potions._AllowDetrimentalEffects || std::get<5>(clas) == false /*either we allow detrimental effects or there are none*/)) {
 								if ((std::get<0>(clas) & AlchemicEffect::kBlood) > 0)
 									_potionsBlood.insert(_potionsBlood.end(), { std::get<0>(clas), item });
 								else if ((std::get<0>(clas) & AlchemicEffect::kHealth) > 0 ||
@@ -3527,7 +3527,7 @@ void Settings::ClassifyItems()
 	PROF_1(TimeProfiling, "function execution time.");
 
 	// add alcoholic items to player exclusion list
-	if (Settings::Player::_DontDrinkAlcohol) {
+	if (Settings::player._DontDrinkAlcohol) {
 		auto itr = Distribution::_alcohol.begin();
 		while (itr != Distribution::_alcohol.end()) {
 			Distribution::_excludedItemsPlayer.insert(*itr);
@@ -3774,11 +3774,11 @@ std::tuple<AlchemicEffect, ItemStrength, ItemType, int, float, bool> Settings::C
 		str = ItemStrength::kPotent;
 	else if (maxmag == 0)
 		str = ItemStrength::kStandard;
-	else if (maxmag <= Distr::_MaxMagnitudeWeak)
+	else if (maxmag <= Settings::distr._MaxMagnitudeWeak)
 		str = ItemStrength::kWeak;
-	else if (maxmag <= Distr::_MaxMagnitudeStandard)
+	else if (maxmag <= Settings::distr._MaxMagnitudeStandard)
 		str = ItemStrength::kStandard;
-	else if (maxmag <= Distr::_MaxMagnitudePotent)
+	else if (maxmag <= Settings::distr._MaxMagnitudePotent)
 		str = ItemStrength::kPotent;
 	else
 		str = ItemStrength::kInsane;
