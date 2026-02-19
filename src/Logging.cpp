@@ -77,8 +77,9 @@ void Logging::AsyncLogger(std::stop_token stop)
 		// main loop for writing logs
 		std::unique_lock<std::mutex> guard(_queueMutex);
 		_queueWait.wait_for(guard, std::chrono::milliseconds(100), [] { return _queue.empty() == false; });
-		try {
-			std::pair<MessageType, std::string> pair = _queue.get_pop_front();
+		auto top = _queue.get_pop_front();
+		if (top.has_value()) {
+			std::pair<MessageType, std::string> pair = top.value();
 			switch (pair.first) {
 			case MessageType::Log:
 				Log::write(pair.second);
@@ -96,7 +97,6 @@ void Logging::AsyncLogger(std::stop_token stop)
 				LogDistr::write(pair.second);
 				break;
 			}
-		} catch (std::exception&) {
 		}
 	}
 }

@@ -155,11 +155,11 @@ public:
 
 	using type = std::deque<T, Allocator>::value_type;
 
-	std::deque<T, Allocator>::value_type get_pop_front()
+	std::optional<type> get_pop_front()
 	{
 		Spinlock guard(_flag);
 		if (_queue.empty())
-			throw std::out_of_range("out of range");
+			return std::nullopt;
 		type elem = _queue.front();
 		_queue.pop_front();
 		return elem;
