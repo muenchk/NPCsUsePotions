@@ -426,7 +426,7 @@ RE::AlchemyItem* Distribution::Rule::GetRandomPotion(int str, std::shared_ptr<Ac
 	std::vector<RE::AlchemyItem*> items;
 	auto eff = GetRandomEffect(distr);
 	loginfo("Effect: {}", eff.string());
-		GetRandomPotioneff:;
+GetRandomPotioneff:;
 	if (eff == AlchemicEffect::kCustom) {
 		auto potions = acinfo->FilterCustomConditionsDistr(acinfo->citems.potions);
 		if (potions.size() == 0) {
@@ -469,8 +469,8 @@ RetryPotion:
 		}
 	}
 	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
 	if (items.size() > 0) {
+		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
 		return items[r(randi)];
 		//logusage("Looking for effect {}, gave {}", eff.string(), Utility::PrintForm(item));
 
@@ -533,9 +533,10 @@ RetryPoison:
 		}
 	}
 	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
+	if (items.size() > 0) {
+		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
 		return items[r(randi)];
+	}
 	return nullptr;
 }
 RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr)
@@ -584,9 +585,10 @@ RetryFortify:
 		}
 	}
 	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
+	if (items.size() > 0) {
+		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
 		return items[r(randi)];
+	}
 	return nullptr;
 }
 RE::AlchemyItem* Distribution::Rule::GetRandomFood_intern(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr)
@@ -610,9 +612,10 @@ RetryFortify:
 		items = Settings::GetMatchingItems(*Settings::foodall(), eff);
 	}
 	// return random item
-	std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-	if (items.size() > 0)
+	if (items.size() > 0) {
+		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
 		return items[r(randi)];
+	}
 	return nullptr;
 }
 
@@ -1275,39 +1278,51 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 				return true;
 		}
 	}
-	bool ret = Distribution::excludedNPCs()->contains(acinfo->GetFormID());
-	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetPluginID());
-	ret |= Distribution::excludedPlugins_NPCs()->contains(acinfo->GetRaceFormID());
-	ret |= acinfo->IsFollower();
-	ret |= (Distribution::excludedNPCs()->contains(acinfo->GetFormIDOriginal()));
+	if (Distribution::excludedNPCs()->contains(acinfo->GetFormID()))
+		return true;
+	if (Distribution::excludedPlugins_NPCs()->contains(acinfo->GetPluginID()))
+		return true;
+	if (Distribution::excludedAssoc()->contains(acinfo->GetRaceFormID()))
+		return true;
+	if (acinfo->IsFollower())
+		return true;
+	if ((Distribution::excludedNPCs()->contains(acinfo->GetFormIDOriginal())))
+		return true;
 	for (auto& id : acinfo->GetTemplateIDs())
-		ret |= Distribution::excludedNPCs()->contains(id);
-	ret |= acinfo->IsGhost();
-	ret |= acinfo->IsSummonable();
+		if (Distribution::excludedNPCs()->contains(id))
+			return true;
+	if (acinfo->IsGhost())
+		return true;
+	if (acinfo->IsSummonable())
+		return true;
 	if (acinfo->Bleeds() == false && Utility::ToLower(acinfo->GetActorBaseFormEditorID()).find("ghost") != std::string::npos) {
 		Distribution::ForceExcludeNPC(acinfo->GetFormID());
 		return true;
 	}
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-	if (!Distribution::npcMap()->contains(acinfo->GetFormID()) && !Distribution::npcMap()->contains(acinfo->GetFormIDOriginal()) && ret == false) {
+	if (!Distribution::npcMap()->contains(acinfo->GetFormID()) && !Distribution::npcMap()->contains(acinfo->GetFormIDOriginal())) {
 		auto base = acinfo->GetActorBase();
 		for (uint32_t i = 0; i < base->numKeywords; i++) {
 			if (base->keywords[i])
-				ret |= Distribution::excludedAssoc()->contains(base->keywords[i]->GetFormID());
+				if (Distribution::excludedAssoc()->contains(base->keywords[i]->GetFormID()))
+					return true;
 		}
 		for (uint32_t i = 0; i < base->factions.size(); i++) {
 			if (base->factions[i].faction)
-				ret |= Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID());
+				if (Distribution::excludedAssoc()->contains(base->factions[i].faction->GetFormID()))
+					return true;
 		}
 		auto race = acinfo->GetRace();
 		if (race) {
-			ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
+			if (Distribution::excludedAssoc()->contains(race->GetFormID()))
+				return true;
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
-				ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+				if (Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID()))
+					return true;
 			}
 		}
 	}
-	return ret;
+	return false;
 }
 
 /// <summary>
@@ -1319,26 +1334,99 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 {
 	if (actor->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
-	if (Settings::usage._DisableItemUsageForExcludedNPCs) {
-		ID id = ID(actor);
-		// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
-		bool ret = Distribution::excludedNPCs()->contains(id);
-		ret |= Distribution::excludedPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(actor));
-		ret |= (Utility::Mods::GetPluginIndex(actor) == 0x1 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID));
-		ret |= actor->GetActorBase() && Distribution::excludedNPCs()->contains(id.GetOriginalID());
-		ret |= actor->IsGhost();
-		ret |= actor->GetActorBase() && actor->GetActorBase()->IsSummonable();
-		if (ret == false && !Distribution::npcMap()->contains(id) && !Distribution::npcMap()->contains(id.GetOriginalID())) {
-			auto race = actor->GetRace();
-			if (race) {
-				ret |= Distribution::excludedPlugins_NPCs()->contains(race->GetFormID());
-				ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
-				for (uint32_t i = 0; i < race->numKeywords; i++) {
-					ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+	{
+		ActorInfo acinfo(actor);
+		if (Distribution::hardExclusions()->contains(acinfo.GetFormID())) {
+			LOG_3("Exclude From Handling: Hard Exclusion Actor");
+			return true;
+		}
+		if (Distribution::hardExclusionsPlugins_NPCs()->contains(acinfo.GetPluginID())) {
+			LOG_3("Exclude From Handling: Hard Exclusion Plugin");
+			return true;
+		}
+		if (Distribution::hardExclusions()->contains(acinfo.GetRaceFormID())) {
+			LOG_3("Exclude From Handling: Hard Exclusion Race");
+			return true;
+		}
+		if ((Distribution::hardExclusions()->contains(acinfo.GetFormIDOriginal()))) {
+			LOG_3("Exclude From Handling: Hard Exclusion Orig ID");
+			return true;
+		}
+		for (auto& id : acinfo.GetTemplateIDs()) {
+			if (Distribution::hardExclusions()->contains(id)) {
+				LOG_3("Exclude From Handling: Hard Exclusion Template");
+				return true;
+			}
+		}
+		if (acinfo.IsGhost()) {
+			LOG_3("Exclude From Handling: Hard Exclusion Ghost");
+			return true;
+		}
+		if (acinfo.IsSummonable()) {
+			LOG_3("Exclude From Handling: Hard Exclusion Summon");
+			return true;
+		}
+		if (acinfo.Bleeds() == false && Utility::ToLower(acinfo.GetActorBaseFormEditorID()).find("ghost") != std::string::npos) {
+			LOG_3("Exclude From Handling: Hard Exclusion Ghost String");
+			return true;
+		}
+
+		// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
+		auto base = acinfo.GetActorBase();
+		for (uint32_t i = 0; i < base->numKeywords; i++) {
+			if (base->keywords[i])
+				if (Distribution::hardExclusions()->contains(base->keywords[i]->GetFormID())) {
+					LOG_3("Exclude From Handling: Hard Exclusion Keyword NPC");
+					return true;
+				}
+		}
+		for (uint32_t i = 0; i < base->factions.size(); i++) {
+			if (base->factions[i].faction)
+				if (Distribution::hardExclusions()->contains(base->factions[i].faction->GetFormID())) {
+					LOG_3("Exclude From Handling: Hard Exclusion Facrion");
+					return true;
+				}
+		}
+		auto race = acinfo.GetRace();
+		if (race) {
+			if (Distribution::hardExclusions()->contains(race->GetFormID()))
+				return true;
+			for (uint32_t i = 0; i < race->numKeywords; i++) {
+				if (Distribution::hardExclusions()->contains(race->keywords[i]->GetFormID())) {
+					LOG_3("Exclude From Handling: Hard Exclusion Keyword Race");
+					return true;
 				}
 			}
 		}
-		return ret;
+	}
+	if (Settings::usage._DisableItemUsageForExcludedNPCs) {
+		ID id = ID(actor);
+		// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
+		if (Distribution::excludedNPCs()->contains(id))
+			return true;
+		if (Distribution::excludedPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(actor)))
+			return true;
+		if ((Utility::Mods::GetPluginIndex(actor) == MAXUINT32 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID)))
+			return true;
+		if (actor->GetActorBase() && Distribution::excludedNPCs()->contains(id.GetOriginalID()))
+			return true;
+		if (actor->IsGhost())
+			return true;
+		if (actor->GetActorBase() && actor->GetActorBase()->IsSummonable())
+			return true;
+		if (!Distribution::npcMap()->contains(id) && !Distribution::npcMap()->contains(id.GetOriginalID())) {
+			auto race = actor->GetRace();
+			if (race) {
+				if (Distribution::excludedPlugins_NPCs()->contains(race->GetFormID()))
+					return true;
+				if (Distribution::excludedAssoc()->contains(race->GetFormID()))
+					return true;
+				for (uint32_t i = 0; i < race->numKeywords; i++) {
+					if (Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID()))
+						return true;
+				}
+			}
+		}
 	}
 	return false;
 }
@@ -1353,34 +1441,44 @@ bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 	// skip fucking deleted references
 	if (npc->formFlags & RE::TESForm::RecordFlags::kDeleted)
 		return true;
-	bool ret = (Distribution::excludedNPCs()->contains(npc->GetFormID()));
-	ret |= npc->IsInFaction(Settings::CurrentFollowerFaction);
-	ret |= npc->IsInFaction(Settings::CurrentHirelingFaction);
-	ret |= npc->IsGhost();
-	ret |= npc->IsSummonable();
+	if ((Distribution::excludedNPCs()->contains(npc->GetFormID())))
+		return true;
+	if (npc->IsInFaction(Settings::CurrentFollowerFaction))
+		return true;
+	if (npc->IsInFaction(Settings::CurrentHirelingFaction))
+		return true;
+	if (npc->IsGhost())
+		return true;
+	if (npc->IsSummonable())
+		return true;
 	if (npc->Bleeds() == false && Utility::ToLower(std::string(npc->GetFormEditorID())).find("ghost") != std::string::npos) {
 		Distribution::ForceExcludeNPC(npc->GetFormID());
 		return true;
 	}
 	// if the actor has an exclusive rule then this goes above Race, Faction and Keyword exclusions
-	if (!Distribution::npcMap()->contains(npc->GetFormID()) && ret == false) {
+	if (!Distribution::npcMap()->contains(npc->GetFormID())) {
 		for (uint32_t i = 0; i < npc->numKeywords; i++) {
 			if (npc->keywords[i])
-				ret |= Distribution::excludedAssoc()->contains(npc->keywords[i]->GetFormID());
+				if (Distribution::excludedAssoc()->contains(npc->keywords[i]->GetFormID()))
+					return true;
 		}
 		for (uint32_t i = 0; i < npc->factions.size(); i++) {
 			if (npc->factions[i].faction)
-				ret |= Distribution::excludedAssoc()->contains(npc->factions[i].faction->GetFormID());
+				if (Distribution::excludedAssoc()->contains(npc->factions[i].faction->GetFormID()))
+					return true;
 		}
 		auto race = npc->GetRace();
 		if (race) {
-			ret |= Distribution::excludedAssoc()->contains(race->GetFormID());
+			if (Distribution::excludedAssoc()->contains(race->GetFormID()))
+				return true;
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
-				ret |= Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID());
+				if (Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID()))
+					return true;
 			}
 		}
 	}
-	return ret;
+
+	return false;
 }
 
 bool Distribution::ForceExcludeNPC(uint32_t actorid)
@@ -1480,30 +1578,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		auto itc = customItems()->find(npc->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			/* for (int d = 0; d < vec.size(); d++) {
-				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-			}*/
-			/* for (int b = 0; b < vec.size(); b++) {
-				for (int c = 0; c < vec[b]->items.size(); c++) {
-					custItems->items.push_back(vec[b]->items[c]);
-				}
-				for (int c = 0; c < vec[b]->death.size(); c++) {
-					custItems->death.push_back(vec[b]->death[c]);
-				}
-				for (int c = 0; c < vec[b]->poisons.size(); c++) {
-					custItems->poisons.push_back(vec[b]->poisons[c]);
-				}
-				for (int c = 0; c < vec[b]->potions.size(); c++) {
-					custItems->potions.push_back(vec[b]->potions[c]);
-				}
-				for (int c = 0; c < vec[b]->fortify.size(); c++) {
-					custItems->fortify.push_back(vec[b]->fortify[c]);
-				}
-			}*/
 			for (int b = 0; b < vec.size(); b++) {
 				if (citemsset->contains(vec[b]->id) == false) {
 					citems->push_back(vec[b]);
@@ -1552,30 +1626,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		auto itc = customItems()->find(race->GetFormID());
 		if (itc != customItems()->end()) {
 			auto vec = itc->second;
-			/* for (int d = 0; d < vec.size(); d++) {
-				custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-				custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-				custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-				custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-				custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-			}*/
-			/* for (int b = 0; b < vec.size(); b++) {
-				for (int c = 0; c < vec[b]->items.size(); c++) {
-					custItems->items.push_back(vec[b]->items[c]);
-				}
-				for (int c = 0; c < vec[b]->death.size(); c++) {
-					custItems->death.push_back(vec[b]->death[c]);
-				}
-				for (int c = 0; c < vec[b]->poisons.size(); c++) {
-					custItems->poisons.push_back(vec[b]->poisons[c]);
-				}
-				for (int c = 0; c < vec[b]->potions.size(); c++) {
-					custItems->potions.push_back(vec[b]->potions[c]);
-				}
-				for (int c = 0; c < vec[b]->fortify.size(); c++) {
-					custItems->fortify.push_back(vec[b]->fortify[c]);
-				}
-			}*/
 			for (int b = 0; b < vec.size(); b++) {
 				if (citemsset->contains(vec[b]->id) == false) {
 					citems->push_back(vec[b]);
@@ -1587,30 +1637,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			itc = customItems()->find(race->keywords[i]->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				/*for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}*/
-				/*for (int b = 0; b < vec.size(); b++) {
-					for (int c = 0; c < vec[b]->items.size(); c++) {
-						custItems->items.push_back(vec[b]->items[c]);
-					}
-					for (int c = 0; c < vec[b]->death.size(); c++) {
-						custItems->death.push_back(vec[b]->death[c]);
-					}
-					for (int c = 0; c < vec[b]->poisons.size(); c++) {
-						custItems->poisons.push_back(vec[b]->poisons[c]);
-					}
-					for (int c = 0; c < vec[b]->potions.size(); c++) {
-						custItems->potions.push_back(vec[b]->potions[c]);
-					}
-					for (int c = 0; c < vec[b]->fortify.size(); c++) {
-						custItems->fortify.push_back(vec[b]->fortify[c]);
-					}
-				}*/
 				for (int b = 0; b < vec.size(); b++) {
 					if (citemsset->contains(vec[b]->id) == false) {
 						citems->push_back(vec[b]);
@@ -1644,30 +1670,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 				auto itc = customItems()->find(key->GetFormID());
 				if (itc != customItems()->end()) {
 					auto vec = itc->second;
-					/* for (int d = 0; d < vec.size(); d++) {
-						custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-						custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-						custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-						custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-						custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-					}*/
-					/* for (int b = 0; b < vec.size(); b++) {
-						for (int c = 0; c < vec[b]->items.size(); c++) {
-							custItems->items.push_back(vec[b]->items[c]);
-						}
-						for (int c = 0; c < vec[b]->death.size(); c++) {
-							custItems->death.push_back(vec[b]->death[c]);
-						}
-						for (int c = 0; c < vec[b]->poisons.size(); c++) {
-							custItems->poisons.push_back(vec[b]->poisons[c]);
-						}
-						for (int c = 0; c < vec[b]->potions.size(); c++) {
-							custItems->potions.push_back(vec[b]->potions[c]);
-						}
-						for (int c = 0; c < vec[b]->fortify.size(); c++) {
-							custItems->fortify.push_back(vec[b]->fortify[c]);
-						}
-					}*/
 					for (int b = 0; b < vec.size(); b++) {
 						if (citemsset->contains(vec[b]->id) == false) {
 							citems->push_back(vec[b]);
@@ -1700,30 +1702,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
 					if (itc != customItems()->end()) {
 						auto vec = itc->second;
-						/* for (int d = 0; d < vec.size(); d++) {
-							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-						}*/
-						/* for (int b = 0; b < vec.size(); b++) {
-							for (int c = 0; c < vec[b]->items.size(); c++) {
-								custItems->items.push_back(vec[b]->items[c]);
-							}
-							for (int c = 0; c < vec[b]->death.size(); c++) {
-								custItems->death.push_back(vec[b]->death[c]);
-							}
-							for (int c = 0; c < vec[b]->poisons.size(); c++) {
-								custItems->poisons.push_back(vec[b]->poisons[c]);
-							}
-							for (int c = 0; c < vec[b]->potions.size(); c++) {
-								custItems->potions.push_back(vec[b]->potions[c]);
-							}
-							for (int c = 0; c < vec[b]->fortify.size(); c++) {
-								custItems->fortify.push_back(vec[b]->fortify[c]);
-							}
-						}*/
 						for (int b = 0; b < vec.size(); b++) {
 							if (citemsset->contains(vec[b]->id) == false) {
 								citems->push_back(vec[b]);
@@ -1757,30 +1735,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			auto itc = customItems()->find(npc->factions[i].faction->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				/* for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}*/
-				/* for (int b = 0; b < vec.size(); b++) {
-					for (int c = 0; c < vec[b]->items.size(); c++) {
-						custItems->items.push_back(vec[b]->items[c]);
-					}
-					for (int c = 0; c < vec[b]->death.size(); c++) {
-						custItems->death.push_back(vec[b]->death[c]);
-					}
-					for (int c = 0; c < vec[b]->poisons.size(); c++) {
-						custItems->poisons.push_back(vec[b]->poisons[c]);
-					}
-					for (int c = 0; c < vec[b]->potions.size(); c++) {
-						custItems->potions.push_back(vec[b]->potions[c]);
-					}
-					for (int c = 0; c < vec[b]->fortify.size(); c++) {
-						custItems->fortify.push_back(vec[b]->fortify[c]);
-					}
-				}*/
 				for (int b = 0; b < vec.size(); b++) {
 					if (citemsset->contains(vec[b]->id) == false) {
 						citems->push_back(vec[b]);
@@ -1812,30 +1766,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
 					if (itc != customItems()->end()) {
 						auto vec = itc->second;
-						/* for (int d = 0; d < vec.size(); d++) {
-							custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-							custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-							custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-							custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-							custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-						}*/
-						/* for (int b = 0; b < vec.size(); b++) {
-							for (int c = 0; c < vec[b]->items.size(); c++) {
-								custItems->items.push_back(vec[b]->items[c]);
-							}
-							for (int c = 0; c < vec[b]->death.size(); c++) {
-								custItems->death.push_back(vec[b]->death[c]);
-							}
-							for (int c = 0; c < vec[b]->poisons.size(); c++) {
-								custItems->poisons.push_back(vec[b]->poisons[c]);
-							}
-							for (int c = 0; c < vec[b]->potions.size(); c++) {
-								custItems->potions.push_back(vec[b]->potions[c]);
-							}
-							for (int c = 0; c < vec[b]->fortify.size(); c++) {
-								custItems->fortify.push_back(vec[b]->fortify[c]);
-							}
-						}*/
 						for (int b = 0; b < vec.size(); b++) {
 							if (citemsset->contains(vec[b]->id) == false) {
 								citems->push_back(vec[b]);
@@ -1869,30 +1799,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			auto itc = customItems()->find(cls->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				/* for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}*/
-				/* for (int b = 0; b < vec.size(); b++) {
-					for (int c = 0; c < vec[b]->items.size(); c++) {
-						custItems->items.push_back(vec[b]->items[c]);
-					}
-					for (int c = 0; c < vec[b]->death.size(); c++) {
-						custItems->death.push_back(vec[b]->death[c]);
-					}
-					for (int c = 0; c < vec[b]->poisons.size(); c++) {
-						custItems->poisons.push_back(vec[b]->poisons[c]);
-					}
-					for (int c = 0; c < vec[b]->potions.size(); c++) {
-						custItems->potions.push_back(vec[b]->potions[c]);
-					}
-					for (int c = 0; c < vec[b]->fortify.size(); c++) {
-						custItems->fortify.push_back(vec[b]->fortify[c]);
-					}
-				}*/
 				for (int b = 0; b < vec.size(); b++) {
 					if (citemsset->contains(vec[b]->id) == false) {
 						citems->push_back(vec[b]);
@@ -1923,30 +1829,6 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			auto itc = customItems()->find(style->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
-				/* for (int d = 0; d < vec.size(); d++) {
-					custItems->items.insert(custItems->items.end(), vec[d]->items.begin(), vec[d]->items.end());
-					custItems->potions.insert(custItems->potions.end(), vec[d]->potions.begin(), vec[d]->potions.end());
-					custItems->poisons.insert(custItems->poisons.end(), vec[d]->poisons.begin(), vec[d]->poisons.end());
-					custItems->fortify.insert(custItems->fortify.end(), vec[d]->fortify.begin(), vec[d]->fortify.end());
-					custItems->food.insert(custItems->food.end(), vec[d]->food.begin(), vec[d]->food.end());
-				}*/
-				/* for (int b = 0; b < vec.size(); b++) {
-					for (int c = 0; c < vec[b]->items.size(); c++) {
-						custItems->items.push_back(vec[b]->items[c]);
-					}
-					for (int c = 0; c < vec[b]->death.size(); c++) {
-						custItems->death.push_back(vec[b]->death[c]);
-					}
-					for (int c = 0; c < vec[b]->poisons.size(); c++) {
-						custItems->poisons.push_back(vec[b]->poisons[c]);
-					}
-					for (int c = 0; c < vec[b]->potions.size(); c++) {
-						custItems->potions.push_back(vec[b]->potions[c]);
-					}
-					for (int c = 0; c < vec[b]->fortify.size(); c++) {
-						custItems->fortify.push_back(vec[b]->fortify[c]);
-					}
-				}*/
 				for (int b = 0; b < vec.size(); b++) {
 					if (citemsset->contains(vec[b]->id) == false) {
 						citems->push_back(vec[b]);
@@ -2866,6 +2748,8 @@ void Distribution::ResetRules()
 	_bosses.clear();
 	_assocMap.clear();
 	_npcMap.clear();
+	_hardExclusions.clear();
+	_hardExclusions_Plugins_NPCs.clear();
 	for (Rule* rule : _rules) {
 		delete rule;
 	}

@@ -5,6 +5,24 @@
 
 namespace Hooks
 {
+	void Functions::EquipBypass(RE::Actor* actor, RE::TESBoundObject* a_object, RE::ExtraDataList** a_extraData)
+	{
+		REL::Relocation<EquipBypass_t> func{ REL::VariantID(37974, 38929, 0), REL::VariantOffset(0, 0, 0) };
+		//func(RE::ActorEquipManager::GetSingleton(), actor, a_object, a_extraData);
+		//ActorEquipManagerLock::Lock();
+		logger::info("calling");
+		func(RE::ActorEquipManager::GetSingleton(), actor, a_object, a_extraData);  //, 0, *a_extraData, 1, Settings::Equip_Potion, 0, 1 << 0 | 1 << 2);  // queueEquip + playSounds
+		logger::info("crashing");
+		//ActorEquipManagerLock::Unlock();
+	}
+
+	bool Functions::DrinkPotion(RE::Actor* actor, RE::AlchemyItem* a_alch, RE::ExtraDataList* a_extralist)
+	{
+		REL::Relocation<decltype(&RE::Actor::DrinkPotion)> func{ REL::VariantID(37797, 38746, 0), REL::VariantOffset(0, 0, 0) };
+
+		return func(actor, a_alch, a_extralist);
+	}
+
 	uint64_t OnFrameHook::OnFrame(void* unk)
 	{
 		Events::Main::OnFrame();

@@ -56,6 +56,7 @@ namespace Events
 
 	void Main::HandleActorPotions(std::shared_ptr<ActorInfo> acinfo)
 	{
+		StartProfiling;
 		if (!acinfo->IsValid()) {
 			LOG_2("{} Invalid", Utility::PrintForm(acinfo));
 			return;
@@ -97,6 +98,7 @@ namespace Events
 			// use potions
 			// do the first round
 			if (alch != 0 && (Settings::potions._UsePotionChance == 100 || rand100(rand) < Settings::potions._UsePotionChance)) {
+				LOG_3("Find Potion with effects {}", alch.string());
 				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, alch, false);
 				LOG_2("used potion with duration {}, magnitude {} and Alchemy Effect {}", dur, mag, Utility::ToString(eff));
 				// check if we have a valid effect
@@ -106,10 +108,12 @@ namespace Events
 				}
 			}
 		}
+		PROF_2(TimeProfiling, "exec time for full potion handling");
 	}
 
 	void Main::HandleActorFortifyPotions(std::shared_ptr<ActorInfo> acinfo)
 	{
+		StartProfiling;
 		if (!acinfo->IsValid())
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false)
@@ -147,10 +151,12 @@ namespace Events
 				}
 			}
 		}
+		PROF_2(TimeProfiling, "exec time for full fortify potion handling");
 	}
 
 	void Main::HandleActorPoisons(std::shared_ptr<ActorInfo> acinfo)
 	{
+		StartProfiling;
 		if (!acinfo->IsValid())
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false)
@@ -220,10 +226,12 @@ namespace Events
 				LOG_2("couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo));
 			// else Mage or Hand to Hand which cannot use poisons
 		}
+		PROF_2(TimeProfiling, "exec time for full poison handling");
 	}
 
 	void Main::HandleActorFood(std::shared_ptr<ActorInfo> acinfo)
 	{
+		StartProfiling;
 		if (!acinfo->IsValid())
 			return;
 		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false)
@@ -255,10 +263,12 @@ namespace Events
 			}
 			LOG_2("current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
 		}
+		PROF_2(TimeProfiling, "exec time for full food handling");
 	}
 
 	void Main::HandleActorOOCPotions(std::shared_ptr<ActorInfo> acinfo)
 	{
+		StartProfiling;
 		if (!acinfo->IsValid())
 			return;
 		if (acinfo->IsInCombat() == true &&
@@ -282,6 +292,7 @@ namespace Events
 				LOG_4("use health pot with duration {} and magnitude {}", acinfo->GetDurHealth(), std::get<0>(tup));
 			}
 		}
+		PROF_2(TimeProfiling, "exec time for full actor OOC potion handling");
 	}
 
 	/// <summary>
@@ -290,6 +301,7 @@ namespace Events
 	/// <param name="acinfo"></param>
 	void Main::HandleActorRuntimeData(std::shared_ptr<ActorInfo> acinfo)
 	{
+		StartProfiling;
 		if (!acinfo->IsValid()) {
 			LOG_1("Actor is invalid");
 			return;
@@ -419,6 +431,8 @@ namespace Events
 
 		// get whether weapons are drawn
 		acinfo->UpdateWeaponsDrawn();
+
+		PROF_2(TimeProfiling, "exec time for full actor runtime handling");
 	}
 
 	/// <summary>
@@ -552,25 +566,34 @@ namespace Events
 
 			// collect actor runtime data
 			std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+				// emergency catch
+				if (Game::IsFastTravelling())
+					return;
+
+				auto taskInterface = SKSE::GetTaskInterface();
 				if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
 					// catch forbidden actors
 					if (forbidden.contains(acinfo->GetFormID()))
 						return;
-					// emergency catch
-					if (Game::IsFastTravelling())
-						return;
-					// handle potions out-of-combat
-					if (Settings::usage._DisableOutOfCombatProcessing == false) {
-						HandleActorOOCPotions(acinfo);
-					}
-					// handle potions
-					HandleActorPotions(acinfo);
-					// handle fortify potions
-					HandleActorFortifyPotions(acinfo);
-					// handle poisons
-					HandleActorPoisons(acinfo);
-					// handle food
-					HandleActorFood(acinfo);
+					taskInterface->AddTask([acinfo]() {
+						// emergency catch -- check again, we don't know when this function is called exactly
+						StartProfiling;
+						if (Game::IsFastTravelling())
+							return;
+						// handle potions out-of-combat
+						if (Settings::usage._DisableOutOfCombatProcessing == false) {
+							HandleActorOOCPotions(acinfo);
+						}
+						// handle potions
+						HandleActorPotions(acinfo);
+						// handle fortify potions
+						HandleActorFortifyPotions(acinfo);
+						// handle poisons
+						HandleActorPoisons(acinfo);
+						// handle food
+						HandleActorFood(acinfo);
+						PROF_1(TimeProfiling, "execution time for actor {}", acinfo->GetFormString());
+					});
 				}
 			});
 		} catch (std::bad_alloc& e) {
@@ -838,6 +861,8 @@ CheckActorsSkipIteration:
 							if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && !actor->IsPlayerRef()) {
 								if (Distribution::ExcludedNPCFromHandling(actor) == false)
 									RegisterNPC(actor);
+								else
+									LOG_1("NPC {} is excluded from handling and cannot be registered", Utility::PrintForm(actor));
 							}
 						}
 					}

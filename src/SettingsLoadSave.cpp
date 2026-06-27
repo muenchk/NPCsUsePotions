@@ -387,6 +387,10 @@ void Settings::Load()
 			Settings::compatibility.animatedPotions._Enable = ini.GetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Settings::compatibility.animatedPotions._Enable);
 			loginfo("Setting: {} {}", "Compatibility:     EnableAnimatedPotions", std::to_string(Settings::compatibility.animatedPotions._Enable));
 
+			// compatibility ultimate animated potions ng
+			Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs = ini.GetBoolValue("Compatibility: Ultimate Potions", "BypassAnimationsForNonPlayerNPCs", Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs);
+			loginfo("Setting: {} {}", "Compatibility:     BypassAnimationsForNonPlayerNPCs", std::to_string(Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs));
+
 			// debug
 			Settings::debug.EnableLog = ini.GetBoolValue("Debug", "EnableLogging", Settings::debug.EnableLog);
 			Logging::EnableLog = Settings::debug.EnableLog;
@@ -406,6 +410,8 @@ void Settings::Load()
 
 			Settings::debug._CheckActorsWithoutRules = ini.GetBoolValue("Debug", "CheckActorWithoutRules", Settings::debug._CheckActorsWithoutRules);
 			loginfo("Setting: {} {}", "Debug:             CheckActorWithoutRules", std::to_string(Settings::debug._CheckActorsWithoutRules));
+			Settings::debug._findPluginsAndPotionsWithoutRules = ini.GetBoolValue("Debug", "CheckForPluginsAndPotionsWithoutRules", Settings::debug._findPluginsAndPotionsWithoutRules);
+			loginfo("Setting: {} {}", "Debug:             CheckForPluginsAndPotionsWithoutRules", std::to_string(Settings::debug._findPluginsAndPotionsWithoutRules));
 
 			Settings::debug._CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", Settings::debug._CalculateCellRules);
 			loginfo("Setting: {} {}", "Debug:             CalculateCellRules", std::to_string(Settings::debug._CalculateCellRules));
@@ -427,8 +433,6 @@ void Settings::Load()
 
 	// save user settings, before applying adjustments
 	//Save();
-
-	FixConsumables();
 }
 
 
@@ -667,7 +671,12 @@ void Settings::Save()
 	// compatibility animated potions
 	ini.SetBoolValue("Compatibility: Animated Potions", "EnableAnimatedPotions", Settings::compatibility.animatedPotions._Enable, "// Enables the automatic usage of potion animations for npcs.");
 
-	
+	// compatibility ultimate animated potions ng	
+	ini.SetBoolValue("Compatibility: Ultimate Potions", "BypassAnimationsForNonPlayerNPCs", Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs,
+		"// If enabled potion animations are bypassed for all NPCs but the player.\n"
+		"// This should fix crashes produced by UAPNG. However this will also mean\n"
+		"// that no Equip Events are fired for potions applied to those NPCs.");
+
 	// debug
 	ini.SetBoolValue("Debug", "EnableLogging", Settings::debug.EnableLog, "// Enables logging output. Use with care as logs may get very large.");
 	ini.SetBoolValue("Debug", "EnableLoadLogging", Settings::debug.EnableLoadLog, "// Enables logging output for plugin load, use if you want to \n"
@@ -682,7 +691,9 @@ void Settings::Save()
 																	"// as Profiling costs execution time.");
 
 	ini.SetBoolValue("Debug", "CheckActorWithoutRules", Settings::debug._CheckActorsWithoutRules, "// Checks all actors in the game on game start whether they are applied the \n"
-																							"// default distribution rule.");
+		"// default distribution rule.");
+	ini.SetBoolValue("Debug", "CheckForPluginsAndPotionsWithoutRules", Settings::debug._findPluginsAndPotionsWithoutRules,
+		"// Find plugins and potions without rules");
 	ini.SetBoolValue("Debug", "CalculateCellRules", Settings::debug._CalculateCellRules, "// When entering a new cell in game, all distribution rules are calculatet once.\n"
 																				"// The result of the evaluation is written to a csv file, for rule debugging");
 	ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", Settings::debug._Test, "// 10 seconds after loading a save game the function for \"CalculateCellRules\" \n"

@@ -653,6 +653,14 @@ private:
 	/// </summary>
 	static inline std::unordered_set<uint32_t> _excludedPlugins_NPCs;
 	/// <summary>
+	/// set that contains any form that is hard excluded from all handling by this mod
+	/// </summary>
+	static inline std::unordered_set<RE::FormID> _hardExclusions;
+	/// <summary>
+	/// set that contains indexes for plugins whichs NPCs are hard excluded from all handling by this mod
+	/// </summary>
+	static inline std::unordered_set<uint32_t> _hardExclusions_Plugins_NPCs;
+	/// <summary>
 	/// set of whitelisted npcs
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _whitelistNPCs;
@@ -811,6 +819,16 @@ public:
 	/// returns the set of plugin indexes for plugins which npcs are excluded
 	/// </summary>
 	static inline std::unordered_set<uint32_t>* excludedPlugins_NPCs() { return initialised ? &_excludedPlugins_NPCs : &_dummySet5; }
+	/// <summary>
+	/// returns the set contains anything that is hard excluded from any handling
+	/// </summary>
+	/// <returns></returns>
+	static const std::unordered_set<RE::FormID>* hardExclusions() { return initialised ? &_hardExclusions : &_dummySet1; }
+	/// <summary>
+	/// returns the set contains anything that is hard excluded from any handling
+	/// </summary>
+	/// <returns></returns>
+	static const std::unordered_set<RE::FormID>* hardExclusionsPlugins_NPCs() { return initialised ? &_hardExclusions_Plugins_NPCs : &_dummySet5; }
 	/// <summary>
 	/// returns the set of whitelisted npcs
 	/// </summary>
@@ -972,6 +990,7 @@ public:
 	// friends
 	// i.e. functions that may access private class members
 
+	friend void Settings::CheckForPluginsWithoutRules();
 	friend void Settings::CheckActorsForRules();
 	friend void Settings::CheckCellForActors(RE::FormID cellid);
 	friend bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION::ScriptData*, RE::TESObjectREFR* a_thisObj, RE::TESObjectREFR* /*a_containingObj*/, RE::Script*, RE::ScriptLocals*, double&, std::uint32_t&);

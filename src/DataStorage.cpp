@@ -188,6 +188,40 @@ namespace Storage
 		}
 		Statistics::Storage_BytesWrittenLast = size;
 		PROF_1(TimeProfiling, "function execution time.");
+
+
+
+		// write profile info to log
+		loginfo("{:<30}{:<30}{:<15}|{:<15}|{:<15}|{:<10}|{:<30}",
+			"File",
+			"Function",
+			"Exec Time",
+			"Average Time",
+			"Last executed",
+			"Executions",
+			"Message");
+		int32_t count = 0;
+		auto itra = Profile::exectimes.begin();
+		std::multimap<std::string, Profile::ExecTime*> sorted;
+		while (itra != Profile::exectimes.end()) {
+			sorted.insert(std::pair<std::string, Profile::ExecTime*>{ itra->second->functionName, itra->second });
+			itra++;
+		}
+		auto itr = sorted.begin();
+		while (itr != sorted.end()) {
+			Profile::ExecTime* exec = itr->second;
+			loginfo("{:<30}{:<30}{:<15}|{:<15}|{:<15}|{:<10}|{:<30}",
+				exec->fileName, 
+				exec->functionName, 
+				Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(exec->exectime).count()),
+				Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(exec->average).count()), 
+				Logging::FormatTime(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - exec->lastexec).count()),
+				exec->executions, 
+				exec->usermessage);
+		//	dimElements[count].tmpid = count;
+			count++;
+			itr++;
+		}
 	}
 
 	/// <summary>

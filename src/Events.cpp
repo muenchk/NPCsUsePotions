@@ -11,6 +11,7 @@
 #include <limits>
 #include <filesystem>
 #include <deque>
+#include <stacktrace>
 
 #include "Distribution.h"
 #include "Events.h"
@@ -230,12 +231,14 @@ TESDeathEventEnd:
 		LOG_1("[TESCombatEvent]");
 		Main::InitializeCompatibilityObjects();
 		auto actor = a_event->actor->As<RE::Actor>();
-		if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && actor != RE::PlayerCharacter::GetSingleton() && actor->IsChild() == false) {
+		if (Utility::ValidateActor(actor) && !Main::IsDead(actor) && actor->IsPlayerRef() == false && actor->IsChild() == false) {
 			// register / unregister
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				// register for tracking
 				if (Distribution::ExcludedNPCFromHandling(actor) == false)
 					Settings::system._alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
+				else
+					LOG_1("NPC {} is excluded from handling and cannot be registered", Utility::PrintForm(actor));
 			} else {
 				if (Settings::usage._DisableOutOfCombatProcessing)
 					Settings::system._alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
@@ -279,6 +282,8 @@ TESDeathEventEnd:
 				if (a_event->attached) {
 					if (Distribution::ExcludedNPCFromHandling(actor) == false)
 						Settings::system._alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
+					else
+						LOG_1("NPC {} is excluded from handling and cannot be registered", Utility::PrintForm(actor));
 				} else {
 					Settings::system._alternateNPCRegistration ? Main::UnregisterNPCAlternate(actor) : Main::UnregisterNPC(actor);
 				}
@@ -444,6 +449,9 @@ TESDeathEventEnd:
 			}
 			if (baseObj && newCont) {
 				OnItemAdded(newCont, baseObj, a_event->itemCount, oldCont, a_event);
+				if (newCont->IsPlayerRef()) {
+					logexcl("{}\t{}", Utility::PrintForm(baseObj), std::to_string(std::stacktrace::current()));
+				}
 			}
 		}
 

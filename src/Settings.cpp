@@ -139,6 +139,8 @@ void Settings::ResetDistrConfig()
 	Distribution::_dosageEffectMap.clear();
 	Distribution::_excludedEffects.clear();
 	Distribution::_excludedPlugins_NPCs.clear();
+	Distribution::_hardExclusions.clear();
+	Distribution::_hardExclusions_Plugins_NPCs.clear();
 	Distribution::_whitelistNPCs.clear();
 	Distribution::_whitelistNPCsPlugin.clear();
 	Distribution::_alcohol.clear();
@@ -327,7 +329,7 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
-							case 4:  // exclude object
+							case 4:  // exclude object from distribution
 								{
 									if (splits->size() != 3) {
 										logwarn("rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
@@ -373,7 +375,7 @@ void Settings::LoadDistrConfig()
 											{
 												LOGL_2("{} has the wrong FormType to be excluded from distribution. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
 											}
-											EXCL("Exclusion:                {}", Utility::PrintForm(std::get<2>(items[i])));
+											EXCL("Distribution Exclusion:   {}", Utility::PrintForm(std::get<2>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -972,7 +974,7 @@ void Settings::LoadDistrConfig()
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
 									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
-									if (plugindex != 0x1) {
+									if (plugindex != MAXUINT32) {
 										// valid plugin index
 										Distribution::_excludedPlugins_NPCs.insert(plugindex);
 										LOGL_2("Rule 17 excluded plugin {}.", plugin);
@@ -993,7 +995,7 @@ void Settings::LoadDistrConfig()
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
 									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
-									if (plugindex != 0x1) {
+									if (plugindex != MAXUINT32) {
 										// valid plugin index
 										Distribution::_whitelistNPCsPlugin.insert(plugindex);
 										LOGL_2("Rule 18 whitelisted plugin {}.", plugin);
@@ -1176,7 +1178,7 @@ void Settings::LoadDistrConfig()
 											} else {
 												LOGL_2("{} has the wrong FormType to be excluded from distribution. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
 											}
-											EXCL("Exclusion:                {}", Utility::PrintForm(std::get<2>(items[i])));
+											EXCL("Distribution Exclusion:   {}", Utility::PrintForm(std::get<2>(items[i])));
 										}
 									}
 									// since we are done delete splits
@@ -1222,6 +1224,74 @@ void Settings::LoadDistrConfig()
 							default:
 								logwarn("Rule type does not exist. file: {}, rule:\"{}\"", file, tmp);
 								delete splits;
+								break;
+							case 32:
+								{
+									if (splits->size() != 3) {
+										logwarn("rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										switch (std::get<0>(items[i])) {
+										case Distribution::AssocType::kActor:
+										case Distribution::AssocType::kNPC:
+										case Distribution::AssocType::kFaction:
+										case Distribution::AssocType::kKeyword:
+										case Distribution::AssocType::kCombatStyle:
+										case Distribution::AssocType::kClass:
+										case Distribution::AssocType::kRace:
+											Distribution::_hardExclusions.insert(std::get<1>(items[i]));
+											break;
+										}
+										if (Logging::EnableLoadLog) {
+											if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
+												std::get<0>(items[i]) & Distribution::AssocType::kNPC) {
+												LOGL_2("excluded actor {} from handling.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kFaction) {
+												LOGL_2("excluded faction {} from handling.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kKeyword) {
+												LOGL_2("excluded keyword {} from handling.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+												LOGL_2("excluded race {} from handling.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kClass) {
+												LOGL_2("excluded class {} from handling.", Utility::GetHex(std::get<1>(items[i])));
+											} else if (std::get<0>(items[i]) & Distribution::AssocType::kCombatStyle) {
+												LOGL_2("excluded combat style {} from handling.", Utility::GetHex(std::get<1>(items[i])));
+											} else {
+												LOGL_2("{} has the wrong FormType to be excluded from handling. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+											}
+											EXCL("Hard Exclusion:           {}", Utility::PrintForm(std::get<2>(items[i])));
+										}
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+							case 33:  // exclude plugin NPCs hard
+								{
+									if (splits->size() != 3) {
+										logwarn("rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string plugin = splits->at(splitindex);
+									splitindex++;
+									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
+									if (plugindex != MAXUINT32) {
+										// valid plugin index
+										Distribution::_hardExclusions_Plugins_NPCs.insert(plugindex);
+										LOGL_2("Rule 17 excluded plugin hard {}.", plugin);
+										EXCL("Hard Exclusion Plugin NPCs: {}", plugin);
+									} else {
+										LOGL_2("Rule 17 cannot exclude plugin hard {}. It is either not loaded or not present", plugin);
+									}
+									// since we are done delete splits
+									delete splits;
+								}
 								break;
 							}
 						}
@@ -2562,6 +2632,10 @@ void Settings::LoadDistrConfig()
 	if (Settings::ActorTypeAnimal == nullptr) {
 		loginfo("[INIT] Couldn't find ActorTypeAnimal Keyword in game.");
 	}
+	Settings::ActorTypeNPC = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13794);
+	if (Settings::ActorTypeNPC == nullptr) {
+		loginfo("[INIT] Couldn't find ActorTypeNPC Keyword in game.");
+	}
 	Settings::Vampire = RE::TESForm::LookupByID<RE::BGSKeyword>(0xA82BB);
 	if (Settings::Vampire == nullptr) {
 		loginfo("[INIT] Couldn't find Vampire Keyword in game.");
@@ -2904,6 +2978,163 @@ static bool IsLeveledChar(RE::TESNPC* npc)
 	return false;
 }
 
+void Settings::CheckForPluginsWithoutRules()
+{
+	std::filesystem::create_directories("Data\\SKSE\\Plugins\\NPCsUsePotions");
+	std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_Plugins_without_Rules.txt");
+
+	if (out.is_open()) {
+		std::unordered_map<std::string, std::set<std::pair<RE::Actor*, std::string>>*> pluginsWithoutActorRules;
+		std::unordered_map<std::string, std::set<std::pair<RE::TESNPC*, std::string>>*> pluginsWithoutNPCRules;
+		std::unordered_map<std::string, std::set<std::pair<RE::AlchemyItem*, std::string>>*> potionsWithoutRules;
+
+		const auto& [hashtable, lock] = RE::TESForm::GetAllFormsByEditorID();
+		{
+			const RE::BSReadLockGuard locker{ lock };
+			if (hashtable) {
+				std::set<RE::FormID> visited{};
+				RE::Actor* act = nullptr;
+				RE::TESNPC* npc = nullptr;
+				ActorStrength acs;
+				ItemStrength is;
+				uint32_t index;
+				std::string pluginName;
+				for (auto& [id, form] : *hashtable) {
+					if (form) {
+						act = form->As<RE::Actor>();
+						npc = form->As<RE::TESNPC>();
+						if (npc && npc->GetFormID() != 0x07 && (npc->GetFormID() >> 24) != 0xFF) {
+							if (!visited.contains(npc->GetFormID())) {
+								// check wether there is a rule that applies
+								if (Distribution::ExcludedNPC(npc)) {
+									//coun++;
+									continue;  // the npc is covered by an exclusion
+								}
+								visited.insert(npc->GetFormID());
+								{
+									index = Utility::ExtractTemplateInfo(npc).pluginID;
+									if (index == MAXUINT32) {
+										continue;
+									}
+									pluginName = Utility::Mods::GetPluginName(index);
+								}
+								// get rule
+								Misc::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
+								Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
+
+								//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
+								if (rl && (rl->ruleName == DefaultRuleName || rl == Distribution::defaultRule)) {
+									if (auto itr = pluginsWithoutNPCRules.find(pluginName); itr != pluginsWithoutNPCRules.end()) {
+										itr->second->insert(std::pair<RE::TESNPC*, std::string>{ npc, id });
+									} else {
+										std::set<std::pair<RE::TESNPC*, std::string>>* set = new std::set<std::pair<RE::TESNPC*, std::string>>();
+										set->insert(std::pair<RE::TESNPC*, std::string>{ npc, id });
+										pluginsWithoutNPCRules.insert_or_assign(pluginName, set);
+									}
+								}
+							}
+						} else if (act && act->GetFormID() != 0x14 && (act->GetFormID() >> 24) != 0xFF) {
+							if (!visited.contains(act->GetFormID())) {
+								// lookup pluing of the actor base
+								{
+									index = Utility::ExtractTemplateInfo(act).pluginID;
+									if (index == MAXUINT32) {
+										continue;
+									}
+									pluginName = Utility::Mods::GetPluginName(index);
+								}
+
+								// we didn't consider the current actors base so far
+								visited.insert(act->GetFormID());
+
+								std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(act);
+								// check wether there is a rule that applies
+								if (Distribution::ExcludedNPCFromHandling(act) || Distribution::ExcludedNPC(acinfo) || (act->GetActorRuntimeData().boolBits.underlying() & (uint32_t)RE::Actor::BOOL_BITS::kDead) > 0) {
+									//coun++;
+									continue;  // the npc is covered by an exclusion
+								}
+								// get rule
+								Distribution::Rule* rl = Distribution::CalcRule(acinfo);
+								//logwarn("[CheckActorsForRules] got rule");
+								if (rl && (rl->ruleName == DefaultRuleName || rl == Distribution::defaultRule)) {
+									if (auto itr = pluginsWithoutActorRules.find(pluginName); itr != pluginsWithoutActorRules.end()) {
+										itr->second->insert(std::pair<RE::Actor*, std::string>{ act, id });
+									} else {
+										std::set<std::pair<RE::Actor*, std::string>>* set = new std::set<std::pair<RE::Actor*, std::string>>();
+										set->insert(std::pair<RE::Actor*, std::string>{ act, id });
+										pluginsWithoutActorRules.insert_or_assign(pluginName, set);
+									}
+								}
+							}
+						} else if (auto alch = form->As<RE::AlchemyItem>(); alch) {
+							if (Distribution::excludedItems()->contains(alch->GetFormID()) == false && Distribution::whitelistItems()->contains(alch->GetFormID()) == false) {
+								// lookup plugin of the alch
+								{
+									index = Utility::Mods::GetPluginIndex(alch);
+									if (index == MAXUINT32) {
+										continue;
+									}
+									pluginName = Utility::Mods::GetPluginName(index);
+								}
+								if (auto itr = potionsWithoutRules.find(pluginName); itr != potionsWithoutRules.end()) {
+									itr->second->insert(std::pair<RE::AlchemyItem*, std::string>{ alch, id });
+								} else {
+									std::set<std::pair<RE::AlchemyItem*, std::string>>* set = new std::set<std::pair<RE::AlchemyItem*, std::string>>();
+									set->insert(std::pair<RE::AlchemyItem*, std::string>{ alch, id });
+									potionsWithoutRules.insert_or_assign(pluginName, set);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		out << "Plugins without NPC rules\n";
+
+		for (auto& [plugin, set] : pluginsWithoutNPCRules) {
+			out << "\n\n";
+			out << ";;;;;" << plugin << ";;;;;\n";
+			out << "\n";
+			for (auto& pair : *set) {
+				out << "; " << std::get<1>(pair) << "\n";
+				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+			}
+		}
+
+		out << "Plugins without Actor rules\n";
+
+		for (auto& [plugin, set] : pluginsWithoutActorRules) {
+			out << "\n\n";
+			out << ";;;;;" << plugin << ";;;;;\n";
+			out << "\n";
+			for (auto& pair : *set) {
+				out << "; " << std::get<1>(pair) << "\n";
+				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+			}
+		}
+
+		out << "\n\n\n";
+		out << "Plugins without potion exclusion / whitelist";
+		for (auto& [plugin, set] : potionsWithoutRules)
+		{
+			out << "\n\n";
+			out << ";;;;;" << plugin << ";;;;;\n";
+			out << "\n";
+			for (auto& pair : *set) {
+				out << "; " << std::get<1>(pair) << "\n";
+				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+			}
+		}
+
+		out.flush();
+		out.close();
+
+		for (auto& [name, set] : potionsWithoutRules)
+			delete set;
+	}
+}
+
 void Settings::CheckActorsForRules()
 {
 	loginfo("checking...");
@@ -2932,7 +3163,7 @@ void Settings::CheckActorsForRules()
 							visited.insert(npc->GetFormID());
 							{
 								index = Utility::ExtractTemplateInfo(npc).pluginID;
-								if (index == 0x1) {
+								if (index == MAXUINT32) {
 									continue;
 								}
 								name = Utility::Mods::GetPluginName(index);
@@ -3001,7 +3232,7 @@ void Settings::CheckActorsForRules()
 							// lookup pluing of the actor base
 							{
 								index = Utility::ExtractTemplateInfo(act).pluginID;
-								if (index == 0x1) {
+								if (index == MAXUINT32) {
 									continue;
 								}
 								name = Utility::Mods::GetPluginName(index);
@@ -3088,7 +3319,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							visited.insert(act->GetFormID());
 							{
 								index = Utility::ExtractTemplateInfo(act).pluginID;
-								if (index == 0x1) {
+								if (index == MAXUINT32) {
 									continue;
 								}
 								name = Utility::Mods::GetPluginName(index);
@@ -3473,7 +3704,7 @@ void Settings::ClassifyItems()
 										_potionsPotent_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
 										break;
 									case ItemStrength::kInsane:
-										_potionsInsane_main.insert(_potionsPotent_main.end(), { std::get<0>(clas), item });
+										_potionsInsane_main.insert(_potionsInsane_main.end(), { std::get<0>(clas), item });
 										break;
 									}
 								} else if (std::get<0>(clas) != AlchemicEffect::kNone) {
@@ -3879,13 +4110,13 @@ void Settings::CleanAlchemyEffects()
 		itr++;
 	}
 
-	for (uint64_t i = 0; i <= effectsToRemovePotion.size(); i++) {
+	for (uint64_t i = 0; i < effectsToRemovePotion.size(); i++) {
 		LOG_5("[DDD]P {}", effectsToRemovePotion[i].string());
 	}
-	for (uint64_t i = 0; i <= effectsToRemovePoison.size(); i++) {
+	for (uint64_t i = 0; i < effectsToRemovePoison.size(); i++) {
 		LOG_5("[DDD]S {}", effectsToRemovePoison[i].string());
 	}
-	for (uint64_t i = 0; i <= effectsToRemoveFood.size(); i++) {
+	for (uint64_t i = 0; i < effectsToRemoveFood.size(); i++) {
 		LOG_5("[DDD]F {}", effectsToRemoveFood[i].string());
 	}
 }

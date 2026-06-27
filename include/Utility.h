@@ -638,7 +638,7 @@ public:
 			const RE::TESFile* file = nullptr;
 			uint32_t pindex = Utility::Mods::GetPluginIndex(pluginname);
 			std::vector<T*> ret;
-			if (pindex == 0x1) // if mod cannot be found return
+			if (pindex == MAXUINT32)  // if mod cannot be found return
 				return ret;
 			if ((pindex & 0x00FFF000) != 0)  // light mod
 				file = datahandler->LookupLoadedLightModByIndex((uint16_t)((pindex & 0x00FFF000) >> 12));

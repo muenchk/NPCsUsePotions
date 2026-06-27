@@ -17,16 +17,16 @@ namespace
 {
 	void InitializeLog()
 	{
-#ifndef NDEBUG
-		auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
-#else
-
 		auto path = logger::log_directory();
 		if (!path) {
 			util::report_and_fail("Failed to find standard logging directory"sv);
 		}
 		Settings::log_directory = path.value();
 		Logging::log_directory = Settings::log_directory;
+
+#ifndef NDEBUG
+		auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
+#else
 		auto spath = path.value();
 		spath /= Settings::PluginNamePlain;
 		spath /= fmt::format("{}_skse.log"sv, Plugin::NAME);
@@ -107,8 +107,11 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 	switch (a_msg->type) {
 	case SKSE::MessagingInterface::kPreLoadGame:
 		Settings::InitGameStuff();
+		Settings::FixConsumables();
 		break;
 	case SKSE::MessagingInterface::kDataLoaded:
+		Hooks::ActorEquipManagerLock::BuildPatches();
+
 		// init ActorInfo's statics
 		ActorInfo::Init();
 		// init Data
@@ -117,7 +120,9 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		Settings::InitGameStuff();
 		// load settings
 		Settings::Load();
+#ifdef NDEBUG
 		Settings::Save();
+#endif
 		loginfo("Settings loaded");
 		// init ACM data access
 		ACM::Init();
@@ -146,6 +151,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		// register console commands
 		Console::RegisterConsoleCommands();
 		loginfo("Registered Console Commands");
+		if (Settings::debug._findPluginsAndPotionsWithoutRules)
+			Settings::CheckForPluginsWithoutRules();
 		PROF_1(TimeProfiling, "DataLoad execution time.");
 		break;
 	case SKSE::MessagingInterface::kPostLoad:
@@ -172,7 +179,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	SKSE::Init(a_skse);
 
-	SKSE::AllocTrampoline(1<<8);
+	SKSE::AllocTrampoline(1<<10);
 
 	auto messaging = SKSE::GetMessagingInterface();
 	if (!messaging->RegisterListener("SKSE", MessageHandler)) {

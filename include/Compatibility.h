@@ -114,6 +114,9 @@ public:
 	// Ultimate Animated Potions
 	int Ult_GlobalCooldown = 2500;
 
+	// potions animated
+	int PotAnim_GlobalCooldown = 2500;
+
 	// general section
 private:
 	/// <summary>
@@ -144,6 +147,10 @@ private:
 	/// Whether Ultimate Animated Potions is loaded
 	/// </summary>
 	bool _loadedUltimatePotions = false;
+	/// <summary>
+	/// Whether Ultimate Animated Potions is loaded
+	/// </summary>
+	bool _loadedPotionsAnimated = false;
 	/// <summary>
 	/// Whether Gourmet is loaded
 	/// </summary>
@@ -288,6 +295,15 @@ public:
 	bool LoadedUltimatePotions()
 	{
 		return _loadedUltimatePotions;
+	}
+
+	/// <summary>
+	/// returns whether Potions Animated NG has been loaded
+	/// </summary>
+	/// <returns></returns>
+	bool LoadedPotionsAnimated()
+	{
+		return _loadedPotionsAnimated;
 	}
 
 	/// <summary>

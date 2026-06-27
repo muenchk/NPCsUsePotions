@@ -224,6 +224,10 @@ private:
 	/// if the actor is a vampire
 	/// </summary>
 	bool _vampire = false;
+	/// <summary>
+	/// if actor has ActorTypeNPC keyword or is otherwise recognized as NPC
+	/// </summary>
+	bool _actorTypeNPC = false;
 
 	/// <summary>
 	/// while the actor is busy with one animation, no other animation should be prepared / played
@@ -658,6 +662,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsAutomaton() { return _automaton; }
+	/// <summary>
+	/// Returns whether the actor is an NPC
+	/// </summary>
+	/// <returns></returns>
+	bool IsActorTypeNPC() { return _actorTypeNPC; }
 
 	/// <summary>
 	/// Returns the actors current target

@@ -82,6 +82,11 @@ public:
 	static void CheckActorsForRules();
 
 	/// <summary>
+	/// Finds plugins that are currently missing rules for either potions or npcs
+	/// </summary>
+	static void CheckForPluginsWithoutRules();
+
+	/// <summary>
 	/// Loads the distribution configuration
 	/// </summary>
 	static void LoadDistrConfig();
@@ -465,7 +470,7 @@ public:
 		/// <summary>
 		/// [Settings] potions that have invisibility as one of their effects may not be distributed as other kinds of potions
 		/// </summary>
-		bool _DoNotDistributeMixedInvisPotions = false;
+		bool _DoNotDistributeMixedInvisPotions = true;
 	};
 	static inline Distr distr;
 
@@ -555,6 +560,15 @@ public:
 			bool _Enable = true;
 		};
 		AnimatedPotions animatedPotions;
+
+		struct UltimatePotions
+		{
+			/// <summary>
+			/// [Setting] If enabled Potions are only equipped for the player, for other npcs they are applied directly
+			/// </summary>
+			bool _BypassAnimationsForNonPlayerNPCs = false;
+		};
+		UltimatePotions ultimatePotions;
 	};
 	static inline Compatibility compatibility;
 
@@ -613,6 +627,10 @@ public:
 		/// [Setting] checks for actors which do not have any rules, and prints their information to the, logfile
 		/// </summary>
 		bool _CheckActorsWithoutRules = false;
+		/// <summary>
+		/// [Setting] check for plugins with npcs and potions without rules
+		/// </summary>
+		bool _findPluginsAndPotionsWithoutRules = false;
 		/// <summary>
 		/// [Setting] tests the rules assigned to actors for all cells in game
 		/// </summary>
@@ -798,6 +816,7 @@ public:
 	static inline RE::BGSKeyword* ActorTypeCreature;
 	static inline RE::BGSKeyword* ActorTypeAnimal;
 	static inline RE::BGSKeyword* Vampire;
+	static inline RE::BGSKeyword* ActorTypeNPC;
 
 	static inline RE::TESFaction* CurrentFollowerFaction;
 	static inline RE::TESFaction* CurrentHirelingFaction;

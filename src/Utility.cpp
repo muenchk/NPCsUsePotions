@@ -2587,7 +2587,7 @@ uint32_t Utility::Mods::GetPluginIndex(RE::TESForm* form)
 uint32_t Utility::Mods::GetIndexLessFormID(RE::TESForm* form)
 {
 	if (form == nullptr)
-		return 0;
+		return MAXUINT32;
 	if ((form->GetFormID() & 0xFF000000) == 0xFF000000) {
 		// temporary id, save whole id
 		return form->GetFormID();

@@ -1489,6 +1489,24 @@ namespace Papyrus
 			/// <param name="enabled"></param>
 			void Set_AnimatedPotions_Enable(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
 
+			/// <summary>
+			/// Returns whether Animated Potions animations should be used by NPCs
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <returns></returns>
+			bool Get_UltimatePotions_BypassAnimationsForNonPlayerNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			/// <summary>
+			/// Sets whether Animated Potions animations should be used by NPCs
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <param name="enabled"></param>
+			void Set_UltimatePotions_BypassAnimationsForNonPlayerNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
+
 
 			/// <summary>
 			/// Returns whether CACO is loaded
@@ -1552,6 +1570,15 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <returns></returns>
 			bool UltimatePotions_Loaded(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			/// <summary>
+			/// Returns whether Potions Animated NG is loaded
+			/// </summary>
+			/// <param name="a_vm"></param>
+			/// <param name="a_stackID"></param>
+			/// <param name=""></param>
+			/// <returns></returns>
+			bool PotionsAnimated_Loaded(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
 		}
 
 		namespace Debug

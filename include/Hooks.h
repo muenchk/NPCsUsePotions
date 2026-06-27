@@ -1,13 +1,184 @@
 #pragma once
+#include "Logging.h"
 namespace Hooks
 {
+
+	class ActorEquipManagerLock
+	{
+		struct PatchLock : Xbyak::CodeGenerator
+		{
+			PatchLock(uintptr_t lockAddr, uintptr_t lockThreadID, uintptr_t sleepAddr, uintptr_t getCurrentThreadID)
+			{
+				Xbyak::Label notMatchID;
+				Xbyak::Label after;
+				Xbyak::Label notexchange1;
+				Xbyak::Label notexchange2;
+				Xbyak::Label loopbegin;
+				Xbyak::Label loopbegin2;
+
+				mov(rax, getCurrentThreadID);
+				call(rax);
+				mov(esi, eax);
+
+				mov(r14, lockAddr);
+				mov(r15, lockThreadID);
+				xor_(rcx, rcx);
+
+				lfence();
+				xor_(r13d, r13d);
+				lea(r12d, ptr[r13 + 0x1]);
+				cmp(dword[r15], esi);
+				jnz(notMatchID);
+				lock();
+				inc(dword[r14]);
+				jmp(after);
+
+				L(notMatchID);
+				mov(ebx, r13d);
+				xor_(eax, eax);
+				lock();
+				cmpxchg(dword[r14], r12d);
+				setz(cl);
+				test(cl, cl);
+				jnz(notexchange1);
+				pause();
+				xor_(eax, eax);
+				lock();
+				cmpxchg(dword[r14], r12d);
+				setz(cl);
+				test(cl, cl);
+				jnz(notexchange2);
+				// nop(ptr[rax + rax*0x1];
+
+				L(loopbegin);
+				inc(ebx);
+				xor_(rcx, rcx);
+
+				L(loopbegin2);
+				mov(rax, sleepAddr);
+				call(rax);
+				xor_(eax, eax);
+				lock();
+				cmpxchg(dword[r14], r12d);
+				setz(cl);
+				test(cl, cl);
+				jz(notexchange2);
+				cmp(ebx, 0x2710);
+				jc(loopbegin);
+				mov(ebx, r12d);
+				jmp(loopbegin2);
+
+				L(notexchange2);
+				lfence();
+
+				L(notexchange1);
+				mov(rax, getCurrentThreadID);
+				call(rax);
+				mov(dword[r15], eax);
+				sfence();
+
+				L(after);
+			}
+		};
+		struct PatchUnlock : Xbyak::CodeGenerator
+		{
+			PatchUnlock(uintptr_t lockAddr, uintptr_t lockThreadID, uintptr_t sleepAddr, uintptr_t getCurrentThreadID)
+			{
+				Xbyak::Label end;
+				Xbyak::Label decrement;
+
+				mov(rax, getCurrentThreadID);
+				call(rax);
+				mov(esi, eax);
+
+				mov(r14, lockAddr);
+				mov(r15, lockThreadID);
+
+				lfence();
+				cmp(dword[r15], esi);
+
+				jnz(end);
+				cmp(dword[r14], 0x1);
+
+				jnz(decrement);
+				xor_(r13d, r13d);
+				mov(dword[r15], r13d);
+				mfence();
+				mov(eax, r12d);
+				lock();
+				cmpxchg(dword[r14], r13d);
+				jmp(end);
+
+				L(decrement);
+				lock();
+				dec(dword[r14]);
+
+				L(end);
+			}
+		};
+
+		static inline REL::Relocation<void*()> funcLock;
+		static inline REL::Relocation<void*()> funcUnlock;
+	public:
+		static void BuildPatches()
+		{
+			try {
+				// sleep
+				REL::Relocation<uintptr_t> sleep{ REL::VariantID(227940, 175091, 0), REL::VariantOffset(0, 0, 0) };  //
+				// get current thread id
+				REL::Relocation<uintptr_t> getCurrentThreadID{ REL::VariantID(227915, 175063, 0), REL::VariantOffset(0, 0, 0) };  //
+				// lockthreadID
+				REL::Relocation<uintptr_t> lockAddr{ REL::VariantID(517458, 403987, 0), REL::VariantOffset(0, 0, 0) };
+				REL::Relocation<uintptr_t> lockThreadID{ REL::VariantID(517457, 403986, 0), REL::VariantOffset(0, 0, 0) };
+
+				PatchLock patch{ lockAddr.get(), lockThreadID.get(), sleep.get(), getCurrentThreadID .get()};
+				patch.ready();
+
+				auto& trampoline = SKSE::GetTrampoline();
+				funcLock = (uintptr_t)trampoline.allocate(patch);
+
+
+
+				PatchUnlock patchUnlock{ lockAddr.get(), lockThreadID.get(), sleep.get(), getCurrentThreadID.get() };
+				patchUnlock.ready();
+
+				funcUnlock = (uintptr_t)trampoline.allocate(patchUnlock);
+			} catch (std::exception& e) {
+				logger::critical("Xbyak Error: {}", e.what());
+				throw e;
+			}
+
+		}
+
+		static void Lock()
+		{
+			funcLock();
+		}
+
+		static void Unlock()
+		{
+			funcUnlock();
+		}
+	};
+
+	// functions not hooks
+	class Functions
+	{
+	private:
+		using EquipBypass_t = void*(RE::ActorEquipManager* a_manager, RE::Actor* a_actor, RE::TESBoundObject* a_object, RE::ExtraDataList** a_extraData);
+
+	public:
+		static void EquipBypass(RE::Actor* actor, RE::TESBoundObject* a_object, RE::ExtraDataList** a_extraData);
+		static bool DrinkPotion(RE::Actor* actor, RE::AlchemyItem* a_alch, RE::ExtraDataList* a_extralist);
+	};
+
+
 	// frame hook
 	class OnFrameHook
 	{
 	public:
 		static void Install()
 		{
-			//REL::Relocation<uintptr_t> target{ REL::VariantID(35564, 36563, 0x5baa00), REL::VariantOffset(0x24, 0x24, 0x27) };
 			REL::Relocation<uintptr_t> target{ REL::VariantID(35564, 36563, 0x5bb1fa), REL::VariantOffset(0x24, 0x24, 0) };
 			auto& trampoline = SKSE::GetTrampoline();
 
@@ -23,8 +194,6 @@ namespace Hooks
 				_OnFrame = trampoline.write_call<5>(target.address(), OnFrame);
 				break;
 			}
-
-			logger::info("Hooked Main::FrameUpdate");
 		}
 
 	private:

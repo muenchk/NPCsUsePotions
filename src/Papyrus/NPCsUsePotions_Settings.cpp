@@ -194,6 +194,9 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Comp_ZUPA_Loaded"), script, Compatibility::ZUPA_Loaded);
 			a_vm->RegisterFunction(std::string("Comp_Sacrosanct_Loaded"), script, Compatibility::Sacrosanct_Loaded);
 			a_vm->RegisterFunction(std::string("Comp_UltimatePotions_Loaded"), script, Compatibility::UltimatePotions_Loaded);
+			a_vm->RegisterFunction(std::string("Comp_UltimatePotions_GetBypassAnimationsForNonPlayerNPCs"), script, Compatibility::Get_UltimatePotions_BypassAnimationsForNonPlayerNPCs);
+			a_vm->RegisterFunction(std::string("Comp_UltimatePotions_SetBypassAnimationsForNonPlayerNPCs"), script, Compatibility::Set_UltimatePotions_BypassAnimationsForNonPlayerNPCs);
+			a_vm->RegisterFunction(std::string("Comp_PotionsAnimated_Loaded"), script, Compatibility::PotionsAnimated_Loaded);
 			// debug
 			a_vm->RegisterFunction(std::string("Debug_GetEnableLog"), script, Debug::Get_EnableLog);
 			a_vm->RegisterFunction(std::string("Debug_SetEnableLog"), script, Debug::Set_EnableLog);
@@ -1349,6 +1352,18 @@ namespace Papyrus
 				Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kCompatibility;
 			}
 
+			bool Get_UltimatePotions_BypassAnimationsForNonPlayerNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs;
+			}
+
+			void Set_UltimatePotions_BypassAnimationsForNonPlayerNPCs(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
+			{
+				Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs = enabled;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+				Settings::_updateSettings |= (uint32_t)Settings::UpdateFlag::kCompatibility;
+			}
+
 			bool CACO_Loaded(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
 			{
 				return ::Compatibility::GetSingleton()->LoadedCACO();
@@ -1383,6 +1398,11 @@ namespace Papyrus
 			{
 				return ::Compatibility::GetSingleton()->LoadedUltimatePotions();
 			}
+
+			bool PotionsAnimated_Loaded(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return ::Compatibility::GetSingleton()->LoadedPotionsAnimated();
+			}
 		}
 
 		namespace Debug
@@ -1396,6 +1416,13 @@ namespace Papyrus
 			{
 				Settings::debug.EnableLog = enabled;
 				Logging::EnableLog = enabled;
+
+				// set generic logging
+				if (enabled == true)
+					Logging::EnableGenericLogging = true;
+				else
+					Logging::EnableGenericLogging = false;
+
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 

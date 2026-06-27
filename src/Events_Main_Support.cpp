@@ -41,14 +41,16 @@ namespace Events
 			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
 				if (!data->UpdateActorInfo(acinfo)) {
 					LOG_1("Removed invalid actor");
-					acset.erase(itr);
+					itr = acset.erase(itr);
+					continue;
 				} else if (acinfo->Is3DLoaded() == false) {
 				} else {
 					actors.insert(*itr);
 				}
 			} else {
 				LOG_1("Removed expired actor");
-				acset.erase(itr);
+				itr = acset.erase(itr);
+				continue;
 			}
 			itr++;
 		}
@@ -95,12 +97,14 @@ namespace Events
 		while (itr != acset.end()) {
 			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
 				if (acinfo->GetFormIDBlank() == formid) {
-					acset.erase(itr);
+					itr = acset.erase(itr);
+					continue;
 					break;
 				}
 			} else {
 				// weak pointer is expired, so remove it while we are on it
-				acset.erase(itr);
+				itr = acset.erase(itr);
+				continue;
 			}
 			itr++;
 		}
@@ -559,6 +563,10 @@ namespace Events
 		}
 		// insert actor
 		ACSetRegisterAndReset(acinfo, actor);
+
+		// checkc combat status if this is called after combat event
+		if (actor->IsInCombat())
+			acinfo->SetCombatState(CombatState::InCombat);
 
 		ProcessDistribution(acinfo);
 		EvalProcessing();

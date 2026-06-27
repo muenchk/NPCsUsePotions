@@ -7,6 +7,7 @@
 #include <math.h>
 #include <atomic>
 #include <memory>
+#include <boost/unordered_map.hpp>
 
 #include "Threading.h"
 #include "Types.h"
@@ -311,8 +312,33 @@ class Profile
 {
 	static inline std::ofstream* _stream = nullptr;
 	static inline std::binary_semaphore lock{ 1 };
+	static inline std::atomic_flag _w_lock = ATOMIC_FLAG_INIT;
 
 public:
+	struct ExecTime
+	{
+	private:
+		std::atomic_flag _lock;
+
+	public:
+		std::string functionName;
+		std::chrono::nanoseconds exectime;
+		uint64_t executions = 0;
+		std::chrono::nanoseconds average;
+		std::chrono::steady_clock::time_point lastexec;
+		std::string fileName;
+		std::string usermessage;
+		void Lock()
+		{
+			while (_lock.test_and_set(std::memory_order_acquire));
+		}
+
+		void Unlock()
+		{
+			_lock.clear(std::memory_order_release);
+		}
+	};
+
 	/// <summary>
 	/// Inits profile log
 	/// </summary>
@@ -329,6 +355,57 @@ public:
 	/// </summary>
 	/// <param name="message"></param>
 	static void write(std::string message);
+
+	/// <summary>
+	/// contains the execution times of the last logged function executions
+	/// exectime, timepoint, name, file, usermes
+	/// </summary>
+	static inline boost::unordered_map<std::string, ExecTime*> exectimes;
+
+	static void Dispose()
+	{
+		SpinlockA guard(_w_lock);
+		//lock.acquire();
+		for (auto [func, exec] : exectimes)
+			delete exec;
+		exectimes.clear();
+		//lock.release();
+	}
+	static void RegisterExec(std::string& file, std::string& func, std::chrono::nanoseconds ns, std::chrono::steady_clock::time_point time, std::string usermes)
+	{
+		auto itr = exectimes.end();
+		{
+			Spinlock guard(_w_lock);
+			itr = exectimes.find(file + "::" + func);
+		}
+		if (itr != exectimes.end()) {
+			itr->second->Lock();
+			itr->second->functionName = func;
+			itr->second->average = std::chrono::nanoseconds((long long)(itr->second->exectime.count() * itr->second->executions + ns.count()) / (itr->second->executions + 1));
+			itr->second->executions++;
+			itr->second->exectime = ns;
+			itr->second->lastexec = time;
+			itr->second->fileName = file;
+			itr->second->usermessage = usermes;
+			itr->second->Unlock();
+		} else {
+			ExecTime* exec = new ExecTime();
+			exec->Lock();
+			{
+				Spinlock guard(_w_lock);
+				exectimes.insert_or_assign(file + "::" + func, exec);
+			}
+			exec->functionName = func;
+			exec->average = ns;
+			exec->exectime = ns;
+			exec->executions = 1;
+			exec->lastexec = time;
+			exec->fileName = file;
+			exec->usermessage = usermes;
+
+			exec->Unlock();
+		}
+	}
 };
 template <class... Args>
 struct [[maybe_unused]] profile
@@ -342,8 +419,12 @@ struct [[maybe_unused]] profile
 		Args&&... a_args,
 		std::source_location a_loc = std::source_location::current())
 	{
-		std::string mes = fmt::format("{:<25} {} {} {:<30} [ExecTime:{:>11}]\t{}", std::filesystem::path(a_loc.file_name()).filename().string() + "(" + std::to_string(static_cast<int>(a_loc.line())) + "):", "[prof]", Logging::TimePassed(), "[" + func + "]", Logging::FormatTimeNS(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - begin).count()), fmt::format(a_fmt, std::forward<Args>(a_args)...) + "\n");
+		std::string file = std::filesystem::path(a_loc.file_name()).filename().string() + "(" + std::to_string(static_cast<int>(a_loc.line())) + ")";
+		auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - begin);
+		auto usrmes = fmt::format(a_fmt, std::forward<Args>(a_args)...);
+		std::string mes = fmt::format("{:<25} {} {} {:<30} [ExecTime:{:>11}]\t{}", file + ":", "[prof]", Logging::TimePassed(), "[" + func + "]", Logging::FormatTimeNS(ns.count()), usrmes + "\n");
 		Logging::LogMessage(Logging::MessageType::Profile, mes);
+		Profile::RegisterExec(file, func, ns, std::chrono::steady_clock::now(), usrmes);
 	}
 };
 

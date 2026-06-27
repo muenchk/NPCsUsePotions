@@ -36,13 +36,15 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
 		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
-		if (pluginID == 0x1) {
+		if (pluginID == MAXUINT32) {
 			pluginID = Utility::ExtractTemplateInfo(_actor->GetActorBase()).pluginID;
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
 		if (_actor->HasKeyword(Settings::Vampire) || _actor->GetRace()->HasKeyword(Settings::Vampire))
 			_vampire = true;
+		if (_actor->HasKeyword(Settings::ActorTypeNPC) || _actor->GetActorBase()->HasKeyword(Settings::ActorTypeNPC) || _actor->GetRace() && _actor->GetRace()->HasKeyword(Settings::ActorTypeNPC))
+			_actorTypeNPC = true;
 		for (auto slot : _actor->GetRace()->equipSlots) {
 			if (slot->GetFormID() == 0x13F43) // LeftHand
 				_haslefthand = true;
@@ -76,7 +78,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	citems.Reset();
 	formid = ID();
 	pluginname = "";
-	pluginID = 1;
+	pluginID = MAXUINT32;
 	name = "";
 	nextFoodTime = 0;
 	lastDistrTime = 0;
@@ -110,11 +112,15 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		pluginname = Utility::Mods::GetPluginName(_actor);
 		pluginID = Utility::Mods::GetPluginIndex(pluginname);
 		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
-		if (pluginID == 0x1) {
+		if (pluginID == MAXUINT32) {
 			pluginID = Utility::ExtractTemplateInfo(_actor->GetActorBase()).pluginID;
 		}
 		if (_actor->HasKeyword(Settings::ActorTypeDwarven) || _actor->GetRace()->HasKeyword(Settings::ActorTypeDwarven))
 			_automaton = true;
+		if (_actor->HasKeyword(Settings::Vampire) || _actor->GetRace()->HasKeyword(Settings::Vampire))
+			_vampire = true;
+		if (_actor->HasKeyword(Settings::ActorTypeNPC) || _actor->GetActorBase()->HasKeyword(Settings::ActorTypeNPC) || _actor->GetRace() && _actor->GetRace()->HasKeyword(Settings::ActorTypeNPC))
+			_actorTypeNPC = true;
 		for (auto slot : _actor->GetRace()->equipSlots) {
 			if (slot->GetFormID() == 0x13F43)  // LeftHand
 				_haslefthand = true;
@@ -192,6 +198,8 @@ RE::Actor* ActorInfo::GetActor()
 	if (!valid || dead)
 		return nullptr;
 
+	LOG_4("Unsafe Operation {}: GetActor", name);
+
 	if (actor.get() && actor.get().get())
 		return actor.get().get();
 	return nullptr;
@@ -249,7 +257,7 @@ uint32_t ActorInfo::GetPluginID()
 {
 	aclock;
 	if (!valid)
-		return 0x1;
+		return MAXUINT32;
 	return pluginID;
 }
 
@@ -1011,7 +1019,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
-				if (pluginID == 0x1) {
+				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
@@ -1078,7 +1086,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
-				if (pluginID == 0x1) {
+				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
@@ -1144,7 +1152,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
-				if (pluginID == 0x1) {
+				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
@@ -1211,7 +1219,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 
 				// init dependend stuff
 				pluginID = Utility::Mods::GetPluginIndex(pluginname);
-				if (pluginID == 0x1) {
+				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
 				_formstring = Utility::PrintForm(this);
@@ -1518,6 +1526,8 @@ bool ActorInfo::DrinkPotion(RE::AlchemyItem* potion, RE::ExtraDataList* extralis
 	if (!valid || dead)
 		return false;
 
+	loginfo("Modifying {}: DrinkPotion", name);
+
 	if (actor.get() && actor.get().get())
 		return actor.get().get()->DrinkPotion(potion, extralist);
 	return false;
@@ -1541,6 +1551,8 @@ void ActorInfo::RemoveItem(RE::TESBoundObject* item, int32_t count)
 	if (!valid)
 		return;
 
+	loginfo("Modifying {}: RemoveItem", name);
+
 	if (actor.get() && actor.get().get())
 		actor.get().get()->RemoveItem(item, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 }
@@ -1550,6 +1562,8 @@ void ActorInfo::AddItem(RE::TESBoundObject* item, int32_t count)
 	aclock;
 	if (!valid)
 		return;
+
+	loginfo("Modifying {}: AddItem", name);
 
 	if (actor.get() && actor.get().get())
 		actor.get().get()->AddObjectToContainer(item, nullptr, count, nullptr);

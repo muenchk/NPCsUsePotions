@@ -3,6 +3,7 @@ buildvr/
 buildAE353/
 buildSE/
 buildAE/
+build*
 .vs/
 src/.vs/
 src/.vscode

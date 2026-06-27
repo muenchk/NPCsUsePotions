@@ -6,6 +6,7 @@
 #include "AlchemyEffect.h"
 #include "Data.h"
 #include "Statistics.h"
+#include "Hooks.h"
 
 
 static std::mt19937 randan((unsigned int)(std::chrono::system_clock::now().time_since_epoch().count()));
@@ -59,6 +60,7 @@ bool ACM::HasPoisonResistValue(RE::MagicItem* item)
 // calc all alchemyeffects of the item and return the duration and magnitude of the effect with the highest product mag * dur
 std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::AlchemyItem* item, AlchemicEffect alchemyEffect, bool excluderestore)
 {
+	StartProfiling;
 	LOG_3("");
 	// check if the ite is excluded
 	if (Distribution::excludedItems()->contains(item->GetFormID()))
@@ -154,12 +156,14 @@ std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::Alc
 			return { true, mag, dur, out, detrimental };
 		}
 		LOG_4("slow fail: does not match effect");
+		PROF_3(TimeProfiling, "Has AlchemyEffect Sloq");
 		return { false, mag, dur, AlchemicEffect::kNone, false };
 	}
 }
 
 std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatchingPotions(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool fortify)
 {
+	StartProfiling;
 	LOG_3("");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ret{};
 	std::tuple<bool, float, int, AlchemicEffect, bool> res;
@@ -198,11 +202,13 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 		iter++;
 	}
 	LOG_3("finished. found: {} potions", ret.size());
+	PROF_3(TimeProfiling, "Searched for potions with effect {}", alchemyEffect.string());
 	return ret;
 }
 
 std::list<RE::AlchemyItem*> ACM::GetAllPotions(std::shared_ptr<ActorInfo> const& acinfo)
 {
+	StartProfiling;
 	LOG_3("");
 	std::list<RE::AlchemyItem*> ret{};
 	auto itemmap = acinfo->GetInventory();
@@ -220,11 +226,13 @@ std::list<RE::AlchemyItem*> ACM::GetAllPotions(std::shared_ptr<ActorInfo> const&
 		}
 		iter++;
 	}
+	PROF_3(TimeProfiling, "Find all potions");
 	return ret;
 }
 
 std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatchingPoisons(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect)
 {
+	StartProfiling;
 	LOG_3("");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ret{};
 	std::tuple<bool, float, int, AlchemicEffect, bool> res;
@@ -263,11 +271,13 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 		iter++;
 	}
 	LOG_3("finished. found: {} poisons", ret.size());
+	PROF_3(TimeProfiling, "Searched for poisons with effect {}", alchemyEffect.string());
 	return ret;
 }
 
 std::list<RE::AlchemyItem*> ACM::GetAllPoisons(std::shared_ptr<ActorInfo> const& acinfo)
 {
+	StartProfiling;
 	LOG_3("");
 	std::list<RE::AlchemyItem*> ret{};
 	auto itemmap = acinfo->GetInventory();
@@ -285,11 +295,13 @@ std::list<RE::AlchemyItem*> ACM::GetAllPoisons(std::shared_ptr<ActorInfo> const&
 		}
 		iter++;
 	}
+	PROF_3(TimeProfiling, "Find all poisons");
 	return ret;
 }
 
 std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatchingFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool raw)
 {
+	StartProfiling;
 	LOG_3("");
 	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ret{};
 	std::tuple<bool, float, int, AlchemicEffect, bool> res;
@@ -330,11 +342,13 @@ std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatc
 		iter++;
 	}
 	LOG_4("return: {}", ret.size());
+	PROF_3(TimeProfiling, "Searched for food with effect {}", alchemyEffect.string());
 	return ret;
 }
 
 std::list<RE::AlchemyItem*> ACM::GetAllFood(std::shared_ptr<ActorInfo> const& acinfo)
 {
+	StartProfiling;
 	LOG_3("");
 	std::list<RE::AlchemyItem*> ret{};
 	auto itemmap = acinfo->GetInventory();
@@ -352,6 +366,7 @@ std::list<RE::AlchemyItem*> ACM::GetAllFood(std::shared_ptr<ActorInfo> const& ac
 		}
 		iter++;
 	}
+	PROF_3(TimeProfiling, "Find all food");
 	return ret;
 }
 
@@ -545,7 +560,7 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 		auto iter = itemmap.begin();
 		auto end = itemmap.end();
 		//RE::EffectSetting* sett = nullptr;
-		LOG_2("trying to find potion");
+		LOG_2("trying to find potion {}", alchemyEffect.string());
 		auto ls = GetMatchingPotions(acinfo, alchemyEffect, fortify);
 		if (fortify)
 			ls.sort(Utility::SortFortify);
@@ -569,7 +584,9 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 			if (potion = std::get<2>(ls.front()); potion) {
 				std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> val = ls.front();
 				LOG_2("Drink Potion {} with duration {} and magnitude {}", Utility::PrintForm(potion), std::get<1>(val), std::get<0>(val));
-				logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(potion), std::get<1>(val), std::get<0>(val));
+				
+				// save statistics
+				Statistics::Misc_PotionsAdministered++;
 				if (comp->LoadedAnimatedPotions() && acinfo->IsPlayer() == false) {
 					LOG_2("AnimatedPotions loaded, apply potion later");
 					comp->AnPoti_AddActorPotion(acinfo->GetFormID(), potion);
@@ -581,14 +598,35 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 					ev->sender = acinfo->GetActor();
 					SKSE::GetModCallbackEventSource()->SendEvent(ev);
 				} else {
-					// save statistics
-					Statistics::Misc_PotionsAdministered++;
 					LOG_2("equip potion");
 
-					SKSE::GetTaskInterface()->AddTask([acinfo, potion]() {
-						RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), potion, nullptr, 1, nullptr, true, false, false);
+					SKSE::GetTaskInterface()->AddTask([acinfo, potion, duration = std::get<1>(val), magnitude = std::get<0>(val)]() {
+						if (comp->LoadedUltimatePotions() && (acinfo->IsActorTypeNPC() == false || Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs && acinfo->IsPlayer() == false)) {
+							logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
+								"[Using Bypass (UAPNG)]    ",
+								acinfo->GetFormString(),
+								Utility::PrintFormNonDebug(potion),
+								duration,
+								magnitude);
+							acinfo->GetActor()->DrinkPotion(potion, nullptr);
+						} else if (comp->LoadedPotionsAnimated() && acinfo->IsActorTypeNPC() == false) {
+							logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
+								"[Using Bypass (PPNG)]    ",
+								acinfo->GetFormString(),
+								Utility::PrintFormNonDebug(potion),
+								duration,
+								magnitude);
+							Hooks::Functions::DrinkPotion(acinfo->GetActor(), potion, nullptr);
+						} else {
+							logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
+								"[Using ActorEquipManager] ",
+								acinfo->GetFormString(),
+								Utility::PrintFormNonDebug(potion),
+								duration,
+								magnitude);
+							RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), potion, nullptr, 1, nullptr, true, false, false);
+						}
 					});
-					//RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, std::get<2>(ls.front()), extra, 1, nullptr, true, false, false);
 				}
 				ls.pop_front();
 				return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
@@ -625,7 +663,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 				// add statistics
 				Statistics::Misc_FoodEaten++;
 				LOG_2("Use Food {} with duration {} and magnitude {}", Utility::PrintForm(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
-				logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
+				logusage("[Using ActorEquipManager]  Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
 				SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
 					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
 				});
@@ -653,7 +691,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 			// save statistics
 			Statistics::Misc_FoodEaten++;
 			LOG_2("Use Food {} with duration {} and magnitude {}", Utility::PrintForm(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
-			logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
+			logusage("[Using ActorEquipManager]  Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(std::get<2>(item)), std::get<1>(item), std::get<0>(item));
 			SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
 				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
 			});
@@ -706,7 +744,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 					return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 				} else {
 					LOG_2("Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
-					logusage("Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
+					logusage("[Manual Application]       Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
 					if (!audiomanager)
 						audiomanager = RE::BSAudioManager::GetSingleton();
 					//RE::ExtraDataList* extra = new RE::ExtraDataList();
@@ -759,199 +797,3 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 	}
 	return { -1, AlchemicEffect::kNone };
 }
-/* CTDs consistently when playing animations from here
-bool ACM::AnimatedPoison_ApplyPoison(std::shared_ptr<ActorInfo> const& acinfo, RE::AlchemyItem* poison)
-{
-	LOG2_4("[AnimatedPoison_ApplyPoison] actor {} poison {}", Utility::PrintForm(acinfo), Utility::PrintForm(poison))
-
-	// if parameters are invalid or compatibility disabled return
-	if (!comp->LoadedAnimatedPoisons() || acinfo == nullptr || poison == nullptr || acinfo->Animation_busy || acinfo->actor == nullptr || acinfo->actor->IsPlayerRef()) {
-		LOG2_4("[AnimatedPoison_ApplyPoison] {} {}", comp->LoadedAnimatedPoisons(), acinfo->Animation_busy);
-		return false;
-	}
-	acinfo->Animation_busy = true;
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 1");
-
-	// save form id, since this function will take longer to complete. If the actor is dead in the meantime we may run into problems
-	// if we do not reacquire all objects we are working with
-	uint32_t actorid = acinfo->formid;
-
-	// target condition check
-	bool bisRiding = false;
-	bool bAnimationDriven = false;
-	bool isStaggering = false;
-	bool isBleedingOut = false;
-	if (acinfo->actor->GetFlyState() != RE::FLY_STATE::kNone || acinfo->actor->IsInKillMove() || acinfo->actor->IsSwimming() || acinfo->actor->GetKnockState() != RE::KNOCK_STATE_ENUM::kNormal) {
-		acinfo->Animation_busy = false;
-		return false;
-	}
-	if (acinfo->actor->GetGraphVariableBool("bisRiding", bisRiding) && bisRiding) {
-		acinfo->Animation_busy = false;
-		return false;
-	}
-	if (acinfo->actor->IsAnimationDriven()) {
-		acinfo->Animation_busy = false;
-		return false;
-	}
-	if (acinfo->actor->GetGraphVariableBool("isStaggering", isStaggering) && isStaggering) {
-		acinfo->Animation_busy = false;
-		return false;
-	}
-	if (acinfo->actor->GetGraphVariableBool("isBleedingOut", isBleedingOut) && isBleedingOut) {
-		acinfo->Animation_busy = false;
-		return false;
-	}
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 2");
-
-
-	// get poisonkeywtring // read json in future
-	std::string AnimationEventString = "poisondamagehealthlinger01";
-	// get animationeventstring
-	// poison dosage ignored, own vales alreay used
-	
-	// do ui stuff
-	RE::UI* ui = RE::UI::GetSingleton();
-	//while (ui->GameIsPaused())
-		//std::this_thread::sleep_for(100ms);
-	// we don't what the player killed in the meantime using console etc. so use fallback
-	acinfo = data->FindActor(actorid);
-	if (acinfo == nullptr)
-		return false;
-	acinfo->actor->SetGraphVariableBool("bSprintOK", false);
-
-	
-	if (comp->AnPois_ToggleStopSprint->value == 1 && acinfo->actor->IsSprinting())
-		true; // find out how to make actor stop sprinting
-	if (Utility::GetItemType(acinfo->actor->GetEquippedObject(true)) != 7) {
-		// draw weapon and wait for what?
-		acinfo->actor->DrawWeaponMagicHands(true);
-		bool isEquipping = false;
-		//while (acinfo->actor->GetGraphVariableBool("isEquipping", isEquipping) && isEquipping)
-		//	std::this_thread::sleep_for(100ms);
-		acinfo = data->FindActor(actorid);
-		if (acinfo == nullptr)
-			return false;
-	}
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 3");
-	// ignore force third person
-	bool lefthand = false;
-	bool sloweffect = false;
-	// left hand check
-	RE::TESForm* leftitem = acinfo->actor->GetEquippedObject(true);
-	RE::TESBoundObject* leftbound = nullptr;
-	RE::SpellItem* leftspell = nullptr;
-	if (leftitem)
-		leftbound = leftitem->As<RE::TESBoundObject>();
-	int itemtype = Utility::GetItemType(leftbound);
-	if (itemtype == 9) // magic spell
-	{
-		RE::ActorEquipManager::GetSingleton()->UnequipObject(acinfo->actor, leftbound);
-		leftspell = leftbound->As<RE::SpellItem>();
-		lefthand = true;
-	} else if (itemtype == 1 ||
-			   itemtype == 2 ||
-			   itemtype == 3 ||
-			   itemtype == 4 ||
-			   itemtype == 8 ||
-			   itemtype == 10 ||
-			   itemtype == 11) {
-		RE::ActorEquipManager::GetSingleton()->UnequipObject(acinfo->actor, leftbound);
-		lefthand = true;
-	} else if (itemtype == 7) {
-		// sheath weapon
-		
-		// currently unknown how to, unequip for now
-		RE::ActorEquipManager::GetSingleton()->UnequipObject(acinfo->actor, leftbound);
-		// choose arrow anim object
-		RE::TESAmmo* ammo = acinfo->actor->GetCurrentAmmo();
-		if (ammo) {
-			if (ammo == comp->AnPois_DaedricArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_DaedricArrowAOSP);
-			} else if (ammo == comp->AnPois_DraugrArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_DraugrArrowAOSP);
-			} else if (ammo == comp->AnPois_DwarvenArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_DwarvenArrowAOSP);
-			} else if (ammo == comp->AnPois_EbonyArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_EbonyArrowAOSP);
-			} else if (ammo == comp->AnPois_ElvenArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_ElvenArrowAOSP);
-			} else if (ammo == comp->AnPois_FalmerArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_FalmerArrowAOSP);
-			} else if (ammo == comp->AnPois_ForswornArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_ForswornArrowAOSP);
-			} else if (ammo == comp->AnPois_GlassArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_GlassArrowAOSP);
-			} else if (ammo == comp->AnPois_IronArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_IronArrowAOSP);
-			} else if (ammo == comp->AnPois_NordHeroArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_NordHeroArrowAOSP);
-			} else if (ammo == comp->AnPois_OrcishArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_OrcishArrowAOSP);
-			} else if (ammo == comp->AnPois_SteelArrow) {
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_SteelArrowAOSP);
-			} else // iron
-				acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_IronArrowAOSP);
-		}
-	}
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 4");
-
-	// slow effect cast
-	if (comp->AnPois_TogglePlayerSlowEffect->value == 1) {
-		acinfo->actor->GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)->SpellCast(true, 0, comp->AnPois_SlowEffectSP);
-		acinfo->actor->GetContainer()->AddObjectToContainer(comp->AnPois_SlowEffectItem, 1, nullptr);
-		sloweffect = true;
-	}
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 5");
-	
-	// send animation
-	//std::this_thread::sleep_for(100ms);
-	
-	//acinfo->actor->NotifyAnimationGraph("TKDodgeForward");
-	acinfo->actor->NotifyAnimationGraph(AnimationEventString);
-	
-	/* std::this_thread::sleep_for(2.6s);
-	acinfo = data->FindActor(actorid);
-	if (acinfo == nullptr)
-		return false;
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 6");
-	
-	// requip lefthand weapon
-	if (lefthand && leftbound)
-	{
-		if (leftspell)
-			RE::ActorEquipManager::GetSingleton()->EquipSpell(acinfo->actor, leftspell, Settings::Equip_LeftHand);
-		else
-			RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->actor, leftbound, nullptr, 1, Settings::Equip_LeftHand);
-		// skip rest of equipping stuff for now
-	}
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 7");
-
-
-	if (sloweffect)
-	{
-		RE::ActorHandle handle = acinfo->actor->GetHandle();
-		acinfo->actor->DispelEffect(comp->AnPois_SlowEffectSP, handle);
-		acinfo->actor->RemoveItem(comp->AnPois_SlowEffectItem, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-	}
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 8");
-
-
-	acinfo->actor->SetGraphVariableBool("bSprintOK", true);
-
-	LOG_4("[AnimatedPoison_ApplyPoison] 9");
-	*/
-/*
-	acinfo->Animation_busy = false;
-	return true;
-}
-
-
-*/
