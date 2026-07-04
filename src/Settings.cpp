@@ -1310,9 +1310,8 @@ void Settings::LoadDistrConfig()
 									Distribution::Rule* rule = nullptr;
 									bool existing = false;
 									for (auto rl : Distribution::_rules) {
-										//loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length())
 										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding rule: {}. file: {}", rl->ruleName, file);
+											LOGL_1("Overriding rule: {}. file: {}", rl->ruleName, file);
 											rule = rl;
 											existing = true;
 											break;
@@ -1665,7 +1664,6 @@ void Settings::LoadDistrConfig()
 										mean += vec2[num] - vec3[num];
 										mean += vec3[num] - vec4[num];
 										mean = mean / 3;
-										loginfo("mean: {}", mean);
 										return mean;
 									};
 									auto addcats = [](Distribution::EffCategoryPreset* preset) {
@@ -1864,9 +1862,8 @@ void Settings::LoadDistrConfig()
 									Distribution::Rule* rule = nullptr;
 									bool existing = false;
 									for (auto rl : Distribution::_rules) {
-										//loginfo("Compare {} || {} || {} || {}", Utility::ToLower(rl->ruleName), Utility::ToLower(splits->at(splitindex)), rl->ruleName.length(), splits->at(splitindex).length()) if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length())
 										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding rule: {}. file: {}", rl->ruleName, file);
+											LOGL_1("Overriding rule: {}. file: {}", rl->ruleName, file);
 											rule = rl;
 											existing = true;
 											break;
@@ -1999,7 +1996,7 @@ void Settings::LoadDistrConfig()
 									LOGL_2("rule {} successfully loaded.", rule->ruleName);
 
 									
-									loginfo("Distr Effect Map: {}", Utility::PrintEffectMap(rule->potionEffects->effects));
+									LOGL_4("Distr Effect Map: {}", Utility::PrintEffectMap(rule->potionEffects->effects));
 								}
 								break;
 							case 23:  // Effect Preset
@@ -2015,7 +2012,7 @@ void Settings::LoadDistrConfig()
 									bool existing = false;
 									for (auto [name, pres] : Distribution::_internEffectPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding preset: {}", name);
+											LOG_1("Overriding preset: {}", name);
 											preset = pres;
 											existing = true;
 											break;
@@ -2055,7 +2052,7 @@ void Settings::LoadDistrConfig()
 										bool existing = false;
 										for (auto [name, pres] : Distribution::_internEffectPresets) {
 											if (Utility::ToLower(name).find(Utility::ToLower(pname)) != std::string::npos && name.length() == pname.length()) {
-												loginfo("Overriding preset: {}", name);
+												LOGL_1("Overriding preset: {}", name);
 												preset = pres;
 												existing = true;
 												break;
@@ -2098,7 +2095,7 @@ void Settings::LoadDistrConfig()
 									bool existing = false;
 									for (auto [name, cat] : Distribution::_internEffectCategories) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding category: {}", name);
+											LOGL_1("Overriding category: {}", name);
 											category = cat;
 											existing = true;
 											break;
@@ -2207,7 +2204,7 @@ void Settings::LoadDistrConfig()
 									bool existing = false;
 									for (auto [name, cat] : Distribution::_internEffectCategoryPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding category: {}", name);
+											LOGL_1("Overriding category: {}", name);
 											catpreset = cat;
 											existing = true;
 											break;
@@ -2294,7 +2291,7 @@ void Settings::LoadDistrConfig()
 									bool existing = false;
 									for (auto [name, pres] : Distribution::_internEffectPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
-											loginfo("Copying preset: {}", name);
+											LOGL_1("Copying preset: {}", name);
 											oldpreset = pres;
 											existing = true;
 											break;
@@ -2312,7 +2309,7 @@ void Settings::LoadDistrConfig()
 									existing = false;
 									for (auto [name, pres] : Distribution::_internEffectPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
-											loginfo("Overriding preset: {}", name);
+											LOGL_1("Overriding preset: {}", name);
 											preset = pres;
 											existing = true;
 											break;
@@ -2406,7 +2403,7 @@ void Settings::LoadDistrConfig()
 			bool existing = false;
 			for (auto rl : Distribution::_rules)
 				if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(newname)) != std::string::npos && rl->ruleName.length() == newname.length()) {
-					loginfo("Overriding rule: {}", rl->ruleName);
+					LOGL_1("Overriding rule: {}", rl->ruleName);
 					newrule = rl;
 					existing = true;
 					break;
@@ -2598,55 +2595,55 @@ void Settings::LoadDistrConfig()
 	// get VendorItemPotion keyword, if we don't find this, potion detection will be nearly impossible
 	Settings::VendorItemPotion = RE::TESForm::LookupByID<RE::BGSKeyword>(0x0008CDEC);
 	if (Settings::VendorItemPotion == nullptr) {
-		loginfo("[INIT] Couldn't find VendorItemPotion Keyword in game.");
+		logwarn("[INIT] Couldn't find VendorItemPotion Keyword in game.");
 	}
 	Settings::VendorItemPoison = RE::TESForm::LookupByID<RE::BGSKeyword>(0x0008CDED);
 	if (Settings::VendorItemPoison == nullptr) {
-		loginfo("[INIT] Couldn't find VendorItemPoison Keyword in game.");
+		logwarn("[INIT] Couldn't find VendorItemPoison Keyword in game.");
 	}
 	Settings::VendorItemFood = RE::TESForm::LookupByID<RE::BGSKeyword>(0x0008CDEA);
 	if (Settings::VendorItemFood == nullptr) {
-		loginfo("[INIT] Couldn't find VendorItemFood Keyword in game.");
+		logwarn("[INIT] Couldn't find VendorItemFood Keyword in game.");
 	}
 	Settings::VendorItemFoodRaw = RE::TESForm::LookupByID<RE::BGSKeyword>(0x000A0E56);
 	if (Settings::VendorItemFoodRaw == nullptr) {
-		loginfo("[INIT] Couldn't find VendorItemFoodRaw Keyword in game.");
+		logwarn("[INIT] Couldn't find VendorItemFoodRaw Keyword in game.");
 	}
 	Settings::CurrentFollowerFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x0005C84E);
 	if (Settings::CurrentFollowerFaction == nullptr) {
-		loginfo("[INIT] Couldn't find CurrentFollowerFaction Faction in game.");
+		logwarn("[INIT] Couldn't find CurrentFollowerFaction Faction in game.");
 	}
 	Settings::CurrentHirelingFaction = RE::TESForm::LookupByID<RE::TESFaction>(0xbd738);
 	if (Settings::CurrentHirelingFaction == nullptr) {
-		loginfo("[INIT] Couldn't find CurrentHirelingFaction Faction in game.");
+		logwarn("[INIT] Couldn't find CurrentHirelingFaction Faction in game.");
 	}
 	Settings::ActorTypeDwarven = RE::TESForm::LookupByID<RE::BGSKeyword>(0x1397A);
 	if (Settings::ActorTypeDwarven == nullptr) {
-		loginfo("[INIT] Couldn't find ActorTypeDwarven Keyword in game.");
+		logwarn("[INIT] Couldn't find ActorTypeDwarven Keyword in game.");
 	}
 	Settings::ActorTypeCreature = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13795);
 	if (Settings::ActorTypeCreature == nullptr) {
-		loginfo("[INIT] Couldn't find ActorTypeCreature Keyword in game.");
+		logwarn("[INIT] Couldn't find ActorTypeCreature Keyword in game.");
 	}
 	Settings::ActorTypeAnimal = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13798);
 	if (Settings::ActorTypeAnimal == nullptr) {
-		loginfo("[INIT] Couldn't find ActorTypeAnimal Keyword in game.");
+		logwarn("[INIT] Couldn't find ActorTypeAnimal Keyword in game.");
 	}
 	Settings::ActorTypeNPC = RE::TESForm::LookupByID<RE::BGSKeyword>(0x13794);
 	if (Settings::ActorTypeNPC == nullptr) {
-		loginfo("[INIT] Couldn't find ActorTypeNPC Keyword in game.");
+		logwarn("[INIT] Couldn't find ActorTypeNPC Keyword in game.");
 	}
 	Settings::Vampire = RE::TESForm::LookupByID<RE::BGSKeyword>(0xA82BB);
 	if (Settings::Vampire == nullptr) {
-		loginfo("[INIT] Couldn't find Vampire Keyword in game.");
+		logwarn("[INIT] Couldn't find Vampire Keyword in game.");
 	}
 
 	Settings::AlchemySkillBoosts = RE::TESForm::LookupByID<RE::BGSPerk>(0xA725C);
 	if (Settings::AlchemySkillBoosts == nullptr)
-		loginfo("[INIT] Couldn't find AlchemySkillBoosts Perk in game.");
+		logwarn("[INIT] Couldn't find AlchemySkillBoosts Perk in game.");
 	Settings::PerkSkillBoosts = RE::TESForm::LookupByID<RE::BGSPerk>(0xCF788);
 	if (Settings::PerkSkillBoosts == nullptr)
-		loginfo("[INIT] Couldn't find PerkSkillBoosts Perk in game.");
+		logwarn("[INIT] Couldn't find PerkSkillBoosts Perk in game.");
 
 	Distribution::initialised = true;
 
@@ -2987,6 +2984,7 @@ void Settings::CheckForPluginsWithoutRules()
 		std::unordered_map<std::string, std::set<std::pair<RE::Actor*, std::string>>*> pluginsWithoutActorRules;
 		std::unordered_map<std::string, std::set<std::pair<RE::TESNPC*, std::string>>*> pluginsWithoutNPCRules;
 		std::unordered_map<std::string, std::set<std::pair<RE::AlchemyItem*, std::string>>*> potionsWithoutRules;
+		std::unordered_map<std::string, std::set<std::pair<RE::TESRace*, std::string>>*> racesWithoutRules;
 
 		const auto& [hashtable, lock] = RE::TESForm::GetAllFormsByEditorID();
 		{
@@ -3084,6 +3082,30 @@ void Settings::CheckForPluginsWithoutRules()
 									potionsWithoutRules.insert_or_assign(pluginName, set);
 								}
 							}
+						} else if (auto race = form->As<RE::TESRace>(); race) {
+							if (Distribution::excludedAssoc()->contains(race->GetFormID()) == false && 
+								Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(race)) &&
+								Distribution::baselineExclusions()->contains(race->GetFormID()) == false &&
+								Distribution::hardExclusions()->contains(race->GetFormID()) == false &&
+								Distribution::whitelistNPCs()->contains(race->GetFormID()) == false &&
+								Distribution::assocMap()->contains(race->GetFormID()) == false &&
+								Distribution::hardExclusionsPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(race)) == false) {
+								// lookup plugin of the race
+								{
+									index = Utility::Mods::GetPluginIndex(race);
+									if (index == MAXUINT32) {
+										continue;
+									}
+									pluginName = Utility::Mods::GetPluginName(index);
+								}
+								if (auto itr = racesWithoutRules.find(pluginName); itr != racesWithoutRules.end()) {
+									itr->second->insert(std::pair<RE::TESRace*, std::string>{ race, id });
+								} else {
+									std::set<std::pair<RE::TESRace*, std::string>>* set = new std::set<std::pair<RE::TESRace*, std::string>>();
+									set->insert(std::pair<RE::TESRace*, std::string>{ race, id });
+									racesWithoutRules.insert_or_assign(pluginName, set);
+								}
+							}
 						}
 					}
 				}
@@ -3118,6 +3140,18 @@ void Settings::CheckForPluginsWithoutRules()
 		out << "Plugins without potion exclusion / whitelist";
 		for (auto& [plugin, set] : potionsWithoutRules)
 		{
+			out << "\n\n";
+			out << ";;;;;" << plugin << ";;;;;\n";
+			out << "\n";
+			for (auto& pair : *set) {
+				out << "; " << std::get<1>(pair) << "\n";
+				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+			}
+		}
+
+		out << "\n\n\n";
+		out << "Plugins without race exclusion / whitelist";
+		for (auto& [plugin, set] : racesWithoutRules) {
 			out << "\n\n";
 			out << ";;;;;" << plugin << ";;;;;\n";
 			out << "\n";

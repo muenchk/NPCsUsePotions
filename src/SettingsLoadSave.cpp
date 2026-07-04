@@ -415,12 +415,6 @@ void Settings::Load()
 
 			Settings::debug._CalculateCellRules = ini.GetBoolValue("Debug", "CalculateCellRules", Settings::debug._CalculateCellRules);
 			loginfo("Setting: {} {}", "Debug:             CalculateCellRules", std::to_string(Settings::debug._CalculateCellRules));
-			Settings::debug._Test = ini.GetBoolValue("Debug", "CalculateAllCellOnStartup", Settings::debug._Test);
-			loginfo("Setting: {} {}", "Debug:             CalculateAllCellOnStartup", std::to_string(Settings::debug._Test));
-			if (Settings::debug._CalculateCellRules && Settings::debug._Test == false) {
-				std::ofstream out("Data\\SKSE\\Plugins\\NPCsUsePotions\\NPCsUsePotions_CellCalculation.csv", std::ofstream::out);
-				out << "CellName;RuleApplied;PluginRef;ActorName;ActorBaseID;ReferenceID;RaceEditorID;RaceID;Cell;Factions\n";
-			}
 
 			Settings::debug._CompatibilityRemoveItemsBeforeDist = ini.GetBoolValue("Debug", "RemoveItemsBeforeDist", Settings::debug._CompatibilityRemoveItemsBeforeDist);
 			loginfo("Setting: {} {}", "Debug:             RemoveItemsBeforeDist", std::to_string(Settings::debug._CompatibilityRemoveItemsBeforeDist));
@@ -696,8 +690,6 @@ void Settings::Save()
 		"// Find plugins and potions without rules");
 	ini.SetBoolValue("Debug", "CalculateCellRules", Settings::debug._CalculateCellRules, "// When entering a new cell in game, all distribution rules are calculatet once.\n"
 																				"// The result of the evaluation is written to a csv file, for rule debugging");
-	ini.SetBoolValue("Debug", "CalculateAllCellOnStartup", Settings::debug._Test, "// 10 seconds after loading a save game the function for \"CalculateCellRules\" \n"
-																			"// is applied to all cells in the game");
 
 	ini.SetBoolValue("Debug", "RemoveItemsBeforeDist", Settings::debug._CompatibilityRemoveItemsBeforeDist, "// Removes all distributables items from npcs before distributing new items.");
 	ini.SetBoolValue("Debug", "RemoveItemsStartup", Settings::debug._CompatibilityRemoveItemsStartup, "// Removes all distributables items from npcs 5 seconds after loading a game");

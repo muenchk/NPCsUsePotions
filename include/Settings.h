@@ -631,10 +631,6 @@ public:
 		/// [Setting] check for plugins with npcs and potions without rules
 		/// </summary>
 		bool _findPluginsAndPotionsWithoutRules = false;
-		/// <summary>
-		/// [Setting] tests the rules assigned to actors for all cells in game
-		/// </summary>
-		bool _Test = false;
 	};
 
 	static inline Debug debug;

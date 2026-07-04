@@ -30,7 +30,6 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp"
 	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Settings.cpp"
 	"${SOURCE_DIR}/BufferOperations.cpp"
-	"${SOURCE_DIR}/Tests.cpp"
 	"${SOURCE_DIR}/VM.cpp" )
 
 

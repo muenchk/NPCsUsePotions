@@ -176,6 +176,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	profile(__func__, std::chrono::steady_clock::now(), "{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	logusage("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 	logexcl("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
+	logdistr("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
 

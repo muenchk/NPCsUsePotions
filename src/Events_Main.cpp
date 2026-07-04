@@ -12,7 +12,6 @@
 #include "Logging.h"
 #include "Settings.h"
 #include "Utility.h"
-#include "Tests.h"
 #include "BufferOperations.h"
 #include "Statistics.h"
 
@@ -814,14 +813,6 @@ CheckActorsSkipIteration:
 		/// </summary>
 		static std::thread* testhandler = nullptr;
 		static std::thread* removeitemshandler = nullptr;
-
-		if (Settings::debug._Test) {
-			if (testhandler == nullptr) {
-				testhandler = new std::thread(Tests::TestAllCells);
-				testhandler->detach();
-				LOG_1("Started TestHandler");
-			}
-		}
 
 		if (Settings::debug._CompatibilityRemoveItemsStartup) {
 			if (removeitemshandler == nullptr) {
