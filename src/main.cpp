@@ -1,14 +1,14 @@
-#include "AlchemyEffect.h"
 #include "Hooks.h"
 #include "Events.h"
 #include "Settings.h"
 #include "Console.h"
-#include "Game.h"
 #include "NUPInterface.h"
 #include "DataStorage.h"
 #include "ActorManipulation.h"
 #include "Compatibility.h"
 #include "Papyrus.h"
+
+#include "UI/UIMonitorActorsWindow.h"
 
 #include <string>
 //#include <ShlObj_core.h>
@@ -103,6 +103,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 {
+	LibSUtils::LibSUtilsSetup::MessageHandler(a_msg);
 	StartProfiling;
 	switch (a_msg->type) {
 	case SKSE::MessagingInterface::kPreLoadGame:
@@ -153,6 +154,12 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg)
 		loginfo("Registered Console Commands");
 		if (Settings::debug._findPluginsAndPotionsWithoutRules)
 			Settings::CheckForPluginsWithoutRules();
+
+		if (Data::libUI) {
+			NPCsUsePotions::UserInterface::ActorMonitor::GetSingleton()->Register();
+		} else {
+		}
+
 		PROF_1(TimeProfiling, "DataLoad execution time.");
 		break;
 	case SKSE::MessagingInterface::kPostLoad:
@@ -201,6 +208,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	SKSE::GetPapyrusInterface()->Register(Papyrus::Register);
 
 	Hooks::InstallHooks();
+	LibSUtilsSetup::InstallHooks();
 
 	return true;
 }

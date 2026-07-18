@@ -8,11 +8,8 @@
 #include "ActorManipulation.h"
 #include "Distribution.h"
 #include "Events.h"
-#include "Game.h"
-#include "Logging.h"
 #include "Settings.h"
 #include "Utility.h"
-#include "BufferOperations.h"
 #include "Statistics.h"
 
 namespace Events
@@ -39,17 +36,17 @@ namespace Events
 	{
 		if (!acinfo->IsValid())
 			return;
-		if (acinfo->GetDurHealth() >= 0)
+		//if (acinfo->GetDurHealth() >= 0)
 			acinfo->DecDurHealth(Settings::system._cycletime);
-		if (acinfo->GetDurMagicka() >= 0)
+		//if (acinfo->GetDurMagicka() >= 0)
 			acinfo->DecDurMagicka(Settings::system._cycletime);
-		if (acinfo->GetDurStamina() >= 0)
+		//if (acinfo->GetDurStamina() >= 0)
 			acinfo->DecDurStamina(Settings::system._cycletime);
-		if (acinfo->GetDurFortify() >= 0)
+		//if (acinfo->GetDurFortify() >= 0)
 			acinfo->DecDurFortify(Settings::system._cycletime);
-		if (acinfo->GetDurRegeneration() >= 0)
+		//if (acinfo->GetDurRegeneration() >= 0)
 			acinfo->DecDurRegeneration(Settings::system._cycletime);
-		if (acinfo->GetGlobalCooldownTimer() >= 0)
+		//if (acinfo->GetGlobalCooldownTimer() >= 0)
 			acinfo->DecGlobalCooldownTimer(Settings::system._cycletime);
 	}
 
@@ -98,7 +95,7 @@ namespace Events
 			// do the first round
 			if (alch != 0 && (Settings::potions._UsePotionChance == 100 || rand100(rand) < Settings::potions._UsePotionChance)) {
 				LOG_3("Find Potion with effects {}", alch.string());
-				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, alch, false);
+				auto const& [dur, eff, mag] = ACM::ActorUsePotion(acinfo, alch, false);
 				LOG_2("used potion with duration {}, magnitude {} and Alchemy Effect {}", dur, mag, Utility::ToString(eff));
 				// check if we have a valid effect
 				if (eff != AlchemicEffect::kNone) {
@@ -142,7 +139,7 @@ namespace Events
 				}
 
 				LOG_4("check for fortify potion with effect {}", effects.string());
-				auto const& [dur, eff, mag, ls] = ACM::ActorUsePotion(acinfo, effects, true);
+				auto const& [dur, eff, mag] = ACM::ActorUsePotion(acinfo, effects, true);
 				if (dur != -1) {
 					acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
 					CalcActorCooldowns(acinfo, eff, dur);
@@ -422,7 +419,7 @@ namespace Events
 
 		if (acinfo->IsInCombat()) {
 			// increase time spent in combat
-			acinfo->IncDurCombat(1000);
+			acinfo->IncDurCombat(Settings::system._cycletime);
 		} else {
 			// reset time spent in combat
 			acinfo->SetDurCombat(0);
@@ -515,6 +512,8 @@ namespace Events
 		// validate actorsets
 		std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>> actors;
 		ValidateActorSets(actors);
+
+		_lastActorsUpdate = std::chrono::steady_clock::now();
 
 		LOG_1("Validated {} Actors", std::to_string(actors.size()));
 
@@ -864,7 +863,7 @@ CheckActorsSkipIteration:
 		InitializeCompatibilityObjects();
 
 		// get the MCM quest and start it if its not running
-		if (Utility::Mods::GetPluginIndex("NPCsUsePotions.esp") != 0x1) {
+		if (Mods::GetPluginIndex("NPCsUsePotions.esp") != MAXUINT32) {
 			RE::TESForm* form = Data::GetSingleton()->FindForm(0x800, "NPCsUsePotions.esp");
 			if (form) {
 				RE::TESQuest* q = form->As<RE::TESQuest>();
@@ -931,8 +930,8 @@ CheckActorsSkipIteration:
 		{
 			if (RE::Actor* actor = handle.get().get(); actor != nullptr) {
 				RE::FormID id = actor->GetFormID();
-				uint32_t formid = Utility::Mods::GetIndexLessFormID(id);
-				std::string pluginname = Utility::Mods::GetPluginNameFromID(id);
+				uint32_t formid = Mods::GetIndexLessFormID(id);
+				std::string pluginname = Mods::GetPluginNameFromID(id);
 				if (a_intfc->OpenRecord('EDID', 0)) {
 					// get entry length
 					int length = 4 + Buffer::CalcStringLength(pluginname);
@@ -945,7 +944,7 @@ CheckActorsSkipIteration:
 						continue;
 					}
 					// fill buffer
-					int offset = 0;
+					size_t offset = 0;
 					Buffer::Write(id, buffer, offset);
 					Buffer::Write(pluginname, buffer, offset);
 					// write record
@@ -969,7 +968,7 @@ CheckActorsSkipIteration:
 		unsigned char* buffer = new unsigned char[length];
 		a_intfc->ReadRecordData(buffer, length);
 		if (length >= 12) {
-			int offset = 0;
+			size_t offset = 0;
 			uint32_t formid = Buffer::ReadUInt32(buffer, offset);
 			std::string pluginname = Buffer::ReadString(buffer, offset);
 			RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formid, pluginname);

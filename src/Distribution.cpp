@@ -1404,9 +1404,9 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 		// only view them as excluded from handling if they are either excluded themselves, or their race is excluded
 		if (Distribution::excludedNPCs()->contains(id))
 			return true;
-		if (Distribution::excludedPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(actor)))
+		if (Distribution::excludedPlugins_NPCs()->contains(Mods::GetPluginIndex(actor)))
 			return true;
-		if ((Utility::Mods::GetPluginIndex(actor) == MAXUINT32 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID)))
+		if ((Mods::GetPluginIndex(actor) == MAXUINT32 && Distribution::excludedPlugins_NPCs()->contains(Utility::ExtractTemplateInfo(actor->GetActorBase()).pluginID)))
 			return true;
 		if (actor->GetActorBase() && Distribution::excludedNPCs()->contains(id.GetOriginalID()))
 			return true;
@@ -1487,7 +1487,7 @@ bool Distribution::ForceExcludeNPC(uint32_t actorid)
 	return true;
 }
 
-Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, Misc::NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
+Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, UtilityBase::NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
 	if (Settings::distr._GameDifficultyScaling) {
@@ -1910,13 +1910,13 @@ bool CheckDistributability(std::shared_ptr<ActorInfo> const& acinfo, Distributio
 	return distr;
 }
 
-Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& acinfo, Misc::NPCTPLTInfo* tpltinfo)
+Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& acinfo, UtilityBase::NPCTPLTInfo* tpltinfo)
 {
 	StartProfiling;
 	if (acinfo == nullptr || acinfo->IsValid() == false)
 		return emptyRule;
 	// get npc template info
-	Misc::NPCTPLTInfo tplt;
+	UtilityBase::NPCTPLTInfo tplt;
 	if (tpltinfo == nullptr) {
 		tplt = Utility::ExtractTemplateInfo(acinfo->GetActor());
 		tpltinfo = &tplt;

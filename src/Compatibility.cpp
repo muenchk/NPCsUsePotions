@@ -2,7 +2,6 @@
 
 #include "Compatibility.h"
 #include "Data.h"
-#include "Game.h"
 #include "Utility.h"
 
 Compatibility* Compatibility::GetSingleton()
@@ -21,22 +20,24 @@ void Compatibility::Load()
 	RE::TESDataHandler* datahandler = RE::TESDataHandler::GetSingleton();
 
 	// NPCsUsePotions
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(NPCsUsePotions); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(NPCsUsePotions); index != MAXUINT32) {
 		LOG_1("Found plugin NPCsUsePotions.esp.");
 		_loadedNPCsUsePotions = true;
 
 		NUP_IgnoreItem = datahandler->LookupForm<RE::BGSKeyword>(0xD64, NPCsUsePotions);
 		NUP_ExcludeItem = datahandler->LookupForm<RE::BGSKeyword>(0xD65, NPCsUsePotions);
+		LOG_1("[NUP] {}", Utility::PrintForm(NUP_IgnoreItem));
+		LOG_1("[NUP] {}", Utility::PrintForm(NUP_ExcludeItem));
 	}
 
 	// apothecary
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Apothecary); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(Apothecary); index != MAXUINT32) {
 		LOG_1("Found plugin Apothecary.esp.");
 		_loadedApothecary = true;
 	}
 
 	// gourmet
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Gourmet); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(Gourmet); index != MAXUINT32) {
 		LOG_1("Found plugin Gourmet.esp.");
 		Gour_FoodTypeAle = datahandler->LookupForm<RE::BGSKeyword>(0xA4B, Gourmet);
 		Gour_FoodTypeWine = datahandler->LookupForm<RE::BGSKeyword>(0xA4C, Gourmet);
@@ -53,7 +54,7 @@ void Compatibility::Load()
 	}
 
 	// caco
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(CACO); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(CACO); index != MAXUINT32) {
 		LOG_1("Found plugin Complete Alchemy & Cooking Overhaul.esp");
 		CACO_VendorItemDrinkAlcohol = RE::TESForm::LookupByID<RE::BGSKeyword>(0x01AF101A);
 		LOG_1("[CACO] {}", Utility::PrintForm(CACO_VendorItemDrinkAlcohol));
@@ -65,11 +66,11 @@ void Compatibility::Load()
 	// animated poisons
 
 	// search for AnimatedPoisons.esp
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPoisons); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(AnimatedPoisons); index != MAXUINT32) {
 		AnPois_Version = 32;
 		LOG_1("Found plugin AnimatedPoisons.esp.");
 	}
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPoisons_5); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(AnimatedPoisons_5); index != MAXUINT32) {
 		AnPois_Version = 50;
 		LOG_1("Found plugin Animated Poisons.esp.");
 	}
@@ -224,11 +225,11 @@ void Compatibility::Load()
 	// animated potions
 
 	// search for AnimatedPotions.esp
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPotions_4_4); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(AnimatedPotions_4_4); index != MAXUINT32) {
 		AnPoti_Version = 44;
 		loginfo("Found plugin Animated Potions.esp and activated compatibility mode");
 	}
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(AnimatedPotions_4_3); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(AnimatedPotions_4_3); index != MAXUINT32) {
 		AnPoti_Version = 43;
 		loginfo("Found plugin AnimatedPotions.esp and activated compatibility mode");
 	}
@@ -252,7 +253,7 @@ void Compatibility::Load()
 	}
 
 	// ZUPA
-	if (Utility::Mods::GetPluginIndex("zxlice's ultimate potion animation.esp") != MAXUINT32)
+	if (Mods::GetPluginIndex("zxlice's ultimate potion animation.esp") != MAXUINT32)
 		_loadedZUPA = true;
 
 	// Sacrosanct
@@ -294,13 +295,13 @@ void Compatibility::Load()
 		loginfo("[INIT] Couldn't find ConcPoison Perk in game.");
 
 	// ordinator
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Ordinator); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(Ordinator); index != MAXUINT32) {
 		LOG_1("Found plugin Ordinator - Perks of Skyrim.esp.");
 		_loadedOrdinator = true;
 	}
 
 	// vokrii
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Vokrii); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(Vokrii); index != MAXUINT32) {
 		LOG_1("Found plugin Vokrii - Minimalistic Perks of Skyrim.esp.");
 		_loadedVokrii = true;
 		ConcPoison2 = datahandler->LookupForm<RE::BGSPerk>(0x3120F8, Vokrii);
@@ -308,7 +309,7 @@ void Compatibility::Load()
 	}
 
 	// adamant
-	if (const uint32_t index = Utility::Mods::GetPluginIndex(Adamant); index != MAXUINT32) {
+	if (const uint32_t index = Mods::GetPluginIndex(Adamant); index != MAXUINT32) {
 		LOG_1("Found plugin Adamant.esp.");
 		_loadedAdamant = true;
 	}

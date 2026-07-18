@@ -154,6 +154,11 @@ namespace Events
 		/// </summary>
 		static inline std::chrono::steady_clock::time_point _lastcyclebegin = std::chrono::steady_clock::now();
 
+		/// <summary>
+		/// time when mods main actor handling has last been run
+		/// </summary>
+		static inline std::chrono::steady_clock::time_point _lastActorsUpdate = std::chrono::steady_clock::now();
+
 		//-----------------CheckActors-----------------------
 
 		/// <summary>
@@ -465,6 +470,18 @@ namespace Events
 		/// </summary>
 		/// <param name="alch"></param>
 		static void AdjustPlayerCooldowns(RE::AlchemyItem* alch);
+
+		/// <summary>
+		/// Returns all registered actors
+		/// </summary>
+		/// <param name="actors"></param>
+		static void GetActors(std::set<std::shared_ptr<ActorInfo>>& actors);
+
+		/// <summary>
+		/// Returns the time of the last check actors cycle
+		/// </summary>
+		/// <returns></returns>
+		static std::chrono::steady_clock::time_point GetLastActorsUpdateTime();
 
 		//-------------------GameFunctions-------------------------
 

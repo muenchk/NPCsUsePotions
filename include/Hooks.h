@@ -1,5 +1,4 @@
 #pragma once
-#include "Logging.h"
 namespace Hooks
 {
 

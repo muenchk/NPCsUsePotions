@@ -1,7 +1,5 @@
-#include "Game.h"
 #include "Hooks.h"
 #include "Events.h"
-#include "Logging.h"
 
 namespace Hooks
 {

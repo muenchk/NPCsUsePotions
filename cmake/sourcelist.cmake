@@ -1,0 +1,26 @@
+set(SOURCE_FILES
+	"${SOURCE_DIR}/ActorInfo.cpp"
+	"${SOURCE_DIR}/ActorManipulation.cpp"
+	"${SOURCE_DIR}/Console.cpp"
+	"${SOURCE_DIR}/Compatibility.cpp" 
+	"${SOURCE_DIR}/DataStorage.cpp"
+	"${SOURCE_DIR}/Data.cpp" 
+	"${SOURCE_DIR}/Distribution.cpp"
+	"${SOURCE_DIR}/Events.cpp"
+	"${SOURCE_DIR}/Events_Main.cpp"
+	"${SOURCE_DIR}/Events_Main_Support.cpp"
+	"${SOURCE_DIR}/Hooks.cpp"
+	"${SOURCE_DIR}/ID.cpp"	
+	"${SOURCE_DIR}/main.cpp"
+	"${SOURCE_DIR}/NUPInterface.cpp"
+	"${SOURCE_DIR}/Papyrus.cpp" 
+	"${SOURCE_DIR}/PCH.h"
+	"${SOURCE_DIR}/Settings.cpp"
+	"${SOURCE_DIR}/SettingsLoadSave.cpp"
+	"${SOURCE_DIR}/Utility.cpp"
+
+	"${SOURCE_DIR}/UI/UIMonitorActorsWindow.cpp"
+
+	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp" 
+	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp"
+	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Settings.cpp" )

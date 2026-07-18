@@ -2,12 +2,22 @@
   "name": "example",
   "version": "1",
   "dependencies": [
+    "directxtex",
+    "freetype",
+    "glaze",
     "boost-stl-interfaces",
     "boost-unordered",
     "boost-bimap",
     "rsm-binary-io",
+    "nlohmann-json",
     "spdlog",
     "rapidcsv",
-    "xbyak"
+    "xbyak",
+    "stb",
+    "lunasvg",
+    {
+      "name": "imgui",
+      "features": [ "dx11-binding", "win32-binding", "freetype", "wchar32" ]
+    }
   ]
 }

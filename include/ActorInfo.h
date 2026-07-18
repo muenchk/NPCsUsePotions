@@ -1,7 +1,6 @@
 #include "NUPInterface.h"
-#include "CustomItem.h"
-#include "AlchemyEffect.h"
 #include "ID.h"
+#include "CustomItem.h"
 
 #include <mutex>
 #include <memory>
@@ -152,7 +151,7 @@ private:
 	/// <summary>
 	/// form id of the actor
 	/// </summary>
-	ID formid;
+	ActorID formid;
 	/// <summary>
 	/// pluginname the actor is defined in
 	/// </summary>
@@ -882,7 +881,7 @@ public:
 	/// <param name="buffer">buffer to write to</param>
 	/// <param name="offset">offset at which writing will begin</param>
 	/// <returns>Whether the data was successfully written</returns>
-	bool WriteData(unsigned char* buffer, int offset);
+	bool WriteData(unsigned char* buffer, size_t offset);
 	/// <summary>
 	/// Reads the object information from the given data
 	/// </summary>
@@ -890,7 +889,7 @@ public:
 	/// <param name="offset">offset in the buffer where the read operation will begin</param>
 	/// <param name="length">maximal length to read</param>
 	/// <returns>Whether the read operation was successful</returns>
-	bool ReadData(unsigned char* buffer, int offset, int length);
+	bool ReadData(unsigned char* buffer, size_t offset, size_t length);
 
 	/// <summary>
 	/// Updates the actor and whether the ActorInfo is valid

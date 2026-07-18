@@ -14,7 +14,6 @@
 #include <unordered_map>
 #include "ActorManipulation.h"
 #include "Distribution.h"
-#include "AlchemyEffect.h"
 #include "Data.h"
 #include "Compatibility.h"
 
@@ -143,6 +142,7 @@ void Settings::ResetDistrConfig()
 	Distribution::_hardExclusions_Plugins_NPCs.clear();
 	Distribution::_whitelistNPCs.clear();
 	Distribution::_whitelistNPCsPlugin.clear();
+	Distribution::_knownRaces.clear();
 	Distribution::_alcohol.clear();
 	Distribution::_magicEffectAlchMap.clear();
 	for (auto [_, cat] : Distribution::_internEffectCategories)
@@ -312,13 +312,15 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
-										if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
-											std::get<0>(items[i]) & Distribution::AssocType::kNPC ||
-											std::get<0>(items[i]) & Distribution::AssocType::kFaction ||
-											std::get<0>(items[i]) & Distribution::AssocType::kKeyword ||
-											std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
+										if (std::get<0>(items[i]) & AssocType::kActor ||
+											std::get<0>(items[i]) & AssocType::kNPC ||
+											std::get<0>(items[i]) & AssocType::kFaction ||
+											std::get<0>(items[i]) & AssocType::kKeyword ||
+											std::get<0>(items[i]) & AssocType::kRace) {
 											Distribution::_bosses.insert(std::get<1>(items[i]));
 											LOGL_2("declared {} as boss.", Utility::GetHex(std::get<1>(items[i])));
 										} else {
@@ -339,36 +341,38 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kActor:
-										case Distribution::AssocType::kNPC:
+										case AssocType::kActor:
+										case AssocType::kNPC:
 											Distribution::_excludedNPCs.insert(std::get<1>(items[i]));
 											break;
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kKeyword:
-										case Distribution::AssocType::kRace:
-										case Distribution::AssocType::kEffectSetting:
+										case AssocType::kFaction:
+										case AssocType::kKeyword:
+										case AssocType::kRace:
+										case AssocType::kEffectSetting:
 											Distribution::_excludedAssoc.insert(std::get<1>(items[i]));
 											break;
-										case Distribution::AssocType::kItem:
+										case AssocType::kItem:
 											Distribution::_excludedItems.insert(std::get<1>(items[i]));
 											break;
 										}
 										if (Logging::EnableLoadLog) {
-											if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
-												std::get<0>(items[i]) & Distribution::AssocType::kNPC) {
+											if (std::get<0>(items[i]) & AssocType::kActor ||
+												std::get<0>(items[i]) & AssocType::kNPC) {
 												LOGL_2("excluded actor {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kFaction) {
+											} else if (std::get<0>(items[i]) & AssocType::kFaction) {
 												LOGL_2("excluded faction {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kKeyword) {
+											} else if (std::get<0>(items[i]) & AssocType::kKeyword) {
 												LOGL_2("excluded keyword {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
+											} else if (std::get<0>(items[i]) & AssocType::kItem) {
 												LOGL_2("excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+											} else if (std::get<0>(items[i]) & AssocType::kRace) {
 												LOGL_2("excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kEffectSetting) {
+											} else if (std::get<0>(items[i]) & AssocType::kEffectSetting) {
 												LOGL_2("excluded magic effect {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
 											else
@@ -392,22 +396,24 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kKeyword:
-										case Distribution::AssocType::kRace:
+										case AssocType::kFaction:
+										case AssocType::kKeyword:
+										case AssocType::kRace:
 											Distribution::_baselineExclusions.insert(std::get<1>(items[i]));
 											break;
 										}
 
 										if (Logging::EnableLoadLog) {
-											if (std::get<0>(items[i]) & Distribution::AssocType::kFaction) {
+											if (std::get<0>(items[i]) & AssocType::kFaction) {
 												LOGL_2("excluded faction {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kKeyword) {
+											} else if (std::get<0>(items[i]) & AssocType::kKeyword) {
 												LOGL_2("excluded keyword {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+											} else if (std::get<0>(items[i]) & AssocType::kRace) {
 												LOGL_2("excluded race {} from base line distribution.", Utility::GetHex(std::get<1>(items[i])));
 											}
 											else
@@ -436,19 +442,21 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID,RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID,RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kItem:
+										case AssocType::kItem:
 											Distribution::_whitelistItems.insert(std::get<1>(items[i]));
 											break;
-										case Distribution::AssocType::kNPC:
-										case Distribution::AssocType::kActor:
-										case Distribution::AssocType::kClass:
-										case Distribution::AssocType::kCombatStyle:
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kKeyword:
-										case Distribution::AssocType::kRace:
+										case AssocType::kNPC:
+										case AssocType::kActor:
+										case AssocType::kClass:
+										case AssocType::kCombatStyle:
+										case AssocType::kFaction:
+										case AssocType::kKeyword:
+										case AssocType::kRace:
 											Distribution::_whitelistNPCs.insert(std::get<1>(items[i]));
 											if (Logging::EnableLoadLog) {
 												LOGL_2("whitelisted object {}.", Utility::GetHex(std::get<1>(items[i])));
@@ -459,9 +467,9 @@ void Settings::LoadDistrConfig()
 											break;
 										}
 										if (Logging::EnableLoadLog) {
-											if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
+											if (std::get<0>(items[i]) & AssocType::kItem) {
 												LOGL_2("whitelisted item {}.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+											} else if (std::get<0>(items[i]) & AssocType::kRace) {
 											}
 										}
 									}
@@ -485,13 +493,13 @@ void Settings::LoadDistrConfig()
 									bool error = false;
 									bool errorcustom = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> assocobj = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> assocobj = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									
 									// parse items associated
 									assoc = splits->at(splitindex);
 									splitindex++;
 									error = false;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> associtm = Utility::ParseCustomObjects(assoc, errorcustom, file, tmp);
+									std::vector<std::tuple<AssocType, RE::FormID, int32_t, CustomItemFlag, int8_t, bool, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, std::vector<std::tuple<uint64_t, uint32_t, std::string>>, bool>> associtm = Utility::ParseCustomObjects(assoc, errorcustom, file, tmp);
 									RE::TESForm* tmpf = nullptr;
 									RE::TESBoundObject* tmpb = nullptr;
 									RE::AlchemyItem* alch = nullptr;
@@ -500,7 +508,7 @@ void Settings::LoadDistrConfig()
 										tmpf = nullptr;
 										tmpb = nullptr;
 										switch (std::get<0>(associtm[i])) {
-										case Distribution::AssocType::kItem:
+										case AssocType::kItem:
 											{
 												tmpf = RE::TESForm::LookupByID(std::get<1>(associtm[i]));
 												if (tmpf) {
@@ -614,14 +622,16 @@ void Settings::LoadDistrConfig()
 									int cx = 0;
 									// now parse associations
 									for (int i = 0; i < assocobj.size(); i++) {
+										if (std::get<2>(assocobj[i]) == nullptr)
+											continue;
 										switch (std::get<0>(assocobj[i])) {
-										case Distribution::AssocType::kActor:
-										case Distribution::AssocType::kNPC:
-										case Distribution::AssocType::kClass:
-										case Distribution::AssocType::kCombatStyle:
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kKeyword:
-										case Distribution::AssocType::kRace:
+										case AssocType::kActor:
+										case AssocType::kNPC:
+										case AssocType::kClass:
+										case AssocType::kCombatStyle:
+										case AssocType::kFaction:
+										case AssocType::kKeyword:
+										case AssocType::kRace:
 											citems->assocobjects.insert(std::get<1>(assocobj[i]));
 											auto iter = Distribution::_customItems.find(std::get<1>(assocobj[i]));
 											if (iter != Distribution::_customItems.end())
@@ -637,13 +647,13 @@ void Settings::LoadDistrConfig()
 											}
 										}
 										if (Logging::EnableLoadLog) {
-											if (std::get<0>(assocobj[i]) & Distribution::AssocType::kKeyword) {
-											} else if (std::get<0>(assocobj[i]) & Distribution::AssocType::kRace) {
-											} else if (std::get<0>(assocobj[i]) & Distribution::AssocType::kFaction) {
-											} else if (std::get<0>(assocobj[i]) & Distribution::AssocType::kCombatStyle) {
-											} else if (std::get<0>(assocobj[i]) & Distribution::AssocType::kClass) {
-											} else if (std::get<0>(assocobj[i]) & Distribution::AssocType::kActor || 
-													   std::get<0>(assocobj[i]) & Distribution::AssocType::kNPC) {
+											if (std::get<0>(assocobj[i]) & AssocType::kKeyword) {
+											} else if (std::get<0>(assocobj[i]) & AssocType::kRace) {
+											} else if (std::get<0>(assocobj[i]) & AssocType::kFaction) {
+											} else if (std::get<0>(assocobj[i]) & AssocType::kCombatStyle) {
+											} else if (std::get<0>(assocobj[i]) & AssocType::kClass) {
+											} else if (std::get<0>(assocobj[i]) & AssocType::kActor || 
+													   std::get<0>(assocobj[i]) & AssocType::kNPC) {
 											}
 										}
 										LOGL_2("attached custom rule to specific objects");
@@ -675,7 +685,7 @@ void Settings::LoadDistrConfig()
 									}
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
-									uint32_t index = Utility::Mods::GetPluginIndex(plugin);
+									uint32_t index = Mods::GetPluginIndex(plugin);
 
 									if (index != 0x1) {
 										// index is a normal mod
@@ -701,7 +711,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									ItemStrength str = ItemStrength::kWeak;
 									// arse item strength
 									try {
@@ -721,8 +731,10 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kItem:
+										case AssocType::kItem:
 											Distribution::_itemStrengthMap.insert_or_assign(std::get<1>(items[i]), str);
 											LOGL_2("set item strength {}.", Utility::GetHex(std::get<1>(items[i])));
 											break;
@@ -748,7 +760,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									int str = 0;
 									// arse item strength
 									try {
@@ -768,12 +780,14 @@ void Settings::LoadDistrConfig()
 									}
 									if (str != 0) {
 										for (int i = 0; i < items.size(); i++) {
+											if (std::get<2>(items[i]) == nullptr)
+												continue;
 											switch (std::get<0>(items[i])) {
-											case Distribution::AssocType::kActor:
-											case Distribution::AssocType::kNPC:
-											case Distribution::AssocType::kFaction:
-											case Distribution::AssocType::kKeyword:
-											case Distribution::AssocType::kRace:
+											case AssocType::kActor:
+											case AssocType::kNPC:
+											case AssocType::kFaction:
+											case AssocType::kKeyword:
+											case AssocType::kRace:
 												Distribution::_actorStrengthMap.insert_or_assign(std::get<1>(items[i]), str);
 												LOGL_2("set relative actor strength {}.", Utility::GetHex(std::get<1>(items[i])));
 												break;
@@ -797,7 +811,7 @@ void Settings::LoadDistrConfig()
 									std::string pluginname = splits->at(splitindex);
 									splitindex++;
 									bool error = false;
-									auto forms = Utility::Mods::GetFormsInPlugin<RE::AlchemyItem>(pluginname);
+									auto forms = Mods::GetFormsInPlugin<RE::AlchemyItem>(pluginname);
 									for (int i = 0; i < forms.size(); i++) {
 										Distribution::_whitelistItems.insert(forms[i]->GetFormID());
 										LOGL_2("whitelisted item. id: {}, name: {}, plugin: {}.", Utility::GetHex(forms[i]->GetFormID()), forms[i]->GetName(), pluginname);
@@ -819,11 +833,12 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
-									for (int i = 0; i < items.size(); i++)
-									{
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kFaction:
+										case AssocType::kFaction:
 											Distribution::_followerFactions.insert(std::get<1>(items[i]));
 											LOGL_2("Whitelisted follower faction {}", std::get<1>(items[i]));
 											break;
@@ -873,9 +888,11 @@ void Settings::LoadDistrConfig()
 									}
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
-										if (std::get<0>(items[i]) == Distribution::AssocType::kItem) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
+										if (std::get<0>(items[i]) == AssocType::kItem) {
 											Distribution::_dosageItemMap.insert_or_assign(std::get<1>(items[i]), std::tuple<bool, bool, int>{ enforce, setting, dosage });
 											LOGL_2("Set dosage for item: {}.", std::get<1>(items[i]));
 										}
@@ -973,7 +990,7 @@ void Settings::LoadDistrConfig()
 									}
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
-									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
+									uint32_t plugindex = Mods::GetPluginIndex(plugin);
 									if (plugindex != MAXUINT32) {
 										// valid plugin index
 										Distribution::_excludedPlugins_NPCs.insert(plugindex);
@@ -994,7 +1011,7 @@ void Settings::LoadDistrConfig()
 									}
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
-									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
+									uint32_t plugindex = Mods::GetPluginIndex(plugin);
 									if (plugindex != MAXUINT32) {
 										// valid plugin index
 										Distribution::_whitelistNPCsPlugin.insert(plugindex);
@@ -1016,10 +1033,12 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kItem:
+										case AssocType::kItem:
 											Distribution::_alcohol.insert(std::get<1>(items[i]));
 											LOGL_2("marked {} as alcoholic", Utility::GetHex(std::get<1>(items[i])));
 											break;
@@ -1055,8 +1074,10 @@ void Settings::LoadDistrConfig()
 										int total = 0;
 										auto items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 										for (int i = 0; i < items.size(); i++) {
+											if (std::get<2>(items[i]) == nullptr)
+												continue;
 											switch (std::get<0>(items[i])) {
-											case Distribution::AssocType::kEffectSetting:
+											case AssocType::kEffectSetting:
 												Distribution::_magicEffectAlchMap.insert_or_assign(std::get<1>(items[i]), e);
 												LOGL_2("fixed {} to effect {}", Utility::GetHex(std::get<1>(items[i])), Utility::ToString(e));
 												break;
@@ -1080,11 +1101,13 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kEffectSetting:
-										case Distribution::AssocType::kItem:
+										case AssocType::kEffectSetting:
+										case AssocType::kItem:
 											Distribution::_excludedItemsPlayer.insert(std::get<1>(items[i]));
 											LOGL_2("excluded {} for the player", Utility::GetHex(std::get<1>(items[i])));
 											break;
@@ -1107,10 +1130,12 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kItem:
+										case AssocType::kItem:
 											Distribution::_excludedDistrItems.insert(std::get<1>(items[i]));
 											LOGL_2("excluded {} fro distribution only", Utility::GetHex(std::get<1>(items[i])));
 											break;
@@ -1141,39 +1166,41 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kActor:
-										case Distribution::AssocType::kNPC:
+										case AssocType::kActor:
+										case AssocType::kNPC:
 											Distribution::_excludedNPCs.insert(std::get<1>(items[i]));
 											break;
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kKeyword:
-										case Distribution::AssocType::kRace:
-										case Distribution::AssocType::kEffectSetting:
+										case AssocType::kFaction:
+										case AssocType::kKeyword:
+										case AssocType::kRace:
+										case AssocType::kEffectSetting:
 											Distribution::_excludedAssoc.insert(std::get<1>(items[i]));
 											break;
-										case Distribution::AssocType::kItem:
+										case AssocType::kItem:
 											Distribution::_excludedItems.insert(std::get<1>(items[i]));
 											break;
-										case Distribution::AssocType::kCombatStyle:
-										case Distribution::AssocType::kClass:
+										case AssocType::kCombatStyle:
+										case AssocType::kClass:
 											break;
 										}
 										if (Logging::EnableLoadLog) {
-											if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
-												std::get<0>(items[i]) & Distribution::AssocType::kNPC) {
+											if (std::get<0>(items[i]) & AssocType::kActor ||
+												std::get<0>(items[i]) & AssocType::kNPC) {
 												LOGL_2("excluded actor {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kFaction) {
+											} else if (std::get<0>(items[i]) & AssocType::kFaction) {
 												LOGL_2("excluded faction {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kKeyword) {
+											} else if (std::get<0>(items[i]) & AssocType::kKeyword) {
 												LOGL_2("excluded keyword {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kItem) {
+											} else if (std::get<0>(items[i]) & AssocType::kItem) {
 												LOGL_2("excluded item {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+											} else if (std::get<0>(items[i]) & AssocType::kRace) {
 												LOGL_2("excluded race {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kEffectSetting) {
+											} else if (std::get<0>(items[i]) & AssocType::kEffectSetting) {
 												LOGL_2("excluded magic effect {} from distribution.", Utility::GetHex(std::get<1>(items[i])));
 											} else {
 												LOGL_2("{} has the wrong FormType to be excluded from distribution. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
@@ -1235,32 +1262,34 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									bool error = false;
 									int total = 0;
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
 									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
 										switch (std::get<0>(items[i])) {
-										case Distribution::AssocType::kActor:
-										case Distribution::AssocType::kNPC:
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kKeyword:
-										case Distribution::AssocType::kCombatStyle:
-										case Distribution::AssocType::kClass:
-										case Distribution::AssocType::kRace:
+										case AssocType::kActor:
+										case AssocType::kNPC:
+										case AssocType::kFaction:
+										case AssocType::kKeyword:
+										case AssocType::kCombatStyle:
+										case AssocType::kClass:
+										case AssocType::kRace:
 											Distribution::_hardExclusions.insert(std::get<1>(items[i]));
 											break;
 										}
 										if (Logging::EnableLoadLog) {
-											if (std::get<0>(items[i]) & Distribution::AssocType::kActor ||
-												std::get<0>(items[i]) & Distribution::AssocType::kNPC) {
+											if (std::get<0>(items[i]) & AssocType::kActor ||
+												std::get<0>(items[i]) & AssocType::kNPC) {
 												LOGL_2("excluded actor {} from handling.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kFaction) {
+											} else if (std::get<0>(items[i]) & AssocType::kFaction) {
 												LOGL_2("excluded faction {} from handling.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kKeyword) {
+											} else if (std::get<0>(items[i]) & AssocType::kKeyword) {
 												LOGL_2("excluded keyword {} from handling.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kRace) {
+											} else if (std::get<0>(items[i]) & AssocType::kRace) {
 												LOGL_2("excluded race {} from handling.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kClass) {
+											} else if (std::get<0>(items[i]) & AssocType::kClass) {
 												LOGL_2("excluded class {} from handling.", Utility::GetHex(std::get<1>(items[i])));
-											} else if (std::get<0>(items[i]) & Distribution::AssocType::kCombatStyle) {
+											} else if (std::get<0>(items[i]) & AssocType::kCombatStyle) {
 												LOGL_2("excluded combat style {} from handling.", Utility::GetHex(std::get<1>(items[i])));
 											} else {
 												LOGL_2("{} has the wrong FormType to be excluded from handling. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
@@ -1280,7 +1309,7 @@ void Settings::LoadDistrConfig()
 									}
 									std::string plugin = splits->at(splitindex);
 									splitindex++;
-									uint32_t plugindex = Utility::Mods::GetPluginIndex(plugin);
+									uint32_t plugindex = Mods::GetPluginIndex(plugin);
 									if (plugindex != MAXUINT32) {
 										// valid plugin index
 										Distribution::_hardExclusions_Plugins_NPCs.insert(plugindex);
@@ -1288,6 +1317,37 @@ void Settings::LoadDistrConfig()
 										EXCL("Hard Exclusion Plugin NPCs: {}", plugin);
 									} else {
 										LOGL_2("Rule 17 cannot exclude plugin hard {}. It is either not loaded or not present", plugin);
+									}
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
+
+							case 100: // set race as known so it doesnt show up in rule scans
+								{
+									if (splits->size() != 3) {
+										logwarn("rule has wrong number of fields, expected 3. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string assoc = splits->at(splitindex);
+									splitindex++;
+									bool error = false;
+									int total = 0;
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> items = Utility::ParseAssocObjects(assoc, error, file, tmp, total);
+									for (int i = 0; i < items.size(); i++) {
+										if (std::get<2>(items[i]) == nullptr)
+											continue;
+										switch (std::get<0>(items[i])) {
+										case AssocType::kRace:
+											Distribution::_knownRaces.insert(std::get<1>(items[i]));
+											if (Logging::EnableLoadLog) {
+												LOGL_2("known race {}.", Utility::GetHex(std::get<1>(items[i])));
+											}
+											break;
+										default:
+											LOGL_2("{} has the wrong FormType for known races. file: {}, rule:\"{}\"", Utility::GetHex(std::get<1>(items[i])), file, tmp);
+											break;
+										}
 									}
 									// since we are done delete splits
 									delete splits;
@@ -1609,7 +1669,7 @@ void Settings::LoadDistrConfig()
 									int total = 0;
 
 									// parse the associated objects
-									std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects(assocObjects, error, file, tmp, total);
+									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> objects = Utility::ParseAssocObjects(assocObjects, error, file, tmp, total);
 
 									// parse the item properties
 									rule->potions = new Distribution::EffCategoryPreset();
@@ -1789,12 +1849,14 @@ void Settings::LoadDistrConfig()
 									// assign rules to search parameters
 									LOGL_2("rule {} contains {} associated objects", rule->ruleName, objects.size());
 									for (int i = 0; i < objects.size(); i++) {
+										if (std::get<2>(objects[i]) == nullptr)
+											continue;
 										switch (std::get<0>(objects[i])) {
-										case Distribution::AssocType::kFaction:
-										case Distribution::AssocType::kCombatStyle:
-										case Distribution::AssocType::kClass:
-										case Distribution::AssocType::kRace:
-										case Distribution::AssocType::kKeyword:
+										case AssocType::kFaction:
+										case AssocType::kCombatStyle:
+										case AssocType::kClass:
+										case AssocType::kRace:
+										case AssocType::kKeyword:
 											if (auto item = Distribution::_assocMap.find(std::get<1>(objects[i])); item != Distribution::_assocMap.end()) {
 												if (std::get<1>(item->second)->rulePriority < rule->rulePriority)
 													Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
@@ -1802,8 +1864,8 @@ void Settings::LoadDistrConfig()
 												Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
 											}
 											break;
-										case Distribution::AssocType::kNPC:
-										case Distribution::AssocType::kActor:
+										case AssocType::kNPC:
+										case AssocType::kActor:
 											if (auto item = Distribution::_npcMap.find(std::get<1>(objects[i])); item != Distribution::_npcMap.end()) {
 												if (item->second->rulePriority < rule->rulePriority)
 													Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
@@ -2494,19 +2556,21 @@ void Settings::LoadDistrConfig()
 					// parse the associated objects
 					bool error = false;
 					int total = 0;
-					std::vector<std::tuple<Distribution::AssocType, RE::FormID, RE::TESForm*>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a), total);
+					std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a), total);
 
 					std::pair<int, Distribution::Rule*> tmptuple = { prio, rule };
 					// assign rules to search parameters
 					bool attach = false; // loop intern
 					int oldprio = INT_MIN;
 					for (int i = 0; i < objects.size(); i++) {
+						if (std::get<2>(objects[i]) == nullptr)
+							continue;
 						switch (std::get<0>(objects[i])) {
-						case Distribution::AssocType::kFaction:
-						case Distribution::AssocType::kKeyword:
-						case Distribution::AssocType::kRace:
-						case Distribution::AssocType::kClass:
-						case Distribution::AssocType::kCombatStyle:
+						case AssocType::kFaction:
+						case AssocType::kKeyword:
+						case AssocType::kRace:
+						case AssocType::kClass:
+						case AssocType::kCombatStyle:
 							if (auto item = Distribution::_assocMap.find(std::get<1>(objects[i])); item != Distribution::_assocMap.end()) {
 								if ((oldprio = std::get<1>(item->second)->rulePriority) < rule->rulePriority) {
 									Distribution::_assocMap.insert_or_assign(std::get<1>(objects[i]), tmptuple);
@@ -2517,8 +2581,8 @@ void Settings::LoadDistrConfig()
 								attach = true;
 							}
 							break;
-						case Distribution::AssocType::kNPC:
-						case Distribution::AssocType::kActor:
+						case AssocType::kNPC:
+						case AssocType::kActor:
 							if (auto item = Distribution::_npcMap.find(std::get<1>(objects[i])); item != Distribution::_npcMap.end()) {
 								if ((oldprio = item->second->rulePriority) < rule->rulePriority) {
 									Distribution::_npcMap.insert_or_assign(std::get<1>(objects[i]), rule);
@@ -2532,38 +2596,38 @@ void Settings::LoadDistrConfig()
 						}
 						if (Logging::EnableLoadLog) {
 							switch (std::get<0>(objects[i])) {
-							case Distribution::AssocType::kFaction:
+							case AssocType::kFaction:
 								if (attach) {
 									LOGL_2("attached Faction {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								} else 
 									LOGL_2("updated Faction {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, prio, oldprio, std::get<1>(a));
 								break;
-							case Distribution::AssocType::kKeyword:
+							case AssocType::kKeyword:
 								if (attach) {
 									LOGL_2("attached Keyword {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								} else
 									LOGL_2("updated Keyword {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, prio, oldprio, std::get<1>(a));
 								break;
-							case Distribution::AssocType::kRace:
+							case AssocType::kRace:
 								if (attach) {
 									LOGL_2("attached Race {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								} else
 									LOGL_2("updated Race {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, prio, oldprio, std::get<1>(a));
 								break;
-							case Distribution::AssocType::kClass:
+							case AssocType::kClass:
 								if (attach) {
 									LOGL_2("attached Class {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								} else
 									LOGL_2("updated Class {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, prio, oldprio, std::get<1>(a));
 								break;
-							case Distribution::AssocType::kCombatStyle:
+							case AssocType::kCombatStyle:
 								if (attach) {
 									LOGL_2("attached CombatStyle {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								} else
 									LOGL_2("updated CombatStyle {} to rule {} with new Priority {} overruling {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, prio, oldprio, std::get<1>(a));
 								break;
-							case Distribution::AssocType::kNPC:
-							case Distribution::AssocType::kActor:
+							case AssocType::kNPC:
+							case AssocType::kActor:
 								if (attach) {
 									LOGL_2("attached Actor {} to rule {}.\t\t\t{}", Utility::GetHex(std::get<1>(objects[i])), rule->ruleName, std::get<1>(a));
 								} else
@@ -3014,10 +3078,10 @@ void Settings::CheckForPluginsWithoutRules()
 									if (index == MAXUINT32) {
 										continue;
 									}
-									pluginName = Utility::Mods::GetPluginName(index);
+									pluginName = Mods::GetPluginName(index);
 								}
 								// get rule
-								Misc::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
+								UtilityBase::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
 								Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
 
 								//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
@@ -3039,7 +3103,7 @@ void Settings::CheckForPluginsWithoutRules()
 									if (index == MAXUINT32) {
 										continue;
 									}
-									pluginName = Utility::Mods::GetPluginName(index);
+									pluginName = Mods::GetPluginName(index);
 								}
 
 								// we didn't consider the current actors base so far
@@ -3068,11 +3132,11 @@ void Settings::CheckForPluginsWithoutRules()
 							if (Distribution::excludedItems()->contains(alch->GetFormID()) == false && Distribution::whitelistItems()->contains(alch->GetFormID()) == false) {
 								// lookup plugin of the alch
 								{
-									index = Utility::Mods::GetPluginIndex(alch);
+									index = Mods::GetPluginIndex(alch);
 									if (index == MAXUINT32) {
 										continue;
 									}
-									pluginName = Utility::Mods::GetPluginName(index);
+									pluginName = Mods::GetPluginName(index);
 								}
 								if (auto itr = potionsWithoutRules.find(pluginName); itr != potionsWithoutRules.end()) {
 									itr->second->insert(std::pair<RE::AlchemyItem*, std::string>{ alch, id });
@@ -3083,20 +3147,72 @@ void Settings::CheckForPluginsWithoutRules()
 								}
 							}
 						} else if (auto race = form->As<RE::TESRace>(); race) {
+							/* if (Distribution::excludedAssoc()->contains(race->GetFormID()))
+							{
+								out << "<" << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "excludedAssoc" << "\n";
+								continue;
+							}
+							if (Distribution::excludedPlugins()->contains(Mods::GetPluginIndex(race))) {
+								out << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "excludedPlugins" << "\n";
+								continue;
+							}
+							if (Distribution::baselineExclusions()->contains(race->GetFormID())) {
+								out << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "baselineExclusions" << "\n";
+								continue;
+							}
+							if (Distribution::hardExclusions()->contains(race->GetFormID())) {
+								out << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "hardExclusions" << "\n";
+								continue;
+							}
+							if (Distribution::whitelistNPCs()->contains(race->GetFormID())) {
+								out << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "whitelistNPCs" << "\n";
+								continue;
+							}
+							if (Distribution::assocMap()->contains(race->GetFormID())) {
+								out << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "assocMap" << "\n";
+								continue;
+							}
+							if (Distribution::hardExclusionsPlugins_NPCs()->contains(Mods::GetPluginIndex(race))) {
+								out << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "hardExclusionsPlugins_NPCs" << "\n";
+								continue;
+							}
+							if (Distribution::knownRaces()->contains(race->GetFormID())) {
+								out << Utility::GetHex(Mods::GetIndexLessFormID(race)) << "," << pluginName << ">\n";
+								out << "; " << id << "\n";
+								out << "\t\t" << "knownRaces" << "\n";
+								continue;
+							}*/
+
 							if (Distribution::excludedAssoc()->contains(race->GetFormID()) == false && 
-								Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(race)) &&
+								Distribution::excludedPlugins()->contains(Mods::GetPluginIndex(race)) == false &&
 								Distribution::baselineExclusions()->contains(race->GetFormID()) == false &&
 								Distribution::hardExclusions()->contains(race->GetFormID()) == false &&
 								Distribution::whitelistNPCs()->contains(race->GetFormID()) == false &&
 								Distribution::assocMap()->contains(race->GetFormID()) == false &&
-								Distribution::hardExclusionsPlugins_NPCs()->contains(Utility::Mods::GetPluginIndex(race)) == false) {
+								Distribution::hardExclusionsPlugins_NPCs()->contains(Mods::GetPluginIndex(race)) == false &&
+								Distribution::knownRaces()->contains(race->GetFormID()) == false) {
 								// lookup plugin of the race
+								std::string pluginName = "";
 								{
-									index = Utility::Mods::GetPluginIndex(race);
+									index = Mods::GetPluginIndex(race);
 									if (index == MAXUINT32) {
 										continue;
 									}
-									pluginName = Utility::Mods::GetPluginName(index);
+									pluginName = Mods::GetPluginName(index);
 								}
 								if (auto itr = racesWithoutRules.find(pluginName); itr != racesWithoutRules.end()) {
 									itr->second->insert(std::pair<RE::TESRace*, std::string>{ race, id });
@@ -3120,7 +3236,7 @@ void Settings::CheckForPluginsWithoutRules()
 			out << "\n";
 			for (auto& pair : *set) {
 				out << "; " << std::get<1>(pair) << "\n";
-				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+				out << "1|4|<" << Utility::GetHex(Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
 			}
 		}
 
@@ -3132,7 +3248,7 @@ void Settings::CheckForPluginsWithoutRules()
 			out << "\n";
 			for (auto& pair : *set) {
 				out << "; " << std::get<1>(pair) << "\n";
-				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+				out << "1|4|<" << Utility::GetHex(Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
 			}
 		}
 
@@ -3145,7 +3261,7 @@ void Settings::CheckForPluginsWithoutRules()
 			out << "\n";
 			for (auto& pair : *set) {
 				out << "; " << std::get<1>(pair) << "\n";
-				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+				out << "1|4|<" << Utility::GetHex(Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
 			}
 		}
 
@@ -3157,7 +3273,7 @@ void Settings::CheckForPluginsWithoutRules()
 			out << "\n";
 			for (auto& pair : *set) {
 				out << "; " << std::get<1>(pair) << "\n";
-				out << "1|4|<" << Utility::GetHex(Utility::Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
+				out << "1|4|<" << Utility::GetHex(Mods::GetIndexLessFormID(std::get<0>(pair))) << "," << plugin << ">\n";
 			}
 		}
 
@@ -3200,7 +3316,7 @@ void Settings::CheckActorsForRules()
 								if (index == MAXUINT32) {
 									continue;
 								}
-								name = Utility::Mods::GetPluginName(index);
+								name = Mods::GetPluginName(index);
 							}
 							// check wether there is a rule that applies
 							if (Distribution::ExcludedNPC(npc)) {
@@ -3208,7 +3324,7 @@ void Settings::CheckActorsForRules()
 								continue;  // the npc is covered by an exclusion
 							}
 							// get rule
-							Misc::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
+							UtilityBase::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
 							Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
 
 							//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
@@ -3269,7 +3385,7 @@ void Settings::CheckActorsForRules()
 								if (index == MAXUINT32) {
 									continue;
 								}
-								name = Utility::Mods::GetPluginName(index);
+								name = Mods::GetPluginName(index);
 							}
 
 							// we didn't consider the current actors base so far
@@ -3356,7 +3472,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 								if (index == MAXUINT32) {
 									continue;
 								}
-								name = Utility::Mods::GetPluginName(index);
+								name = Mods::GetPluginName(index);
 							}
 							bool excluded = false;
 							// check wether there is a rule that applies
@@ -3513,6 +3629,8 @@ void Settings::ClassifyItems()
 	data->ResetAlchItemEffects();
 	data->ResetMagicItemPoisonResist();
 	Comp* comp = Comp::GetSingleton();
+	if (comp->NUP_ExcludeItem == nullptr)
+		comp->Load();
 
 	std::vector<std::tuple<std::string, std::string>> ingredienteffectmap;
 
@@ -3531,7 +3649,7 @@ void Settings::ClassifyItems()
 					if (item) {
 						LOGL_4("Found AlchemyItem {}", Utility::PrintForm(item));
 						// check for exclusion based on keywords
-						if (item->HasKeyword(comp->NUP_ExcludeItem)) {
+						if (comp->NUP_ExcludeItem != nullptr && item->HasKeyword(comp->NUP_ExcludeItem)) {
 							EXCL("[Keyword Excl] Item:      {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							Distribution::_excludedItems.insert(item->GetFormID());
 							continue;
@@ -3554,7 +3672,7 @@ void Settings::ClassifyItems()
 							continue;
 						}
 						// check whether the plugin is excluded
-						if (Distribution::excludedPlugins()->contains(Utility::Mods::GetPluginIndex(item)) == true) {
+						if (Distribution::excludedPlugins()->contains(Mods::GetPluginIndex(item)) == true) {
 							EXCL("[Excluded Plugin] Item:   {}", Utility::PrintForm<RE::AlchemyItem>(item));
 							Distribution::_excludedItems.insert(item->GetFormID());
 							continue;

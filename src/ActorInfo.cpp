@@ -4,7 +4,6 @@
 #include "Settings.h"
 #include "Utility.h"
 #include "Distribution.h"
-#include "BufferOperations.h"
 #include "ActorManipulation.h"
 #include "Data.h"
 #include "Compatibility.h"
@@ -33,8 +32,8 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 			formid.SetOriginalID(_actor->GetActorBase()->GetFormID());
 		}
 		name = std::string(_actor->GetName());
-		pluginname = Utility::Mods::GetPluginName(_actor);
-		pluginID = Utility::Mods::GetPluginIndex(pluginname);
+		pluginname = Mods::GetPluginName(_actor);
+		pluginID = Mods::GetPluginIndex(pluginname);
 		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
 		if (pluginID == MAXUINT32) {
 			pluginID = Utility::ExtractTemplateInfo(_actor->GetActorBase()).pluginID;
@@ -76,7 +75,7 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	durRegeneration = 0;
 	globalCooldownTimer = 0;
 	citems.Reset();
-	formid = ID();
+	formid = ActorID();
 	pluginname = "";
 	pluginID = MAXUINT32;
 	name = "";
@@ -109,8 +108,8 @@ void ActorInfo::Reset(RE::Actor* _actor)
 			formid.SetOriginalID(_actor->GetActorBase()->GetFormID());
 		}
 		name = std::string(_actor->GetName());
-		pluginname = Utility::Mods::GetPluginName(_actor);
-		pluginID = Utility::Mods::GetPluginIndex(pluginname);
+		pluginname = Mods::GetPluginName(_actor);
+		pluginID = Mods::GetPluginIndex(pluginname);
 		// if there is no plugin ID, it means that npc is temporary, so base it off of the base npc
 		if (pluginID == MAXUINT32) {
 			pluginID = Utility::ExtractTemplateInfo(_actor->GetActorBase()).pluginID;
@@ -913,7 +912,7 @@ int32_t ActorInfo::GetMinDataSize(int32_t vers)
 	}
 }
 
-bool ActorInfo::WriteData(unsigned char* buffer, int offset)
+bool ActorInfo::WriteData(unsigned char* buffer, size_t offset)
 {
 	aclock;
 	int addoff = 0;
@@ -969,7 +968,7 @@ bool ActorInfo::WriteData(unsigned char* buffer, int offset)
 	return true;
 }
 
-bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
+bool ActorInfo::ReadData(unsigned char* buffer, size_t offset, size_t length)
 {
 	aclock;
 	int ver = Buffer::ReadUInt32(buffer, offset);
@@ -1018,7 +1017,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				combatstate = CombatState::OutOfCombat;
 
 				// init dependend stuff
-				pluginID = Utility::Mods::GetPluginIndex(pluginname);
+				pluginID = Mods::GetPluginIndex(pluginname);
 				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
@@ -1085,7 +1084,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				combatstate = CombatState::OutOfCombat;
 
 				// init dependend stuff
-				pluginID = Utility::Mods::GetPluginIndex(pluginname);
+				pluginID = Mods::GetPluginIndex(pluginname);
 				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
@@ -1151,7 +1150,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				combatstate = static_cast<CombatState>(Buffer::ReadUInt32(buffer, offset));
 
 				// init dependend stuff
-				pluginID = Utility::Mods::GetPluginIndex(pluginname);
+				pluginID = Mods::GetPluginIndex(pluginname);
 				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}
@@ -1218,7 +1217,7 @@ bool ActorInfo::ReadData(unsigned char* buffer, int offset, int length)
 				_haslefthand = Buffer::ReadBool(buffer, offset);
 
 				// init dependend stuff
-				pluginID = Utility::Mods::GetPluginIndex(pluginname);
+				pluginID = Mods::GetPluginIndex(pluginname);
 				if (pluginID == MAXUINT32) {
 					pluginID = Utility::ExtractTemplateInfo(reac->GetActorBase()).pluginID;
 				}

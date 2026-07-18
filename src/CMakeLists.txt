@@ -3,34 +3,7 @@ set(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/..")
 include_directories("${ROOT_DIR}/include")
 
 set(SOURCE_DIR "${ROOT_DIR}/src")
-set(SOURCE_FILES
-	"${SOURCE_DIR}/main.cpp"
-	"${SOURCE_DIR}/Hooks.cpp"
-	"${SOURCE_DIR}/Events.cpp"
-	"${SOURCE_DIR}/Events_Main.cpp"
-	"${SOURCE_DIR}/Events_Main_Support.cpp"
-	"${SOURCE_DIR}/Settings.cpp"
-	"${SOURCE_DIR}/SettingsLoadSave.cpp"
-	"${SOURCE_DIR}/ActorManipulation.cpp"
-	"${SOURCE_DIR}/Distribution.cpp"
-	"${SOURCE_DIR}/Console.cpp"
-	"${SOURCE_DIR}/ActorInfo.cpp"
-	"${SOURCE_DIR}/Game.cpp"	
-	"${SOURCE_DIR}/ID.cpp"	
-	"${SOURCE_DIR}/Logging.cpp"
-	"${SOURCE_DIR}/Utility.cpp"
-	"${SOURCE_DIR}/NUPInterface.cpp"
-	"${SOURCE_DIR}/AlchemyEffect.cpp"
-	"${SOURCE_DIR}/PCH.h"
-	"${SOURCE_DIR}/DataStorage.cpp"
-	"${SOURCE_DIR}/Data.cpp" 
-	"${SOURCE_DIR}/Compatibility.cpp" 
-	"${SOURCE_DIR}/Papyrus.cpp" 
-	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Poisons.cpp" 
-	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Potions.cpp"
-	"${SOURCE_DIR}/Papyrus/NPCsUsePotions_Settings.cpp"
-	"${SOURCE_DIR}/BufferOperations.cpp"
-	"${SOURCE_DIR}/VM.cpp" )
+include(${ROOT_DIR}/cmake/sourcelist.cmake)
 
 
 source_group(TREE "${ROOT_DIR}" FILES ${SOURCE_FILES})
@@ -127,12 +100,13 @@ target_include_directories(
 )
 
 
-add_subdirectory($ENV{CommonLibNGPath} CommonLibSSE EXCLUDE_FROM_ALL)
+add_subdirectory($ENV{LibSUtilPath} LibSUtils EXCLUDE_FROM_ALL)
 
 target_link_libraries(
 	"${PROJECT_NAME}"
 	PRIVATE
 		CommonLibSSE::CommonLibSSE
+		LibSUtils::LibSUtils
 )
 
 target_precompile_headers(

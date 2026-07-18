@@ -1,27 +1,27 @@
 #pragma once
 
-struct ID
+struct ActorID
 {
-	ID() = default;
+	ActorID() = default;
 	/// <summary>
 	/// Constructs an ID from the active FormID and the FormID of the original ActorBase
 	/// </summary>
 	/// <param name="id">IS of the RE::Actor*</param>
 	/// <param name="originalID">ID of the original template</param>
-	ID(RE::FormID id, RE::FormID originalID);
+	ActorID(RE::FormID id, RE::FormID originalID);
 	/// <summary>
 	/// Constructs an ID from an actor
 	/// </summary>
 	/// <param name="actor">The actor</param>
-	ID(RE::Actor* actor);
+	ActorID(RE::Actor* actor);
 	/// <summary>
 	/// Constructs an ID from the actors FormID
 	/// </summary>
 	/// <param name="id"></param>
-	ID(RE::FormID id);
+	ActorID(RE::FormID id);
 
 	bool operator==(RE::FormID a_formID) const;
-	bool operator==(ID& a_id) const;
+	bool operator==(ActorID& a_id) const;
 	bool operator==(int a_formID) const;
 
 	operator RE::FormID() const;

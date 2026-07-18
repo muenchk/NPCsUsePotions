@@ -2,10 +2,9 @@
 #include <tuple>
 #include <vector>
 
-#include "ActorManipulation.h"
-#include "AlchemyEffect.h"
 #include "Data.h"
 #include "Statistics.h"
+#include "ActorManipulation.h"
 #include "Hooks.h"
 
 
@@ -484,6 +483,7 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> ACM::GetRandomFood(std:
 
 std::unordered_map<uint32_t, int> ACM::GetCustomItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
+	StartProfiling;
 	LOG_3("");
 	std::unordered_map<uint32_t, int> ret{};
 	auto itemmap = acinfo->GetInventory();
@@ -498,12 +498,14 @@ std::unordered_map<uint32_t, int> ACM::GetCustomItems(std::shared_ptr<ActorInfo>
 		iter++;
 	}
 	LOG_4("return: {}", ret.size());
+	PROF_2(TimeProfiling, "");
 	return ret;
 }
 
 
 std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
+	StartProfiling;
 	LOG_3("");
 	std::vector<std::unordered_map<uint32_t, int>> ret;
 	std::unordered_map<uint32_t, int> all{};
@@ -516,8 +518,8 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shar
 	RE::AlchemyItem* alch = nullptr;
 	while (iter != itemmap.end()) {
 		if (iter->first && iter->second.first > 0 && std::get<1>(iter->second).get() &&
-			std::get<1>(iter->second).get()->IsQuestObject() == false &&
 			(alch = iter->first->As<RE::AlchemyItem>()) != nullptr &&
+			std::get<1>(iter->second).get()->IsQuestObject() == false &&
 			alch->HasKeyword(comp->NUP_IgnoreItem) == false && 
 			acinfo->IsCustomAlchItem(alch)) {
 			// check whether it a medicine and in the custom potion list
@@ -544,21 +546,20 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shar
 	ret.push_back(poisons);
 	ret.push_back(fortify);
 	ret.push_back(food);
+	PROF_2(TimeProfiling, "");
 	return ret;
 }
 
-std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool fortify)
+std::tuple<int, AlchemicEffect, float> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool fortify)
 {
+	StartProfiling;
 	LOG_2("");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		auto begin = std::chrono::steady_clock::now();
 		// if no effect is specified, return
 		if (alchemyEffect == 0) {
-			return { -1, AlchemicEffect::kNone, 0.0f, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>{} };
+			return { -1, AlchemicEffect::kNone, 0.0f};
 		}
-		auto itemmap = acinfo->GetInventory();
-		auto iter = itemmap.begin();
-		auto end = itemmap.end();
 		//RE::EffectSetting* sett = nullptr;
 		LOG_2("trying to find potion {}", alchemyEffect.string());
 		auto ls = GetMatchingPotions(acinfo, alchemyEffect, fortify);
@@ -566,25 +567,16 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 			ls.sort(Utility::SortFortify);
 		else
 			ls.sort(Utility::SortPotion);
-		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid() && acinfo->CanUsePot(std::get<2>(tup)->GetFormID()) == false; });
+		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid(); });
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
-		return ActorUsePotion(acinfo, ls);
-	}
-	std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> lstemp;
-	return { 0, 0, 0.0f, lstemp };
-}
 
-std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>& ls)
-{
-	LOG_2("list bound");
-	if (Utility::VerifyActorInfo(acinfo)) {
 		if (ls.size() > 0) {
 			RE::AlchemyItem* potion;
 			if (potion = std::get<2>(ls.front()); potion) {
 				std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> val = ls.front();
 				LOG_2("Drink Potion {} with duration {} and magnitude {}", Utility::PrintForm(potion), std::get<1>(val), std::get<0>(val));
-				
+
 				// save statistics
 				Statistics::Misc_PotionsAdministered++;
 				if (comp->LoadedAnimatedPotions() && acinfo->IsPlayer() == false) {
@@ -629,15 +621,18 @@ std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::Alch
 					});
 				}
 				ls.pop_front();
-				return { std::get<1>(val), std::get<3>(val), std::get<0>(val), ls };
+				PROF_2(TimeProfiling, "");
+				return { std::get<1>(val), std::get<3>(val), std::get<0>(val) };
 			}
 		}
 	}
-	return { -1, AlchemicEffect::kNone, 0.0f, ls };
+	PROF_2(TimeProfiling, "");
+	return { 0, 0, 0.0f };
 }
 
 std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool raw)
 {
+	StartProfiling;
 	LOG_2("");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		auto begin = std::chrono::steady_clock::now();
@@ -645,9 +640,6 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 		if (alchemyEffect == 0) {
 			return { -1, AlchemicEffect::kNone };
 		}
-		auto itemmap = acinfo->GetInventory();
-		auto iter = itemmap.begin();
-		auto end = itemmap.end();
 		//RE::EffectSetting* sett = nullptr;
 		LOG_2("trying to find food");
 		auto ls = GetMatchingFood(acinfo, alchemyEffect, raw);
@@ -667,22 +659,22 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 				SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
 					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
 				});
+				PROF_2(TimeProfiling, "");
 				return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 			}
 		}
 		//LOG_2("step3");
 	}
+	PROF_2(TimeProfiling, "");
 	return { -1, AlchemicEffect::kNone };
 }
 
 std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, bool raw)
 {
+	StartProfiling;
 	LOG_2("");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		auto begin = std::chrono::steady_clock::now();
-		auto itemmap = acinfo->GetInventory();
-		auto iter = itemmap.begin();
-		auto end = itemmap.end();
 		LOG_2("trying to find food");
 		auto item = GetRandomFood(acinfo, raw);
 		//LOG_2("step1");
@@ -695,10 +687,12 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 			SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
 				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
 			});
+			PROF_2(TimeProfiling, "");
 			return { std::get<1>(item), std::get<3>(item) };
 		}
 		//LOG_2("step3");
 	}
+	PROF_2(TimeProfiling, "");
 	return { -1, AlchemicEffect::kNone };
 }
 
@@ -709,6 +703,7 @@ static RE::BSAudioManager* audiomanager;
 
 std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect)
 {
+	StartProfiling;
 	LOG_2("");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		auto begin = std::chrono::steady_clock::now();
@@ -716,9 +711,6 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 		if (alchemyEffect == 0) {
 			return { -1, AlchemicEffect::kNone };
 		}
-		auto itemmap = acinfo->GetInventory();
-		auto iter = itemmap.begin();
-		auto end = itemmap.end();
 		//RE::EffectSetting* sett = nullptr;
 		LOG_2("trying to find poison");
 		auto ls = GetMatchingPoisons(acinfo, alchemyEffect);
@@ -769,6 +761,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 							handle.SetVolume(1.0);
 							handle.Play();
 						}
+						PROF_2(TimeProfiling, "");
 						return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 					} else {
 						ied = acinfo->GetEquippedEntryData(true);
@@ -787,6 +780,7 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 									handle.SetVolume(1.0);
 									handle.Play();
 								}
+								PROF_2(TimeProfiling, "");
 								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
 							}
 						}
@@ -795,5 +789,6 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 			}
 		}
 	}
+	PROF_2(TimeProfiling, "");
 	return { -1, AlchemicEffect::kNone };
 }

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "AlchemyEffect.h"
 #include "CustomItem.h"
-#include "Misc.h"
 #include "Data.h"
 #include "Settings.h"
 
@@ -14,21 +12,6 @@
 class Distribution
 {
 public:
-	/// <summary>
-	/// Supported Association types for distribution rules
-	/// </summary>
-	enum AssocType
-	{
-		kKeyword = 1,
-		kFaction = 2,
-		kRace = 4,
-		kActor = 8,
-		kNPC = 16,
-		kItem = 32,
-		kClass = 64,
-		kCombatStyle = 128,
-		kEffectSetting = 256,
-	};
 
 	class CustomItemStorage;
 
@@ -669,6 +652,10 @@ private:
 	/// </summary>
 	static inline std::unordered_set<uint32_t> _whitelistNPCsPlugin;
 	/// <summary>
+	/// set of races that are known, but that do not have dedicated rules attached to them by design
+	/// </summary>
+	static inline std::unordered_set<uint32_t> _knownRaces;
+	/// <summary>
 	/// set that contains the IDs of alcoholic items
 	/// </summary>
 	static inline std::unordered_set<RE::FormID> _alcohol;
@@ -838,6 +825,11 @@ public:
 	/// returns the set of plugin indexes for plugins, which npcs are whitelisted
 	/// </summary>
 	static inline std::unordered_set<uint32_t>* whitelistNPCsPlugin() { return initialised ? &_whitelistNPCsPlugin : &_dummySet5; }
+	/// <summary>
+	/// returns the set of known races that do not have explicit rules attached to them
+	/// </summary>
+	/// <returns></returns>
+	static inline std::unordered_set<RE::FormID>* knownRaces() { return initialised ? &_knownRaces : &_dummySet1; }
 	/// <summary>
 	/// returns the set that contains the IDs of alcoholic items
 	/// </summary>
@@ -1013,7 +1005,7 @@ private:
 	/// <param name="tpltinfo">template information of the NPC if available</param>
 	/// <param name="custItems">[overwrite] custom items of the NPC</param>
 	/// <returns></returns>
-	static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, Misc::NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
+	static Rule* CalcRule(RE::TESNPC* actor, ActorStrength& acs, ItemStrength& is, UtilityBase::NPCTPLTInfo* tpltinfo = nullptr, CustomItemStorage* custItems = nullptr);
 
 public:
 	/// <summary>
@@ -1022,7 +1014,7 @@ public:
 	/// <param name="acinfo">the ActorInfo of the actor to calculate for [infomation us updated]</param>
 	/// <param name="tpltinfo">template information of the actor, if available</param>
 	/// <returns></returns>
-	static Rule* CalcRule(std::shared_ptr<ActorInfo> const&acinfo, Misc::NPCTPLTInfo* tpltinfo = nullptr);
+	static Rule* CalcRule(std::shared_ptr<ActorInfo> const& acinfo, UtilityBase::NPCTPLTInfo* tpltinfo = nullptr);
 	static std::vector<std::tuple<int, Distribution::Rule*, std::string>> CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is);
 
 private:

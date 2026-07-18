@@ -1,8 +1,6 @@
 
 #include "ActorManipulation.h"
 #include "Events.h"
-#include "Game.h"
-#include "Threading.h"
 #include "Utility.h"
 
 namespace Events
@@ -54,6 +52,23 @@ namespace Events
 			}
 			itr++;
 		}
+	}
+
+	void Main::GetActors(std::set<std::shared_ptr<ActorInfo>>& actors)
+	{
+		std::lock_guard<std::mutex> lock(sem);
+		auto itr = acset.begin();
+		while (itr != acset.end()) {
+			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
+				actors.insert(acinfo);
+			}
+			itr++;
+		}
+	}
+
+	std::chrono::steady_clock::time_point Main::GetLastActorsUpdateTime()
+	{
+		return _lastActorsUpdate;
 	}
 
 	void Main::ACSetRegisterAndReset(std::shared_ptr<ActorInfo> acinfo, RE::Actor* actor)

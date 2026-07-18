@@ -181,15 +181,7 @@ public:
 	/// <param name="compatibility">whether to use items in compatibility mode</param>
 	/// <param name="fortify">whether to search for fortify potions</param>
 	/// <returns>Wether a potion was consumed</returns>
-	static std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool fortify = false);
-
-	/// <summary>
-	/// takes an already computed list and uses the first item in the list
-	/// </summary>
-	/// <param name="acinfo"></param>
-	/// <param name="ls"></param>
-	/// <returns></returns>
-	static std::tuple<int, AlchemicEffect, float, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>> ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>>& ls);
+	static std::tuple<int, AlchemicEffect, float> ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool fortify = false);
 	
 	/// <summary>
 	/// tries to use a food with the given effect [eff]

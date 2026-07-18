@@ -19,6 +19,15 @@ macro(set_from_environment VARIABLE)
 	endif()
 endmacro()
 
+find_package(imgui CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(directxtex CONFIG REQUIRED)
+find_package(glaze CONFIG REQUIRED)
+find_package(Freetype REQUIRED)
+find_package(lunasvg REQUIRED)
+
+
 set_from_environment(SkyrimOutputPath)
 if(NOT DEFINED SkyrimOutputPath)
 	message(FATAL_ERROR "SkyrimOutputPath is not set")

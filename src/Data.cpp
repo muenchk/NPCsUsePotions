@@ -3,16 +3,14 @@
 #include <iterator>
 
 #include "Data.h"
-#include "Logging.h"
 #include "Utility.h"
 #include "Statistics.h"
 #include "ActorManipulation.h"
-#include "BufferOperations.h"
 #include "Events.h"
 
 void Data::Init()
 {
-	datahandler = RE::TESDataHandler::GetSingleton();
+	Data::GetSingleton()->DataBase::Init();
 }
 
 Data* Data::GetSingleton()
@@ -247,8 +245,8 @@ long Data::SaveDeletedActors(SKSE::SerializationInterface* a_intfc)
 	long successfulwritten = 0;
 
 	for (auto& actorid : deletedActors) {
-		uint32_t formid = Utility::Mods::GetIndexLessFormID(actorid);
-		std::string pluginname = Utility::Mods::GetPluginNameFromID(actorid);
+		uint32_t formid = Mods::GetIndexLessFormID(actorid);
+		std::string pluginname = Mods::GetPluginNameFromID(actorid);
 		if (a_intfc->OpenRecord('DAID', 0)) {
 			// get entry length
 			int length = 4 + Buffer::CalcStringLength(pluginname);
@@ -261,7 +259,7 @@ long Data::SaveDeletedActors(SKSE::SerializationInterface* a_intfc)
 				continue;
 			}
 			// fill buffer
-			int offset = 0;
+			size_t offset = 0;
 			Buffer::Write(actorid, buffer, offset);
 			Buffer::Write(pluginname, buffer, offset);
 			// write record
@@ -286,7 +284,7 @@ long Data::ReadDeletedActors(SKSE::SerializationInterface* a_intfc, uint32_t len
 	unsigned char* buffer = new unsigned char[length];
 	a_intfc->ReadRecordData(buffer, length);
 	if (length >= 12) {
-		int offset = 0;
+		size_t offset = 0;
 		uint32_t formid = Buffer::ReadUInt32(buffer, offset);
 		std::string pluginname = Buffer::ReadString(buffer, offset);
 		RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(formid, pluginname);

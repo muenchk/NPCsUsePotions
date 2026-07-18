@@ -5,9 +5,8 @@
 #include <memory>
 
 #include "ActorInfo.h"
-#include "AlchemyEffect.h"
 
-class Data
+class Data : public DataBase
 {
 private:
 	/// <summary>
@@ -30,11 +29,6 @@ private:
 	/// map that contains game objects that are used in custom object conditions, for fast access
 	/// </summary>
 	std::unordered_map<uint32_t, RE::TESForm*> customItemFormMap;
-
-	/// <summary>
-	/// datahandler
-	/// </summary>
-	RE::TESDataHandler* datahandler = nullptr;
 
 	/// <summary>
 	/// Creates a new shared pointer to an ActorInfo and inserts it into the map and valid actors

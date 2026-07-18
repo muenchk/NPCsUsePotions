@@ -22,8 +22,6 @@
 #include <limits>
 #include "ActorInfo.h"
 #include <Console.h>
-#include <Logging.h>
-#include <AlchemyEffect.h>
 #include "APIs/TrueDirectionalMovementAPI.h"
 
 class Settings

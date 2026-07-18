@@ -15,12 +15,9 @@
 
 #include "Distribution.h"
 #include "Events.h"
-#include "Game.h"
 #include "Settings.h"
 #include "Statistics.h"
-#include "Threading.h"
 #include "Utility.h"
-#include "VM.h"
 		
 namespace Events
 {
@@ -449,9 +446,6 @@ TESDeathEventEnd:
 			}
 			if (baseObj && newCont) {
 				OnItemAdded(newCont, baseObj, a_event->itemCount, oldCont, a_event);
-				if (newCont->IsPlayerRef()) {
-					logexcl("{}\t{}", Utility::PrintForm(baseObj), std::to_string(std::stacktrace::current()));
-				}
 			}
 		}
 

@@ -1,6 +1,5 @@
 
 #include "Papyrus/NPCsUsePotions_Poisons.h"
-#include "Logging.h"
 #include "Data.h"
 #include "Utility.h"
 #include "Compatibility.h"

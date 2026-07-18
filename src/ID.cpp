@@ -1,19 +1,19 @@
 #include "ID.h"
 
-ID::ID(RE::FormID id, RE::FormID originalID) :
+ActorID::ActorID(RE::FormID id, RE::FormID originalID) :
 	_id(id),
 	_originalID(originalID)
 {
 
 }
 
-ID::ID(RE::FormID id) :
+ActorID::ActorID(RE::FormID id) :
 	_id(id)
 {
 	_originalID = 0;
 }
 
-ID::ID(RE::Actor* actor)
+ActorID::ActorID(RE::Actor* actor)
 {
 	_id = actor->GetFormID();
 	_originalID = 0;
@@ -30,7 +30,7 @@ ID::ID(RE::Actor* actor)
 	}
 }
 
-bool ID::operator==(RE::FormID a_formID) const
+bool ActorID::operator==(RE::FormID a_formID) const
 {
 	if (_id == a_formID || _originalID == a_formID)
 		return true;
@@ -40,7 +40,7 @@ bool ID::operator==(RE::FormID a_formID) const
 	return false;
 }
 
-bool ID::operator==(int a_formID) const
+bool ActorID::operator==(int a_formID) const
 {
 	if (_id == (unsigned int)a_formID || _originalID == (unsigned int)a_formID)
 		return true;
@@ -50,39 +50,39 @@ bool ID::operator==(int a_formID) const
 	return false;
 }
 
-bool ID::operator==(ID& a_id) const
+bool ActorID::operator==(ActorID& a_id) const
 {
 	if (a_id._id == _id && a_id._originalID == _originalID)
 		return true;
 	return false;
 }
 
-ID::operator RE::FormID() const
+ActorID::operator RE::FormID() const
 {
 	return _id;
 }
 
-void ID::SetID(RE::FormID id)
+void ActorID::SetID(RE::FormID id)
 {
 	_id = id;
 }
 
-void ID::SetOriginalID(RE::FormID originalID)
+void ActorID::SetOriginalID(RE::FormID originalID)
 {
 	_originalID = originalID;
 }
 
-void ID::AddTemplateID(RE::FormID templateID)
+void ActorID::AddTemplateID(RE::FormID templateID)
 {
 	_templateIDs.push_back(templateID);
 }
 
-RE::FormID ID::GetOriginalID()
+RE::FormID ActorID::GetOriginalID()
 {
 	return _originalID;
 }
 
-std::vector<RE::FormID> ID::GetTemplateIDs()
+std::vector<RE::FormID> ActorID::GetTemplateIDs()
 {
 	return _templateIDs;
 }
