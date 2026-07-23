@@ -65,7 +65,7 @@ std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::Alc
 	if (Distribution::excludedItems()->contains(item->GetFormID()))
 		return { false, -1.0f, -1, AlchemicEffect::kNone, false };
 	auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
-	LOG_4("Item: {}, Effect: {}, Dur: {}, Mag: {}, Detr:{}, Dosage: {}", Utility::PrintForm(item), eff.string(), dur, mag, detr, dosage);
+	LOG_4("Item: {}, Effect: {}, Dur: {}, Mag: {}, Detr:{}, Dosage: {}, Expected: {}", Utility::PrintForm(item), eff.string(), dur, mag, detr, dosage, alchemyEffect.string());
 	static AlchemicEffect restoreeff = AlchemicEffect::kHealth | AlchemicEffect::kMagicka | AlchemicEffect::kStamina;
 	if (mapf) {
 		if ((eff & alchemyEffect) != 0 && (!excluderestore || (eff & restoreeff) == 0)) { // don't use potion if it has restore on it and we want to exclude them
@@ -154,7 +154,7 @@ std::tuple<bool, float, int, AlchemicEffect, bool> ACM::HasAlchemyEffect(RE::Alc
 			data->SetAlchItemEffects(item->GetFormID(), out, dur, mag, detrimental, dosage);
 			return { true, mag, dur, out, detrimental };
 		}
-		LOG_4("slow fail: does not match effect");
+		LOG_4("slow fail: does not match effect, Expected: {}", alchemyEffect.string());
 		PROF_3(TimeProfiling, "Has AlchemyEffect Sloq");
 		return { false, mag, dur, AlchemicEffect::kNone, false };
 	}
@@ -296,6 +296,94 @@ std::list<RE::AlchemyItem*> ACM::GetAllPoisons(std::shared_ptr<ActorInfo> const&
 	}
 	PROF_3(TimeProfiling, "Find all poisons");
 	return ret;
+}
+
+void ACM::GetMatchingItems(std::shared_ptr<ActorInfo> const& acinfo, MatchingItems& match, bool allowRawFood)
+{
+	StartProfiling;
+	LOG_3("");
+	if (match.potionEffects.IsValid() || match.fortifyEffects.IsValid() || match.poisonEffects.IsValid() || match.foodEffects.IsValid()) {
+		std::tuple<bool, float, int, AlchemicEffect, bool> res;
+		auto itemmap = acinfo->GetInventory();
+		auto iter = itemmap.begin();
+		RE::AlchemyItem* item = nullptr;
+		while (iter != itemmap.end()) {
+			if (Utility::ValidateForm(iter->first) &&
+				std::get<1>(iter->second).get() &&
+				std::get<1>(iter->second).get()->IsQuestObject() == false &&
+				(acinfo->IsPlayer() == false ||
+					acinfo->IsPlayer() &&
+						(Settings::player._UseFavoritedItemsOnly == false ||
+							std::get<1>(iter->second).get()->IsFavorited()) &&
+						(Settings::player._DontUseFavoritedItems == false ||
+							std::get<1>(iter->second).get()->IsFavorited() == false) &&
+						Distribution::excludedItemsPlayer()->contains(iter->first->GetFormID()) == false)) {
+				item = iter->first->As<RE::AlchemyItem>();
+				// check whether the item has excluding keywords
+				if (item && item->HasKeyword(comp->NUP_IgnoreItem) == false && iter->second.first > 0) {
+					LOG_5("checking item {}", Utility::PrintForm(item));
+					// check for potions first
+					if (item->IsMedicine() || item->HasKeyword(Settings::VendorItemPotion)) {
+						LOG_4("found medicine");
+						if (acinfo->CanUseFortify(item->GetFormID())) {
+							auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+							match.matchingFortifyPotions.push_back({ mag, dur, item, AlchemicEffect::kCustom });
+							goto ContLoop;
+						}
+						if (acinfo->CanUsePotion(item->GetFormID())) {
+							auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+							match.matchingPotions.push_back({ mag, dur, item, AlchemicEffect::kCustom });
+							goto ContLoop;
+						}
+						if (res = HasAlchemyEffect(item, match.fortifyEffects, true);
+							std::get<0>(res) &&
+							(Settings::potions._AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
+							match.matchingFortifyPotions.push_back({ std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+							goto ContLoop;
+						}
+						if (res = HasAlchemyEffect(item, match.potionEffects, false);
+							std::get<0>(res) &&
+							(Settings::potions._AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
+							match.matchingPotions.push_back({ std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+							goto ContLoop;
+						}
+					}
+					// now check for poisons
+					else if (item->IsPoison() || item->HasKeyword(Settings::VendorItemPoison)) {
+						LOG_4("found poison");
+						if (acinfo->CanUsePoison(item->GetFormID())) {
+							auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+							match.matchingPoisons.push_back({ mag, dur, item, AlchemicEffect::kCustom });
+						} else if (res = HasAlchemyEffect(item, match.poisonEffects);
+							std::get<0>(res) &&
+							(Settings::poisons._AllowPositiveEffects || std::get<4>(res) == false /*either we allow poisons with positive effects, or there are no positive effects*/)) {
+							LOG_3("Adding Poison to list: {}", Utility::PrintForm(item));
+							match.matchingPoisons.push_back({ std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+						}
+					}
+					// last check for food
+					else if (item->IsFood() ||
+							 item->HasKeyword(Settings::VendorItemFood) ||
+							 (item->HasKeyword(Settings::VendorItemFoodRaw)) &&
+								 (allowRawFood == true || !item->HasKeyword(Settings::VendorItemFoodRaw))) {
+						LOG_4("found food {}", Utility::PrintForm(item));
+						if (acinfo->CanUseFood(item->GetFormID())) {
+							auto [mapf, eff, dur, mag, detr, dosage] = data->GetAlchItemEffects(item->GetFormID());
+							match.matchingFood.push_back({ mag, dur, item, AlchemicEffect::kCustom });
+						} else if (res = HasAlchemyEffect(item, match.foodEffects);
+							std::get<0>(res) &&
+							(Settings::food._AllowDetrimentalEffects || std::get<4>(res) == false /*either we allow detrimental effects or there are none*/)) {
+							match.matchingFood.push_back({ std::get<1>(res), std::get<2>(res), item, std::get<3>(res) });
+						}
+					}
+				}
+			}
+ContLoop:
+			iter++;
+		}
+		LOG_3("finished. found: {} food, {} fortify, {} poisons, {} potions", match.matchingFood.size(), match.matchingFortifyPotions.size(), match.matchingPoisons.size(), match.matchingPotions.size());
+		PROF_3(TimeProfiling, "");
+	}
 }
 
 std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> ACM::GetMatchingFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool raw)
@@ -550,120 +638,101 @@ std::vector<std::unordered_map<uint32_t, int>> ACM::GetCustomAlchItems(std::shar
 	return ret;
 }
 
-std::tuple<int, AlchemicEffect, float> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool fortify)
+std::tuple<int, AlchemicEffect, float> ACM::ActorUsePotion(std::shared_ptr<ActorInfo> const& acinfo, MatchingItems& match, bool fortify)
 {
 	StartProfiling;
 	LOG_2("");
 	if (Utility::VerifyActorInfo(acinfo)) {
+		std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> val;
 		auto begin = std::chrono::steady_clock::now();
-		// if no effect is specified, return
-		if (alchemyEffect == 0) {
-			return { -1, AlchemicEffect::kNone, 0.0f};
+		if (fortify) {
+			std::sort(match.matchingFortifyPotions.begin(), match.matchingFortifyPotions.end(), Utility::SortFortify);
+			val = match.matchingFortifyPotions.front();
+		} else {
+			std::sort(match.matchingPotions.begin(), match.matchingPotions.end(), Utility::SortPotion);
+			val = match.matchingPotions.front();
 		}
-		//RE::EffectSetting* sett = nullptr;
-		LOG_2("trying to find potion {}", alchemyEffect.string());
-		auto ls = GetMatchingPotions(acinfo, alchemyEffect, fortify);
-		if (fortify)
-			ls.sort(Utility::SortFortify);
-		else
-			ls.sort(Utility::SortPotion);
-		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid(); });
+		//ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid(); });
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
 
-		if (ls.size() > 0) {
-			RE::AlchemyItem* potion;
-			if (potion = std::get<2>(ls.front()); potion) {
-				std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> val = ls.front();
-				LOG_2("Drink Potion {} with duration {} and magnitude {}", Utility::PrintForm(potion), std::get<1>(val), std::get<0>(val));
+		auto& [mag, dur, potion, eff] = val;
 
-				// save statistics
-				Statistics::Misc_PotionsAdministered++;
-				if (comp->LoadedAnimatedPotions() && acinfo->IsPlayer() == false) {
-					LOG_2("AnimatedPotions loaded, apply potion later");
-					comp->AnPoti_AddActorPotion(acinfo->GetFormID(), potion);
+		if (potion) {
+			LOG_2("Drink Potion {} with duration {} and magnitude {}", Utility::PrintForm(potion), dur, mag);
 
-					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-					ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPotionsEvent");
-					ev->strArg = RE::BSFixedString(std::to_string(potion->GetFormID()));
-					ev->numArg = 0.0f;
-					ev->sender = acinfo->GetActor();
-					SKSE::GetModCallbackEventSource()->SendEvent(ev);
-				} else {
-					LOG_2("equip potion");
+			// save statistics
+			Statistics::Misc_PotionsAdministered++;
+			if (comp->LoadedAnimatedPotions() && acinfo->IsPlayer() == false) {
+				LOG_2("AnimatedPotions loaded, apply potion later");
+				comp->AnPoti_AddActorPotion(acinfo->GetFormID(), potion);
 
-					SKSE::GetTaskInterface()->AddTask([acinfo, potion, duration = std::get<1>(val), magnitude = std::get<0>(val)]() {
-						if (comp->LoadedUltimatePotions() && (acinfo->IsActorTypeNPC() == false || Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs && acinfo->IsPlayer() == false)) {
-							logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
-								"[Using Bypass (UAPNG)]    ",
-								acinfo->GetFormString(),
-								Utility::PrintFormNonDebug(potion),
-								duration,
-								magnitude);
-							acinfo->GetActor()->DrinkPotion(potion, nullptr);
-						} else if (comp->LoadedPotionsAnimated() && acinfo->IsActorTypeNPC() == false) {
-							logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
-								"[Using Bypass (PPNG)]    ",
-								acinfo->GetFormString(),
-								Utility::PrintFormNonDebug(potion),
-								duration,
-								magnitude);
-							Hooks::Functions::DrinkPotion(acinfo->GetActor(), potion, nullptr);
-						} else {
-							logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
-								"[Using ActorEquipManager] ",
-								acinfo->GetFormString(),
-								Utility::PrintFormNonDebug(potion),
-								duration,
-								magnitude);
-							RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), potion, nullptr, 1, nullptr, true, false, false);
-						}
-					});
-				}
-				ls.pop_front();
-				PROF_2(TimeProfiling, "");
-				return { std::get<1>(val), std::get<3>(val), std::get<0>(val) };
+				SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPotionsEvent");
+				ev->strArg = RE::BSFixedString(std::to_string(potion->GetFormID()));
+				ev->numArg = 0.0f;
+				ev->sender = acinfo->GetActor();
+				SKSE::GetModCallbackEventSource()->SendEvent(ev);
+			} else {
+				LOG_2("equip potion");
+
+				SKSE::GetTaskInterface()->AddTask([acinfo, potion, duration = dur, magnitude = mag]() {
+					if (comp->LoadedUltimatePotions() && (acinfo->IsActorTypeNPC() == false || Settings::compatibility.ultimatePotions._BypassAnimationsForNonPlayerNPCs && acinfo->IsPlayer() == false)) {
+						logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
+							"[Using Bypass (UAPNG)]    ",
+							acinfo->GetFormString(),
+							Utility::PrintFormNonDebug(potion),
+							duration,
+							magnitude);
+						acinfo->GetActor()->DrinkPotion(potion, nullptr);
+					} else if (comp->LoadedPotionsAnimated() && acinfo->IsActorTypeNPC() == false) {
+						logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
+							"[Using Bypass (PPNG)]    ",
+							acinfo->GetFormString(),
+							Utility::PrintFormNonDebug(potion),
+							duration,
+							magnitude);
+						Hooks::Functions::DrinkPotion(acinfo->GetActor(), potion, nullptr);
+					} else {
+						logusage("{} Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}",
+							"[Using ActorEquipManager] ",
+							acinfo->GetFormString(),
+							Utility::PrintFormNonDebug(potion),
+							duration,
+							magnitude);
+						RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), potion, nullptr, 1, nullptr, true, false, false);
+					}
+				});
 			}
+
+			PROF_2(TimeProfiling, "");
+			return { dur, std::get<3>(val), mag };
 		}
 	}
 	PROF_2(TimeProfiling, "");
 	return { 0, 0, 0.0f };
 }
 
-std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect, bool raw)
+std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> const& acinfo, MatchingItems& match)
 {
 	StartProfiling;
 	LOG_2("");
 	if (Utility::VerifyActorInfo(acinfo)) {
-		auto begin = std::chrono::steady_clock::now();
-		// if no effect is specified, return
-		if (alchemyEffect == 0) {
-			return { -1, AlchemicEffect::kNone };
-		}
-		//RE::EffectSetting* sett = nullptr;
-		LOG_2("trying to find food");
-		auto ls = GetMatchingFood(acinfo, alchemyEffect, raw);
-		//LOG_2("step1");
-		ls.sort(Utility::SortMagnitude);
-		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid() && acinfo->CanUseFood(std::get<2>(tup)->GetFormID()) == false; });
-		//LOG_2("step2");
+		std::sort(match.matchingFood.begin(), match.matchingFood.end(), Utility::SortMagnitude);
+		auto& [mag, dur, food, eff] = match.matchingFood.front();
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
-		if (ls.size() > 0) {
-			RE::AlchemyItem* food;
-			if (food = std::get<2>(ls.front()); food) {
-				// add statistics
-				Statistics::Misc_FoodEaten++;
-				LOG_2("Use Food {} with duration {} and magnitude {}", Utility::PrintForm(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
-				logusage("[Using ActorEquipManager]  Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(food), std::get<1>(ls.front()), std::get<0>(ls.front()));
-				SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
-					RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
-				});
-				PROF_2(TimeProfiling, "");
-				return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
-			}
+		if (food) {
+			// add statistics
+			Statistics::Misc_FoodEaten++;
+			LOG_2("Use Food {} with duration {} and magnitude {}", Utility::PrintForm(food), dur, mag);
+			logusage("[Using ActorEquipManager]  Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(food), dur, mag);
+			SKSE::GetTaskInterface()->AddTask([acinfo, food]() {
+				RE::ActorEquipManager::GetSingleton()->EquipObject(acinfo->GetActor(), food, nullptr, 1, nullptr, true, false, false);
+			});
+			PROF_2(TimeProfiling, "");
+			return { dur, eff };
 		}
-		//LOG_2("step3");
 	}
 	PROF_2(TimeProfiling, "");
 	return { -1, AlchemicEffect::kNone };
@@ -701,88 +770,79 @@ std::pair<int, AlchemicEffect> ACM::ActorUseFood(std::shared_ptr<ActorInfo> cons
 /// </summary>
 static RE::BSAudioManager* audiomanager;
 
-std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> const& acinfo, AlchemicEffect alchemyEffect)
+std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> const& acinfo, MatchingItems& match)
 {
 	StartProfiling;
 	LOG_2("");
 	if (Utility::VerifyActorInfo(acinfo)) {
 		auto begin = std::chrono::steady_clock::now();
-		// if no effect is specified, return
-		if (alchemyEffect == 0) {
-			return { -1, AlchemicEffect::kNone };
-		}
-		//RE::EffectSetting* sett = nullptr;
-		LOG_2("trying to find poison");
-		auto ls = GetMatchingPoisons(acinfo, alchemyEffect);
-		ls.sort(Utility::SortMagnitude);
-		ls.remove_if([acinfo](std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> tup) { return (std::get<3>(tup) & AlchemicEffect::kCureDisease).IsValid() && acinfo->CanUsePoison(std::get<2>(tup)->GetFormID()) == false; });
+
+		std::sort(match.matchingPoisons.begin(), match.matchingPoisons.end(), Utility::SortMagnitude);
+		auto& [mag, dur, poison, eff] = match.matchingPoisons.front();
 		// got all potions the actor has sorted by magnitude.
 		// now use the one with the highest magnitude;
-		RE::AlchemyItem* poison;
-		if (ls.size() > 0) {
-			if (poison = std::get<2>(ls.front()); poison) {
-				// save statistics
-				Statistics::Misc_PoisonsUsed++;
-				if (comp->LoadedAnimatedPoisons()) {
-					LOG_2("AnimatedPoisons loaded, apply poison later");
-					comp->AnPois_AddActorPoison(acinfo->GetFormID(), poison);
+		if (poison) {
+			// save statistics
+			Statistics::Misc_PoisonsUsed++;
+			if (comp->LoadedAnimatedPoisons()) {
+				LOG_2("AnimatedPoisons loaded, apply poison later");
+				comp->AnPois_AddActorPoison(acinfo->GetFormID(), poison);
 
-					SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
-					ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPoisonsEvent");
-					ev->strArg = RE::BSFixedString(std::to_string(poison->GetFormID()));
-					ev->numArg = 0.0f;
-					ev->sender = acinfo->GetActor();
-					SKSE::GetModCallbackEventSource()->SendEvent(ev);
-					return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+				SKSE::ModCallbackEvent* ev = new SKSE::ModCallbackEvent();
+				ev->eventName = RE::BSFixedString("NPCsUsePotions_AnimatedPoisonsEvent");
+				ev->strArg = RE::BSFixedString(std::to_string(poison->GetFormID()));
+				ev->numArg = 0.0f;
+				ev->sender = acinfo->GetActor();
+				SKSE::GetModCallbackEventSource()->SendEvent(ev);
+				return { dur, eff };
+			} else {
+				LOG_2("Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), dur, mag);
+				logusage("[Manual Application]       Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), dur, mag);
+				if (!audiomanager)
+					audiomanager = RE::BSAudioManager::GetSingleton();
+				//RE::ExtraDataList* extra = new RE::ExtraDataList();
+				int dosage = Distribution::GetPoisonDosage(poison, 0xFFFFFFFFFFFFFFFF, true);
+				if (dosage == 0)
+					dosage = acinfo->GetBasePoisonDosage(comp);
+				if (dosage == 0)  // if the actor doesn't have the perk
+					dosage = data->GetPoisonDosage(poison);
+				LOG_2("Set poison dosage to {} for item {}.", dosage, Utility::PrintForm(poison));
+				auto ied = acinfo->GetEquippedEntryData(false);
+				if (ied) {
+					ied->PoisonObject(poison, dosage);
+					acinfo->RemoveItem(poison, 1);
+					{
+						// play poison sound
+						RE::BSSoundHandle handle;
+						if (poison->data.consumptionSound)
+							audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+						else if (Settings::PoisonUse)
+							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+						handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
+						handle.SetVolume(1.0);
+						handle.Play();
+					}
+					PROF_2(TimeProfiling, "");
+					return { dur, eff };
 				} else {
-					LOG_2("Use Poison {} with duration {} and magnitude {}", Utility::PrintForm(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
-					logusage("[Manual Application]       Actor:\t{}\tItem:\t{}\tDuration:\t{}\tMagnitude:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(poison), std::get<1>(ls.front()), std::get<0>(ls.front()));
-					if (!audiomanager)
-						audiomanager = RE::BSAudioManager::GetSingleton();
-					//RE::ExtraDataList* extra = new RE::ExtraDataList();
-					int dosage = Distribution::GetPoisonDosage(poison, 0xFFFFFFFFFFFFFFFF, true);
-					if (dosage == 0)
-						dosage = acinfo->GetBasePoisonDosage(comp);
-					if (dosage == 0)  // if the actor doesn't have the perk
-						dosage = data->GetPoisonDosage(poison);
-					LOG_2("Set poison dosage to {} for item {}.", dosage, Utility::PrintForm(poison));
-					auto ied = acinfo->GetEquippedEntryData(false);
+					ied = acinfo->GetEquippedEntryData(true);
 					if (ied) {
-						ied->PoisonObject(poison, dosage);
-						acinfo->RemoveItem(poison, 1);
-						{
-							// play poison sound
-							RE::BSSoundHandle handle;
-							if (poison->data.consumptionSound)
-								audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-							else if (Settings::PoisonUse)
-								audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-							handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-							handle.SetVolume(1.0);
-							handle.Play();
-						}
-						PROF_2(TimeProfiling, "");
-						return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
-					} else {
-						ied = acinfo->GetEquippedEntryData(true);
-						if (ied) {
-							if (ied->object && ied->object->IsWeapon()) {
-								ied->PoisonObject(poison, dosage);
-								acinfo->RemoveItem(poison, 1);
-								{
-									// play poison sound
-									RE::BSSoundHandle handle;
-									if (poison->data.consumptionSound)
-										audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
-									else
-										audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
-									handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
-									handle.SetVolume(1.0);
-									handle.Play();
-								}
-								PROF_2(TimeProfiling, "");
-								return { std::get<1>(ls.front()), std::get<3>(ls.front()) };
+						if (ied->object && ied->object->IsWeapon()) {
+							ied->PoisonObject(poison, dosage);
+							acinfo->RemoveItem(poison, 1);
+							{
+								// play poison sound
+								RE::BSSoundHandle handle;
+								if (poison->data.consumptionSound)
+									audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+								else
+									audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+								handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
+								handle.SetVolume(1.0);
+								handle.Play();
 							}
+							PROF_2(TimeProfiling, "");
+							return { dur, eff };
 						}
 					}
 				}

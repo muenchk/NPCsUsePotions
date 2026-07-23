@@ -438,29 +438,29 @@ GetRandomPotioneff:;
 		auto itm = potions[ra(randi)];
 		return itm->object->As<RE::AlchemyItem>();
 	} else if (eff == AlchemicEffect::kBlood) {
-		items = Settings::GetMatchingItems(*Settings::potionsBlood(), eff);
+		items = Settings::GetMatchingItems(*Settings::potionsBlood(), eff, numPotionEffects);
 	} else {
 RetryPotion:
 		switch (str) {
 		case 1:  // weak
-			items = Settings::GetMatchingItems(*Settings::potionsWeak_main(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsWeak_main(), eff, numPotionEffects);
 			break;
 		case 2:  // standard
-			items = Settings::GetMatchingItems(*Settings::potionsStandard_main(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsStandard_main(), eff, numPotionEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryPotion;
 			}
 			break;
 		case 3:  // potent
-			items = Settings::GetMatchingItems(*Settings::potionsPotent_main(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsPotent_main(), eff, numPotionEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryPotion;
 			}
 			break;
 		case 4:  // insane
-			items = Settings::GetMatchingItems(*Settings::potionsInsane_main(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsInsane_main(), eff, numPotionEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryPotion;
@@ -507,24 +507,24 @@ GetRandomPoisoneff:;
 RetryPoison:
 		switch (str) {
 		case 1:  // weak
-			items = Settings::GetMatchingItems(*Settings::poisonsWeak(), eff);
+			items = Settings::GetMatchingItems(*Settings::poisonsWeak(), eff, numPoisonEffects);
 			break;
 		case 2:  // standard
-			items = Settings::GetMatchingItems(*Settings::poisonsStandard(), eff);
+			items = Settings::GetMatchingItems(*Settings::poisonsStandard(), eff, numPoisonEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryPoison;
 			}
 			break;
 		case 3:  // potent
-			items = Settings::GetMatchingItems(*Settings::poisonsPotent(), eff);
+			items = Settings::GetMatchingItems(*Settings::poisonsPotent(), eff, numPoisonEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryPoison;
 			}
 			break;
 		case 4:  // insane
-			items = Settings::GetMatchingItems(*Settings::poisonsInsane(), eff);
+			items = Settings::GetMatchingItems(*Settings::poisonsInsane(), eff, numPoisonEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryPoison;
@@ -559,24 +559,24 @@ GetRandomFortifyeff:;
 RetryFortify:
 		switch (str) {
 		case 1:  // weak
-			items = Settings::GetMatchingItems(*Settings::potionsWeak_rest(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsWeak_rest(), eff, numFortifyEffects);
 			break;
 		case 2:  // standard
-			items = Settings::GetMatchingItems(*Settings::potionsStandard_rest(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsStandard_rest(), eff, numFortifyEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryFortify;
 			}
 			break;
 		case 3:  // potent
-			items = Settings::GetMatchingItems(*Settings::potionsPotent_rest(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsPotent_rest(), eff, numFortifyEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryFortify;
 			}
 			break;
 		case 4:  // insane
-			items = Settings::GetMatchingItems(*Settings::potionsInsane_rest(), eff);
+			items = Settings::GetMatchingItems(*Settings::potionsInsane_rest(), eff, numFortifyEffects);
 			if (items.size() == 0) {
 				str -= 1;
 				goto RetryFortify;
@@ -609,7 +609,7 @@ GetRandomFortifyeff:;
 		return itm->object->As<RE::AlchemyItem>();
 	} else {
 RetryFortify:
-		items = Settings::GetMatchingItems(*Settings::foodall(), eff);
+		items = Settings::GetMatchingItems(*Settings::foodall(), eff, numFoodEffects);
 	}
 	// return random item
 	if (items.size() > 0) {

@@ -925,19 +925,7 @@ public:
 	/// <param name="list"></param>
 	/// <param name="effect"></param>
 	/// <returns></returns>
-	static std::vector<RE::AlchemyItem*> GetMatchingItems(std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>& list, AlchemicEffect effect)
-	{
-		std::vector<RE::AlchemyItem*> ret;
-		for (auto entry : list) {
-			//if ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid()) {
-			//	logusage("Has InvisibilityEffect, DoNot {}, haseff {}", Settings::distr._DoNotDistributeMixedInvisPotions, (std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid());
-			//}
-			if ((std::get<0>(entry) & effect) > 0 && (Settings::distr._DoNotDistributeMixedInvisPotions == false || Settings::distr._DoNotDistributeMixedInvisPotions && ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid() == false || (effect & AlchemicEffect::kInvisibility).IsValid()))) {
-				ret.push_back(std::get<1>(entry));
-			}
-		}
-		return ret;
-	}
+	static std::vector<RE::AlchemyItem*> GetMatchingItems(std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>& list, AlchemicEffect effect, int numMaxEffects);
 
 	/// <summary>
 	/// Deletes all AlchemyEffects, that are not used by any potions, etc. from all distribution rules
