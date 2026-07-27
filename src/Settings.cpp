@@ -1324,8 +1324,9 @@ void Settings::LoadDistrConfig()
 								break;
 							case 34:  // set number of item effects for rules
 								{
-									if (splits->size() != 4) {
-										logwarn("rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+									// 1|34|RuleIdentifier|ItemType|numEffects
+									if (splits->size() != 5) {
+										logwarn("rule has wrong number of fields, expected 5. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
 										continue;
 									}
 									std::string ruleName = splits->at(splitindex);
@@ -4328,11 +4329,8 @@ std::vector<RE::AlchemyItem*> Settings::GetMatchingItems(std::list<std::pair<Alc
 {
 	std::vector<RE::AlchemyItem*> ret;
 	for (auto entry : list) {
-		//if ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid()) {
-		//	logusage("Has InvisibilityEffect, DoNot {}, haseff {}", Settings::distr._DoNotDistributeMixedInvisPotions, (std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid());
-		//}
 		if (entry.second->effects.size() > numMaxEffects) {
-			LOG_4("Cannot distribute item {}, due to number of effects", Utility::PrintForm(entry.second));
+			//LOG_4("Cannot distribute item {}, due to number of effects", Utility::PrintForm(entry.second));
 			continue;
 		}
 		if ((std::get<0>(entry) & effect) > 0 && (Settings::distr._DoNotDistributeMixedInvisPotions == false || Settings::distr._DoNotDistributeMixedInvisPotions && ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid() == false || (effect & AlchemicEffect::kInvisibility).IsValid()))) {
