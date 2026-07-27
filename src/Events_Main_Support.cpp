@@ -502,6 +502,7 @@ namespace Events
 	/// <param name="acinfo"></param>
 	void Main::ProcessDistribution(std::shared_ptr<ActorInfo> acinfo)
 	{
+		StartProfiling;
 		// check wether this charackter maybe a follower
 		if (acinfo->GetLastDistrTime() == 0.0f || RE::Calendar::GetSingleton()->GetDaysPassed() - acinfo->GetLastDistrTime() > 1) {
 			if (!Distribution::ExcludedNPC(acinfo) && acinfo->IsDead() == false) {
@@ -533,22 +534,20 @@ namespace Events
 				// if we have characters that should not get items, the function
 				// just won't return anything, but we have to check for standard factions like CurrentFollowerFaction
 				auto items = Distribution::GetDistrItems(acinfo);
-				if (acinfo->IsDead()) {
-					return;
-				}
-				if (items.size() > 0) {
+				if (!acinfo->IsDead() && items.size() > 0) {
 					for (int i = 0; i < items.size(); i++) {
 						if (items[i] == nullptr) {
 							continue;
 						}
 						acinfo->AddItem(items[i], 1);
-						LOG_4("added item {} to actor {}", Utility::PrintForm(items[i]), Utility::PrintForm(acinfo));
+						LOG_4("added item {} to actor {}", Utility::PrintForm(items[i]), acinfo->GetFormString());
 						logdistr("Actor:\t{}\tItem:\t{}", acinfo->GetFormString(), Utility::PrintFormNonDebug(items[i]));
 					}
 					acinfo->SetLastDistrTime(RE::Calendar::GetSingleton()->GetDaysPassed());
 				}
 			}
 		}
+		PROF_2(TimeProfiling, "");
 	}
 
 	/// <summary>
@@ -557,6 +556,7 @@ namespace Events
 	/// <param name="actor"></param>
 	void Main::RegisterNPC(RE::Actor* actor)
 	{
+		StartProfiling;
 		EvalProcessing();
 		// exit if the actor is unsafe / not valid
 		if (Utility::ValidateActor(actor) == false)
@@ -570,7 +570,7 @@ namespace Events
 		}
 		LOG_1("Trying to register new actor for potion tracking: {}", Utility::PrintForm(actor));
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
-		LOG_1("Found: {}", Utility::PrintForm(acinfo));
+		LOG_1("Found: {}", acinfo->GetFormString());
 		// if actor was dead, exit
 		if (acinfo->GetDead()) {
 			LOG_1("Actor already dead");
@@ -583,11 +583,14 @@ namespace Events
 		if (actor->IsInCombat())
 			acinfo->SetCombatState(CombatState::InCombat);
 
-		ProcessDistribution(acinfo);
+		SKSE::GetTaskInterface()->AddTask([acinfo]() {
+			ProcessDistribution(acinfo);
+		});
 		EvalProcessing();
 		if (actor->IsDead())
 			return;
 
+		PROF_2(TimeProfiling, "");
 		LOG_1("finished registering NPC");
 	}
 

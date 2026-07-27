@@ -72,7 +72,7 @@ namespace Events
 		/// <summary>
 		/// list of npcs that are currently in combat
 		/// </summary>
-		static inline std::forward_list<std::shared_ptr<ActorInfo>> combatants;
+		static inline std::deque<std::shared_ptr<ActorInfo>> combatants;
 		/// <summary>
 		/// set of actors temporarily forbidden from processing
 		/// </summary>

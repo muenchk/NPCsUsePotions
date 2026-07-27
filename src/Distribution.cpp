@@ -821,6 +821,7 @@ void Distribution::Rule::RemoveAlchemyEffectFood(AlchemicEffect effect)
 
 std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
+	StartProfiling;
 	Rule* rule = CalcRule(acinfo, nullptr);
 	std::vector<RE::TESBoundObject*> ret;
 	if (rule == Distribution::emptyRule) {
@@ -1007,6 +1008,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 		LOG_4("remove last item");
 		ret.pop_back();
 	}
+	PROF_2(TimeProfiling, "");
 	return ret;
 }
 std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(std::shared_ptr<ActorInfo> const& acinfo)
@@ -1925,8 +1927,14 @@ bool CheckDistributability(std::shared_ptr<ActorInfo> const& acinfo, Distributio
 Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& acinfo, UtilityBase::NPCTPLTInfo* tpltinfo)
 {
 	StartProfiling;
-	if (acinfo == nullptr || acinfo->IsValid() == false)
+	if (acinfo == nullptr || acinfo->IsValid() == false) {
+		acinfo->SetLastRuleCalcTime();
+		acinfo->SetDistributionRule(emptyRule);
 		return emptyRule;
+	}
+	Rule* rule = nullptr;
+	if (acinfo->GetLastRuleCalcTime() + std::chrono::seconds(60) < std::chrono::steady_clock::now() && (rule = acinfo->GetDistributionRule()) != nullptr)
+		return rule;
 	// get npc template info
 	UtilityBase::NPCTPLTInfo tplt;
 	if (tpltinfo == nullptr) {
@@ -1977,15 +1985,10 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 	}
 	// now calculate rule and on top get the boss override
 
+	auto acsMap = actorStrengthMap();
+
 	bool bossoverride = false;
 	int acsadj = 0;
-	auto adjustacs = [&acsadj](RE::FormID id) {
-		try {
-			acsadj += actorStrengthMap()->at(id);
-		} catch (std::out_of_range&) {
-		}
-	};
-
 
 	bool ruleoverride = false;
 	bool baseexcluded = false;
@@ -2003,7 +2006,6 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 
 	auto base = acinfo->GetActorBase();
 
-	Rule* rule = nullptr;
 	// define general stuff
 	auto race = acinfo->GetRace();
 
@@ -2016,7 +2018,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		prio = INT_MAX;
 	}
 	bossoverride |= bosses()->contains(acinfo->GetFormID());
-	adjustacs(acinfo->GetFormID());
+	if (auto itr = acsMap->find(acinfo->GetFormID()); itr != acsMap->end())
+			acsadj += itr->second;
 	// get custom items
 	if (calccustitems) {
 		auto itc = customItems()->find(acinfo->GetFormID());
@@ -2044,7 +2047,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		}
 	}
 	bossoverride |= bosses()->contains(acinfo->GetActorBaseFormID());
-	adjustacs(acinfo->GetActorBaseFormID());
+	if (auto itr = acsMap->find(acinfo->GetActorBaseFormID()); itr != acsMap->end())
+		acsadj += itr->second;
 	// get custom items
 	if (calccustitems) {
 		auto itc = customItems()->find(acinfo->GetActorBaseFormID());
@@ -2072,7 +2076,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			}
 		}
 		bossoverride |= bosses()->contains(tpltinfo->base->GetFormID());
-		adjustacs(tpltinfo->base->GetFormID());
+		if (auto itr = acsMap->find(tpltinfo->base->GetFormID()); itr != acsMap->end())
+			acsadj += itr->second;
 		// get custom items
 		if (calccustitems) {
 			auto itc = customItems()->find(tpltinfo->base->GetFormID());
@@ -2124,12 +2129,14 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 				}
 				baseexcluded |= baselineExclusions()->contains(race->keywords[i]->GetFormID());
 				bossoverride |= bosses()->contains(race->keywords[i]->GetFormID());
-				adjustacs(race->keywords[i]->GetFormID());
+				if (auto itr = acsMap->find(race->keywords[i]->GetFormID()); itr != acsMap->end())
+					acsadj += itr->second;
 			}
 		}
 	}
 	bossoverride |= bosses()->contains(base->GetRace()->GetFormID());
-	adjustacs(base->GetRace()->GetFormID());
+	if (auto itr = acsMap->find(base->GetRace()->GetFormID()); itr != acsMap->end())
+		acsadj += itr->second;
 	// get custom items
 	if (calccustitems) {
 		auto itc = customItems()->find(race->GetFormID());
@@ -2187,7 +2194,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 				baseexcluded |= baselineExclusions()->contains(key->GetFormID());
 			}
 			bossoverride |= bosses()->contains(key->GetFormID());
-			adjustacs(key->GetFormID());
+			if (auto itr = acsMap->find(key->GetFormID()); itr != acsMap->end())
+				acsadj += itr->second;
 			// get custom items
 			if (calccustitems) {
 				auto itc = customItems()->find(key->GetFormID());
@@ -2226,7 +2234,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
 				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltkeywords[i]->GetFormID());
-				adjustacs(tpltinfo->tpltkeywords[i]->GetFormID());
+				if (auto itr = acsMap->find(tpltinfo->tpltkeywords[i]->GetFormID()); itr != acsMap->end())
+					acsadj += itr->second;
 				// get custom items
 				if (calccustitems) {
 					auto itc = customItems()->find(tpltinfo->tpltkeywords[i]->GetFormID());
@@ -2250,6 +2259,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 
 	// handle factions
 	for (uint32_t i = 0; i < base->factions.size(); i++) {
+		if (base->factions[i].faction == nullptr)
+			continue;
 		if (!ruleoverride) {
 			auto it = assocMap()->find(base->factions[i].faction->GetFormID());
 			if (it != assocMap()->end()) {
@@ -2266,7 +2277,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			baseexcluded |= baselineExclusions()->contains(base->factions[i].faction->GetFormID());
 		}
 		bossoverride |= bosses()->contains(base->factions[i].faction->GetFormID());
-		adjustacs(base->factions[i].faction->GetFormID());
+		if (auto itr = acsMap->find(base->factions[i].faction->GetFormID()); itr != acsMap->end())
+			acsadj += itr->second;
 		if (calccustitems) {
 			auto itc = customItems()->find(base->factions[i].faction->GetFormID());
 			if (itc != customItems()->end()) {
@@ -2303,7 +2315,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 					baseexcluded |= baselineExclusions()->contains(tpltinfo->tpltfactions[i]->GetFormID());
 				}
 				bossoverride |= bosses()->contains(tpltinfo->tpltfactions[i]->GetFormID());
-				adjustacs(tpltinfo->tpltfactions[i]->GetFormID());
+				if (auto itr = acsMap->find(tpltinfo->tpltfactions[i]->GetFormID()); itr != acsMap->end())
+					acsadj += itr->second;
 				if (calccustitems) {
 					auto itc = customItems()->find(tpltinfo->tpltfactions[i]->GetFormID());
 					if (itc != customItems()->end()) {
@@ -2342,7 +2355,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 				}
 			}
 		}
-		adjustacs(base->npcClass->GetFormID());
+		if (auto itr = acsMap->find(base->npcClass->GetFormID()); itr != acsMap->end())
+			acsadj += itr->second;
 		if (calccustitems) {
 			auto itc = customItems()->find(base->npcClass->GetFormID());
 			if (itc != customItems()->end()) {
@@ -2377,7 +2391,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 				}
 			}
 		}
-		adjustacs(base->combatStyle->GetFormID());
+		if (auto itr = acsMap->find(base->combatStyle->GetFormID()); itr != acsMap->end())
+			acsadj += itr->second;
 		if (calccustitems) {
 			auto itc = customItems()->find(base->combatStyle->GetFormID());
 			if (itc != customItems()->end()) {
@@ -2450,17 +2465,21 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		acinfo->SetWhitelistCalculated();
 	}
 
-	PROF_1(TimeProfiling, "execution time");
+	PROF_1(TimeProfiling, "execution time for {}", Utility::PrintFormNonDebug(acinfo));
 
+	acinfo->SetLastRuleCalcTime();
 	if (rule) {
 		LOG_1("rule found: {}", rule->ruleName);
+		acinfo->SetDistributionRule(rule);
 		return rule;
 	} else {
 		// there are no rules!!!
 		if (baseexcluded) {
+			acinfo->SetDistributionRule(Distribution::emptyRule);
 			return Distribution::emptyRule;
 		}
 		LOG_1("default rule found: {}", Distribution::defaultRule->ruleName);
+		acinfo->SetDistributionRule(Distribution::defaultRule);
 		return Distribution::defaultRule;
 	}
 }

@@ -290,6 +290,8 @@ private:
 	/// </summary>
 	long long timestamp_invalid;
 
+	std::chrono::steady_clock::time_point lastRuleCalcTime = std::chrono::steady_clock::time_point::min();
+	Distribution::Rule* _distributionRule = nullptr;
 
 public:
 	/// <summary>
@@ -895,6 +897,19 @@ public:
 	/// Updates the actor and whether the ActorInfo is valid
 	/// </summary>
 	void Update();
+
+	/// <summary>
+	/// Sets the last time the rules have been calculated
+	/// </summary>
+	void SetLastRuleCalcTime();
+	/// <summary>
+	/// returns the last time the rules have been calculated
+	/// </summary>
+	/// <returns></returns>
+	std::chrono::steady_clock::time_point GetLastRuleCalcTime();
+
+	void SetDistributionRule(Distribution::Rule* rule);
+	Distribution::Rule* GetDistributionRule();
 
 #pragma endregion
 

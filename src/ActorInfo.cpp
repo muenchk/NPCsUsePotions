@@ -54,7 +54,7 @@ ActorInfo::ActorInfo(RE::Actor* _actor)
 		UpdatePermanentPoisonResist();
 		// set to valid
 		valid = true;
-		_formstring = Utility::PrintForm(this);
+		_formstring = Utility::PrintFormNonDebug(this);
 		timestamp_invalid = 0;
 		dead = false;
 	}
@@ -93,6 +93,8 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	tcombatdata = 0;
 	target = std::weak_ptr<ActorInfo>{};
 	handleactor = false;
+	lastRuleCalcTime = std::chrono::steady_clock::time_point::min();
+	_distributionRule = nullptr;
 	if (_actor) {
 		actor = _actor->GetHandle();
 		formid.SetID(_actor->GetFormID());
@@ -1264,6 +1266,26 @@ void ActorInfo::Update()
 	{
 		SetInvalid();
 	}
+}
+
+void ActorInfo::SetLastRuleCalcTime() 
+{ 
+	lastRuleCalcTime = std::chrono::steady_clock::time_point::now(); 
+}
+
+std::chrono::steady_clock::time_point ActorInfo::GetLastRuleCalcTime()
+{
+	return lastRuleCalcTime;
+}
+
+void ActorInfo::SetDistributionRule(Distribution::Rule* rule)
+{
+	_distributionRule = rule;
+}
+
+Distribution::Rule* ActorInfo::GetDistributionRule()
+{
+	return _distributionRule;
 }
 
 std::weak_ptr<ActorInfo> ActorInfo::GetTarget()

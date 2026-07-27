@@ -66,6 +66,13 @@ std::string Utility::PrintForm(std::weak_ptr<ActorInfo> acweak)
 	}
 }
 
+std::string Utility::PrintFormNonDebug(std::shared_ptr<ActorInfo> const& acinfo)
+{
+	if (acinfo == nullptr || acinfo->IsValid() == false)
+		return "None";
+	return std::string("[") + typeid(ActorInfo).name() + "<" + Utility::GetHex(acinfo->GetFormID()) + "><" + acinfo->GetName() + "><" + acinfo->GetPluginname() + ">]";
+}
+
 std::string Utility::ToString(ActorStrength acs)
 {
 	switch (acs) {

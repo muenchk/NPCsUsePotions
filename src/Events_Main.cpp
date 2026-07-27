@@ -54,18 +54,18 @@ namespace Events
 	{
 		StartProfiling;
 		if (!acinfo->IsValid()) {
-			LOG_2("{} Invalid", Utility::PrintForm(acinfo));
+			LOG_2("{} Invalid", acinfo->GetFormString());
 			return 0;
 		}
 		if (acinfo->IsInCombat() == false || acinfo->GetHandleActor() == false) {
-			LOG_2("{} out-of-combat or not to be handled", Utility::PrintForm(acinfo));
+			LOG_2("{} out-of-combat or not to be handled", acinfo->GetFormString());
 			return 0;
 		}
 		if (Settings::potions._HandleWeaponSheathedAsOutOfCombat && !acinfo->IsWeaponDrawn()) {
-			LOG_2("{} weapon sheathed", Utility::PrintForm(acinfo));
+			LOG_2("{} weapon sheathed", acinfo->GetFormString());
 			return 0;
 		}
-		LOG_1("{}", Utility::PrintForm(acinfo));
+		LOG_1("{}", acinfo->GetFormString());
 		AlchemicEffect alch = 0;
 		AlchemicEffect alch2 = 0;
 		AlchemicEffect alch3 = 0;
@@ -123,7 +123,7 @@ namespace Events
 			return 0;
 		if (Settings::fortifyPotions._DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return 0;
-		LOG_1("{}", Utility::PrintForm(acinfo));
+		LOG_1("{}", acinfo->GetFormString());
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance &&
 			Settings::fortifyPotions._enableFortifyPotions &&
 			(!(acinfo->IsPlayer()) || Settings::player._playerFortifyPotions)) {
@@ -161,7 +161,7 @@ namespace Events
 			return 0;
 		if (Settings::poisons._DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return 0;
-		LOG_1("{}", Utility::PrintForm(acinfo));
+		LOG_1("{}", acinfo->GetFormString());
 		if (acinfo->GetDurCombat() > 1000 &&
 			acinfo->GetGlobalCooldownTimer() <= tolerance &&
 			Settings::poisons._enablePoisons &&
@@ -220,7 +220,7 @@ namespace Events
 				}
 			}
 			if (combatdata == 0)
-				LOG_2("couldn't determine combatdata for npc {}", Utility::PrintForm(acinfo));
+				LOG_2("couldn't determine combatdata for npc {}", acinfo->GetFormString());
 			// else Mage or Hand to Hand which cannot use poisons
 		}
 		return 0;
@@ -237,7 +237,7 @@ namespace Events
 			return 0;
 		if (Settings::food._DontUseWithWeaponsSheathed && !acinfo->IsWeaponDrawn())
 			return 0;
-		LOG_1("{}", Utility::PrintForm(acinfo));
+		LOG_1("{}", acinfo->GetFormString());
 		if (acinfo->GetGlobalCooldownTimer() <= tolerance &&
 			Settings::food._enableFood &&
 			RE::Calendar::GetSingleton()->GetDaysPassed() >= acinfo->GetNextFoodTime() &&
@@ -260,12 +260,12 @@ namespace Events
 		StartProfiling;
 		if (!acinfo->IsValid())
 			return 0;
-		if (acinfo->IsInCombat() == true &&
+		if (acinfo->GetHandleActor() == false ||
+			acinfo->IsInCombat() == true &&
 				(Settings::potions._HandleWeaponSheathedAsOutOfCombat == false /*if disabled we always use the combat handler*/ ||
-					Settings::potions._HandleWeaponSheathedAsOutOfCombat == true && acinfo->IsWeaponDrawn() == true /*if weapons are drawn we use the combat handler*/) ||
-			acinfo->GetHandleActor() == false)
+					Settings::potions._HandleWeaponSheathedAsOutOfCombat == true && acinfo->IsWeaponDrawn() == true /*if weapons are drawn we use the combat handler*/))
 			return 0;
-		LOG_1("{}", Utility::PrintForm(acinfo));
+		LOG_1("{}", acinfo->GetFormString());
 		// we are only checking for health here
 		if (Settings::potions._enableHealthRestoration && !comp->CannotRestoreHealth(acinfo) && acinfo->GetGlobalCooldownTimer() <= tolerance && acinfo->GetDurHealth() < tolerance &&
 			ACM::GetAVPercentage(acinfo->GetActor(), RE::ActorValue::kHealth) < Settings::potions._healthThreshold && (!acinfo->IsPlayer() || Settings::player._playerPotions)) {
@@ -300,11 +300,11 @@ namespace Events
 		// if npc 3d isn't loaded, skip them
 		if (acinfo->Is3DLoaded() == false)
 		{
-			LOG_5("3d not loaded {}", Utility::PrintForm(acinfo));
+			LOG_5("3d not loaded {}", acinfo->GetFormString());
 			acinfo->SetHandleActor(false);
 			return;
 		}
-		LOG_1("{}", Utility::PrintForm(acinfo));
+		LOG_1("{}", acinfo->GetFormString());
 		LOG_2("cooldowns: durHealth:{}\tdurMagicka:{}\tdurStamina:{}\tdurFortify:{}\tdurRegen:{}", acinfo->GetDurHealth(), acinfo->GetDurMagicka(), acinfo->GetDurStamina(), acinfo->GetDurFortify(), acinfo->GetDurRegeneration());
 		// check for staggered option
 		// check for paralyzed
@@ -496,6 +496,12 @@ namespace Events
 				}
 			}
 		}
+
+		if (!CanProcess() || Game::IsFastTravelling())
+			return;
+		if (IsPlayerDead())
+			return;
+
 		LOG_1("Validate Actors {}", acset.size());
 
 		// validate actorsets
@@ -505,11 +511,6 @@ namespace Events
 		_lastActorsUpdate = std::chrono::steady_clock::now();
 
 		LOG_1("Validated {} Actors", std::to_string(actors.size()));
-
-		if (!CanProcess() || Game::IsFastTravelling())
-			return;
-		if (IsPlayerDead())
-			return;
 
 		try {
 			actorsincombat = 0;
@@ -534,12 +535,9 @@ namespace Events
 			// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
 			std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
 				if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-					DecreaseActorCooldown(acinfo);
-					// retrieve runtime data
-					HandleActorRuntimeData(acinfo);
 					if (acinfo->IsInCombat()) {
 						actorsincombat++;
-						combatants.push_front(acinfo);
+						combatants.push_back(acinfo);
 						if (acinfo->GetPlayerHostile())
 							hostileactors++;
 					}
@@ -566,6 +564,14 @@ namespace Events
 						// emergency catch -- check again, we don't know when this function is called exactly
 						StartProfiling;
 						if (Game::IsFastTravelling())
+							return;
+
+						DecreaseActorCooldown(acinfo);
+						// retrieve runtime data
+						HandleActorRuntimeData(acinfo);
+
+						// don't handle at all if this is set
+						if (acinfo->GetHandleActor())
 							return;
 
 						ACM::MatchingItems match;

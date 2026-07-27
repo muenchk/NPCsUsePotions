@@ -29,7 +29,7 @@ std::shared_ptr<ActorInfo> Data::CreateActorInfo(RE::Actor* actor)
 		actorinfoMap.insert_or_assign(acinfo->GetFormID(), acinfo);
 		Distribution::CalcRule(acinfo);
 	}
-	LOG_4("{}", Utility::PrintForm(acinfo));
+	LOG_4("{}", acinfo->GetFormString());
 	return acinfo;
 }
 
@@ -418,7 +418,7 @@ long Data::ReadActorInfoMap(SKSE::SerializationInterface * a_intfc, uint32_t len
 	} else {
 		accounter++;
 		RegisterActorInfo(acinfo);
-		LOG_3("read ActorInfo. actor: {}", Utility::PrintForm(acinfo));
+		LOG_3("read ActorInfo. actor: {}", acinfo->GetFormString());
 	}
 	delete[] buffer;
 	// release lock

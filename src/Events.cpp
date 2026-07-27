@@ -250,6 +250,9 @@ TESDeathEventEnd:
 			else if (a_event->newState == RE::ACTOR_COMBAT_STATE::kNone)
 				acinfo->SetCombatState(CombatState::OutOfCombat);
 
+			// set whether actor is hostile to player
+			acinfo->SetPlayerHostile(actor->IsHostileToActor(RE::PlayerCharacter::GetSingleton()));
+
 		}
 		PROF_2(TimeProfiling, "[TESCombatEvent] event execution time");
 		return EventResult::kContinue;

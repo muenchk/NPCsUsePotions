@@ -100,7 +100,7 @@ public:
 	template <class T>
 	static std::string PrintFormNonDebug(T* form)
 	{
-		if (form == nullptr || form->GetFormID() == 0 || Logging::EnableGenericLogging == false)
+		if (form == nullptr || form->GetFormID() == 0)
 			return "None";
 		std::string plugin = "";
 		if ((form->GetFormID() & 0xFF000000) != 0xFE000000) {
@@ -110,6 +110,7 @@ public:
 
 		return std::string("[") + typeid(T).name() + "<" + Utility::GetHex(form->GetFormID()) + "><" + form->GetName() + "><" + plugin + ">]";
 	}
+	static std::string PrintFormNonDebug(std::shared_ptr<ActorInfo> const& acinfo);
 
 	static std::string PrintEffectDistr(Distribution::EffectDistr* distr)
 	{

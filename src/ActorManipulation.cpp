@@ -545,7 +545,7 @@ std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect> ACM::GetRandomFood(std:
 		count++;
 	}
 	if (count == 1000) {
-		logcritical("Maximum number of Items Exceeded! Forcibly excluding Actor {}", Utility::PrintForm(acinfo));
+		logcritical("Maximum number of Items Exceeded! Forcibly excluding Actor {}", acinfo->GetFormString());
 		Distribution::ForceExcludeNPC(acinfo->GetFormID());
 		return { 0.0f, 0, nullptr, AlchemicEffect::kNone };
 	}
