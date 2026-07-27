@@ -27,7 +27,6 @@ std::shared_ptr<ActorInfo> Data::CreateActorInfo(RE::Actor* actor)
 	if (acinfo->IsValid()) {
 		validActors.insert(acinfo->GetFormID());
 		actorinfoMap.insert_or_assign(acinfo->GetFormID(), acinfo);
-		Distribution::CalcRule(acinfo);
 	}
 	LOG_4("{}", acinfo->GetFormString());
 	return acinfo;
@@ -53,7 +52,6 @@ void Data::RegisterActorInfo(std::shared_ptr<ActorInfo> acinfo)
 	if (acinfo->IsValid()) {
 		validActors.insert(acinfo->GetFormID());
 		actorinfoMap.insert_or_assign(acinfo->GetFormID(), acinfo);
-		Distribution::CalcRule(acinfo);
 	}
 }
 

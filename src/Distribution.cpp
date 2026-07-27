@@ -1139,7 +1139,7 @@ DistributionRule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& acinf
 		return emptyRule;
 	}
 	DistributionRule* rule = nullptr;
-	if (acinfo->GetLastRuleCalcTime() + std::chrono::seconds(60) < std::chrono::steady_clock::now() && (rule = acinfo->GetDistributionRule()) != nullptr)
+	if (acinfo->GetLastRuleCalcTime() + std::chrono::seconds(60) > std::chrono::steady_clock::now() && (rule = acinfo->GetDistributionRule()) != nullptr)
 		return rule;
 	// get npc template info
 	UtilityBase::NPCTPLTInfo tplt;
