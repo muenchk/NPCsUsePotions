@@ -1317,6 +1317,8 @@ bool Distribution::ExcludedNPC(std::shared_ptr<ActorInfo> const& acinfo)
 			if (Distribution::excludedAssoc()->contains(race->GetFormID()))
 				return true;
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
+				if (race->keywords[i] == nullptr)
+					continue;
 				if (Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID()))
 					return true;
 			}
@@ -1392,6 +1394,8 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 			if (Distribution::hardExclusions()->contains(race->GetFormID()))
 				return true;
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
+				if (race->keywords[i] == nullptr)
+					continue;
 				if (Distribution::hardExclusions()->contains(race->keywords[i]->GetFormID())) {
 					LOG_3("Exclude From Handling: Hard Exclusion Keyword Race");
 					return true;
@@ -1422,6 +1426,8 @@ bool Distribution::ExcludedNPCFromHandling(RE::Actor* actor)
 				if (Distribution::excludedAssoc()->contains(race->GetFormID()))
 					return true;
 				for (uint32_t i = 0; i < race->numKeywords; i++) {
+					if (race->keywords[i] == nullptr)
+						continue;
 					if (Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID()))
 						return true;
 				}
@@ -1472,6 +1478,8 @@ bool Distribution::ExcludedNPC(RE::TESNPC* npc)
 			if (Distribution::excludedAssoc()->contains(race->GetFormID()))
 				return true;
 			for (uint32_t i = 0; i < race->numKeywords; i++) {
+				if (race->keywords[i] == nullptr)
+					continue;
 				if (Distribution::excludedAssoc()->contains(race->keywords[i]->GetFormID()))
 					return true;
 			}
@@ -1603,6 +1611,8 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			}
 		baseexcluded |= baselineExclusions()->contains(race->GetFormID());
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			if (race->keywords[i] == nullptr)
+				continue;
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
 			if (itr != assocMap()->end())
 			{
@@ -1634,6 +1644,8 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 			}
 		}
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			if (race->keywords[i] == nullptr)
+				continue;
 			itc = customItems()->find(race->keywords[i]->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
@@ -2097,6 +2109,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 			}
 		baseexcluded |= baselineExclusions()->contains(race->GetFormID());
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			if (race->keywords[i] == nullptr)
+				continue;
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
 			if (itr != assocMap()->end()) {
 				if (prio < std::get<0>(itr->second)) {
@@ -2129,6 +2143,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		}
 		}
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			if (race->keywords[i] == nullptr)
+				continue;
 			itc = customItems()->find(race->keywords[i]->GetFormID());
 			if (itc != customItems()->end()) {
 				auto vec = itc->second;
@@ -2145,6 +2161,8 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		if (whitelistNPCs()->contains(acinfo->GetRaceFormID()))
 			acinfo->SetWhitelisted();
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			if (race->keywords[i] == nullptr)
+				continue;
 			if (whitelistNPCs()->contains(race->keywords[i]->GetFormID()))
 				acinfo->SetWhitelisted();
 		}
@@ -2573,6 +2591,8 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 		adjustacs(base->GetRace()->GetFormID());
 		auto race = base->GetRace();
 		for (uint32_t i = 0; i < race->numKeywords; i++) {
+			if (race->keywords[i] == nullptr)
+				continue;
 			auto itr = assocMap()->find(race->keywords[i]->GetFormID());
 			if (itr != assocMap()->end())
 			{
