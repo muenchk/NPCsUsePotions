@@ -1351,7 +1351,7 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 
-									Distribution::Rule* rule = Distribution::FindRule(ruleName);
+									DistributionRule* rule = Distribution::FindRule(ruleName);
 									if (rule == nullptr) {
 										logwarn("The specified rule cannot be found. file: {}, rule:\"{}\"", file, tmp);
 										delete splits;
@@ -1418,7 +1418,7 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// next entry is the rulename, so we just set it
-									Distribution::Rule* rule = nullptr;
+									DistributionRule* rule = nullptr;
 									bool existing = false;
 									for (auto rl : Distribution::_rules) {
 										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
@@ -1429,7 +1429,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									if (existing == false)
-										rule = new Distribution::Rule();
+										rule = new DistributionRule();
 									rule->ruleVersion = ruleVersion;
 									rule->ruleType = ruleType;
 									rule->ruleName = splits->at(splitindex);
@@ -1723,29 +1723,29 @@ void Settings::LoadDistrConfig()
 									std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> objects = Utility::ParseAssocObjects(assocObjects, error, file, tmp, total);
 
 									// parse the item properties
-									rule->potions = new Distribution::EffCategoryPreset();
+									rule->potions = new EffCategoryPreset();
 									rule->potions->name = rule->ruleName + "_potions_catpreset";
 									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->potions->name, rule->potions);
-									rule->poisons = new Distribution::EffCategoryPreset();
+									rule->poisons = new EffCategoryPreset();
 									rule->poisons->name = rule->ruleName + "_poisons_catpreset";
 									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->poisons->name, rule->poisons);
-									rule->fortify = new Distribution::EffCategoryPreset();
+									rule->fortify = new EffCategoryPreset();
 									rule->fortify->name = rule->ruleName + "_fortify_catpreset";
 									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->fortify->name, rule->fortify);
-									rule->food = new Distribution::EffCategoryPreset();
+									rule->food = new EffCategoryPreset();
 									rule->food->name = rule->ruleName + "_food_catpreset";
 									Distribution::_internEffectCategoryPresets.insert_or_assign(rule->food->name, rule->food);
 									
-									rule->potionEffects = new Distribution::EffectPreset();
+									rule->potionEffects = new EffectPreset();
 									rule->potionEffects->name = rule->ruleName + "_potion_effectspreset";
 									Distribution::_internEffectPresets.insert_or_assign(rule->potionEffects->name, rule->potionEffects);
-									rule->poisonEffects = new Distribution::EffectPreset();
+									rule->poisonEffects = new EffectPreset();
 									rule->poisonEffects->name = rule->ruleName + "_poison_effectspreset";
 									Distribution::_internEffectPresets.insert_or_assign(rule->poisonEffects->name, rule->poisonEffects);
-									rule->fortifyEffects = new Distribution::EffectPreset();
+									rule->fortifyEffects = new EffectPreset();
 									rule->fortifyEffects->name = rule->ruleName + "_fortify_effectspreset";
 									Distribution::_internEffectPresets.insert_or_assign(rule->fortifyEffects->name, rule->fortifyEffects);
-									rule->foodEffects = new Distribution::EffectPreset();
+									rule->foodEffects = new EffectPreset();
 									rule->foodEffects->name = rule->ruleName + "_food_effectspreset";
 									Distribution::_internEffectPresets.insert_or_assign(rule->foodEffects->name, rule->foodEffects);
 
@@ -1777,15 +1777,15 @@ void Settings::LoadDistrConfig()
 										mean = mean / 3;
 										return mean;
 									};
-									auto addcats = [](Distribution::EffCategoryPreset* preset) {
+									auto addcats = [](EffCategoryPreset* preset) {
 										for (int i = 0; i < 5; i++)
 										{
-											preset->cats[i] = new Distribution::EffCategory();
+											preset->cats[i] = new EffCategory();
 											preset->cats[i]->name = preset->name + "_" + std::to_string(i);
 											Distribution::_internEffectCategories.insert_or_assign(preset->cats[i]->name, preset->cats[i]);
 										}
 									};
-									auto setcat = [](Distribution::EffCategoryPreset* preset, int num, int base, float falloff, int max, Distribution::FalloffFunction fall) {
+									auto setcat = [](EffCategoryPreset* preset, int num, int base, float falloff, int max, FalloffFunction fall) {
 										preset->cats[num]->baseChance = base;
 										preset->cats[num]->falloff = falloff;
 										preset->cats[num]->max = max;
@@ -1800,29 +1800,29 @@ void Settings::LoadDistrConfig()
 									rule->fortify->tieradjust = fortifyTierAdjust;
 									rule->food->tieradjust = 0;
 
-									setcat(rule->potions, 0, potion1Chance[0], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 0), maxPotions, Distribution::FalloffFunction::Exponential);
-									setcat(rule->potions, 1, potion1Chance[1], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 1), maxPotions, Distribution::FalloffFunction::Exponential);
-									setcat(rule->potions, 2, potion1Chance[2], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 2), maxPotions, Distribution::FalloffFunction::Exponential);
-									setcat(rule->potions, 3, potion1Chance[3], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 3), maxPotions, Distribution::FalloffFunction::Exponential);
-									setcat(rule->potions, 4, potion1Chance[4], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 4), maxPotions, Distribution::FalloffFunction::Exponential);
+									setcat(rule->potions, 0, potion1Chance[0], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 0), maxPotions, FalloffFunction::Exponential);
+									setcat(rule->potions, 1, potion1Chance[1], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 1), maxPotions, FalloffFunction::Exponential);
+									setcat(rule->potions, 2, potion1Chance[2], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 2), maxPotions, FalloffFunction::Exponential);
+									setcat(rule->potions, 3, potion1Chance[3], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 3), maxPotions, FalloffFunction::Exponential);
+									setcat(rule->potions, 4, potion1Chance[4], meanfalloff(potion1Chance, potion2Chance, potion3Chance, potion4Chance, 4), maxPotions, FalloffFunction::Exponential);
 
-									setcat(rule->poisons, 0, poison1Chance[0], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 0), maxPoisons, Distribution::FalloffFunction::Exponential);
-									setcat(rule->poisons, 1, poison1Chance[1], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 1), maxPoisons, Distribution::FalloffFunction::Exponential);
-									setcat(rule->poisons, 2, poison1Chance[2], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 2), maxPoisons, Distribution::FalloffFunction::Exponential);
-									setcat(rule->poisons, 3, poison1Chance[3], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 3), maxPoisons, Distribution::FalloffFunction::Exponential);
-									setcat(rule->poisons, 4, poison1Chance[4], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 4), maxPoisons, Distribution::FalloffFunction::Exponential);
+									setcat(rule->poisons, 0, poison1Chance[0], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 0), maxPoisons, FalloffFunction::Exponential);
+									setcat(rule->poisons, 1, poison1Chance[1], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 1), maxPoisons, FalloffFunction::Exponential);
+									setcat(rule->poisons, 2, poison1Chance[2], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 2), maxPoisons, FalloffFunction::Exponential);
+									setcat(rule->poisons, 3, poison1Chance[3], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 3), maxPoisons, FalloffFunction::Exponential);
+									setcat(rule->poisons, 4, poison1Chance[4], meanfalloff(poison1Chance, poison2Chance, poison3Chance, poison4Chance, 4), maxPoisons, FalloffFunction::Exponential);
 
-									setcat(rule->fortify, 0, fortify1Chance[0], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 0), maxFortify, Distribution::FalloffFunction::Exponential);
-									setcat(rule->fortify, 1, fortify1Chance[1], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 1), maxFortify, Distribution::FalloffFunction::Exponential);
-									setcat(rule->fortify, 2, fortify1Chance[2], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 2), maxFortify, Distribution::FalloffFunction::Exponential);
-									setcat(rule->fortify, 3, fortify1Chance[3], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 3), maxFortify, Distribution::FalloffFunction::Exponential);
-									setcat(rule->fortify, 4, fortify1Chance[4], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 4), maxFortify, Distribution::FalloffFunction::Exponential);
+									setcat(rule->fortify, 0, fortify1Chance[0], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 0), maxFortify, FalloffFunction::Exponential);
+									setcat(rule->fortify, 1, fortify1Chance[1], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 1), maxFortify, FalloffFunction::Exponential);
+									setcat(rule->fortify, 2, fortify1Chance[2], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 2), maxFortify, FalloffFunction::Exponential);
+									setcat(rule->fortify, 3, fortify1Chance[3], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 3), maxFortify, FalloffFunction::Exponential);
+									setcat(rule->fortify, 4, fortify1Chance[4], meanfalloff(fortify1Chance, fortify2Chance, fortify3Chance, fortify4Chance, 4), maxFortify, FalloffFunction::Exponential);
 
-									setcat(rule->food, 0, foodChance[0], 0, 1, Distribution::FalloffFunction::Exponential);
-									setcat(rule->food, 1, foodChance[1], 0, 1, Distribution::FalloffFunction::Exponential);
-									setcat(rule->food, 2, foodChance[2], 0, 1, Distribution::FalloffFunction::Exponential);
-									setcat(rule->food, 3, foodChance[3], 0, 1, Distribution::FalloffFunction::Exponential);
-									setcat(rule->food, 4, foodChance[4], 0, 1, Distribution::FalloffFunction::Exponential);
+									setcat(rule->food, 0, foodChance[0], 0, 1, FalloffFunction::Exponential);
+									setcat(rule->food, 1, foodChance[1], 0, 1, FalloffFunction::Exponential);
+									setcat(rule->food, 2, foodChance[2], 0, 1, FalloffFunction::Exponential);
+									setcat(rule->food, 3, foodChance[3], 0, 1, FalloffFunction::Exponential);
+									setcat(rule->food, 4, foodChance[4], 0, 1, FalloffFunction::Exponential);
 
 									
 									std::vector<std::tuple<AlchemicEffect, float, int>> potioneffects = Utility::ParseAlchemyEffects(potionProperties, error);
@@ -1832,15 +1832,15 @@ void Settings::LoadDistrConfig()
 									auto potionDistrChance = Utility::GetDistribution(potioneffects, RandomRange, true);
 									auto potionEffectMap = Utility::UnifyEffectMap(potioneffects);
 									for (auto [alch, weight] : potionEffectMap) {
-										Distribution::Effect eff;
+										Effect eff;
 										eff.effect = alch;
 										eff.max = 0;
 										eff.current = 0;
 										eff.weight = 1000 * weight;
 										rule->potionEffects->effects.insert_or_assign(alch, eff);
 									}
-									rule->potionEffects->standardDistr = Distribution::GetEffectDistribution(rule->potionEffects->effects);
-									rule->potionEffects->validEffects = Distribution::SumAlchemyEffects(rule->potionEffects->standardDistr);
+									rule->potionEffects->standardDistr = Utility::GetEffectDistribution(rule->potionEffects->effects);
+									rule->potionEffects->validEffects = Utility::SumAlchemyEffects(rule->potionEffects->standardDistr);
 									LOGL_4("PotionEffMap:\t{}", Utility::PrintEffectMap(potionEffectMap));
 									LOGL_2("rule {} contains {} potion effects", rule->ruleName, potionDistr.size());
 									std::vector<std::tuple<AlchemicEffect, float, int>> poisoneffects = Utility::ParseAlchemyEffects(poisonProperties, error);
@@ -1849,15 +1849,15 @@ void Settings::LoadDistrConfig()
 									auto poisonDistrChance = Utility::GetDistribution(poisoneffects, RandomRange, true);
 									auto poisonEffectMap = Utility::UnifyEffectMap(poisoneffects);
 									for (auto [alch, weight] : poisonEffectMap) {
-										Distribution::Effect eff;
+										Effect eff;
 										eff.effect = alch;
 										eff.max = 0;
 										eff.current = 0;
 										eff.weight = 1000 * weight;
 										rule->poisonEffects->effects.insert_or_assign(alch, eff);
 									}
-									rule->poisonEffects->standardDistr = Distribution::GetEffectDistribution(rule->poisonEffects->effects);
-									rule->poisonEffects->validEffects = Distribution::SumAlchemyEffects(rule->poisonEffects->standardDistr);
+									rule->poisonEffects->standardDistr = Utility::GetEffectDistribution(rule->poisonEffects->effects);
+									rule->poisonEffects->validEffects = Utility::SumAlchemyEffects(rule->poisonEffects->standardDistr);
 									LOGL_4("PoisonEffMap:\t{}", Utility::PrintEffectMap(poisonEffectMap));
 									LOGL_2("rule {} contains {} poison effects", rule->ruleName, poisonDistr.size());
 									std::vector<std::tuple<AlchemicEffect, float, int>> fortifyeffects = Utility::ParseAlchemyEffects(fortifyproperties, error);
@@ -1866,15 +1866,15 @@ void Settings::LoadDistrConfig()
 									auto fortifyDistrChance = Utility::GetDistribution(fortifyeffects, RandomRange, true);
 									auto fortifyEffectMap = Utility::UnifyEffectMap(fortifyeffects);
 									for (auto [alch, weight] : fortifyEffectMap) {
-										Distribution::Effect eff;
+										Effect eff;
 										eff.effect = alch;
 										eff.max = 0;
 										eff.current = 0;
 										eff.weight = 1000 * weight;
 										rule->fortifyEffects->effects.insert_or_assign(alch, eff);
 									}
-									rule->fortifyEffects->standardDistr = Distribution::GetEffectDistribution(rule->fortifyEffects->effects);
-									rule->fortifyEffects->validEffects = Distribution::SumAlchemyEffects(rule->fortifyEffects->standardDistr);
+									rule->fortifyEffects->standardDistr = Utility::GetEffectDistribution(rule->fortifyEffects->effects);
+									rule->fortifyEffects->validEffects = Utility::SumAlchemyEffects(rule->fortifyEffects->standardDistr);
 									LOGL_4("FortifyEffMap:\t{}", Utility::PrintEffectMap(fortifyEffectMap));
 									LOGL_2("rule {} contains {} fortify potion effects", rule->ruleName, fortifyDistr.size());
 									std::vector<std::tuple<AlchemicEffect, float, int>> foodeffects = Utility::ParseAlchemyEffects(foodProperties, error);
@@ -1883,19 +1883,19 @@ void Settings::LoadDistrConfig()
 									auto foodDistrChance = Utility::GetDistribution(foodeffects, RandomRange, true);
 									auto foodEffectMap = Utility::UnifyEffectMap(foodeffects);
 									for (auto [alch, weight] : foodEffectMap) {
-										Distribution::Effect eff;
+										Effect eff;
 										eff.effect = alch;
 										eff.max = 0;
 										eff.current = 0;
 										eff.weight = 1000 * weight;
 										rule->foodEffects->effects.insert_or_assign(alch, eff);
 									}
-									rule->foodEffects->standardDistr = Distribution::GetEffectDistribution(rule->foodEffects->effects);
-									rule->foodEffects->validEffects = Distribution::SumAlchemyEffects(rule->foodEffects->standardDistr);
+									rule->foodEffects->standardDistr = Utility::GetEffectDistribution(rule->foodEffects->effects);
+									rule->foodEffects->validEffects = Utility::SumAlchemyEffects(rule->foodEffects->standardDistr);
 									LOGL_4("FoodEffMap:\t{}", Utility::PrintEffectMap(foodEffectMap));
 									LOGL_2("rule {} contains {} food effects", rule->ruleName, foodDistr.size());
 
-									std::pair<int, Distribution::Rule*> tmptuple = { rule->rulePriority, rule };
+									std::pair<int, DistributionRule*> tmptuple = { rule->rulePriority, rule };
 
 									// assign rules to search parameters
 									LOGL_2("rule {} contains {} associated objects", rule->ruleName, objects.size());
@@ -1972,7 +1972,7 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// next entry is the rulename, so we just set it
-									Distribution::Rule* rule = nullptr;
+									DistributionRule* rule = nullptr;
 									bool existing = false;
 									for (auto rl : Distribution::_rules) {
 										if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && rl->ruleName.length() == splits->at(splitindex).length()) {
@@ -1983,7 +1983,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									if (existing == false)
-										rule = new Distribution::Rule();
+										rule = new DistributionRule();
 									rule->ruleVersion = ruleVersion;
 									rule->ruleType = ruleType;
 									rule->ruleName = splits->at(splitindex);
@@ -2121,7 +2121,7 @@ void Settings::LoadDistrConfig()
 									}
 
 									// next entry is the effect preset name, so we just set it
-									Distribution::EffectPreset* preset = nullptr;
+									EffectPreset* preset = nullptr;
 									bool existing = false;
 									for (auto [name, pres] : Distribution::_internEffectPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
@@ -2132,7 +2132,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									if (existing == false)
-										preset = new Distribution::EffectPreset();
+										preset = new EffectPreset();
 									// name
 									preset->name = splits->at(splitindex);
 									splitindex++;
@@ -2141,8 +2141,8 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 
 									Utility::ParseAlchemyEffects(effectProperties, preset);
-									preset->standardDistr = Distribution::GetEffectDistribution(preset->effects);
-									preset->validEffects = Distribution::SumAlchemyEffects(preset->standardDistr);
+									preset->standardDistr = Utility::GetEffectDistribution(preset->effects);
+									preset->validEffects = Utility::SumAlchemyEffects(preset->standardDistr);
 									Distribution::_internEffectPresets.insert_or_assign(preset->name, preset);
 
 									delete splits;
@@ -2158,10 +2158,10 @@ void Settings::LoadDistrConfig()
 									}
 									auto names = Utility::SplitString(splits->at(splitindex), ',', true);
 									splitindex++;
-									std::vector<Distribution::EffectPreset*> presets;
+									std::vector<EffectPreset*> presets;
 									for (std::string pname : names) {
 										// next entry is the effect preset name, so we just set it
-										Distribution::EffectPreset* preset = nullptr;
+										EffectPreset* preset = nullptr;
 										bool existing = false;
 										for (auto [name, pres] : Distribution::_internEffectPresets) {
 											if (Utility::ToLower(name).find(Utility::ToLower(pname)) != std::string::npos && name.length() == pname.length()) {
@@ -2187,8 +2187,8 @@ void Settings::LoadDistrConfig()
 									for (auto preset : presets)
 									{
 										Utility::ParseAlchemyEffects(effectProperties, preset);
-										preset->standardDistr = Distribution::GetEffectDistribution(preset->effects);
-										preset->validEffects = Distribution::SumAlchemyEffects(preset->standardDistr);
+										preset->standardDistr = Utility::GetEffectDistribution(preset->effects);
+										preset->validEffects = Utility::SumAlchemyEffects(preset->standardDistr);
 										cumnames += preset->name + "|";
 									}
 
@@ -2204,7 +2204,7 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// next entry is the category name, so we just set it
-									Distribution::EffCategory* category = nullptr;
+									EffCategory* category = nullptr;
 									bool existing = false;
 									for (auto [name, cat] : Distribution::_internEffectCategories) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
@@ -2215,7 +2215,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									if (existing == false)
-										category = new Distribution::EffCategory();
+										category = new EffCategory();
 									// name
 									category->name = splits->at(splitindex);
 									splitindex++;
@@ -2284,9 +2284,9 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// fallofffunc
-									category->falloffFunc = Distribution::FalloffFunction::Exponential;
+									category->falloffFunc = FalloffFunction::Exponential;
 									try {
-										category->falloffFunc = (Distribution::FalloffFunction)std::stoi(splits->at(splitindex));
+										category->falloffFunc = (FalloffFunction)std::stoi(splits->at(splitindex));
 										splitindex++;
 									} catch (std::out_of_range&) {
 										logwarn("out-of-range expection in field \"FalloffFunction\". file: {}, rule:\"{}\"", file, tmp);
@@ -2313,7 +2313,7 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// next entry is the preset name, so we just set it
-									Distribution::EffCategoryPreset* catpreset = nullptr;
+									EffCategoryPreset* catpreset = nullptr;
 									bool existing = false;
 									for (auto [name, cat] : Distribution::_internEffectCategoryPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
@@ -2324,7 +2324,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									if (existing == false)
-										catpreset = new Distribution::EffCategoryPreset();
+										catpreset = new EffCategoryPreset();
 									// name
 									catpreset->name = splits->at(splitindex);
 									splitindex++;
@@ -2400,7 +2400,7 @@ void Settings::LoadDistrConfig()
 										continue;
 									}
 									// next entry is the new effect preset name, so we just set it
-									Distribution::EffectPreset* oldpreset = nullptr;
+									EffectPreset* oldpreset = nullptr;
 									bool existing = false;
 									for (auto [name, pres] : Distribution::_internEffectPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
@@ -2418,7 +2418,7 @@ void Settings::LoadDistrConfig()
 									}
 									splitindex++;
 									// next entry is the new effect preset name, so we just set it
-									Distribution::EffectPreset* preset = nullptr;
+									EffectPreset* preset = nullptr;
 									existing = false;
 									for (auto [name, pres] : Distribution::_internEffectPresets) {
 										if (Utility::ToLower(name).find(Utility::ToLower(splits->at(splitindex))) != std::string::npos && name.length() == splits->at(splitindex).length()) {
@@ -2429,7 +2429,7 @@ void Settings::LoadDistrConfig()
 										}
 									}
 									if (existing == false)
-										preset = new Distribution::EffectPreset();
+										preset = new EffectPreset();
 									// name
 									preset->name = splits->at(splitindex);
 									splitindex++;
@@ -2464,7 +2464,7 @@ void Settings::LoadDistrConfig()
 
 	// create default rule if there is none
 	if (Distribution::defaultRule == nullptr) {
-		Distribution::defaultRule = new Distribution::Rule(1 /*version*/, 1 /*type*/, DefaultRuleName, INT_MIN + 1 /*rulePriority*/, true /*allowMixed*/, true /*styleScaling*/, 5 /*maxPotions*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*potion1Chance*/,
+		Distribution::defaultRule = new DistributionRule(1 /*version*/, 1 /*type*/, DefaultRuleName, INT_MIN + 1 /*rulePriority*/, true /*allowMixed*/, true /*styleScaling*/, 5 /*maxPotions*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*potion1Chance*/,
 			std::vector<int>{ 20, 30, 40, 50, 60 } /*potion2Chance*/, std::vector<int>{ 10, 20, 30, 40, 50 } /*potion3Chance*/, std::vector<int>{ 5, 15, 25, 35, 45 } /*potion4Chance*/, std::vector<int>{ 0, 10, 20, 30, 40 } /*potionAddChance*/, 0 /*potionTierAdjust*/,
 			5 /*maxFortify*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*fortify1Chance*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*fortify2Chance*/, std::vector<int>{ 20, 30, 40, 50, 60 } /*fortify3Chance*/, std::vector<int>{ 10, 20, 30, 40, 50 } /*fortify4Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*fortifyAddChance*/, 0 /*fortifyTierAdjust*/,
 			5 /*maxPoisons*/, std::vector<int>{ 30, 35, 40, 45, 50 } /*poison1Chance*/, std::vector<int>{ 20, 25, 30, 35, 40 } /*poison2Chance*/, std::vector<int>{ 10, 15, 20, 25, 30 } /*poison3Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*poison4Chance*/,
@@ -2480,7 +2480,7 @@ void Settings::LoadDistrConfig()
 			AlchemicEffect::kAnyFood | AlchemicEffect::kCustom /*validFood*/);
 	}
 	if (Distribution::defaultCustomRule == nullptr) {
-		Distribution::defaultCustomRule = new Distribution::Rule(1 /*version*/, 1 /*type*/, DefaultRuleName, INT_MIN + 1 /*rulePriority*/, true /*allowMixed*/, true /*styleScaling*/, 5 /*maxPotions*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*potion1Chance*/,
+		Distribution::defaultCustomRule = new DistributionRule(1 /*version*/, 1 /*type*/, DefaultRuleName, INT_MIN + 1 /*rulePriority*/, true /*allowMixed*/, true /*styleScaling*/, 5 /*maxPotions*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*potion1Chance*/,
 			std::vector<int>{ 20, 30, 40, 50, 60 } /*potion2Chance*/, std::vector<int>{ 10, 20, 30, 40, 50 } /*potion3Chance*/, std::vector<int>{ 5, 15, 25, 35, 45 } /*potion4Chance*/, std::vector<int>{ 0, 10, 20, 30, 40 } /*potionAddChance*/, 0 /*potionTierAdjust*/,
 			5 /*maxFortify*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*fortify1Chance*/, std::vector<int>{ 30, 40, 50, 60, 70 } /*fortify2Chance*/, std::vector<int>{ 20, 30, 40, 50, 60 } /*fortify3Chance*/, std::vector<int>{ 10, 20, 30, 40, 50 } /*fortify4Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*fortifyAddChance*/, 0 /*fortifyTierAdjust*/,
 			5 /*maxPoisons*/, std::vector<int>{ 30, 35, 40, 45, 50 } /*poison1Chance*/, std::vector<int>{ 20, 25, 30, 35, 40 } /*poison2Chance*/, std::vector<int>{ 10, 15, 20, 25, 30 } /*poison3Chance*/, std::vector<int>{ 5, 10, 15, 20, 25 } /*poison4Chance*/,
@@ -2506,13 +2506,13 @@ void Settings::LoadDistrConfig()
 			std::string name = (splits)->at(2);
 			std::string newname = (splits)->at(3);
 			
-			Distribution::Rule* rule = Distribution::FindRule(name);
+			DistributionRule* rule = Distribution::FindRule(name);
 			if (rule == nullptr) {
 				logwarn("base rule couldn't be found file: {}, rule:\"{}\", fields: {}", std::get<1>(cpy), std::get<2>(cpy), splits->size());
 				delete splits;
 				continue;
 			}
-			Distribution::Rule* newrule = nullptr;
+			DistributionRule* newrule = nullptr;
 			bool existing = false;
 			for (auto rl : Distribution::_rules)
 				if (Utility::ToLower(rl->ruleName).find(Utility::ToLower(newname)) != std::string::npos && rl->ruleName.length() == newname.length()) {
@@ -2578,7 +2578,7 @@ void Settings::LoadDistrConfig()
 				{
 					// valid rule
 					name = (std::get<0>(a))->at(2);
-					Distribution::Rule* rule = Distribution::FindRule(name);
+					DistributionRule* rule = Distribution::FindRule(name);
 					if (rule == nullptr) {
 						logwarn("rule not found. file: {}, rule:\"{}\"", std::get<1>(a), std::get<2>(a));
 						continue;  // rule doesn't exist, evaluate next attachment
@@ -2609,7 +2609,7 @@ void Settings::LoadDistrConfig()
 					int total = 0;
 					std::vector<std::tuple<AssocType, RE::FormID, RE::TESForm*, std::string>> objects = Utility::ParseAssocObjects((std::get<0>(a)->at(3)), error, std::get<1>(a), std::get<2>(a), total);
 
-					std::pair<int, Distribution::Rule*> tmptuple = { prio, rule };
+					std::pair<int, DistributionRule*> tmptuple = { prio, rule };
 					// assign rules to search parameters
 					bool attach = false; // loop intern
 					int oldprio = INT_MIN;
@@ -3133,7 +3133,7 @@ void Settings::CheckForPluginsWithoutRules()
 								}
 								// get rule
 								UtilityBase::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
-								Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
+								DistributionRule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
 
 								//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
 								if (rl && (rl->ruleName == DefaultRuleName || rl == Distribution::defaultRule)) {
@@ -3167,7 +3167,7 @@ void Settings::CheckForPluginsWithoutRules()
 									continue;  // the npc is covered by an exclusion
 								}
 								// get rule
-								Distribution::Rule* rl = Distribution::CalcRule(acinfo);
+								DistributionRule* rl = Distribution::CalcRule(acinfo);
 								//logwarn("[CheckActorsForRules] got rule");
 								if (rl && (rl->ruleName == DefaultRuleName || rl == Distribution::defaultRule)) {
 									if (auto itr = pluginsWithoutActorRules.find(pluginName); itr != pluginsWithoutActorRules.end()) {
@@ -3376,7 +3376,7 @@ void Settings::CheckActorsForRules()
 							}
 							// get rule
 							UtilityBase::NPCTPLTInfo npcinfo = Utility::ExtractTemplateInfo(npc);
-							Distribution::Rule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
+							DistributionRule* rl = Distribution::CalcRule(npc, acs, is, &npcinfo);
 
 							//Utility::ToLower(std::string(npc->GetFormEditorID())).find("lvl") == std::string::npos
 							if (rl && rl->ruleName == DefaultRuleName && !IsLeveledChar(npc)) {
@@ -3444,7 +3444,7 @@ void Settings::CheckActorsForRules()
 
 							std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(act);
 							// get rule
-							Distribution::Rule* rl = Distribution::CalcRule(acinfo);
+							DistributionRule* rl = Distribution::CalcRule(acinfo);
 							// check wether there is a rule that applies
 							if (Distribution::ExcludedNPC(acinfo)) {
 								//coun++;
@@ -3530,7 +3530,7 @@ void Settings::CheckCellForActors(RE::FormID cellid)
 							if (Logging::EnableLog) {
 								std::shared_ptr<ActorInfo> acinfo = std::make_shared<ActorInfo>(act);
 								// get rule
-								Distribution::Rule* rl = Distribution::CalcRule(acinfo);
+								DistributionRule* rl = Distribution::CalcRule(acinfo);
 								if (Distribution::ExcludedNPC(acinfo)) {
 									excluded = true;
 									LOG_1("excluded");

@@ -26,7 +26,7 @@ bool Console::CalcRule::Process(const RE::SCRIPT_PARAMETER*, RE::SCRIPT_FUNCTION
 		acinfo = Data::GetSingleton()->FindActor(RE::PlayerCharacter::GetSingleton());
 	ActorStrength acs = ActorStrength::Weak;
 	ItemStrength is = ItemStrength::kWeak;
-	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
+	std::vector<std::tuple<int, DistributionRule*, std::string>> rls = Distribution::CalcAllRules(actor, acs, is);
 	//loginfo("console 4");
 
 	std::string tmp = "Displaying stats for Actor:\t\t" + std::string(actor->GetName()) + "\tFormID:\t" + Utility::PrintForm(actor) + "\tOriginalID:\t" + Utility::GetHex(acinfo->GetFormIDOriginal());

@@ -112,7 +112,7 @@ public:
 	}
 	static std::string PrintFormNonDebug(std::shared_ptr<ActorInfo> const& acinfo);
 
-	static std::string PrintEffectDistr(Distribution::EffectDistr* distr)
+	static std::string PrintEffectDistr(EffectDistr* distr)
 	{
 		std::string res = "";
 		for (int i = 0; i < distr->effects.size(); i++)
@@ -161,7 +161,7 @@ public:
 	/// </summary>
 	/// <param name="effectMap"></param>
 	/// <returns></returns>
-	static std::string PrintEffectMap(std::unordered_map<AlchemicEffect, Distribution::Effect>& effectMap);
+	static std::string PrintEffectMap(std::unordered_map<AlchemicEffect, Effect>& effectMap);
 
 	#pragma region Parsing
 
@@ -203,7 +203,7 @@ public:
 	/// </summary>
 	/// <param name="input"></param>
 	/// <param name="preset"></param>
-	static bool ParseAlchemyEffects(std::string input, Distribution::EffectPreset* preset);
+	static bool ParseAlchemyEffects(std::string input, EffectPreset* preset);
 
 	/// <summary>
 	/// Computes a distribution from an effectmap.
@@ -254,6 +254,27 @@ public:
 	/// <param name="acinfo">ActorInfo to verify</param>
 	/// </summary>
 	static bool VerifyActorInfo(std::shared_ptr<ActorInfo> const& acinfo);
+
+	static EffectDistr GetEffectDistribution(std::unordered_map<AlchemicEffect, Effect>& effectmap)
+	{
+		EffectDistr distr;
+		distr.total = 0;
+		for (auto [eff, effect] : effectmap) {
+			distr.effects.push_back({ effect.weight, effect });
+			distr.total += effect.weight;
+		}
+		return distr;
+	}
+
+	static AlchemicEffect SumAlchemyEffects(EffectDistr& distr)
+	{
+		AlchemicEffect eff;
+		for (auto [_, effect] : distr.effects) {
+			eff |= effect.effect;
+		}
+		eff |= AlchemicEffect::kCustom;
+		return eff;
+	}
 
 	#pragma endregion
 

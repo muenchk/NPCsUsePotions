@@ -23,806 +23,12 @@ static std::mt19937 randi((unsigned int)(std::chrono::system_clock::now().time_s
 static std::uniform_int_distribution<signed> randRR(1, RandomRange);
 static std::uniform_int_distribution<signed> rand100(1, 100);
 
-#pragma region Rule
-
-// private
-
-Distribution::EffectDistr Distribution::Rule::GetScaledDistribution(Settings::ItemType type, EffectPreset* preset, std::shared_ptr<ActorInfo> const& acinfo)
-{
-	RE::TESCombatStyle* style = acinfo->GetCombatStyle();
-	std::unordered_map<AlchemicEffect, Effect> effectMap = preset->effects;
-	int customnum = 0;
-	switch (type) {
-	case Settings::ItemType::kFood:
-		customnum = (int)acinfo->citems.foodset.size();
-		for (auto& [effect, adjuster] : _probabilityAdjustersFood) {
-			if (effectMap.contains(effect)) {
-				Effect eff = effectMap.at(effect);
-				eff.weight *= adjuster;
-				effectMap.insert_or_assign(effect, eff);
-			}
-		}
-		break;
-	case Settings::ItemType::kFortifyPotion:
-		customnum = (int)acinfo->citems.fortifyset.size();
-		for (auto& [effect, adjuster] : _probabilityAdjustersFortify) {
-			if (effectMap.contains(effect)) {
-				Effect eff = effectMap.at(effect);
-				eff.weight *= adjuster;
-				effectMap.insert_or_assign(effect, eff);
-			}
-		}
-		break;
-	case Settings::ItemType::kPoison:
-		customnum = (int)acinfo->citems.poisonsset.size();
-		for (auto& [effect, adjuster] : _probabilityAdjustersPoison) {
-			if (effectMap.contains(effect)) {
-				Effect eff = effectMap.at(effect);
-				eff.weight *= adjuster;
-				effectMap.insert_or_assign(effect, eff);
-			}
-		}
-		break;
-	case Settings::ItemType::kPotion:
-		customnum = (int)acinfo->citems.potionsset.size();
-		for (auto& [effect, adjuster] : _probabilityAdjustersPotion) {
-			if (effectMap.contains(effect)) {
-				Effect eff = effectMap.at(effect);
-				float weight = eff.weight;
-				eff.weight *= adjuster;
-				effectMap.insert_or_assign(effect, eff);
-			}
-		}
-		break;
-	}
-
-	if (effectMap.size() == 0 && customnum > 0)
-	{
-		Effect eff;
-		eff.current = 0;
-		eff.effect = AlchemicEffect::kCustom;
-		eff.max = 0;
-		eff.weight = 1000;
-		effectMap.insert_or_assign(AlchemicEffect::kCustom, eff);
-	}
-
-	float scale = 0.0f;
-
-	if (styleScaling && style) {
-		// get primary combat score
-		// and then scale the appropiate alchemic effects up by the scaling value
-		int prefscore = 0;
-		int prefscore2 = 0;
-		double max = 0;
-		double max2 = 0;
-		if ((style->generalData.magicScoreMult == style->generalData.meleeScoreMult) == (style->generalData.meleeScoreMult == style->generalData.rangedScoreMult) == (style->generalData.rangedScoreMult == style->generalData.shoutScoreMult) == (style->generalData.staffScoreMult == style->generalData.magicScoreMult)) {
-		} else {
-			if (style->generalData.magicScoreMult > max) {
-				max = style->generalData.magicScoreMult;
-				prefscore = 0x01;  // magic
-			} else if (style->generalData.magicScoreMult > max2) {
-				max2 = style->generalData.magicScoreMult;
-				prefscore2 = 0x01;
-			}
-
-			if (style->generalData.rangedScoreMult > max) {
-				max = style->generalData.rangedScoreMult;
-				prefscore = 0x02;
-			} else if (style->generalData.rangedScoreMult > max2) {
-				max2 = style->generalData.rangedScoreMult;
-				prefscore2 = 0x02;
-			}
-
-			if (style->generalData.meleeScoreMult > max) {
-				max = style->generalData.meleeScoreMult;
-				prefscore = 0x04;
-			} else if (style->generalData.meleeScoreMult > max2) {
-				max2 = style->generalData.meleeScoreMult;
-				prefscore2 = 0x04;
-			}
-
-			if (style->generalData.staffScoreMult > max) {
-				max = style->generalData.staffScoreMult;
-				prefscore = 0x08;
-			} else if (style->generalData.staffScoreMult > max2) {
-				max2 = style->generalData.staffScoreMult;
-				prefscore2 = 0x08;
-			}
-
-			if (style->generalData.unarmedScoreMult > max) {
-				max = style->generalData.unarmedScoreMult;
-				prefscore = 0x10;
-			} else if (style->generalData.unarmedScoreMult > max2) {
-				max2 = style->generalData.unarmedScoreMult;
-				prefscore2 = 0x10;
-			}
-		}
-		scale = Settings::distr._StyleScalingPrimary;
-		// scale general effects first
-		auto itr = effectMap.find(AlchemicEffect::kDamageResist);
-		if (itr != effectMap.end()) {
-			auto eff = itr->second;
-			eff.weight *= scale;
-			effectMap.insert_or_assign(AlchemicEffect::kDamageResist, eff);
-		}
-		itr = effectMap.find(AlchemicEffect::kResistMagic);
-		if (itr != effectMap.end()) {
-			auto eff = itr->second;
-			eff.weight *= scale;
-			effectMap.insert_or_assign(AlchemicEffect::kResistMagic, eff);
-		}
-		itr = effectMap.find(AlchemicEffect::kPoisonResist);
-		if (itr != effectMap.end()) {
-			auto eff = itr->second;
-			eff.weight *= scale;
-			effectMap.insert_or_assign(AlchemicEffect::kPoisonResist, eff);
-		}
-		itr = effectMap.find(AlchemicEffect::kResistDisease);
-		if (itr != effectMap.end()) {
-			auto eff = itr->second;
-			eff.weight *= scale;
-			effectMap.insert_or_assign(AlchemicEffect::kResistDisease, eff);
-		}
-		itr = effectMap.find(AlchemicEffect::kReflectDamage);
-		if (itr != effectMap.end()) {
-			auto eff = itr->second;
-			eff.weight *= scale;
-			effectMap.insert_or_assign(AlchemicEffect::kReflectDamage, eff);
-		}
-
-		if (prefscore & 0x08) {  // staff
-			if (prefscore2 & 0x08 && max != max2)
-				scale = Settings::distr._StyleScalingSecondary;
-			goto GetScaledDistributionMagic;
-		}
-		if (prefscore & 0x01) {  // magic
-			if (prefscore2 & 0x01 && max != max2)
-				scale = Settings::distr._StyleScalingSecondary;
-GetScaledDistributionMagic:
-			itr = effectMap.find(AlchemicEffect::kMagicka);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kMagicka, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kMagickaRate);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kMagickaRate, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kMagickaRateMult);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kMagickaRateMult, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kFortifyMagicka);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kFortifyMagicka, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kAlteration);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kAlteration, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kConjuration);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kConjuration, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kDestruction);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kDestruction, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kIllusion);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kIllusion, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kRestoration);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kRestoration, eff);
-			}
-		}
-		scale = Settings::distr._StyleScalingPrimary;
-		if (prefscore & 0x02) {  // ranged
-			if (prefscore2 & 0x02 && max != max2)
-				scale = Settings::distr._StyleScalingSecondary;
-			itr = effectMap.find(AlchemicEffect::kArchery);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kArchery, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kBowSpeed);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kBowSpeed, eff);
-			}
-		}
-		scale = Settings::distr._StyleScalingPrimary;
-		if (prefscore & 0x04) {  // melee
-			if (prefscore2 & 0x04 && max != max2)
-				scale = Settings::distr._StyleScalingSecondary;
-			itr = effectMap.find(AlchemicEffect::kOneHanded);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kOneHanded, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kTwoHanded);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kTwoHanded, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kBlock);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kBlock, eff);
-			}
-		}
-		scale = Settings::distr._StyleScalingPrimary;
-		if (prefscore & 0x10) {  // unarmed
-			if (prefscore2 & 0x10 && max != max2)
-				scale = Settings::distr._StyleScalingSecondary;
-			itr = effectMap.find(AlchemicEffect::kUnarmedDamage);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kUnarmedDamage, eff);
-			}
-		}
-		scale = Settings::distr._StyleScalingPrimary;
-		if (prefscore & 0x16) {
-			// stamina pots
-			if ((prefscore & 0x16) == (prefscore & 0x16) && max != max2)
-				scale = Settings::distr._StyleScalingSecondary;
-			itr = effectMap.find(AlchemicEffect::kStamina);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kStamina, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kStaminaRate);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kStaminaRate, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kStaminaRateMult);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kStaminaRateMult, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kFortifyStamina);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kFortifyStamina, eff);
-			}
-			// weap speed
-			itr = effectMap.find(AlchemicEffect::kWeaponSpeedMult);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kWeaponSpeedMult, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kAttackDamageMult);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kAttackDamageMult, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kCriticalChance);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kCriticalChance, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kHeavyArmor);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kHeavyArmor, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kLightArmor);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kLightArmor, eff);
-			}
-		}
-		scale = Settings::distr._StyleScalingPrimary;
-		if (prefscore & 0x14) {
-			if ((prefscore & 0x14) == (prefscore2 & 0x14) && max != max2)
-				scale = Settings::distr._StyleScalingSecondary;
-			itr = effectMap.find(AlchemicEffect::kHealth);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kHealth, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kHealRate);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kHealRate, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kHealRateMult);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kHealRateMult, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kFortifyHealth);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kFortifyHealth, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kSpeedMult);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kSpeedMult, eff);
-			}
-			itr = effectMap.find(AlchemicEffect::kMeleeDamage);
-			if (itr != effectMap.end()) {
-				auto eff = itr->second;
-				eff.weight *= scale;
-				effectMap.insert_or_assign(AlchemicEffect::kMeleeDamage, eff);
-			}
-		}
-	}
-	return GetEffectDistribution(effectMap);
-}
-
-AlchemicEffect Distribution::Rule::GetRandomEffect(EffectDistr& distr)
-{
-	std::uniform_int_distribution<signed> randDistr(1, distr.total);
-	int random = randDistr(randi);
-	int current = 0;
-	auto itr = distr.effects.begin();
-	while (itr != distr.effects.end()) {
-		//logusage("Checking Effect: {}", std::get<1>(distribution[i]).string());
-		current += itr->first;
-		if (random <= current) {
-			//logusage("Choosing Effect: {}, val {}", std::get<1>(distribution[i]).string(), random);
-			itr->second.current++;
-			auto ret = itr->second.effect;
-			if (itr->second.max == itr->second.current) { // if it is larger, max was 0 and the max limit is disabled
-				distr.total -= itr->first;
-				distr.effects.erase(itr);
-			}
-			return ret;
-		}
-		itr++;
-	}
-	return AlchemicEffect::kNone;
-}
-
-RE::AlchemyItem* Distribution::Rule::GetRandomPotion(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr)
-{
-	str += potions->tieradjust;
-	if (str < 1)
-		str = 1;
-	if (str > 4)
-		str = 4;
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-	auto eff = GetRandomEffect(distr);
-	loginfo("Effect: {}", eff.string());
-GetRandomPotioneff:;
-	if (eff == AlchemicEffect::kCustom) {
-		auto potions = acinfo->FilterCustomConditionsDistr(acinfo->citems.potions);
-		if (potions.size() == 0) {
-			distr.RemoveEffect(AlchemicEffect::kCustom);
-			eff = GetRandomEffect(distr);
-			goto GetRandomPotioneff;
-		}
-		std::uniform_int_distribution<signed> ra(0, (int)(potions.size() - 1));
-		auto itm = potions[ra(randi)];
-		return itm->object->As<RE::AlchemyItem>();
-	} else if (eff == AlchemicEffect::kBlood) {
-		items = Settings::GetMatchingItems(*Settings::potionsBlood(), eff, numPotionEffects);
-	} else {
-RetryPotion:
-		switch (str) {
-		case 1:  // weak
-			items = Settings::GetMatchingItems(*Settings::potionsWeak_main(), eff, numPotionEffects);
-			break;
-		case 2:  // standard
-			items = Settings::GetMatchingItems(*Settings::potionsStandard_main(), eff, numPotionEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryPotion;
-			}
-			break;
-		case 3:  // potent
-			items = Settings::GetMatchingItems(*Settings::potionsPotent_main(), eff, numPotionEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryPotion;
-			}
-			break;
-		case 4:  // insane
-			items = Settings::GetMatchingItems(*Settings::potionsInsane_main(), eff, numPotionEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryPotion;
-			}
-			break;
-		}
-	}
-	// return random item
-	if (items.size() > 0) {
-		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-		return items[r(randi)];
-		//logusage("Looking for effect {}, gave {}", eff.string(), Utility::PrintForm(item));
-
-	} else {
-		//logusage("Looking for effect {}, item size 0", eff.string());
-	}
-	return nullptr;
-}
-RE::AlchemyItem* Distribution::Rule::GetRandomPoison(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr)
-{
-	str += poisons->tieradjust;
-	if (str < 1)
-		str = 1;
-	if (str > 4)
-		str = 4;
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-	auto eff = GetRandomEffect(distr);
-GetRandomPoisoneff:;
-	if (eff == AlchemicEffect::kCustom) {
-		auto poisons = acinfo->FilterCustomConditionsDistr(acinfo->citems.poisons);
-		if (poisons.size() == 0) {
-			distr.RemoveEffect(AlchemicEffect::kCustom);
-			eff = GetRandomEffect(distr);
-			goto GetRandomPoisoneff;
-		}
-		std::uniform_int_distribution<signed> ra(0, (int)(poisons.size() - 1));
-		auto itm = poisons[ra(randi)];
-		//if (std::get<1>(itm) <= rand100(randi)) // calc chances
-		return itm->object->As<RE::AlchemyItem>();
-		//else
-		//	return nullptr;
-	} else {
-RetryPoison:
-		switch (str) {
-		case 1:  // weak
-			items = Settings::GetMatchingItems(*Settings::poisonsWeak(), eff, numPoisonEffects);
-			break;
-		case 2:  // standard
-			items = Settings::GetMatchingItems(*Settings::poisonsStandard(), eff, numPoisonEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryPoison;
-			}
-			break;
-		case 3:  // potent
-			items = Settings::GetMatchingItems(*Settings::poisonsPotent(), eff, numPoisonEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryPoison;
-			}
-			break;
-		case 4:  // insane
-			items = Settings::GetMatchingItems(*Settings::poisonsInsane(), eff, numPoisonEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryPoison;
-			}
-			break;
-		}
-	}
-	// return random item
-	if (items.size() > 0) {
-		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-		return items[r(randi)];
-	}
-	return nullptr;
-}
-RE::AlchemyItem* Distribution::Rule::GetRandomFortifyPotion(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr)
-{
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-	auto eff = GetRandomEffect(distr);
-GetRandomFortifyeff:;
-	if (eff == AlchemicEffect::kCustom) {
-		auto fortify = acinfo->FilterCustomConditionsDistr(acinfo->citems.fortify);
-		if (fortify.size() == 0) {
-			distr.RemoveEffect(AlchemicEffect::kCustom);
-			eff = GetRandomEffect(distr);
-			goto GetRandomFortifyeff;
-		}
-		std::uniform_int_distribution<signed> ra(0, (int)(fortify.size() - 1));
-		auto itm = fortify[ra(randi)];
-		return itm->object->As<RE::AlchemyItem>();
-	} else {
-RetryFortify:
-		switch (str) {
-		case 1:  // weak
-			items = Settings::GetMatchingItems(*Settings::potionsWeak_rest(), eff, numFortifyEffects);
-			break;
-		case 2:  // standard
-			items = Settings::GetMatchingItems(*Settings::potionsStandard_rest(), eff, numFortifyEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryFortify;
-			}
-			break;
-		case 3:  // potent
-			items = Settings::GetMatchingItems(*Settings::potionsPotent_rest(), eff, numFortifyEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryFortify;
-			}
-			break;
-		case 4:  // insane
-			items = Settings::GetMatchingItems(*Settings::potionsInsane_rest(), eff, numFortifyEffects);
-			if (items.size() == 0) {
-				str -= 1;
-				goto RetryFortify;
-			}
-			break;
-		}
-	}
-	// return random item
-	if (items.size() > 0) {
-		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-		return items[r(randi)];
-	}
-	return nullptr;
-}
-RE::AlchemyItem* Distribution::Rule::GetRandomFood_intern(int str, std::shared_ptr<ActorInfo> const& acinfo, EffectDistr& distr)
-{
-	// get matching items
-	std::vector<RE::AlchemyItem*> items;
-	auto eff = GetRandomEffect(distr);
-GetRandomFortifyeff:;
-	if (eff == AlchemicEffect::kCustom) {
-		auto fortify = acinfo->FilterCustomConditionsDistr(acinfo->citems.fortify);
-		if (fortify.size() == 0) {
-			distr.RemoveEffect(AlchemicEffect::kCustom);
-			eff = GetRandomEffect(distr);
-			goto GetRandomFortifyeff;
-		}
-		std::uniform_int_distribution<signed> ra(0, (int)(fortify.size() - 1));
-		auto itm = fortify[ra(randi)];
-		return itm->object->As<RE::AlchemyItem>();
-	} else {
-RetryFortify:
-		items = Settings::GetMatchingItems(*Settings::foodall(), eff, numFoodEffects);
-	}
-	// return random item
-	if (items.size() > 0) {
-		std::uniform_int_distribution<signed> r(0, (int)(items.size()) - 1);
-		return items[r(randi)];
-	}
-	return nullptr;
-}
-
-// public
-
-std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPotions(std::shared_ptr<ActorInfo> const& acinfo)
-{
-	std::vector<RE::AlchemyItem*> ret;
-	if (ruleVersion == 2 || ruleVersion == 3) {
-		EffectDistr distr = potionEffects->standardDistr;
-		if (styleScaling || Distribution::_probabilityAdjustersPotion.size() > 0) {
-			distr = GetScaledDistribution(Settings::ItemType::kPotion, potionEffects, acinfo);
-		}
-
-		int astr = static_cast<int>(acinfo->GetActorStrength());
-		int str = static_cast<int>(acinfo->GetItemStrength());
-		int koeff = 0;
-		switch (potions->cats[astr]->falloffFunc) {
-		case FalloffFunction::Exponential:
-			for (int i = 0; i < potions->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				loginfo("Potion Prob: {}", potions->cats[astr]->baseChance * std::pow(potions->cats[astr]->falloff, koeff) * Settings::distr._ProbabilityScaling);
-				if (rand100(randi) <= potions->cats[astr]->baseChance * std::pow(potions->cats[astr]->falloff, i) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomPotion(str, acinfo, distr);
-					ret.push_back(pot);
-					loginfo("Potion: {}", Utility::PrintForm(pot));
-				}
-			}
-			break;
-		case FalloffFunction::Linear:
-			for (int i = 0; i < potions->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				loginfo("Potion Prob: {}", (potions->cats[astr]->baseChance - potions->cats[astr]->falloff * koeff) * Settings::distr._ProbabilityScaling);
-				if (rand100(randi) <= (potions->cats[astr]->baseChance - potions->cats[astr]->falloff * i) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomPotion(str, acinfo, distr);
-					ret.push_back(pot);
-					loginfo("Potion: {}", Utility::PrintForm(pot));
-				}
-			}
-			break;
-		}
-	}
-	return ret;
-}
-std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomPoisons(std::shared_ptr<ActorInfo> const& acinfo)
-{
-	std::vector<RE::AlchemyItem*> ret;
-	if (ruleVersion == 2 || ruleVersion == 3) {
-		EffectDistr distr = poisonEffects->standardDistr;
-		if (styleScaling || Distribution::_probabilityAdjustersPoison.size() > 0)
-			distr = GetScaledDistribution(Settings::ItemType::kPoison, poisonEffects, acinfo);
-
-		int astr = static_cast<int>(acinfo->GetActorStrength());
-		int str = static_cast<int>(acinfo->GetItemStrength());
-		int koeff = 0;
-		switch (poisons->cats[astr]->falloffFunc) {
-		case FalloffFunction::Exponential:
-			for (int i = 0; i < poisons->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				if (rand100(randi) <= poisons->cats[astr]->baseChance * std::pow(poisons->cats[astr]->falloff, koeff) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomPoison(str, acinfo, distr);
-					ret.push_back(pot);
-				}
-			}
-			break;
-		case FalloffFunction::Linear:
-			for (int i = 0; i < poisons->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				if (rand100(randi) <= (poisons->cats[astr]->baseChance - poisons->cats[astr]->falloff * koeff) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomPoison(str, acinfo, distr);
-					ret.push_back(pot);
-				}
-			}
-			break;
-		}
-	}
-	return ret;
-}
-std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFortifyPotions(std::shared_ptr<ActorInfo> const& acinfo)
-{
-	std::vector<RE::AlchemyItem*> ret;
-	if (ruleVersion == 2 || ruleVersion == 3) {
-		EffectDistr distr = fortifyEffects->standardDistr;
-		if (styleScaling || Distribution::_probabilityAdjustersFortify.size() > 0)
-			distr = GetScaledDistribution(Settings::ItemType::kFortifyPotion, fortifyEffects, acinfo);
-
-		int astr = static_cast<int>(acinfo->GetActorStrength());
-		int str = static_cast<int>(acinfo->GetItemStrength());
-		int koeff = 0;
-		switch (fortify->cats[astr]->falloffFunc) {
-		case FalloffFunction::Exponential:
-			for (int i = 0; i < fortify->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				if (rand100(randi) <= fortify->cats[astr]->baseChance * std::pow(fortify->cats[astr]->falloff, koeff) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomFortifyPotion(str, acinfo, distr);
-					ret.push_back(pot);
-				}
-			}
-			break;
-		case FalloffFunction::Linear:
-			for (int i = 0; i < fortify->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				if (rand100(randi) <= (fortify->cats[astr]->baseChance - fortify->cats[astr]->falloff * koeff) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomFortifyPotion(str, acinfo, distr);
-					ret.push_back(pot);
-				}
-			}
-			break;
-		}
-	}
-	return ret;
-}
-std::vector<RE::AlchemyItem*> Distribution::Rule::GetRandomFood(std::shared_ptr<ActorInfo> const& acinfo)
-{
-	std::vector<RE::AlchemyItem*> ret;
-	if (ruleVersion == 2 || ruleVersion == 3) {
-		EffectDistr distr = foodEffects->standardDistr;
-		if (styleScaling || Distribution::_probabilityAdjustersFood.size() > 0)
-			distr = GetScaledDistribution(Settings::ItemType::kFood, foodEffects, acinfo);
-
-		int astr = static_cast<int>(acinfo->GetActorStrength());
-		int str = static_cast<int>(acinfo->GetItemStrength());
-		int koeff = 0;
-		switch (food->cats[astr]->falloffFunc) {
-		case FalloffFunction::Exponential:
-			for (int i = 0; i < food->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				if (rand100(randi) <= food->cats[astr]->baseChance * std::pow(food->cats[astr]->falloff, koeff) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomFood_intern(str, acinfo, distr);
-					ret.push_back(pot);
-				}
-			}
-			break;
-		case FalloffFunction::Linear:
-			for (int i = 0; i < food->cats[astr]->max; i++) {
-				if (potions->cats[astr]->falloffdelay > i)
-					koeff = 0;
-				else
-					koeff = i - potions->cats[astr]->falloffdelay;
-				if (rand100(randi) <= (food->cats[astr]->baseChance - food->cats[astr]->falloff * koeff) * Settings::distr._ProbabilityScaling) {
-					auto pot = GetRandomFood_intern(str, acinfo, distr);
-					ret.push_back(pot);
-				}
-			}
-			break;
-		}
-	}
-	return ret;
-}
-
-void Distribution::Rule::RemoveAlchemyEffectPotion(AlchemicEffect effect)
-{
-	potionEffects->effects.erase(effect);
-	potionEffects->standardDistr = GetEffectDistribution(potionEffects->effects);
-	potionEffects->validEffects = SumAlchemyEffects(potionEffects->standardDistr);
-}
-
-void Distribution::Rule::RemoveAlchemyEffectPoison(AlchemicEffect effect)
-{
-	poisonEffects->effects.erase(effect);
-	poisonEffects->standardDistr = GetEffectDistribution(poisonEffects->effects);
-	poisonEffects->validEffects = SumAlchemyEffects(poisonEffects->standardDistr);
-}
-
-void Distribution::Rule::RemoveAlchemyEffectFortifyPotion(AlchemicEffect effect)
-{
-	fortifyEffects->effects.erase(effect);
-	fortifyEffects->standardDistr = GetEffectDistribution(fortifyEffects->effects);
-	fortifyEffects->validEffects = SumAlchemyEffects(fortifyEffects->standardDistr);
-}
-
-void Distribution::Rule::RemoveAlchemyEffectFood(AlchemicEffect effect)
-{
-	foodEffects->effects.erase(effect);
-	foodEffects->standardDistr = GetEffectDistribution(foodEffects->effects);
-	foodEffects->validEffects = SumAlchemyEffects(foodEffects->standardDistr);
-}
-
-#pragma endregion
-
 #pragma region Distribution
 
 std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	StartProfiling;
-	Rule* rule = CalcRule(acinfo, nullptr);
+	DistributionRule* rule = CalcRule(acinfo, nullptr);
 	std::vector<RE::TESBoundObject*> ret;
 	if (rule == Distribution::emptyRule) {
 		// if there is no rule, we have to check for cutsom items anyway, so assign a default rule that 
@@ -1013,7 +219,7 @@ std::vector<RE::TESBoundObject*> Distribution::GetDistrItems(std::shared_ptr<Act
 }
 std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	Rule* rule = CalcRule(acinfo, nullptr);
+	DistributionRule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomPotions(acinfo);
 	acinfo->potionDistr.clear();
 	acinfo->potionDistr.shrink_to_fit();
@@ -1028,7 +234,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrPotions(std::shared_ptr<Acto
 }
 std::vector<RE::AlchemyItem*> Distribution::GetDistrPoisons(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	Rule* rule = CalcRule(acinfo, nullptr);
+	DistributionRule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomPoisons(acinfo);
 	acinfo->poisonDistr.clear();
 	acinfo->poisonDistr.shrink_to_fit();
@@ -1043,7 +249,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrPoisons(std::shared_ptr<Acto
 }
 std::vector<RE::AlchemyItem*> Distribution::GetDistrFortifyPotions(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	Rule* rule = CalcRule(acinfo, nullptr);
+	DistributionRule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomFortifyPotions(acinfo);
 	acinfo->fortifyDistf.clear();
 	acinfo->fortifyDistf.shrink_to_fit();
@@ -1058,7 +264,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrFortifyPotions(std::shared_p
 }
 std::vector<RE::AlchemyItem*> Distribution::GetDistrFood(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	Rule* rule = CalcRule(acinfo, nullptr);
+	DistributionRule* rule = CalcRule(acinfo, nullptr);
 	auto ritems = rule->GetRandomFood(acinfo);
 	acinfo->foodDistr.clear();
 	acinfo->foodDistr.shrink_to_fit();
@@ -1074,7 +280,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetDistrFood(std::shared_ptr<ActorIn
 
 std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(std::shared_ptr<ActorInfo> const& acinfo)
 {
-	Rule* rule = CalcRule(acinfo);
+	DistributionRule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::distr._DistributePotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> items = ACM::GetMatchingPotions(acinfo, rule->potionEffects->validEffects, false);
@@ -1108,7 +314,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItemsUnique(std:
 std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	//LOG_4("[SettingsDistribution] GetMatchingInventoryItems enter");
-	Rule* rule = CalcRule(acinfo);
+	DistributionRule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::distr._DistributePotions) {
 		std::list<std::tuple<float, int, RE::AlchemyItem*, AlchemicEffect>> items = ACM::GetMatchingPotions(acinfo, rule->potionEffects->validEffects, false);
@@ -1157,7 +363,7 @@ std::vector<RE::AlchemyItem*> Distribution::GetMatchingInventoryItems(std::share
 std::vector<RE::AlchemyItem*> Distribution::GetAllInventoryItems(std::shared_ptr<ActorInfo> const& acinfo)
 {
 	//LOG_4("[SettingsDistribution] GetMatchingInventoryItems enter");
-	Rule* rule = CalcRule(acinfo);
+	DistributionRule* rule = CalcRule(acinfo);
 	std::vector<RE::AlchemyItem*> ret;
 	if (Settings::distr._DistributePotions || Settings::distr._DistributeFortifyPotions) {
 		std::list<RE::AlchemyItem*> items = ACM::GetAllPotions(acinfo);
@@ -1497,7 +703,7 @@ bool Distribution::ForceExcludeNPC(uint32_t actorid)
 	return true;
 }
 
-Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, UtilityBase::NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
+DistributionRule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, ItemStrength& is, UtilityBase::NPCTPLTInfo* tpltinfo, CustomItemStorage* custItems)
 {
 	// calc strength section
 	if (Settings::distr._GameDifficultyScaling) {
@@ -1567,7 +773,7 @@ Distribution::Rule* Distribution::CalcRule(RE::TESNPC* npc, ActorStrength& acs, 
 		citemsset = new std::unordered_set<std::string>{};
 	}
 
-	Rule* rule = nullptr;
+	DistributionRule* rule = nullptr;
 	// define general stuff
 	auto style = npc->combatStyle;
 	auto cls = npc->npcClass;
@@ -1924,7 +1130,7 @@ bool CheckDistributability(std::shared_ptr<ActorInfo> const& acinfo, Distributio
 	return distr;
 }
 
-Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& acinfo, UtilityBase::NPCTPLTInfo* tpltinfo)
+DistributionRule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& acinfo, UtilityBase::NPCTPLTInfo* tpltinfo)
 {
 	StartProfiling;
 	if (acinfo == nullptr || acinfo->IsValid() == false) {
@@ -1932,7 +1138,7 @@ Distribution::Rule* Distribution::CalcRule(std::shared_ptr<ActorInfo> const& aci
 		acinfo->SetDistributionRule(emptyRule);
 		return emptyRule;
 	}
-	Rule* rule = nullptr;
+	DistributionRule* rule = nullptr;
 	if (acinfo->GetLastRuleCalcTime() + std::chrono::seconds(60) < std::chrono::steady_clock::now() && (rule = acinfo->GetDistributionRule()) != nullptr)
 		return rule;
 	// get npc template info
@@ -2503,7 +1709,7 @@ static std::string GetFormEditorID(RE::TESFaction* fid)
 	return "ERROR";
 }
 */
-std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
+std::vector<std::tuple<int, DistributionRule*, std::string>> Distribution::CalcAllRules(RE::Actor* actor, ActorStrength& acs, ItemStrength& is)
 {
 	// calc strength section
 	if (Settings::distr._GameDifficultyScaling) {
@@ -2565,8 +1771,8 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 
 	auto base = actor->GetActorBase();
 
-	std::vector<std::tuple<int, Distribution::Rule*, std::string>> rls;
-	Rule* rule = nullptr;
+	std::vector<std::tuple<int, DistributionRule*, std::string>> rls;
+	DistributionRule* rule = nullptr;
 
 	//std::vector<Rule*> rls;
 	// find rule in npc map
@@ -2725,10 +1931,10 @@ std::vector<std::tuple<int, Distribution::Rule*, std::string>> Distribution::Cal
 	} else {
 		// there are no rules!!!
 		if (baseexcluded) {
-			return std::vector<std::tuple<int, Distribution::Rule*, std::string>>{ { INT_MIN, Distribution::emptyRule, "Empty" } };
+			return std::vector<std::tuple<int, DistributionRule*, std::string>>{ { INT_MIN, Distribution::emptyRule, "Empty" } };
 		}
 		LOG_1("default rule found: {}", Distribution::defaultRule->ruleName);
-		return std::vector<std::tuple<int, Distribution::Rule*, std::string>>{ { INT_MIN, Distribution::defaultRule, "Default" } };
+		return std::vector<std::tuple<int, DistributionRule*, std::string>>{ { INT_MIN, Distribution::defaultRule, "Default" } };
 	}
 }
 
@@ -2789,7 +1995,7 @@ void Distribution::ResetRules()
 	_npcMap.clear();
 	_hardExclusions.clear();
 	_hardExclusions_Plugins_NPCs.clear();
-	for (Rule* rule : _rules) {
+	for (auto& rule : _rules) {
 		delete rule;
 	}
 	for (auto [str, cat] : _internEffectCategories)

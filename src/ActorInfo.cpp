@@ -4,6 +4,7 @@
 #include "Settings.h"
 #include "Utility.h"
 #include "Distribution.h"
+#include "DistributionRule.h"
 #include "ActorManipulation.h"
 #include "Data.h"
 #include "Compatibility.h"
@@ -1270,7 +1271,7 @@ void ActorInfo::Update()
 
 void ActorInfo::SetLastRuleCalcTime() 
 { 
-	lastRuleCalcTime = std::chrono::steady_clock::time_point::now(); 
+	lastRuleCalcTime = std::chrono::steady_clock::now(); 
 }
 
 std::chrono::steady_clock::time_point ActorInfo::GetLastRuleCalcTime()
@@ -1278,12 +1279,12 @@ std::chrono::steady_clock::time_point ActorInfo::GetLastRuleCalcTime()
 	return lastRuleCalcTime;
 }
 
-void ActorInfo::SetDistributionRule(Distribution::Rule* rule)
+void ActorInfo::SetDistributionRule(DistributionRule* rule)
 {
 	_distributionRule = rule;
 }
 
-Distribution::Rule* ActorInfo::GetDistributionRule()
+DistributionRule* ActorInfo::GetDistributionRule()
 {
 	return _distributionRule;
 }

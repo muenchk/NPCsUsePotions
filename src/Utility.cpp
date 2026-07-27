@@ -456,7 +456,7 @@ std::string Utility::PrintEffectMap(std::map<AlchemicEffect, float> effectMap)
 	return ret;
 }
 
-std::string Utility::PrintEffectMap(std::unordered_map<AlchemicEffect, Distribution::Effect>& effectMap)
+std::string Utility::PrintEffectMap(std::unordered_map<AlchemicEffect, Effect>& effectMap)
 {
 	std::string ret = "|";
 	for (auto& [key, value] : effectMap) {
@@ -831,7 +831,7 @@ std::vector<std::tuple<AlchemicEffect, float, int>> Utility::ParseAlchemyEffects
 	return ret;
 }
 
-bool Utility::ParseAlchemyEffects(std::string input, Distribution::EffectPreset* preset)
+bool Utility::ParseAlchemyEffects(std::string input, EffectPreset* preset)
 {
 	LOG_3("");
 	if (preset == nullptr)
@@ -913,7 +913,7 @@ bool Utility::ParseAlchemyEffects(std::string input, Distribution::EffectPreset*
 						for (auto eff : effects) {
 							auto itr = preset->effects.find(eff);
 							if (itr != preset->effects.end()) {
-								Distribution::Effect e;
+								Effect e;
 								switch (op) {
 								case 1:  // add
 									e = itr->second;
@@ -945,7 +945,7 @@ bool Utility::ParseAlchemyEffects(std::string input, Distribution::EffectPreset*
 							else
 							{
 								// not found -> just set
-								Distribution::Effect e;
+								Effect e;
 								e.effect = eff;
 								e.weight = modifier;
 								e.max = max;

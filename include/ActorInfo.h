@@ -8,6 +8,7 @@
 #define aclock ((void)0);  //std::lock_guard<std::mutex> guard(mutex);
 
 class Compatibility;
+class DistributionRule;
 
 #pragma once
 /// <summary>
@@ -291,7 +292,7 @@ private:
 	long long timestamp_invalid;
 
 	std::chrono::steady_clock::time_point lastRuleCalcTime = std::chrono::steady_clock::time_point::min();
-	Distribution::Rule* _distributionRule = nullptr;
+	DistributionRule* _distributionRule = nullptr;
 
 public:
 	/// <summary>
@@ -908,8 +909,8 @@ public:
 	/// <returns></returns>
 	std::chrono::steady_clock::time_point GetLastRuleCalcTime();
 
-	void SetDistributionRule(Distribution::Rule* rule);
-	Distribution::Rule* GetDistributionRule();
+	void SetDistributionRule(DistributionRule* rule);
+	DistributionRule* GetDistributionRule();
 
 #pragma endregion
 
