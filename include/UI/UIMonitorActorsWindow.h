@@ -39,7 +39,7 @@ namespace NPCsUsePotions
 
 		public:
 			static ActorMonitor* GetSingleton();
-			static std::shared_ptr<ActorMonitor> GetSingletonShared();
+			static util::shared_ptr<ActorMonitor> GetSingletonShared();
 
 			void Init()
 			{

@@ -1322,7 +1322,58 @@ void Settings::LoadDistrConfig()
 									delete splits;
 								}
 								break;
+							case 34:  // set number of item effects for rules
+								{
+									if (splits->size() != 4) {
+										logwarn("rule has wrong number of fields, expected 4. file: {}, rule:\"{}\", fields: {}", file, tmp, splits->size());
+										continue;
+									}
+									std::string ruleName = splits->at(splitindex);
+									splitindex++;
+									std::string itemType = splits->at(splitindex);
+									splitindex++;
+									int numEffects = -1;
+									try {
+										numEffects = std::stoi(splits->at(splitindex));
+										splitindex++;
+									} catch (std::out_of_range&) {
+										logwarn("out-of-range expection in field \"NumEffects\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									} catch (std::invalid_argument&) {
+										logwarn("invalid-argument expection in field \"NumEffects\". file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									}
+									if (numEffects < 1) {
+										logwarn("The given number of Effects may not be less than 1. file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									}
 
+									Distribution::Rule* rule = Distribution::FindRule(ruleName);
+									if (rule == nullptr) {
+										logwarn("The specified rule cannot be found. file: {}, rule:\"{}\"", file, tmp);
+										delete splits;
+										continue;
+									}
+
+									if (itemType == "Potion") {
+										rule->numPotionEffects = numEffects;
+									} else if (itemType == "Fortify") {
+										rule->numFortifyEffects = numEffects;
+									} else if (itemType == "Poison") {
+										rule->numPoisonEffects = numEffects;
+									} else if (itemType == "Food") {
+										rule->numFoodEffects = numEffects;
+									}
+
+									LOGL_2("Max number of effects for {} on rule {} has been set to {} ", itemType, ruleName, numEffects);
+
+									// since we are done delete splits
+									delete splits;
+								}
+								break;
 							case 100: // set race as known so it doesnt show up in rule scans
 								{
 									if (splits->size() != 3) {
@@ -4271,6 +4322,24 @@ void Settings::CleanAlchemyEffects()
 	for (uint64_t i = 0; i < effectsToRemoveFood.size(); i++) {
 		LOG_5("[DDD]F {}", effectsToRemoveFood[i].string());
 	}
+}
+
+std::vector<RE::AlchemyItem*> Settings::GetMatchingItems(std::list<std::pair<AlchemicEffect, RE::AlchemyItem*>>& list, AlchemicEffect effect, int numMaxEffects)
+{
+	std::vector<RE::AlchemyItem*> ret;
+	for (auto entry : list) {
+		//if ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid()) {
+		//	logusage("Has InvisibilityEffect, DoNot {}, haseff {}", Settings::distr._DoNotDistributeMixedInvisPotions, (std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid());
+		//}
+		if (entry.second->effects.size() > numMaxEffects) {
+			LOG_4("Cannot distribute item {}, due to number of effects", Utility::PrintForm(entry.second));
+			continue;
+		}
+		if ((std::get<0>(entry) & effect) > 0 && (Settings::distr._DoNotDistributeMixedInvisPotions == false || Settings::distr._DoNotDistributeMixedInvisPotions && ((std::get<0>(entry) & AlchemicEffect::kInvisibility).IsValid() == false || (effect & AlchemicEffect::kInvisibility).IsValid()))) {
+			ret.push_back(std::get<1>(entry));
+		}
+	}
+	return ret;
 }
 
 #pragma endregion

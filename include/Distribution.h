@@ -146,6 +146,10 @@ public:
 		int rulePriority = 0;
 		bool allowMixed = true;
 		bool styleScaling = true;
+		int numPotionEffects = 100;
+		int numFortifyEffects = 100;
+		int numPoisonEffects = 100;
+		int numFoodEffects = 100;
 
 		EffCategoryPreset* potions;
 		EffectPreset* potionEffects;

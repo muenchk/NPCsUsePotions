@@ -302,30 +302,30 @@ namespace Events
 		/// Handles actor potion usage
 		/// </summary>
 		/// <param name="acinfo"></param>
-		static void HandleActorPotions(std::shared_ptr<ActorInfo> acinfo);
+		static AlchemicEffect HandleActorPotions(std::shared_ptr<ActorInfo> acinfo);
 
 		/// <summary>
 		/// Handles actor fortify potion usage
 		/// </summary>
 		/// <param name="acinfo"></param>
-		static void HandleActorFortifyPotions(std::shared_ptr<ActorInfo> acinfo);
+		static AlchemicEffect HandleActorFortifyPotions(std::shared_ptr<ActorInfo> acinfo);
 
 		/// <summary>
 		/// Handles actor poison usage
 		/// </summary>
 		/// <param name="acinfo"></param>
-		static void HandleActorPoisons(std::shared_ptr<ActorInfo> acinfo);
+		static AlchemicEffect HandleActorPoisons(std::shared_ptr<ActorInfo> acinfo);
 
 		/// <summary>
 		/// Handles actor food usage
 		/// </summary>
 		/// <param name="acinfo"></param>
-		static void HandleActorFood(std::shared_ptr<ActorInfo> acinfo);
+		static AlchemicEffect HandleActorFood(std::shared_ptr<ActorInfo> acinfo);
 
 		/// <summary>
 		/// Handles actor out-of-combat potion usage
 		/// </summary>
-		static void HandleActorOOCPotions(std::shared_ptr<ActorInfo> acinfo);
+		static AlchemicEffect HandleActorOOCPotions(std::shared_ptr<ActorInfo> acinfo);
 
 		/// <summary>
 		/// Refreshes important runtime data of an ActorInfo, including combatdata and status

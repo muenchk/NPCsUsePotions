@@ -1094,5 +1094,46 @@ public:
 	/// <returns></returns>
 	bool IsPoisoned();
 
+	std::vector<RE::TESFaction*> GetFactions();
+
+	void EvaluatePackage();
+
+#pragma endregion
+#pragma region ACM
+
+	/// <summary>
+	/// Returns the current maximum for an actor value.
+	/// This takes the base av and any modifiers into account
+	/// </summary>
+	/// <param name="_actor"></param>
+	/// <param name="av"></param>
+	/// <returns></returns>
+	float GetAVMax(RE::ActorValue av);
+	/// <summary>
+	/// Returns the current maximum for an actor value.
+	/// This takes the base av and any modifiers into account
+	/// </summary>
+	/// <param name="_actor"></param>
+	/// <param name="av"></param>
+	/// <returns></returns>
+	float GetAV(RE::ActorValue av);
+	/// <summary>
+	/// Returns the current percentage of an actor value (like percentag of health remaining)
+	/// </summary>
+	/// <param name="_actor">Actor to get av from</param>
+	/// <param name="av">Actor value to compute</param>
+	/// <returns></returns>
+	float GetAVPercentage(RE::ActorValue av);
+	/// <summary>
+	/// Returns the actor value percentage of an actor calculated from their base value
+	/// and a given current value
+	/// </summary>
+	/// <param name="_actor">Actor to get av from</param>
+	/// <param name="av">Actor value to compute</param>
+	/// <param name="curr">current value</param>
+	/// <returns></returns>
+	float GetAVPercentageFromValue(RE::ActorValue av, float curr);
+
+	void RestoreAV(RE::ActorValue av, float value);
 #pragma endregion
 };

@@ -1990,4 +1990,105 @@ bool ActorInfo::IsPoisoned()
 	return false;
 }
 
+std::vector<RE::TESFaction*> ActorInfo::GetFactions()
+{
+	aclock;
+	if (!valid || dead)
+		return {};
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		std::vector<RE::TESFaction*> factions;
+		auto factionVisitor = [&factions](RE::TESFaction* a_faction, int8_t a_rank) {
+			if (a_rank >= 0)
+				factions.push_back(a_faction);
+			return true;
+		};
+		act->VisitFactions(factionVisitor);
+	}
+	return std::vector<RE::TESFaction*>();
+}
+
+void ActorInfo::EvaluatePackage()
+{
+	aclock;
+	if (!valid || dead)
+		return;
+
+	if (actor.get() && actor.get().get()) {
+		actor.get()->EvaluatePackage();
+	}
+}
+
+#pragma endregion
+
+
+#pragma region ACM
+
+float ActorInfo::GetAVMax(RE::ActorValue av)
+{
+	aclock;
+	if (!valid || dead)
+		return 0;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		// add base value, permanent modifiers and temporary modifiers (magic effects for instance)
+		return act->AsActorValueOwner()->GetPermanentActorValue(av) + act->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av);
+	}
+	return 0;
+}
+
+float ActorInfo::GetAV(RE::ActorValue av)
+{
+	aclock;
+	if (!valid || dead)
+		return 0;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		return act->AsActorValueOwner()->GetActorValue(av);
+	}
+	return 0;
+}
+
+float ActorInfo::GetAVPercentage(RE::ActorValue av)
+{
+	aclock;
+	if (!valid || dead)
+		return 0;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		return act->AsActorValueOwner()->GetActorValue(av) / (act->AsActorValueOwner()->GetPermanentActorValue(av) + act->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+	}
+	return 0;
+}
+
+float ActorInfo::GetAVPercentageFromValue(RE::ActorValue av, float curr)
+{
+	aclock;
+	if (!valid || dead)
+		return 0;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		return curr / (act->AsActorValueOwner()->GetPermanentActorValue(av) + act->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av));
+	}
+	return 0;
+}
+
+void ActorInfo::RestoreAV(RE::ActorValue av, float value)
+{
+	aclock;
+	if (!valid || dead)
+		return;
+
+	if (actor.get() && actor.get().get()) {
+		RE::Actor* act = actor.get().get();
+		act->AsActorValueOwner()->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
+	}
+	return;
+}
+
 #pragma endregion
