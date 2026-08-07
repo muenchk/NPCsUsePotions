@@ -572,7 +572,9 @@ namespace Events
 
 						// don't handle at all if this is set
 						if (!acinfo->GetHandleActor())
+							acinfo->UpdateWidgets();
 							return;
+						}
 
 						ACM::MatchingItems match;
 						// handle potions out-of-combat
@@ -625,6 +627,8 @@ namespace Events
 								LOG_2("current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
 							}
 						}
+
+						acinfo->UpdateWidgets();
 
 						PROF_1(TimeProfiling, "execution time for actor {}", acinfo->GetFormString());
 					});

@@ -18,6 +18,7 @@ void ActorInfo::Init()
 ActorInfo::ActorInfo(RE::Actor* _actor)
 {
 	LOG_3("");
+	cooldowns = util::make_shared<CooldownData>();
 	if (_actor) {
 		actor = _actor->GetHandle();
 		formid.SetID(_actor->GetFormID());
@@ -69,19 +70,19 @@ void ActorInfo::Reset(RE::Actor* _actor)
 		return;
 	}
 	aclock;
-	durHealth = 0;
-	durMagicka = 0;
-	durStamina = 0;
-	durFortify = 0;
-	durRegeneration = 0;
+	cooldowns->durHealth = 0;
+	cooldowns->durMagicka = 0;
+	cooldowns->durStamina = 0;
+	cooldowns->durFortify = 0;
+	cooldowns->durRegeneration = 0;
 	globalCooldownTimer = 0;
 	citems.Reset();
 	formid = ActorID();
 	pluginname = "";
 	pluginID = MAXUINT32;
 	name = "";
-	nextFoodTime = 0;
-	lastDistrTime = 0;
+	cooldowns->nextFoodTime = 0;
+	cooldowns->lastDistrTime = 0;
 	durCombat = 0;
 	_distributedCustomItems = 0;
 	_boss = false;
@@ -96,6 +97,8 @@ void ActorInfo::Reset(RE::Actor* _actor)
 	handleactor = false;
 	lastRuleCalcTime = std::chrono::steady_clock::time_point::min();
 	_distributionRule = nullptr;
+	_showWidgets = false;
+	UpdateWidgets();
 	if (_actor) {
 		actor = _actor->GetHandle();
 		formid.SetID(_actor->GetFormID());
@@ -142,11 +145,24 @@ void ActorInfo::Reset(RE::Actor* _actor)
 ActorInfo::ActorInfo(bool blockedReset)
 {
 	blockReset = blockedReset;
+	cooldowns = util::make_shared<CooldownData>();
 }
 
 ActorInfo::ActorInfo()
 {
+	cooldowns = util::make_shared<CooldownData>();
+}
+ActorInfo::~ActorInfo()
+{
+	for (int i = 0; i < handles.size(); i++) {
+		try {
+			if (handles[i] != nullptr)
+				handles[i]->Invalidate();
+		} catch (std::exception&) {}
+	}
 
+	_showWidgets = false;
+	UpdateWidgets();
 }
 
 bool ActorInfo::IsValid()
@@ -937,19 +953,19 @@ bool ActorInfo::WriteData(unsigned char* buffer, size_t offset)
 	// pluginname
 	Buffer::Write(pluginname, buffer, offset);
 	// durHealth
-	Buffer::Write(durHealth, buffer, offset);
+	Buffer::Write(cooldowns->durHealth, buffer, offset);
 	// durMagicka
-	Buffer::Write(durMagicka, buffer, offset);
+	Buffer::Write(cooldowns->durMagicka, buffer, offset);
 	// durStamina
-	Buffer::Write(durStamina, buffer, offset);
+	Buffer::Write(cooldowns->durStamina, buffer, offset);
 	// durFortify
-	Buffer::Write(durFortify, buffer, offset);
+	Buffer::Write(cooldowns->durFortify, buffer, offset);
 	// durRegeneration
-	Buffer::Write(durRegeneration, buffer, offset);
+	Buffer::Write(cooldowns->durRegeneration, buffer, offset);
 	// nextFoodTime
-	Buffer::Write(nextFoodTime, buffer, offset);
+	Buffer::Write(cooldowns->nextFoodTime, buffer, offset);
 	// lastDistrTime
-	Buffer::Write(lastDistrTime, buffer, offset);
+	Buffer::Write(cooldowns->lastDistrTime, buffer, offset);
 	// durCombat
 	Buffer::Write(durCombat, buffer, offset);
 	// distributedCustomItems
@@ -1000,13 +1016,13 @@ bool ActorInfo::ReadData(unsigned char* buffer, size_t offset, size_t length)
 				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
-				durHealth = Buffer::ReadInt32(buffer, offset);
-				durMagicka = Buffer::ReadInt32(buffer, offset);
-				durStamina = Buffer::ReadInt32(buffer, offset);
-				durFortify = Buffer::ReadInt32(buffer, offset);
-				durRegeneration = Buffer::ReadInt32(buffer, offset);
-				nextFoodTime = Buffer::ReadFloat(buffer, offset);
-				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->durHealth = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durMagicka = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durStamina = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durFortify = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durRegeneration = Buffer::ReadInt32(buffer, offset);
+				cooldowns->nextFoodTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->lastDistrTime = Buffer::ReadFloat(buffer, offset);
 				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
 				itemStrength = static_cast<ItemStrength>(Buffer::ReadUInt32(buffer, offset));
@@ -1066,13 +1082,13 @@ bool ActorInfo::ReadData(unsigned char* buffer, size_t offset, size_t length)
 				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
-				durHealth = Buffer::ReadInt32(buffer, offset);
-				durMagicka = Buffer::ReadInt32(buffer, offset);
-				durStamina = Buffer::ReadInt32(buffer, offset);
-				durFortify = Buffer::ReadInt32(buffer, offset);
-				durRegeneration = Buffer::ReadInt32(buffer, offset);
-				nextFoodTime = Buffer::ReadFloat(buffer, offset);
-				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->durHealth = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durMagicka = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durStamina = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durFortify = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durRegeneration = Buffer::ReadInt32(buffer, offset);
+				cooldowns->nextFoodTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->lastDistrTime = Buffer::ReadFloat(buffer, offset);
 				durCombat = Buffer::ReadInt32(buffer, offset);
 				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
@@ -1136,13 +1152,13 @@ bool ActorInfo::ReadData(unsigned char* buffer, size_t offset, size_t length)
 				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
-				durHealth = Buffer::ReadInt32(buffer, offset);
-				durMagicka = Buffer::ReadInt32(buffer, offset);
-				durStamina = Buffer::ReadInt32(buffer, offset);
-				durFortify = Buffer::ReadInt32(buffer, offset);
-				durRegeneration = Buffer::ReadInt32(buffer, offset);
-				nextFoodTime = Buffer::ReadFloat(buffer, offset);
-				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->durHealth = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durMagicka = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durStamina = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durFortify = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durRegeneration = Buffer::ReadInt32(buffer, offset);
+				cooldowns->nextFoodTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->lastDistrTime = Buffer::ReadFloat(buffer, offset);
 				durCombat = Buffer::ReadInt32(buffer, offset);
 				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
@@ -1202,13 +1218,13 @@ bool ActorInfo::ReadData(unsigned char* buffer, size_t offset, size_t length)
 				formid.SetID(reac->GetFormID());
 
 				name = reac->GetName();
-				durHealth = Buffer::ReadInt32(buffer, offset);
-				durMagicka = Buffer::ReadInt32(buffer, offset);
-				durStamina = Buffer::ReadInt32(buffer, offset);
-				durFortify = Buffer::ReadInt32(buffer, offset);
-				durRegeneration = Buffer::ReadInt32(buffer, offset);
-				nextFoodTime = Buffer::ReadFloat(buffer, offset);
-				lastDistrTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->durHealth = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durMagicka = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durStamina = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durFortify = Buffer::ReadInt32(buffer, offset);
+				cooldowns->durRegeneration = Buffer::ReadInt32(buffer, offset);
+				cooldowns->nextFoodTime = Buffer::ReadFloat(buffer, offset);
+				cooldowns->lastDistrTime = Buffer::ReadFloat(buffer, offset);
 				durCombat = Buffer::ReadInt32(buffer, offset);
 				_distributedCustomItems = Buffer::ReadBool(buffer, offset);
 				actorStrength = static_cast<ActorStrength>(Buffer::ReadUInt32(buffer, offset));
@@ -1287,6 +1303,203 @@ void ActorInfo::SetDistributionRule(DistributionRule* rule)
 DistributionRule* ActorInfo::GetDistributionRule()
 {
 	return _distributionRule;
+}
+
+int ActorInfo::GetDurHealth()
+{
+	return cooldowns->durHealth;
+}
+
+void ActorInfo::SetDurHealth(int value)
+{
+	cooldowns->durHealth = value;
+	cooldowns->durHealthMax = value;
+}
+void ActorInfo::DecDurHealth(int value)
+{
+	cooldowns->durHealth -= value;
+}
+int ActorInfo::GetDurMagicka()
+{
+	return cooldowns->durMagicka;
+}
+void ActorInfo::SetDurMagicka(int value)
+{
+	cooldowns->durMagicka = value;
+	cooldowns->durMagickaMax = value;
+}
+void ActorInfo::DecDurMagicka(int value)
+{
+	cooldowns->durMagicka -= value;
+}
+int ActorInfo::GetDurStamina()
+{
+	return cooldowns->durStamina;
+}
+void ActorInfo::SetDurStamina(int value)
+{
+	cooldowns->durStamina = value;
+	cooldowns->durStaminaMax = value;
+}
+void ActorInfo::DecDurStamina(int value)
+{
+	cooldowns->durStamina -= value;
+}
+int ActorInfo::GetDurFortify()
+{
+	return cooldowns->durFortify;
+}
+void ActorInfo::SetDurFortify(int value)
+{
+	cooldowns->durFortify = value;
+	cooldowns->durFortifyMax = value;
+}
+void ActorInfo::DecDurFortify(int value)
+{
+	cooldowns->durFortify -= value;
+}
+int ActorInfo::GetDurRegeneration()
+{
+	return cooldowns->durRegeneration;
+}
+void ActorInfo::SetDurRegeneration(int value)
+{
+	cooldowns->durRegeneration = value;
+	cooldowns->durRegenerationMax = value;
+}
+void ActorInfo::DecDurRegeneration(int value)
+{
+	cooldowns->durRegeneration -= value;
+}
+float ActorInfo::GetNextFoodTime()
+{
+	return cooldowns->nextFoodTime;
+}
+void ActorInfo::SetNextFoodTime(float value)
+{
+	cooldowns->nextFoodTime = value;
+}
+float ActorInfo::GetLastDistrTime()
+{
+	return cooldowns->lastDistrTime;
+}
+void ActorInfo::SetLastDistrTime(float value)
+{
+	cooldowns->lastDistrTime = value;
+}
+
+void ActorInfo::UpdateWidgets()
+{
+	if (_showWidgets) {
+		if (_widgetData._widgetPanel == nullptr)
+		{
+			_widgetData._widgetPanel = dynamic_pointer_cast<IWidgetPanel>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetPanel, ""));
+			_widgetData._widgetPanel->SetRows(1);
+			_widgetData._widgetPanel->SetColumns(5);
+			_widgetData._widgetPanel->SetLocationObjectAnchor(Offset{ 0, false, OffsetPosition ::Low }, Offset{ 25.f, false, OffsetPosition ::Low }, Dimension{ true, 0.2f }, Dimension{ true, 0.2f }, false, AlignmentFlags::CenterX | AlignmentFlags::Bottom, 0.5f, RE::ObjectRefHandle{ RE::PlayerCharacter::GetSingleton()->GetHandle() }, LocationObjectAnchor::ObjectAnchor::ActorHead);
+			_widgetData._widgetPanel->SetFillDirection(AlignmentFlags::Left | AlignmentFlags::Bottom);
+			_widgetData._widgetPanel->Show();
+			LibImGuiUI::LibImGuiUI_APIv1::instance->RegisterWidget(_widgetData._widgetPanel);
+
+			_widgetData._potionHealthWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			auto cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
+				if (auto ptr = weak.lock(); ptr) {
+					return (float)ptr->durHealth / (float)ptr->durHealthMax;
+				} else
+					return 0.f;
+			});*/
+			_widgetData._potionHealthWidget->AddSubordinateWidget(cooldownWidget);
+
+			_widgetData._potionMagickaWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
+				if (auto ptr = weak.lock(); ptr) {
+					return (float)ptr->durMagicka / (float)ptr->durMagickaMax;
+				} else
+					return 0.f;
+			});*/
+			_widgetData._potionMagickaWidget->AddSubordinateWidget(cooldownWidget);
+
+			_widgetData._potionStaminaWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
+				if (auto ptr = weak.lock(); ptr) {
+					return (float)ptr->durStamina / (float)ptr->durStaminaMax;
+				} else
+					return 0.f;
+			});*/
+			_widgetData._potionStaminaWidget->AddSubordinateWidget(cooldownWidget);
+
+			_widgetData._fortifyWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
+				if (auto ptr = weak.lock(); ptr) {
+					return (float)ptr->durFortify / (float)ptr->durFortifyMax;
+				} else
+					return 0.f;
+			});*/
+			_widgetData._fortifyWidget->AddSubordinateWidget(cooldownWidget);
+
+			_widgetData._regenWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
+				if (auto ptr = weak.lock(); ptr) {
+					return (float)ptr->durRegeneration / (float)ptr->durRegenerationMax;
+				} else
+					return 0.f;
+			});*/
+			_widgetData._regenWidget->AddSubordinateWidget(cooldownWidget);
+		}
+
+		if (_widgetData._widgetPanel) {
+			if (_widgetData._potionHealthWidgetShown && cooldowns->durHealth <= 0) {
+				_widgetData._widgetPanel->RemoveWidget(_widgetData._potionHealthWidget);
+			} else if (_widgetData._potionHealthWidgetShown == false && cooldowns->durHealth > 0) {
+				_widgetData._widgetPanel->AddWidget(_widgetData._potionHealthWidget);
+			}
+
+			if (_widgetData._potionMagickaWidgetShown && cooldowns->durMagicka <= 0)
+				_widgetData._widgetPanel->RemoveWidget(_widgetData._potionMagickaWidget);
+			else if (_widgetData._potionMagickaWidgetShown == false && cooldowns->durMagicka > 0) {
+				_widgetData._widgetPanel->AddWidget(_widgetData._potionMagickaWidget);
+			}
+			if (_widgetData._potionStaminaWidgetShown && cooldowns->durStamina <= 0)
+				_widgetData._widgetPanel->RemoveWidget(_widgetData._potionStaminaWidget);
+			else if (_widgetData._potionStaminaWidgetShown == false && cooldowns->durMagicka > 0) {
+				_widgetData._widgetPanel->AddWidget(_widgetData._potionStaminaWidget);
+			}
+			if (_widgetData._fortifyWidgetShown && cooldowns->durFortify <= 0)
+				_widgetData._widgetPanel->RemoveWidget(_widgetData._fortifyWidget);
+			else if (_widgetData._fortifyWidgetShown == false && cooldowns->durMagicka > 0) {
+				_widgetData._widgetPanel->AddWidget(_widgetData._fortifyWidget);
+			}
+			if (_widgetData._regenWidgetShown && cooldowns->durRegeneration <= 0)
+				_widgetData._widgetPanel->RemoveWidget(_widgetData._regenWidget);
+			else if (_widgetData._regenWidgetShown == false && cooldowns->durRegeneration > 0) {
+				_widgetData._widgetPanel->AddWidget(_widgetData._regenWidget);
+			}
+		}
+
+	} else {
+		// reset all widget data and pointers
+		_widgetData._potionHealthWidget.reset();
+		_widgetData._potionStaminaWidget.reset();
+		_widgetData._potionMagickaWidget.reset();
+		_widgetData._fortifyWidget.reset();
+		_widgetData._regenWidget.reset();
+		if (_widgetData._widgetPanel) {
+			//_widgetData._widgetPanel->RemoveAllWidgets();
+			LibImGuiUI::LibImGuiUI_APIv1::instance->UnregisterWidget(_widgetData._widgetPanel);
+			_widgetData._widgetPanel.reset();
+		}
+		_widgetData = WidgetData();
+	}
+}
+
+void ActorInfo::ShowWidgets(bool shown)
+{
+	_showWidgets = shown;
 }
 
 std::weak_ptr<ActorInfo> ActorInfo::GetTarget()

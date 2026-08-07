@@ -579,6 +579,9 @@ namespace Events
 		// insert actor
 		ACSetRegisterAndReset(acinfo, actor);
 
+		// show widgets
+		acinfo->ShowWidgets(true);
+
 		// checkc combat status if this is called after combat event
 		if (actor->IsInCombat())
 			acinfo->SetCombatState(CombatState::InCombat);
@@ -630,6 +633,9 @@ namespace Events
 		LOG_1("Unregister NPC from potion tracking: {}", Utility::PrintForm(actor));
 		std::shared_ptr<ActorInfo> acinfo = data->FindActor(actor);
 		ACSetUnregister(acinfo);
+		// unshow widgets
+		acinfo->ShowWidgets(false);
+		acinfo->UpdateWidgets();
 		acinfo->SetDurHealth(0);
 		acinfo->SetDurMagicka(0);
 		acinfo->SetDurStamina(0);

@@ -18,6 +18,9 @@
 #include "Settings.h"
 #include "Statistics.h"
 #include "Utility.h"
+#include "ActorManipulation.h"
+
+using namespace LibImGuiUI::UserInterface;
 		
 namespace Events
 {
@@ -232,8 +235,9 @@ TESDeathEventEnd:
 			// register / unregister
 			if (a_event->newState == RE::ACTOR_COMBAT_STATE::kCombat || a_event->newState == RE::ACTOR_COMBAT_STATE::kSearching) {
 				// register for tracking
-				if (Distribution::ExcludedNPCFromHandling(actor) == false)
+				if (Distribution::ExcludedNPCFromHandling(actor) == false) {
 					Settings::system._alternateNPCRegistration ? Main::RegisterNPCAlternate(actor) : Main::RegisterNPC(actor);
+				}
 				else
 					LOG_1("NPC {} is excluded from handling and cannot be registered", Utility::PrintForm(actor));
 			} else {

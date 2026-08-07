@@ -9,6 +9,10 @@
 #include <imgui.h>
 #include "imgui_internal.h"
 
+#include <boost/container/string.hpp>
+#include <boost/container/set.hpp>
+#include <boost/container/vector.hpp>
+
 #include <LibSUtils/LibSUtils.h>
 #include <LibImGuiUI/LibImGuiUI_API.h>
 

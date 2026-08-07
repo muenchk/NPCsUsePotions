@@ -5,6 +5,8 @@
 #include <mutex>
 #include <memory>
 
+using namespace LibImGuiUI::UserInterface;
+
 #define aclock ((void)0);  //std::lock_guard<std::mutex> guard(mutex);
 
 class Compatibility;
@@ -140,6 +142,43 @@ public:
 	CustomItems citems;
 
 private:
+	struct CooldownData
+	{
+		/// <summary>
+		/// Current remaining cooldown on health potions
+		/// </summary>
+		int durHealth = 0;
+		int durHealthMax = 1000;
+		/// <summary>
+		/// Current remaining cooldown on magicka potions
+		/// </summary>
+		int durMagicka = 0;
+		int durMagickaMax = 1000;
+		/// <summary>
+		/// Current remaining cooldown on stamina potions
+		/// </summary>
+		int durStamina = 0;
+		int durStaminaMax = 1000;
+		/// <summary>
+		/// Current remaining cooldown on fortify potions
+		/// </summary>
+		int durFortify = 0;
+		int durFortifyMax = 1000;
+		/// <summary>
+		/// Current remaining cooldown on regeneration potions
+		/// </summary>
+		int durRegeneration = 0;
+		int durRegenerationMax = 1000;
+		/// <summary>
+		/// time when the actor may use the next food item -> compare with RE::Calendar::GetSingleton()->GetDaysPassed();
+		/// </summary>
+		float nextFoodTime = 0.0f;
+		/// <summary>
+		/// Time the npc was last given items
+		/// </summary>
+		float lastDistrTime = 0.0f;
+	};
+
 	/// <summary>
 	/// central lock coordinating all function accesses
 	/// </summary>
@@ -165,34 +204,8 @@ private:
 	/// name of the actor
 	/// </summary>
 	std::string name = "";
-	/// <summary>
-	/// Current remaining cooldown on health potions
-	/// </summary>
-	int durHealth = 0;
-	/// <summary>
-	/// Current remaining cooldown on magicka potions
-	/// </summary>
-	int durMagicka = 0;
-	/// <summary>
-	/// Current remaining cooldown on stamina potions
-	/// </summary>
-	int durStamina = 0;
-	/// <summary>
-	/// Current remaining cooldown on fortify potions
-	/// </summary>
-	int durFortify = 0;
-	/// <summary>
-	/// Current remaining cooldown on regeneration potions
-	/// </summary>
-	int durRegeneration = 0;
-	/// <summary>
-	/// time when the actor may use the next food item -> compare with RE::Calendar::GetSingleton()->GetDaysPassed();
-	/// </summary>
-	float nextFoodTime = 0.0f;
-	/// <summary>
-	/// Time the npc was last given items
-	/// </summary>
-	float lastDistrTime = 0.0f;
+	
+	util::shared_ptr<CooldownData> cooldowns;
 	/// <summary>
 	/// Current time spent in combat
 	/// </summary>
@@ -294,6 +307,26 @@ private:
 	std::chrono::steady_clock::time_point lastRuleCalcTime = std::chrono::steady_clock::time_point::min();
 	DistributionRule* _distributionRule = nullptr;
 
+	struct WidgetData
+	{
+		util::shared_ptr<IWidgetPanel> _widgetPanel;
+		util::shared_ptr<ITextureWidget> _potionHealthWidget;
+		util::shared_ptr<ITextureWidget> _potionStaminaWidget;
+		util::shared_ptr<ITextureWidget> _potionMagickaWidget;
+		util::shared_ptr<ITextureWidget> _fortifyWidget;
+		util::shared_ptr<ITextureWidget> _regenWidget;
+
+		bool _potionHealthWidgetShown = false;
+		bool _potionStaminaWidgetShown = false;
+		bool _potionMagickaWidgetShown = false;
+		bool _fortifyWidgetShown = false;
+		bool _regenWidgetShown = false;
+	};
+
+	WidgetData _widgetData;
+
+	bool _showWidgets = false;
+
 public:
 	/// <summary>
 	/// version of class [used for save and load]
@@ -311,15 +344,7 @@ public:
 	std::string ToString();
 	
 
-	~ActorInfo()
-	{
-		for (int i = 0; i < handles.size(); i++) {
-			try {
-				if (handles[i] != nullptr)
-					handles[i]->Invalidate();
-			} catch (std::exception&) {}
-		}
-	}
+	~ActorInfo();
 
 	/// <summary>
 	/// custom potion distribution to be applied
@@ -459,93 +484,93 @@ public:
 	/// Returns the duration of health potions
 	/// </summary>
 	/// <returns></returns>
-	int GetDurHealth() { return durHealth; }
+	int GetDurHealth();
 	/// <summary>
 	/// Sets the duration of health potions
 	/// <param name="value"></param>
 	/// </summary>
-	void SetDurHealth(int value) { durHealth = value; }
+	void SetDurHealth(int value);
 	/// <summary>
 	/// Decreases the duration of health potions
 	/// </summary>
 	/// <param name="value"></param>
 	/// <returns></returns>
-	void DecDurHealth(int value) { durHealth -= value; }
+	void DecDurHealth(int value);
 	/// <summary>
 	/// Returns the duration of magicka potions
 	/// </summary>
 	/// <returns></returns>
-	int GetDurMagicka() { return durMagicka; }
+	int GetDurMagicka();
 	/// <summary>
 	/// Sets the duration of magicka potions
 	/// </summary>
 	/// <param name="value"></param>
 	/// <returns></returns>
-	void SetDurMagicka(int value) { durMagicka = value; }
+	void SetDurMagicka(int value);
 	/// <summary>
 	/// Decreases the duration of magicka potions
 	/// </summary>
 	/// <param name="value"></param>
 	/// <returns></returns>
-	void DecDurMagicka(int value) { durMagicka -= value; }
+	void DecDurMagicka(int value);
 	/// <summary>
 	/// Returns the duration of stamina potions
 	/// </summary>
 	/// <returns></returns>
-	int GetDurStamina() { return durStamina; }
+	int GetDurStamina();
 	/// <summary>
 	/// Sets the duration of stamina potions
 	/// </summary>
 	/// <param name="value"></param>
-	void SetDurStamina(int value) { durStamina = value; }
+	void SetDurStamina(int value);
 	/// <summary>
 	/// Decreases the duration of stamina potions
 	/// </summary>
 	/// <param name="value"></param>
-	void DecDurStamina(int value) { durStamina -= value; }
+	void DecDurStamina(int value);
 	/// <summary>
 	/// Returns the duration of fortify potions
 	/// </summary>
 	/// <returns></returns>
-	int GetDurFortify() { return durFortify; }
+	int GetDurFortify();
 	/// <summary>
 	/// Sets the duration of fortify potions
 	/// </summary>
 	/// <param name="value"></param>
-	void SetDurFortify(int value) { durFortify = value; }
+	void SetDurFortify(int value);
 	/// <summary>
 	/// Decreases the duration of fortify potions
 	/// </summary>
 	/// <param name="value"></param>
-	void DecDurFortify(int value) { durFortify -= value; }
+	void DecDurFortify(int value);
 	/// <summary>
 	/// Returns the duration of regeneration potions
 	/// </summary>
-	int GetDurRegeneration() { return durRegeneration; }
+	int GetDurRegeneration();
 	/// <summary>
 	/// Sets the duration of regeneration potions
 	/// </summary>
-	void SetDurRegeneration(int value) { durRegeneration = value; }
+	void SetDurRegeneration(int value);
 	/// <summary>
 	/// Decreases the duration of regeneration potions
 	/// </summary>
-	void DecDurRegeneration(int value) { durRegeneration -= value; }
+	void DecDurRegeneration(int value);
 	/// <summary>
 	/// Returns the game time the next food item may be consumed
 	/// </summary>
-	float GetNextFoodTime() { return nextFoodTime; }
+	float GetNextFoodTime();
 	/// <summary>
 	/// Set the game time the next food item may be consumed
 	/// </summary>
-	void SetNextFoodTime(float value) { nextFoodTime = value; }
+	void SetNextFoodTime(float value);
 	/// <summary>
 	/// Returns the time items were last distributed
 	/// </summary>
-	float GetLastDistrTime() { return lastDistrTime; }
+	float GetLastDistrTime();
 	/// <summary>
 	/// Set the time items were last distributed
 	/// </summary>
-	void SetLastDistrTime(float value) { lastDistrTime = value; }
+	void SetLastDistrTime(float value);
 	/// <summary>
 	/// Returns the time spent in combat
 	/// </summary>
@@ -911,6 +936,10 @@ public:
 
 	void SetDistributionRule(DistributionRule* rule);
 	DistributionRule* GetDistributionRule();
+
+	void UpdateWidgets();
+
+	void ShowWidgets(bool shown);
 
 #pragma endregion
 
