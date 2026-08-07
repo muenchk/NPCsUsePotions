@@ -70,7 +70,7 @@ public:
 	{
 		if (_actor == nullptr)
 			return 1;
-		return _actor->AsActorValueOwner()->GetPermanentActorValue(av) + _actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, av);
+		return _actor->AsActorValueOwner()->GetActorValue(av);
 	}
 	/// <summary>
 	/// Returns the current percentage of an actor value (like percentag of health remaining)

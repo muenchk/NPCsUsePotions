@@ -571,7 +571,7 @@ namespace Events
 						HandleActorRuntimeData(acinfo);
 
 						// don't handle at all if this is set
-						if (acinfo->GetHandleActor())
+						if (!acinfo->GetHandleActor())
 							return;
 
 						ACM::MatchingItems match;
