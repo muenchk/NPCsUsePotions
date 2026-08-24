@@ -1729,15 +1729,15 @@ short ActorInfo::GetLevel()
 	return 1;
 }
 
-SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> ActorInfo::GetBoolBits()
+REX::EnumSet<RE::Actor::BOOL_BITS, std::uint32_t> ActorInfo::GetBoolBits()
 {
 	aclock;
 	if (!valid)
-		return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
+		return REX::EnumSet<RE::Actor::BOOL_BITS, std::uint32_t>{};
 
 	if (actor.get() && actor.get().get())
 		return actor.get().get()->GetActorRuntimeData().boolBits;
-	return SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t>{};
+	return REX::EnumSet<RE::Actor::BOOL_BITS, std::uint32_t>{};
 }
 
 bool ActorInfo::IsFlying()
@@ -2109,7 +2109,7 @@ void ActorInfo::RestoreAV(RE::ActorValue av, float value)
 
 	if (actor.get() && actor.get().get()) {
 		RE::Actor* act = actor.get().get();
-		act->AsActorValueOwner()->RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
+		act->AsActorValueOwner()->RestoreActorValue(av, value);
 	}
 	return;
 }

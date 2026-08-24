@@ -1050,7 +1050,7 @@ public:
 	/// <summary>
 	/// Returns the boolbits of the actor
 	/// </summary>
-	SKSE::stl::enumeration<RE::Actor::BOOL_BITS, uint32_t> GetBoolBits();
+	REX::EnumSet<RE::Actor::BOOL_BITS, std::uint32_t> GetBoolBits();
 
 	/// <summary>
 	/// Returns whether the actor is flying
