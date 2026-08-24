@@ -815,9 +815,9 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 						// play poison sound
 						RE::BSSoundHandle handle;
 						if (poison->data.consumptionSound)
-							audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+							audiomanager->GetSoundHandle(handle, poison->data.consumptionSound->soundDescriptor);
 						else if (Settings::PoisonUse)
-							audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+							audiomanager->GetSoundHandle(handle, Settings::PoisonUse->soundDescriptor);
 						handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
 						handle.SetVolume(1.0);
 						handle.Play();
@@ -834,9 +834,9 @@ std::pair<int, AlchemicEffect> ACM::ActorUsePoison(std::shared_ptr<ActorInfo> co
 								// play poison sound
 								RE::BSSoundHandle handle;
 								if (poison->data.consumptionSound)
-									audiomanager->BuildSoundDataFromDescriptor(handle, poison->data.consumptionSound->soundDescriptor);
+									audiomanager->GetSoundHandle(handle, poison->data.consumptionSound->soundDescriptor);
 								else
-									audiomanager->BuildSoundDataFromDescriptor(handle, Settings::PoisonUse->soundDescriptor);
+									audiomanager->GetSoundHandle(handle, Settings::PoisonUse->soundDescriptor);
 								handle.SetObjectToFollow(acinfo->GetActor()->Get3D());
 								handle.SetVolume(1.0);
 								handle.Play();
