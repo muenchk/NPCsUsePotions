@@ -335,7 +335,7 @@ TESDeathEventEnd:
 				if (obj) {
 					if (obj->data.consumptionSound) {
 						RE::BSSoundHandle handle;
-						audiomanager->BuildSoundDataFromDescriptor(handle, obj->data.consumptionSound->soundDescriptor);
+						audiomanager->GetSoundHandle(handle, obj->data.consumptionSound->soundDescriptor);
 						handle.SetObjectToFollow(a_event->actor->Get3D());
 						handle.SetVolume(1.0);
 						handle.Play();

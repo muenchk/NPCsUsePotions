@@ -203,7 +203,7 @@ void Compatibility::Load()
 				AnPois_PoisonSound) {
 				_loadedAnimatedPoisons = true;
 				if (Settings::compatibility.animatedPoisons._Enable) {
-					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
+					RE::SendHUDMessage::ShowHUDMessage("NPCsUsePotions enabled Animated Poisons compatibility", 0, false);
 					LOG_1("Enabled Animated Poisons.");
 				}
 			}
@@ -215,7 +215,7 @@ void Compatibility::Load()
 			if (AnPois_AnimatedPoisonsMCM) {
 				_loadedAnimatedPoisons = true;
 				if (Settings::compatibility.animatedPoisons._Enable) {
-					RE::DebugNotification("NPCsUsePotions enabled Animated Poisons 5 compatibility", 0, false);
+					RE::SendHUDMessage::ShowHUDMessage("NPCsUsePotions enabled Animated Poisons 5 compatibility", 0, false);
 					LOG_1("Enabled Animated Poisons.");
 				}
 			}
@@ -247,7 +247,7 @@ void Compatibility::Load()
 	if (AnPoti_TogglePlayerPotionAnimation) {
 		_loadedAnimatedPotions = true;
 		if (Settings::compatibility.animatedPotions._Enable) {
-			RE::DebugNotification("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
+			RE::SendHUDMessage::ShowHUDMessage("NPCsUsePotions enabled Animated Potions compatibility", 0, false);
 			LOG_1("Enabled Animated Potions.");
 		}
 	}
@@ -261,7 +261,7 @@ void Compatibility::Load()
 	Sac_MockeryOfLife = datahandler->LookupForm<RE::EffectSetting>(0x0D592E, Sacrosanct);
 	if (Sac_MockeryOfLife != nullptr) {
 		_loadedSacrosanct = true;
-		RE::DebugNotification("NPCsUsePotions enabled Sacrosanct compatibility", 0, false);
+		RE::SendHUDMessage::ShowHUDMessage("NPCsUsePotions enabled Sacrosanct compatibility", 0, false);
 		LOG_1("Enabled Sacrosanct.");
 	}
 
