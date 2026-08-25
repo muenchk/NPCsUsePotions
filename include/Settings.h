@@ -40,6 +40,8 @@ public:
 
 	static inline std::filesystem::path file_directory = "";
 
+	static inline util::string icon_path = "Data\\Interface\\NPCsUsePotions\\Icons\\";
+
 	/// <summary>
 	/// Indicates whether something has been modified
 	/// </summary>
@@ -525,6 +527,19 @@ public:
 		bool _ForceFixPotionSounds = true;
 	};
 	static inline Fixes fixes;
+
+	struct Widgets
+	{
+		/// <summary>
+		/// [Settings] Sets the widget cooldown style for potion cooldown widgets
+		/// </summary>
+		ICooldownWidget::CooldownStyle _widgetCooldownStyle = ICooldownWidget::CooldownStyle::FilledCircleRadialSweep;
+
+		bool _showPlayerWidgets = true;
+		bool _showFollowerWidgets = true;
+		bool _showOtherNPCWidgets = true;
+	};
+	static inline Widgets widgets;
 
 	/// <summary>
 	/// General settings for compatibility

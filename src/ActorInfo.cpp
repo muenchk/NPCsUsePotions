@@ -1219,10 +1219,20 @@ bool ActorInfo::ReadData(unsigned char* buffer, size_t offset, size_t length)
 
 				name = reac->GetName();
 				cooldowns->durHealth = Buffer::ReadInt32(buffer, offset);
+				if (cooldowns->durHealth < 0)
+					cooldowns->durHealth = 0;
 				cooldowns->durMagicka = Buffer::ReadInt32(buffer, offset);
+				if (cooldowns->durMagicka < 0)
+					cooldowns->durMagicka = 0;
 				cooldowns->durStamina = Buffer::ReadInt32(buffer, offset);
+				if (cooldowns->durStamina < 0)
+					cooldowns->durStamina = 0;
 				cooldowns->durFortify = Buffer::ReadInt32(buffer, offset);
+				if (cooldowns->durFortify < 0)
+					cooldowns->durFortify = 0;
 				cooldowns->durRegeneration = Buffer::ReadInt32(buffer, offset);
+				if (cooldowns->durRegeneration < 0)
+					cooldowns->durRegeneration = 0;
 				cooldowns->nextFoodTime = Buffer::ReadFloat(buffer, offset);
 				cooldowns->lastDistrTime = Buffer::ReadFloat(buffer, offset);
 				durCombat = Buffer::ReadInt32(buffer, offset);
@@ -1390,110 +1400,143 @@ void ActorInfo::SetLastDistrTime(float value)
 
 void ActorInfo::UpdateWidgets()
 {
+	if (!(_follower && Settings::widgets._showFollowerWidgets ||
+		IsPlayer() && Settings::widgets._showPlayerWidgets ||
+		!_follower && !IsPlayer() && Settings::widgets._showOtherNPCWidgets)) {
+		return;
+	}
+
+	static const ImU32 _colourOverride = 0xFFFFFFFF;
 	if (_showWidgets) {
-		if (_widgetData._widgetPanel == nullptr)
+		if (_widgetData == nullptr)
+			_widgetData = new WidgetData;
+		if (_widgetData->_widgetPanel == nullptr)
 		{
-			_widgetData._widgetPanel = dynamic_pointer_cast<IWidgetPanel>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetPanel, ""));
-			_widgetData._widgetPanel->SetRows(1);
-			_widgetData._widgetPanel->SetColumns(5);
-			_widgetData._widgetPanel->SetLocationObjectAnchor(Offset{ 0, false, OffsetPosition ::Low }, Offset{ 25.f, false, OffsetPosition ::Low }, Dimension{ true, 0.2f }, Dimension{ true, 0.2f }, false, AlignmentFlags::CenterX | AlignmentFlags::Bottom, 0.5f, RE::ObjectRefHandle{ RE::PlayerCharacter::GetSingleton()->GetHandle() }, LocationObjectAnchor::ObjectAnchor::ActorHead);
-			_widgetData._widgetPanel->SetFillDirection(AlignmentFlags::Left | AlignmentFlags::Bottom);
-			_widgetData._widgetPanel->Show();
-			LibImGuiUI::LibImGuiUI_APIv1::instance->RegisterWidget(_widgetData._widgetPanel);
+			_widgetData->_widgetPanel = dynamic_pointer_cast<IWidgetPanel>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetPanel, ""));
+			_widgetData->_widgetPanel->SetRows(1);
+			_widgetData->_widgetPanel->SetColumns(6);
+			_widgetData->_widgetPanel->SetLocationObjectAnchor(Offset{ 0, false, OffsetPosition ::Low }, Offset{ 25.f, false, OffsetPosition ::Low }, Dimension{ true, 0.1f }, Dimension{ true, 0.1f }, false, AlignmentFlags::CenterX | AlignmentFlags::Bottom, 0.5f, RE::ObjectRefHandle{ actor }, LocationObjectAnchor::ObjectAnchor::ActorHead);
+			_widgetData->_widgetPanel->SetFillDirection(AlignmentFlags::Left | AlignmentFlags::Bottom);
+			_widgetData->_widgetPanel->Show();
+			LibImGuiUI::LibImGuiUI_APIv1::instance->RegisterWidget(_widgetData->_widgetPanel);
 
-			_widgetData._potionHealthWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
-			auto cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
-			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
-				if (auto ptr = weak.lock(); ptr) {
-					return (float)ptr->durHealth / (float)ptr->durHealthMax;
-				} else
-					return 0.f;
-			});*/
-			_widgetData._potionHealthWidget->AddSubordinateWidget(cooldownWidget);
+			_widgetData->_potionHealthWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			_widgetData->_potionHealthWidget->SetTexturePath(Settings::icon_path + "Fallback.svg");
+			_widgetData->_potionHealthWidget->SetMultiplyTextureColour(_colourOverride);
+			_widgetData->_potionHealthWidget->SetDimensions({ 1.f, 1.f });
+			_widgetData->_potionHealthWidget->Show();
+			_widgetData->_potionHealthCooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			_widgetData->_potionHealthCooldownWidget->Show();
+			_widgetData->_potionHealthCooldownWidget->SetCooldownStyle(Settings::widgets._widgetCooldownStyle);
 
-			_widgetData._potionMagickaWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
-			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
-			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
-				if (auto ptr = weak.lock(); ptr) {
-					return (float)ptr->durMagicka / (float)ptr->durMagickaMax;
-				} else
-					return 0.f;
-			});*/
-			_widgetData._potionMagickaWidget->AddSubordinateWidget(cooldownWidget);
+			_widgetData->_potionHealthWidget->AddSubordinateWidget(_widgetData->_potionHealthCooldownWidget);
 
-			_widgetData._potionStaminaWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
-			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
-			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
-				if (auto ptr = weak.lock(); ptr) {
-					return (float)ptr->durStamina / (float)ptr->durStaminaMax;
-				} else
-					return 0.f;
-			});*/
-			_widgetData._potionStaminaWidget->AddSubordinateWidget(cooldownWidget);
+			_widgetData->_potionMagickaWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			_widgetData->_potionMagickaWidget->SetTexturePath(Settings::icon_path + "Fallback.svg");
+			_widgetData->_potionMagickaWidget->SetMultiplyTextureColour(_colourOverride);
+			_widgetData->_potionMagickaWidget->SetDimensions({ 1.f, 1.f });
+			_widgetData->_potionMagickaWidget->Show();
+			_widgetData->_potionStaminaCooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			_widgetData->_potionStaminaCooldownWidget->Show();
+			_widgetData->_potionStaminaCooldownWidget->SetCooldownStyle(Settings::widgets._widgetCooldownStyle);
 
-			_widgetData._fortifyWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
-			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
-			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
-				if (auto ptr = weak.lock(); ptr) {
-					return (float)ptr->durFortify / (float)ptr->durFortifyMax;
-				} else
-					return 0.f;
-			});*/
-			_widgetData._fortifyWidget->AddSubordinateWidget(cooldownWidget);
+			_widgetData->_potionMagickaWidget->AddSubordinateWidget(_widgetData->_potionStaminaCooldownWidget);
 
-			_widgetData._regenWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
-			cooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
-			/* cooldownWidget->SetUpdateProgressCallback([weak = util::weak_ptr<CooldownData>(cooldowns)]() {
-				if (auto ptr = weak.lock(); ptr) {
-					return (float)ptr->durRegeneration / (float)ptr->durRegenerationMax;
-				} else
-					return 0.f;
-			});*/
-			_widgetData._regenWidget->AddSubordinateWidget(cooldownWidget);
-		}
+			_widgetData->_potionStaminaWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			_widgetData->_potionStaminaWidget->SetTexturePath(Settings::icon_path + "Fallback.svg");
+			_widgetData->_potionStaminaWidget->SetMultiplyTextureColour(_colourOverride);
+			_widgetData->_potionStaminaWidget->SetDimensions({ 1.f, 1.f });
+			_widgetData->_potionStaminaWidget->Show();
+			_widgetData->_potionMagickaCooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			_widgetData->_potionMagickaCooldownWidget->Show();
+			_widgetData->_potionMagickaCooldownWidget->SetCooldownStyle(Settings::widgets._widgetCooldownStyle);
 
-		if (_widgetData._widgetPanel) {
-			if (_widgetData._potionHealthWidgetShown && cooldowns->durHealth <= 0) {
-				_widgetData._widgetPanel->RemoveWidget(_widgetData._potionHealthWidget);
-			} else if (_widgetData._potionHealthWidgetShown == false && cooldowns->durHealth > 0) {
-				_widgetData._widgetPanel->AddWidget(_widgetData._potionHealthWidget);
+			_widgetData->_potionStaminaWidget->AddSubordinateWidget(_widgetData->_potionMagickaCooldownWidget);
+
+			_widgetData->_fortifyWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			_widgetData->_fortifyWidget->SetTexturePath(Settings::icon_path + "Fallback.svg");
+			_widgetData->_fortifyWidget->SetMultiplyTextureColour(_colourOverride);
+			_widgetData->_fortifyWidget->SetDimensions({ 1.f, 1.f });
+			_widgetData->_fortifyWidget->Show();
+			_widgetData->_fortifyCooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			_widgetData->_fortifyCooldownWidget->Show();
+			_widgetData->_fortifyCooldownWidget->SetCooldownStyle(Settings::widgets._widgetCooldownStyle);
+
+			_widgetData->_fortifyWidget->AddSubordinateWidget(_widgetData->_fortifyCooldownWidget);
+
+			_widgetData->_regenWidget = dynamic_pointer_cast<ITextureWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetTexture, ""));
+			_widgetData->_regenWidget->SetTexturePath(Settings::icon_path + "Fallback.svg");
+			_widgetData->_regenWidget->SetMultiplyTextureColour(_colourOverride);
+			_widgetData->_regenWidget->SetDimensions({ 1.f, 1.f });
+			_widgetData->_regenWidget->Show();
+			_widgetData->_regenCooldownWidget = dynamic_pointer_cast<ICooldownWidget>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetCooldown, ""));
+			_widgetData->_regenCooldownWidget->Show();
+			_widgetData->_regenCooldownWidget->SetCooldownStyle(Settings::widgets._widgetCooldownStyle);
+
+			_widgetData->_regenWidget->AddSubordinateWidget(_widgetData->_regenCooldownWidget);
+		} else {
+			if (_widgetData->_potionHealthWidgetShown && cooldowns->durHealth <= 0) {
+				_widgetData->_widgetPanel->RemoveWidget(_widgetData->_potionHealthWidget);
+				_widgetData->_potionHealthWidgetShown = false;
+			} else if (_widgetData->_potionHealthWidgetShown == false && cooldowns->durHealth > 0) {
+				_widgetData->_widgetPanel->AddWidget(_widgetData->_potionHealthWidget);
+				_widgetData->_potionHealthWidgetShown = true;
 			}
-
-			if (_widgetData._potionMagickaWidgetShown && cooldowns->durMagicka <= 0)
-				_widgetData._widgetPanel->RemoveWidget(_widgetData._potionMagickaWidget);
-			else if (_widgetData._potionMagickaWidgetShown == false && cooldowns->durMagicka > 0) {
-				_widgetData._widgetPanel->AddWidget(_widgetData._potionMagickaWidget);
+			_widgetData->_potionHealthCooldownWidget->SetProgress((float)cooldowns->durHealth / (float)cooldowns->durHealthMax);
+			if (_widgetData->_potionMagickaWidgetShown && cooldowns->durMagicka <= 0) {
+				_widgetData->_widgetPanel->RemoveWidget(_widgetData->_potionMagickaWidget);
+				_widgetData->_potionMagickaWidgetShown = false;
+			} else if (_widgetData->_potionMagickaWidgetShown == false && cooldowns->durMagicka > 0) {
+				_widgetData->_widgetPanel->AddWidget(_widgetData->_potionMagickaWidget);
+				_widgetData->_potionMagickaWidgetShown = true;
 			}
-			if (_widgetData._potionStaminaWidgetShown && cooldowns->durStamina <= 0)
-				_widgetData._widgetPanel->RemoveWidget(_widgetData._potionStaminaWidget);
-			else if (_widgetData._potionStaminaWidgetShown == false && cooldowns->durMagicka > 0) {
-				_widgetData._widgetPanel->AddWidget(_widgetData._potionStaminaWidget);
+			_widgetData->_potionMagickaCooldownWidget->SetProgress((float)cooldowns->durMagicka / (float)cooldowns->durMagickaMax);
+			if (_widgetData->_potionStaminaWidgetShown && cooldowns->durStamina <= 0) {
+				_widgetData->_widgetPanel->RemoveWidget(_widgetData->_potionStaminaWidget);
+				_widgetData->_potionStaminaWidgetShown = false;
+			} else if (_widgetData->_potionStaminaWidgetShown == false && cooldowns->durStamina > 0) {
+				_widgetData->_widgetPanel->AddWidget(_widgetData->_potionStaminaWidget);
+				_widgetData->_potionStaminaWidgetShown = true;
 			}
-			if (_widgetData._fortifyWidgetShown && cooldowns->durFortify <= 0)
-				_widgetData._widgetPanel->RemoveWidget(_widgetData._fortifyWidget);
-			else if (_widgetData._fortifyWidgetShown == false && cooldowns->durMagicka > 0) {
-				_widgetData._widgetPanel->AddWidget(_widgetData._fortifyWidget);
+			_widgetData->_potionStaminaCooldownWidget->SetProgress((float)cooldowns->durStamina / (float)cooldowns->durStaminaMax);
+			if (_widgetData->_fortifyWidgetShown && cooldowns->durFortify <= 0) {
+				_widgetData->_widgetPanel->RemoveWidget(_widgetData->_fortifyWidget);
+				_widgetData->_fortifyWidgetShown = false;
+			} else if (_widgetData->_fortifyWidgetShown == false && cooldowns->durFortify > 0) {
+				_widgetData->_widgetPanel->AddWidget(_widgetData->_fortifyWidget);
+				_widgetData->_fortifyWidgetShown = true;
 			}
-			if (_widgetData._regenWidgetShown && cooldowns->durRegeneration <= 0)
-				_widgetData._widgetPanel->RemoveWidget(_widgetData._regenWidget);
-			else if (_widgetData._regenWidgetShown == false && cooldowns->durRegeneration > 0) {
-				_widgetData._widgetPanel->AddWidget(_widgetData._regenWidget);
+			_widgetData->_fortifyCooldownWidget->SetProgress((float)cooldowns->durFortify / (float)cooldowns->durFortifyMax);
+			if (_widgetData->_regenWidgetShown && cooldowns->durRegeneration <= 0) {
+				_widgetData->_widgetPanel->RemoveWidget(_widgetData->_regenWidget);
+				_widgetData->_regenWidgetShown = true;
+			} else if (_widgetData->_regenWidgetShown == false && cooldowns->durRegeneration > 0) {
+				_widgetData->_widgetPanel->AddWidget(_widgetData->_regenWidget);
+				_widgetData->_regenWidgetShown = true;
 			}
+			_widgetData->_regenCooldownWidget->SetProgress((float)cooldowns->durRegeneration / (float)cooldowns->durRegenerationMax);
 		}
 
 	} else {
-		// reset all widget data and pointers
-		_widgetData._potionHealthWidget.reset();
-		_widgetData._potionStaminaWidget.reset();
-		_widgetData._potionMagickaWidget.reset();
-		_widgetData._fortifyWidget.reset();
-		_widgetData._regenWidget.reset();
-		if (_widgetData._widgetPanel) {
-			//_widgetData._widgetPanel->RemoveAllWidgets();
-			LibImGuiUI::LibImGuiUI_APIv1::instance->UnregisterWidget(_widgetData._widgetPanel);
-			_widgetData._widgetPanel.reset();
+		if (_widgetData) {
+			// reset all widget data and pointers
+			_widgetData->_potionHealthWidget.reset();
+			_widgetData->_potionHealthCooldownWidget.reset();
+			_widgetData->_potionStaminaWidget.reset();
+			_widgetData->_potionStaminaCooldownWidget.reset();
+			_widgetData->_potionMagickaWidget.reset();
+			_widgetData->_potionMagickaCooldownWidget.reset();
+			_widgetData->_fortifyWidget.reset();
+			_widgetData->_fortifyCooldownWidget.reset();
+			_widgetData->_regenWidget.reset();
+			_widgetData->_regenCooldownWidget.reset();
+			if (_widgetData->_widgetPanel) {
+				LibImGuiUI::LibImGuiUI_APIv1::instance->UnregisterWidget(_widgetData->_widgetPanel);
+				_widgetData->_widgetPanel.reset();
+			}
+			delete _widgetData;
+			_widgetData = nullptr;
 		}
-		_widgetData = WidgetData();
 	}
 }
 
@@ -1690,14 +1733,16 @@ bool ActorInfo::IsFollower()
 
 	if (actor.get() && actor.get().get()) {
 		RE::Actor* reac = actor.get().get();
-		bool follower = reac->IsInFaction(Settings::CurrentFollowerFaction) || reac->IsInFaction(Settings::CurrentHirelingFaction);
-		if (follower)
+		_follower = reac->IsInFaction(Settings::CurrentFollowerFaction) || reac->IsInFaction(Settings::CurrentHirelingFaction);
+		if (_follower)
 			return true;
 		if (reac->GetActorBase()) {
 			auto itr = reac->GetActorBase()->factions.begin();
 			while (itr != reac->GetActorBase()->factions.end()) {
-				if (Distribution::followerFactions()->contains(itr->faction->GetFormID()) && itr->rank >= 0)
-					return true;
+				if (Distribution::followerFactions()->contains(itr->faction->GetFormID()) && itr->rank >= 0) {
+					_follower = true;
+					return _follower;
+				}
 				itr++;
 			}
 		}

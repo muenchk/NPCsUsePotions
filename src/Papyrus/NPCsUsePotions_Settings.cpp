@@ -178,6 +178,15 @@ namespace Papyrus
 			a_vm->RegisterFunction(std::string("Fixes_SetApplySkillBoostPerks"), script, Fixes::Set_ApplySkillBosstPerks);
 			a_vm->RegisterFunction(std::string("Fixes_GetForceFixPotionSounds"), script, Fixes::Get_ForceFixPotionSounds);
 			a_vm->RegisterFunction(std::string("Fixes_SetForceFixPotionSounds"), script, Fixes::Set_ForceFixPotionSounds);
+			// widgets
+			a_vm->RegisterFunction(std::string("Widgets_GetWidgetCooldownStyle"), script, Widgets::Get_WidgetCooldownStyle);
+			a_vm->RegisterFunction(std::string("Widgets_SetWidgetCooldownStyle"), script, Widgets::Set_WidgetCooldownStyle);
+			a_vm->RegisterFunction(std::string("Widgets_GetShowPlayerWidgets"), script, Widgets::Get_ShowPlayerWidgets);
+			a_vm->RegisterFunction(std::string("Widgets_SetShowPlayerWidgets"), script, Widgets::Set_ShowPlayerWidgets);
+			a_vm->RegisterFunction(std::string("Widgets_GetShowFollowerWidgets"), script, Widgets::Get_ShowFollowerWidgets);
+			a_vm->RegisterFunction(std::string("Widgets_SetShowFollowerWidgets"), script, Widgets::Set_ShowFollowerWidgets);
+			a_vm->RegisterFunction(std::string("Widgets_GetShowOtherNPCWidgets"), script, Widgets::Get_ShowOtherNPCWidgets);
+			a_vm->RegisterFunction(std::string("Widgets_SetShowOtherNPCWidgets"), script, Widgets::Set_ShowOtherNPCWidgets);
 			// compatibility
 			a_vm->RegisterFunction(std::string("Comp_GetDisableCreaturesWhitoutRules"), script, Compatibility::Get_DisableCreaturesWithoutRules);
 			a_vm->RegisterFunction(std::string("Comp_SetDisableCreaturesWithoutRules"), script, Compatibility::Set_DisableCreaturesWithoutRules);
@@ -1299,6 +1308,46 @@ namespace Papyrus
 			void Set_ForceFixPotionSounds(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
 			{
 				Settings::fixes._ForceFixPotionSounds = enabled;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+		}
+
+		namespace Widgets
+		{
+			int Get_WidgetCooldownStyle(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return (int)Settings::widgets._widgetCooldownStyle;
+			}
+			void Set_WidgetCooldownStyle(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int style)
+			{
+				Settings::widgets._widgetCooldownStyle = (ICooldownWidget::CooldownStyle)style;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+			bool Get_ShowPlayerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::widgets._showPlayerWidgets;
+			}
+			void Set_ShowPlayerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
+			{
+				Settings::widgets._showPlayerWidgets = enabled;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+			bool Get_ShowFollowerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::widgets._showFollowerWidgets;
+			}
+			void Set_ShowFollowerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
+			{
+				Settings::widgets._showFollowerWidgets = enabled;
+				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+			bool Get_ShowOtherNPCWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Settings::widgets._showOtherNPCWidgets;
+			}
+			void Set_ShowOtherNPCWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
+			{
+				Settings::widgets._showOtherNPCWidgets = enabled;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
 			}
 		}

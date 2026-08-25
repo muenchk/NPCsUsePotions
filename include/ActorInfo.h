@@ -243,6 +243,11 @@ private:
 	bool _actorTypeNPC = false;
 
 	/// <summary>
+	/// if the actor is a follower
+	/// </summary>
+	bool _follower = false;
+
+	/// <summary>
 	/// while the actor is busy with one animation, no other animation should be prepared / played
 	/// </summary>
 	bool Animation_busy = false;
@@ -311,10 +316,15 @@ private:
 	{
 		util::shared_ptr<IWidgetPanel> _widgetPanel;
 		util::shared_ptr<ITextureWidget> _potionHealthWidget;
+		util::shared_ptr<ICooldownWidget> _potionHealthCooldownWidget;
 		util::shared_ptr<ITextureWidget> _potionStaminaWidget;
+		util::shared_ptr<ICooldownWidget> _potionStaminaCooldownWidget;
 		util::shared_ptr<ITextureWidget> _potionMagickaWidget;
+		util::shared_ptr<ICooldownWidget> _potionMagickaCooldownWidget;
 		util::shared_ptr<ITextureWidget> _fortifyWidget;
+		util::shared_ptr<ICooldownWidget> _fortifyCooldownWidget;
 		util::shared_ptr<ITextureWidget> _regenWidget;
+		util::shared_ptr<ICooldownWidget> _regenCooldownWidget;
 
 		bool _potionHealthWidgetShown = false;
 		bool _potionStaminaWidgetShown = false;
@@ -323,8 +333,8 @@ private:
 		bool _regenWidgetShown = false;
 	};
 
-	WidgetData _widgetData;
-
+	WidgetData* _widgetData = nullptr;
+	
 	bool _showWidgets = false;
 
 public:

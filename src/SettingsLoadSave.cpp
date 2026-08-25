@@ -357,6 +357,16 @@ void Settings::Load()
 			Settings::fixes._ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", Settings::fixes._ForceFixPotionSounds);
 			loginfo("Setting: {} {}", "Fixes:             ForceFixPotionSounds", std::to_string(Settings::fixes._ForceFixPotionSounds));
 
+			// widgets
+			Settings::widgets._widgetCooldownStyle = (ICooldownWidget::CooldownStyle)ini.GetLongValue("Widgets", "widgetCooldownStyle", (long)Settings::widgets._widgetCooldownStyle);
+			loginfo("Setting: {} {}", "Widgets:             widgetCooldownStyle", std::to_string((long)Settings::widgets._widgetCooldownStyle));
+			Settings::widgets._showPlayerWidgets = ini.GetBoolValue("Widgets", "showPlayerWidgets", Settings::widgets._showPlayerWidgets);
+			loginfo("Setting: {} {}", "Widgets:             showPlayerWidgets", std::to_string(Settings::widgets._showPlayerWidgets));
+			Settings::widgets._showFollowerWidgets = ini.GetBoolValue("Widgets", "showFollowerWidgets", Settings::widgets._showFollowerWidgets);
+			loginfo("Setting: {} {}", "Widgets:             showFollowerWidgets", std::to_string(Settings::widgets._showFollowerWidgets));
+			Settings::widgets._showOtherNPCWidgets = ini.GetBoolValue("Widgets", "showOtherNPCWidgets", Settings::widgets._showOtherNPCWidgets);
+			loginfo("Setting: {} {}", "Widgets:             showOtherNPCWidgets", std::to_string(Settings::widgets._showOtherNPCWidgets));
+
 			// system
 			Settings::system._cycletime = ini.GetLongValue("System", "CycleWaitTime", Settings::system._cycletime);
 			if (Settings::system._cycletime < 500)
@@ -621,6 +631,18 @@ void Settings::Save()
 	ini.SetBoolValue("Fixes", "ForceFixPotionSounds", Settings::fixes._ForceFixPotionSounds, "// Forcefully fixes all sounds used by consumables in the game \n"
 																					"// without regard for other mods changes. If deactivate the changes \n"
 																					"// of other mods that should have the same effect are respected.");
+
+	// widgets
+	ini.SetLongValue("Widgets", "widgetCooldownStyle", (long)Settings::widgets._widgetCooldownStyle,
+		"// Sets the style of cooldown widgets.\n"
+		"// 0 - Circle based with radial sweep\n"
+		"// 1 - Rectangle based with vertical sweep");
+	ini.SetBoolValue("Widgets", "showPlayerWidgets", Settings::widgets._showPlayerWidgets, 
+		"// Whether to show cooldown widgets for the player");
+	ini.SetBoolValue("Widgets", "showFollowerWidgets", Settings::widgets._showFollowerWidgets, 
+		"// Whether to show cooldown widgets for followers");
+	ini.SetBoolValue("Widgets", "showOtherNPCWidgets", Settings::widgets._showOtherNPCWidgets, 
+		"// Whether to show cooldown widgets for other NPCs");
 
 
 	// system

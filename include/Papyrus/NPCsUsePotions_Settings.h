@@ -1415,6 +1415,18 @@ namespace Papyrus
 			void Set_ForceFixPotionSounds(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
 		}
 
+		namespace Widgets
+		{
+			int Get_WidgetCooldownStyle(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+			void Set_WidgetCooldownStyle(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int style);
+			bool Get_ShowPlayerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+			void Set_ShowPlayerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
+			bool Get_ShowFollowerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+			void Set_ShowFollowerWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
+			bool Get_ShowOtherNPCWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+			void Set_ShowOtherNPCWidgets(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
+		}
+
 		namespace Compatibility
 		{
 			/// <summary>

@@ -36,17 +36,17 @@ namespace Events
 	{
 		if (!acinfo->IsValid())
 			return;
-		//if (acinfo->GetDurHealth() >= 0)
+		if (acinfo->GetDurHealth() >= 0)
 			acinfo->DecDurHealth(Settings::system._cycletime);
-		//if (acinfo->GetDurMagicka() >= 0)
+		if (acinfo->GetDurMagicka() >= 0)
 			acinfo->DecDurMagicka(Settings::system._cycletime);
-		//if (acinfo->GetDurStamina() >= 0)
+		if (acinfo->GetDurStamina() >= 0)
 			acinfo->DecDurStamina(Settings::system._cycletime);
-		//if (acinfo->GetDurFortify() >= 0)
+		if (acinfo->GetDurFortify() >= 0)
 			acinfo->DecDurFortify(Settings::system._cycletime);
-		//if (acinfo->GetDurRegeneration() >= 0)
+		if (acinfo->GetDurRegeneration() >= 0)
 			acinfo->DecDurRegeneration(Settings::system._cycletime);
-		//if (acinfo->GetGlobalCooldownTimer() >= 0)
+		if (acinfo->GetGlobalCooldownTimer() >= 0)
 			acinfo->DecGlobalCooldownTimer(Settings::system._cycletime);
 	}
 
@@ -571,7 +571,7 @@ namespace Events
 						HandleActorRuntimeData(acinfo);
 
 						// don't handle at all if this is set
-						if (!acinfo->GetHandleActor())
+						if (!acinfo->GetHandleActor()) {
 							acinfo->UpdateWidgets();
 							return;
 						}
