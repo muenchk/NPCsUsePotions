@@ -1,7 +1,7 @@
 Scriptname NPCsUsePotions_MCM extends SKI_ConfigBase
 
 Event OnConfigInit()
-    Pages = new string[11]
+    Pages = new string[12]
     Pages[0] = "$NUP_PaGeneral" ; general, system, removal, fixes
     Pages[1] = "$NUP_PaPotions"
     Pages[2] = "$NUP_PaPoisons"
@@ -13,6 +13,7 @@ Event OnConfigInit()
     Pages[8] = "$NUP_PaCompatibility"
     Pages[9] = "$NUP_PaDebug"
     Pages[10] = "$NUP_PaStatistics"
+    Pages[11] = "$NUP_Widgets"
 EndEvent
 
 ;event OnGameReload()
@@ -128,6 +129,11 @@ string[] D_Prohib_Menu_Options
 int[] D_Prohib_options
 int D_ProbScaling
 int D_DoNotMixed
+; widgets
+int W_CooldownStyle
+int W_ShowPlayerWidgets
+int W_ShowFollowerWidgets
+int W_ShowOtherNPCWidgets
 ; whitelist
 int W_EnableItems
 int W_EnableNPCs
@@ -140,6 +146,7 @@ int C_AnPois_Comp
 int C_AnPois_Enable
 int C_AnPoti_Comp
 int C_AnPoti_Enable
+int C_UAPNG_Bypass
 ; debug
 int D_EnableLog
 int D_EnableLoadLog
@@ -162,7 +169,7 @@ int[] EffectOptionsPotionIndex
 string[] EffectOptions
 
 Event OnPageReset(string page)
-    Pages = new string[11]
+    Pages = new string[12]
     Pages[0] = "$NUP_PaGeneral" ; general, system, removal, fixes
     Pages[1] = "$NUP_PaPotions"
     Pages[2] = "$NUP_PaPoisons"
@@ -174,6 +181,7 @@ Event OnPageReset(string page)
     Pages[8] = "$NUP_PaCompatibility"
     Pages[9] = "$NUP_PaDebug"
     Pages[10] = "$NUP_PaStatistics"
+    Pages[11] = "$NUP_Widgets"
 
     ENUMPotion = 2
     ENUMFortify = 8
@@ -411,6 +419,9 @@ Event OnPageReset(string page)
         AddTextOption("$NUP_TLoaded", Comp_Sacrosanct_Loaded())
         AddHeaderOption("$NUP_HUltimatePotionsNG")
         AddTextOption("$NUP_TLoaded", Comp_UltimatePotions_Loaded())
+        C_UAPNG_Bypass = AddToggleOption("$NUP_CEnableBypass", Comp_UltimatePotions_GetBypassAnimationsForNonPlayerNPCs())
+        AddHeaderOption("$NUP_HPotionsAnimated")
+        AddTextOption("$NUP_TLoaded", Comp_PotionsAnimated_Loaded())
 
 
         SetCursorPosition(1)
@@ -438,6 +449,14 @@ Event OnPageReset(string page)
         S_EventsHandled = AddTextOption("$NUP_TEventsHandled", Stats_EventsHandled())
         S_ActorsHandled = AddTextOption("$NUP_TActorsHandled", Stats_ActorsHandled())
         S_ActorsHandledTotal = AddTextOption("$NUP_TTotalActorsHandled", Stats_ActorsHandledTotal())
+    elseif (page == Pages[11])
+        SetCursorFillMode(TOP_TO_BOTTOM)
+        SetCursorPosition(0)
+        AddHeaderOption("$NUP_WHeader")
+        W_CooldownStyle = AddSliderOption("$NUP_WCooldownStyle", Widgets_GetWidgetCooldownStyle())
+        W_ShowPlayerWidgets = AddToggleOption("$NUP_WShowPlayerWidgets", Widgets_GetShowPlayerWidgets())
+        W_ShowFollowerWidgets = AddToggleOption("$NUP_WShowFollowerWidgets", Widgets_GetShowFollowerWidgets())
+        W_ShowOtherNPCWidgets = AddToggleOption("$NUP_WShowOtherNPCsWidgets", Widgets_GetShowOtherNPCWidgets())
     endif
 EndEvent
 
@@ -497,6 +516,8 @@ Event OnOptionSelect(int option)
         Comp_AnimatedPoisons_SetEnabled(!Comp_AnimatedPoisons_GetEnabled())
     elseif (option == C_AnPoti_Enable)
         Comp_AnimatedPotions_SetEnabled(!Comp_AnimatedPotions_GetEnabled())
+    elseif (option == C_UAPNG_Bypass)
+        Comp_UltimatePotions_SetBypassAnimationsForNonPlayerNPCs(!Comp_UltimatePotions_GetBypassAnimationsForNonPlayerNPCs())
     elseif (option == W_EnableItems)
         Whitelist_SetEnabledItems(!Whitelist_GetEnabledItems())
     elseif (option == W_EnableNPCs)
@@ -589,6 +610,12 @@ Event OnOptionSelect(int option)
         Debug_SetEnableLoadLog(!Debug_GetEnableLoadLog())
     elseif (option == D_EnableProfiling)
         Debug_SetEnableProfiling(!Debug_GetEnableProfiling())
+    elseif (option == W_ShowPlayerWidgets)
+        Widgets_SetShowPlayerWidgets(!Widgets_GetShowPlayerWidgets())
+    elseif (option == W_ShowFollowerWidgets)
+        Widgets_SetShowFollowerWidgets(!Widgets_GetShowFollowerWidgets())
+    elseif (option == W_ShowOtherNPCWidgets)
+        Widgets_SetShowOtherNPCWidgets(!Widgets_GetShowOtherNPCWidgets())
     endif
     int i = 1
     while (i < 65)
@@ -747,6 +774,11 @@ Event OnOptionSliderOpen(int option)
         SetSliderDialogStartValue(Debug_GetProfileLevel())
         SetSliderDialogRange(0, 4)
         SetSliderDialogInterval(1)
+    elseif (option == W_CooldownStyle)
+        SetSliderDialogDefaultValue(0)
+        SetSliderDialogStartValue(Widgets_GetWidgetCooldownStyle())
+        SetSliderDialogRange(0, 1)
+        SetSliderDialogInterval(1)
     endif
 
     int i = 0
@@ -852,6 +884,8 @@ Event OnOptionSliderAccept(int option, float value)
         Debug_SetLogLevel(valueint)
     elseif (option == D_ProfileLevel)
         Debug_SetProfileLevel(valueint)
+    elseif (option == W_CooldownStyle)
+        Widgets_SetWidgetCooldownStyle(valueint)
     endif
 
     int i = 0
@@ -896,6 +930,7 @@ Event OnOptionDefault(int option)
     elseif (option == C_AnPois_Enable)
     elseif (option == C_AnPoti_Comp)
     elseif (option == C_AnPoti_Enable)
+    elseif (option == C_UAPNG_Bypass)
     elseif (option == W_EnableItems)
         Whitelist_SetEnabledItems(false)
     elseif (option == W_EnableNPCs)
@@ -1046,6 +1081,14 @@ Event OnOptionDefault(int option)
         Debug_SetEnableProfiling(false)
     elseif (option == D_ProfileLevel)
         Debug_SetProfileLevel(0)
+    elseif (option == W_CooldownStyle)
+        Widgets_SetWidgetCooldownStyle(0)
+    elseif (option == W_ShowPlayerWidgets)
+        Widgets_SetShowPlayerWidgets(true)
+    elseif (option == W_ShowFollowerWidgets)
+        Widgets_SetShowFollowerWidgets(true)
+    elseif (option == W_ShowOtherNPCWidgets)
+        Widgets_SetShowOtherNPCWidgets(true)
     endif
     int i = 1
     while (i < 65)
@@ -1083,6 +1126,8 @@ Event OnOptionHighlight(int option)
         SetInfoText("$NUP_Help_AnimatedPoisonsEnable")
     elseif (option == C_AnPoti_Enable)
         SetInfoText("$NUP_Help_AnimatedPotionsEnable")
+    elseif (option == C_UAPNG_Bypass)
+        SetInfoText("$NUP_Help_UAPNGEnableBypass")
     elseif (option == W_EnableItems)
         SetInfoText("$NUP_Help_WhitelistEnableItems")
     elseif (option == W_EnableNPCs)
@@ -1233,6 +1278,14 @@ Event OnOptionHighlight(int option)
         SetInfoText("$NUP_Help_EnableProfiling")
     elseif (option == D_ProfileLevel)
         SetInfoText("$NUP_Help_ProfileLevel")
+    elseif (option == W_CooldownStyle)
+        SetInfoText("$NUP_Help_WCooldownStyle")
+    elseif (option == W_ShowPlayerWidgets)
+        SetInfoText("$NUP_Help_WShowPlayerWidgets")
+    elseif (option == W_ShowFollowerWidgets)
+        SetInfoText("$NUP_Help_WShowFollowerWidgets")
+    elseif (option == W_ShowOtherNPCWidgets)
+        SetInfoText("$NUP_Help_WShowOtherNPCWidgets")
     else
         SetInfoText("")
     endif
@@ -1674,6 +1727,28 @@ bool Function Fixes_GetForceFixPotionSounds() global native
 ; Sets whether the sounds of potions, poisons, and food will be fixed by modifying the Records on game load [requires Restart]
 Function Fixes_SetForceFixPotionSounds(bool enabled) global native
 
+; --------- Widgets ---------
+
+;
+int Function Widgets_GetWidgetCooldownStyle() global native
+;
+Function Widgets_SetWidgetCooldownStyle(int style) global native
+
+;
+bool Function Widgets_GetShowPlayerWidgets() global native
+;
+Function Widgets_SetShowPlayerWidgets(bool enabled) global native
+
+;
+bool Function Widgets_GetShowFollowerWidgets() global native
+;
+Function Widgets_SetShowFollowerWidgets(bool enabled) global native
+
+;
+bool Function Widgets_GetShowOtherNPCWidgets() global native
+;
+Function Widgets_SetShowOtherNPCWidgets(bool enabled) global native
+
 ; --------- Compatibility ---------
 
 ; Returns whether all npcs that are in the ActorTypeCreature and/or ActorTypeAnimal faction and do not have a dedicated rule are removed from item distribution, item usage, and perk distribution
@@ -1696,6 +1771,11 @@ bool Function Comp_AnimatedPotions_GetEnabled() global native
 ; Sets whether Animated Potions animations should be used by NPCs
 Function Comp_AnimatedPotions_SetEnabled(bool enabled) global native
 
+; Returns whether Bypassing is enabled for all non player npcs for UAPNG
+bool Function Comp_UltimatePotions_GetBypassAnimationsForNonPlayerNPCs() global native
+; Sets whether Bypassing is enabled for all non player npcs for UAPNG
+Function Comp_UltimatePotions_SetBypassAnimationsForNonPlayerNPCs(bool enabled) global native
+
 ; Returns whether CACO is loaded
 bool Function Comp_CACO_Loaded() global native
 ; Returns whether Apothecary is loaded
@@ -1710,6 +1790,8 @@ bool Function Comp_ZUPA_Loaded() global native
 bool Function Comp_Sacrosanct_Loaded() global native
 ; Returns whether Ultimate Potions [AE] is loaded
 bool Function Comp_UltimatePotions_Loaded() global native
+; Returns whether Potions Animated NG is loaded
+bool Function Comp_PotionsAnimated_Loaded() global native
 
 ; --------- Debug ---------
 
