@@ -4,6 +4,7 @@
 #include "Settings.h"
 #include "Statistics.h"
 #include "Utility.h"
+#include "Events.h"
 
 
 namespace Papyrus
@@ -23,6 +24,8 @@ namespace Papyrus
 			// system
 			a_vm->RegisterFunction(std::string("GetCycleTime"), script, System::Get_CycleTime);
 			a_vm->RegisterFunction(std::string("SetCycleTime"), script, System::Set_CycleTime);
+			a_vm->RegisterFunction(std::string("GetModEnabled"), script, System::Get_ModEnabled);
+			a_vm->RegisterFunction(std::string("SetModEnabled"), script, System::Set_ModEnabled);
 			// usage
 			a_vm->RegisterFunction(std::string("Usage_GetGlobalCooldown"), script, Usage::Get_GlobalCooldown);
 			a_vm->RegisterFunction(std::string("Usage_SetGlobalCooldown"), script, Usage::Set_GlobalCooldown);
@@ -335,6 +338,16 @@ namespace Papyrus
 					milliseconds = 10000;
 				Settings::system._cycletime = milliseconds;
 				Settings::_modifiedSettings = Settings::ChangeFlag::kChanged;
+			}
+
+			bool Get_ModEnabled(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*)
+			{
+				return Events::Main::GetEnabledNPCProcessing();
+			}
+
+			void Set_ModEnabled(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled)
+			{
+				Events::Main::SetEnabledNPCProcessing(enabled);
 			}
 		}
 

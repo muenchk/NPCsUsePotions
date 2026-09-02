@@ -512,130 +512,134 @@ namespace Events
 
 		LOG_1("Validated {} Actors", std::to_string(actors.size()));
 
-		try {
-			actorsincombat = 0;
-			hostileactors = 0;
+		if (enableNPCProcessing) {
+			try {
+				actorsincombat = 0;
+				hostileactors = 0;
 
-			// update combat status of player
-			if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
-				// the player should always be valid. If they don't the game doesn't work either anyway
-				if (playerinfo->GetActor()->IsInCombat()) {
-					playerinfo->SetCombatState(CombatState::InCombat);
-					// if player is in combat, decrease actorsincombat by 1 to ensure that the player won't affect
-					// the statistics
-					actorsincombat--;
-				} else
-					playerinfo->SetCombatState(CombatState::OutOfCombat);
-			}
-
-			// first decrease all cooldowns for all registered actors
-			// decreasing durations
-			//
-			// calc actors in combat
-			// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
-			std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
-				if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-					if (acinfo->IsInCombat()) {
-						actorsincombat++;
-						combatants.push_back(acinfo);
-						if (acinfo->GetPlayerHostile())
-							hostileactors++;
-					}
+				// update combat status of player
+				if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
+					// the player should always be valid. If they don't the game doesn't work either anyway
+					if (playerinfo->GetActor()->IsInCombat()) {
+						playerinfo->SetCombatState(CombatState::InCombat);
+						// if player is in combat, decrease actorsincombat by 1 to ensure that the player won't affect
+						// the statistics
+						actorsincombat--;
+					} else
+						playerinfo->SetCombatState(CombatState::OutOfCombat);
 				}
-			});
 
-			if (!CanProcess() || Game::IsFastTravelling())
-				return;
-			if (IsPlayerDead())
-				return;
+				// first decrease all cooldowns for all registered actors
+				// decreasing durations
+				//
+				// calc actors in combat
+				// number of actors currently in combat, does not account for multiple combats taking place that are not related to each other
+				std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+					if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+						if (acinfo->IsInCombat()) {
+							actorsincombat++;
+							combatants.push_back(acinfo);
+							if (acinfo->GetPlayerHostile())
+								hostileactors++;
+						}
+					}
+				});
 
-			// collect actor runtime data
-			std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
-				// emergency catch
-				if (Game::IsFastTravelling())
+				if (!CanProcess() || Game::IsFastTravelling())
+					return;
+				if (IsPlayerDead())
 					return;
 
-				auto taskInterface = SKSE::GetTaskInterface();
-				if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
-					// catch forbidden actors
-					if (forbidden.contains(acinfo->GetFormID()))
+				// collect actor runtime data
+				std::for_each(actors.begin(), actors.end(), [](std::weak_ptr<ActorInfo> acweak) {
+					// emergency catch
+					if (Game::IsFastTravelling())
 						return;
-					taskInterface->AddTask([acinfo]() {
-						// emergency catch -- check again, we don't know when this function is called exactly
-						StartProfiling;
-						if (Game::IsFastTravelling())
+
+					auto taskInterface = SKSE::GetTaskInterface();
+					if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
+						// catch forbidden actors
+						if (forbidden.contains(acinfo->GetFormID()))
 							return;
+						taskInterface->AddTask([acinfo]() {
+							// emergency catch -- check again, we don't know when this function is called exactly
+							StartProfiling;
+							if (Game::IsFastTravelling())
+								return;
 
-						DecreaseActorCooldown(acinfo);
-						// retrieve runtime data
-						HandleActorRuntimeData(acinfo);
+							DecreaseActorCooldown(acinfo);
+							// retrieve runtime data
+							HandleActorRuntimeData(acinfo);
 
-						// don't handle at all if this is set
-						if (!acinfo->GetHandleActor()) {
-							acinfo->UpdateWidgets();
-							return;
-						}
-
-						ACM::MatchingItems match;
-						// handle potions out-of-combat
-						if (Settings::usage._DisableOutOfCombatProcessing == false) {
-							match.potionEffects = HandleActorOOCPotions(acinfo);
-						}
-
-						// handle potions
-						if (match.potionEffects.IsValid() == false)
-							match.potionEffects = HandleActorPotions(acinfo);
-						// handle fortify potions
-						match.fortifyEffects = HandleActorFortifyPotions(acinfo);
-						// handle poisons
-						match.poisonEffects = HandleActorPoisons(acinfo);
-						// handle food
-						match.foodEffects = HandleActorFood(acinfo);
-
-						if (acinfo->IsPlayer())
-							ACM::GetMatchingItems(acinfo, match, !Settings::player._DontEatRawFood);
-						else
-							ACM::GetMatchingItems(acinfo, match, false);
-
-						if (match.matchingPotions.size() > 0) {
-							auto const& [dur, eff, mag] = ACM::ActorUsePotion(acinfo, match, false);
-							if (eff != AlchemicEffect::kNone) {
-								CalcActorCooldowns(acinfo, eff, dur);
-								acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
+							// don't handle at all if this is set
+							if (!acinfo->GetHandleActor()) {
+								if (LibImGuiUI::LibImGuiUI_APIv1::instance)
+									acinfo->UpdateWidgets();
+								return;
 							}
-						}
-						if (match.matchingFortifyPotions.size() > 0) {
-							auto const& [dur, eff, mag] = ACM::ActorUsePotion(acinfo, match, true);
-							if (dur != -1) {
-								acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
-								CalcActorCooldowns(acinfo, eff, dur);
-								LOG_4("used potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), dur * 1000, Utility::ToString(eff));
-							}
-						}
-						if (match.matchingPoisons.size() > 0)
-						{
-							auto const& [dur, eff] = ACM::ActorUsePoison(acinfo, match);
-							if (eff != 0)  // check whether an effect was applied
-								acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPoisons());
-						}
-						if (match.matchingFood.size() > 0)
-						{
-							auto [dur, effect] = ACM::ActorUseFood(acinfo, match);
-							if (dur != -1) {
-								acinfo->SetNextFoodTime(Main::CalcFoodDuration(dur));
-								acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownFood());
-								LOG_2("current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
-							}
-						}
 
-						acinfo->UpdateWidgets();
+							ACM::MatchingItems match;
+							// handle potions out-of-combat
+							if (Settings::usage._DisableOutOfCombatProcessing == false) {
+								match.potionEffects = HandleActorOOCPotions(acinfo);
+							}
 
-						PROF_1(TimeProfiling, "execution time for actor {}", acinfo->GetFormString());
-					});
-				}
-			});
-		} catch (std::bad_alloc& e) {
-			logcritical("Failed to execute due to memory allocation issues: {}", std::string(e.what()));
+							// handle potions
+							if (match.potionEffects.IsValid() == false)
+								match.potionEffects = HandleActorPotions(acinfo);
+							// handle fortify potions
+							match.fortifyEffects = HandleActorFortifyPotions(acinfo);
+							// handle poisons
+							match.poisonEffects = HandleActorPoisons(acinfo);
+							// handle food
+							match.foodEffects = HandleActorFood(acinfo);
+
+							if (acinfo->IsPlayer())
+								ACM::GetMatchingItems(acinfo, match, !Settings::player._DontEatRawFood);
+							else
+								ACM::GetMatchingItems(acinfo, match, false);
+
+							if (match.matchingPotions.size() > 0) {
+								auto const& [dur, eff, mag] = ACM::ActorUsePotion(acinfo, match, false);
+								if (eff != AlchemicEffect::kNone) {
+									CalcActorCooldowns(acinfo, eff, dur);
+									acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
+								}
+							}
+							if (match.matchingFortifyPotions.size() > 0) {
+								auto const& [dur, eff, mag] = ACM::ActorUsePotion(acinfo, match, true);
+								if (dur != -1) {
+									acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPotions());
+									CalcActorCooldowns(acinfo, eff, dur);
+									LOG_4("used potion with tracked duration {} {} and effect {}", acinfo->GetDurRegeneration(), dur * 1000, Utility::ToString(eff));
+								}
+							}
+							if (match.matchingPoisons.size() > 0) {
+								auto const& [dur, eff] = ACM::ActorUsePoison(acinfo, match);
+								if (eff != 0)  // check whether an effect was applied
+									acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownPoisons());
+							}
+							if (match.matchingFood.size() > 0) {
+								auto [dur, effect] = ACM::ActorUseFood(acinfo, match);
+								if (dur != -1) {
+									acinfo->SetNextFoodTime(Main::CalcFoodDuration(dur));
+									acinfo->SetGlobalCooldownTimer(comp->GetGlobalCooldownFood());
+									LOG_2("current days passed: {}, next food time: {}", std::to_string(RE::Calendar::GetSingleton()->GetDaysPassed()), std::to_string(acinfo->GetNextFoodTime()));
+								}
+							}
+
+							if (LibImGuiUI::LibImGuiUI_APIv1::instance)
+								acinfo->UpdateWidgets();
+
+							PROF_1(TimeProfiling, "execution time for actor {}", acinfo->GetFormString());
+						});
+					}
+				});
+			} catch (std::bad_alloc& e) {
+				logcritical("Failed to execute due to memory allocation issues: {}", std::string(e.what()));
+			}
+		} else {
+			LOG_1("Skip Round due to MCM setting.");
 		}
 		// write execution time of iteration
 		PROF_1(TimeProfiling, "execution time for {} actors", actors.size());

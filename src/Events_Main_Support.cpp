@@ -731,6 +731,15 @@ namespace Events
 		           calendar->GetDaysPassed() + dur * calendar->GetTimescale() / 60 / 60 / 24;
 	}
 
+	bool Main::GetEnabledNPCProcessing()
+	{
+		return enableNPCProcessing;
+	}
+
+	void Main::SetEnabledNPCProcessing(bool enabled)
+	{
+		enableNPCProcessing = enabled;
+	}
 
 	/// <summary>
 	/// Removes all distributable alchemy items from all actors in the game on loading a game

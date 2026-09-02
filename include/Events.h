@@ -141,6 +141,10 @@ namespace Events
 		/// enables all active functions
 		/// </summary>
 		static inline bool enableProcessing = false;
+		/// <summary>
+		/// temporarily disabled NPC processing
+		/// </summary>
+		static inline bool enableNPCProcessing = true;
 
 		//-------------------Timing--------------------------
 
@@ -482,6 +486,18 @@ namespace Events
 		/// </summary>
 		/// <returns></returns>
 		static std::chrono::steady_clock::time_point GetLastActorsUpdateTime();
+
+		/// <summary>
+		/// Returns whether npc processing is enabled (potion usage, etc.)
+		/// </summary>
+		/// <returns></returns>
+		static bool GetEnabledNPCProcessing();
+
+		/// <summary>
+		/// Sets whether npc processing is enabled (potion usage, etc.)
+		/// </summary>
+		/// <param name="enabled"></param>
+		static void SetEnabledNPCProcessing(bool enabled);
 
 		//-------------------GameFunctions-------------------------
 

@@ -92,6 +92,10 @@ namespace Papyrus
 			/// <param name=""></param>
 			/// <param name="milliseconds">the time between cycles in milliseconds</param>
 			void Set_CycleTime(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, int milliseconds);
+
+			bool Get_ModEnabled(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*);
+
+			void Set_ModEnabled(RE::BSScript::Internal::VirtualMachine* a_vm, RE::VMStackID a_stackID, RE::StaticFunctionTag*, bool enabled);
 		}
 
 		// Usage

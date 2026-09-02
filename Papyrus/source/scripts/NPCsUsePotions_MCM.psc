@@ -13,7 +13,6 @@ Event OnConfigInit()
     Pages[8] = "$NUP_PaCompatibility"
     Pages[9] = "$NUP_PaDebug"
     Pages[10] = "$NUP_PaStatistics"
-    Pages[11] = "$NUP_Widgets"
 EndEvent
 
 ;event OnGameReload()
@@ -30,6 +29,7 @@ int ENUMFood = 4
 int G_MaxDuration
 int G_MaxFortifyDuration
 int G_CycleTime
+int G_ModEnabled
 int G_GlobalCooldown
 int G_DisableItemUsageWhileStaggered
 int G_DisableItemUsageWhileFlying
@@ -181,7 +181,6 @@ Event OnPageReset(string page)
     Pages[8] = "$NUP_PaCompatibility"
     Pages[9] = "$NUP_PaDebug"
     Pages[10] = "$NUP_PaStatistics"
-    Pages[11] = "$NUP_Widgets"
 
     ENUMPotion = 2
     ENUMFortify = 8
@@ -234,6 +233,7 @@ Event OnPageReset(string page)
         G_MaxFortifyDuration = AddSliderOption("$NUP_SMaxDurationForFortPotions", GetMaxFortifyDuration())
         AddHeaderOption("$NUP_HSystem")
         G_CycleTime = AddSliderOption("$NUP_SCycleTime", GetCycleTime())
+        G_ModEnabled = AddToggleOption("$NUP_EnableNPCProcessing", GetModEnabled())
         SetCursorPosition(1)
         AddHeaderOption("$NUP_HGeneralOptions")
         G_DisableNonFollowerNPCs = AddToggleOption("$NUP_CDisableNonFollowerNPCs", Usage_GetDisableNonFollowerNPCs())
@@ -449,14 +449,6 @@ Event OnPageReset(string page)
         S_EventsHandled = AddTextOption("$NUP_TEventsHandled", Stats_EventsHandled())
         S_ActorsHandled = AddTextOption("$NUP_TActorsHandled", Stats_ActorsHandled())
         S_ActorsHandledTotal = AddTextOption("$NUP_TTotalActorsHandled", Stats_ActorsHandledTotal())
-    elseif (page == Pages[11])
-        SetCursorFillMode(TOP_TO_BOTTOM)
-        SetCursorPosition(0)
-        AddHeaderOption("$NUP_WHeader")
-        W_CooldownStyle = AddSliderOption("$NUP_WCooldownStyle", Widgets_GetWidgetCooldownStyle())
-        W_ShowPlayerWidgets = AddToggleOption("$NUP_WShowPlayerWidgets", Widgets_GetShowPlayerWidgets())
-        W_ShowFollowerWidgets = AddToggleOption("$NUP_WShowFollowerWidgets", Widgets_GetShowFollowerWidgets())
-        W_ShowOtherNPCWidgets = AddToggleOption("$NUP_WShowOtherNPCsWidgets", Widgets_GetShowOtherNPCWidgets())
     endif
 EndEvent
 
@@ -510,6 +502,8 @@ EndEvent
 
 Event OnOptionSelect(int option)
     if (option == 0)
+    elseif (option == G_ModEnabled)
+        SetModEnabled(!GetModEnabled())
     elseif (option == C_DisableCreatures)
         Comp_SetDisableCreaturesWithoutRules(!Comp_GetDisableCreaturesWhitoutRules())
     elseif (option == C_AnPois_Enable)
@@ -1057,6 +1051,8 @@ Event OnOptionDefault(int option)
         SetMaxFortifyDuration(180000)
     elseif (option == G_CycleTime)
         SetCycleTime(1000)
+    elseif (option == G_ModEnabled)
+        SetModEnabled(true)
     elseif (option == G_DisableNonFollowerNPCs)
         Usage_SetDisableNonFollowerNPCs(false)
     elseif (option == G_DisableOutOfCombatProcessing)
@@ -1254,6 +1250,8 @@ Event OnOptionHighlight(int option)
         SetInfoText("$NUP_Help_MaxFortifyDuration")
     elseif (option == G_CycleTime)
         SetInfoText("$NUP_Help_CycleTime")
+    elseif (option == G_ModEnabled)
+        SetInfoText("$NUP_Help_EnableNPCProcessing")
     elseif (option == G_DisableNonFollowerNPCs)
         SetInfoText("$NUP_Help_DisableNonFollowerNPCs")
     elseif (option == G_DisableOutOfCombatProcessing)
@@ -1344,6 +1342,10 @@ string Function ToStringAlchemicEffect(int value) global native
 int Function GetCycleTime() global native
 ; sets the time between cycles in milliseconds
 Function SetCycleTime(int milliseconds) global native
+; returns whether the mod is allowed to process npcs
+bool Function GetModEnabled() global native
+; sets whether the mod is allowed to process npcs (this will only affect potion usage and not distribution)
+Function SetModEnabled(bool enable) global native
 
 ; --------- Usage ---------
 
