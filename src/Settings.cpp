@@ -687,7 +687,7 @@ void Settings::LoadDistrConfig()
 									splitindex++;
 									uint32_t index = Mods::GetPluginIndex(plugin);
 
-									if (index != 0x1) {
+									if (index != MAXUINT32) {
 										// index is a normal mod
 										Distribution::_excludedPlugins.insert(index);
 										LOGL_2("Rule 9 excluded plugin {} with index {}", plugin, Utility::GetHex(index));
