@@ -101,6 +101,11 @@ target_include_directories(
 
 
 add_subdirectory($ENV{LibSUtilPath} LibSUtils EXCLUDE_FROM_ALL)
+set_target_properties(LibSUtils PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${ROOT_DIR}/../libsutils-buildir/lib/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${ROOT_DIR}/../libsutils-buildir/bin/$<CONFIG>"
+    RUNTIME_OUTPUT_DIRECTORY "${ROOT_DIR}/../libsutils-buildir/bin/$<CONFIG>"
+)
 
 target_link_libraries(
 	"${PROJECT_NAME}"

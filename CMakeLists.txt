@@ -19,7 +19,6 @@ macro(set_from_environment VARIABLE)
 	endif()
 endmacro()
 
-find_package(imgui CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(directxtex CONFIG REQUIRED)

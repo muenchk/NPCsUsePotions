@@ -99,9 +99,9 @@ namespace NPCsUsePotions
 			auto [globalFont, globalFontSize] = LibImGuiUI::LibImGuiUI_APIv1::instance->GetFontByType(FontType::SmallFont);
 			ImGui::PushFont(globalFont, globalFontSize);
 
-			ImGuiStyle& style = ImGui::GetStyle();
+			ImGuiStyle* style = ImGui::GetStyle();
 
-			auto col = style.Colors[ImGuiCol_WindowBg];
+			auto col = style->Colors[ImGuiCol_WindowBg];
 			col.w = 0.2f;  //0.1f;
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, col);
 
