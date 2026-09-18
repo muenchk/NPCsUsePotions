@@ -45,23 +45,17 @@ namespace NPCsUsePotions
 			{
 				if (!_openKeys)
 					_openKeys = new Window::KeyInformation;
-				if (!_openKeys->keys) {
-					_openKeys->numKeys = 2;
-					_openKeys->keys = new uint32_t[_openKeys->numKeys];
-					_openKeys->keys[0] = 0x31;  // N
-					_openKeys->keys[1] = 0x2A;  // LShift
-					_openKeys->alternateKeyEsacape = false;
-				}
+
+				_openKeys->keys.insert(0x31);  // N
+				_openKeys->keys.insert(0x2A);  // LShift
+				_openKeys->alternateKeyEsacape = false;
 
 				if (!_closeKeys)
 					_closeKeys = new Window::KeyInformation;
-				if (!_closeKeys->keys) {
-					_closeKeys->numKeys = 2;
-					_closeKeys->keys = new uint32_t[_closeKeys->numKeys];
-					_closeKeys->keys[0] = 0x31;  // N
-					_closeKeys->keys[1] = 0x2A;  // LShift
-					_closeKeys->alternateKeyEsacape = true;
-				}
+
+				_closeKeys->keys.insert(0x31);  // N
+				_closeKeys->keys.insert(0x2A);  // LShift
+				_closeKeys->alternateKeyEsacape = false;
 			}
 
 			virtual void Draw() override;

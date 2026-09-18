@@ -1415,7 +1415,7 @@ void ActorInfo::UpdateWidgets()
 			_widgetData->_widgetPanel = dynamic_pointer_cast<IWidgetPanel>(LibImGuiUI::LibImGuiUI_APIv1::instance->CreateWidget(WidgetType::IWidgetPanel, ""));
 			_widgetData->_widgetPanel->SetRows(1);
 			_widgetData->_widgetPanel->SetColumns(6);
-			_widgetData->_widgetPanel->SetLocationObjectAnchor(Offset{ 0, false, OffsetPosition ::Low }, Offset{ 25.f, false, OffsetPosition ::Low }, Dimension{ true, 0.1f }, Dimension{ true, 0.1f }, false, AlignmentFlags::CenterX | AlignmentFlags::Bottom, 0.5f, RE::ObjectRefHandle{ actor }, LocationObjectAnchor::ObjectAnchor::ActorHead);
+			_widgetData->_widgetPanel->SetLocationObjectAnchor(Offset{ 0, false, OffsetPosition ::Low }, Offset{ 25.f, false, OffsetPosition ::Low }, Dimension{ true, 0.1f }, Dimension{ true, 0.1f }, false, AlignmentFlags::CenterX | AlignmentFlags::Bottom, 0.5f, RE::ObjectRefHandle{ actor }, LocationObjectAnchor::ObjectAnchor::ActorHead, false, false);
 			_widgetData->_widgetPanel->SetFillDirection(AlignmentFlags::Left | AlignmentFlags::Bottom);
 			_widgetData->_widgetPanel->Show();
 			LibImGuiUI::LibImGuiUI_APIv1::instance->RegisterWidget(_widgetData->_widgetPanel);

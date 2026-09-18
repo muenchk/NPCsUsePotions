@@ -766,6 +766,9 @@ std::vector<RE::AlchemyItem*> DistributionRule::GetRandomPotions(std::shared_ptr
 			distr = GetScaledDistribution(Settings::ItemType::kPotion, potionEffects, acinfo);
 		}
 
+		if (distr.effects.size() == 0)
+			return {};
+
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
 		int koeff = 0;
@@ -810,6 +813,9 @@ std::vector<RE::AlchemyItem*> DistributionRule::GetRandomPoisons(std::shared_ptr
 		if (styleScaling || Distribution::_probabilityAdjustersPoison.size() > 0)
 			distr = GetScaledDistribution(Settings::ItemType::kPoison, poisonEffects, acinfo);
 
+		if (distr.effects.size() == 0)
+			return {};
+
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
 		int koeff = 0;
@@ -850,6 +856,9 @@ std::vector<RE::AlchemyItem*> DistributionRule::GetRandomFortifyPotions(std::sha
 		if (styleScaling || Distribution::_probabilityAdjustersFortify.size() > 0)
 			distr = GetScaledDistribution(Settings::ItemType::kFortifyPotion, fortifyEffects, acinfo);
 
+		if (distr.effects.size() == 0)
+			return {};
+
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
 		int koeff = 0;
@@ -889,6 +898,9 @@ std::vector<RE::AlchemyItem*> DistributionRule::GetRandomFood(std::shared_ptr<Ac
 		EffectDistr distr = foodEffects->standardDistr;
 		if (styleScaling || Distribution::_probabilityAdjustersFood.size() > 0)
 			distr = GetScaledDistribution(Settings::ItemType::kFood, foodEffects, acinfo);
+
+		if (distr.effects.size() == 0)
+			return {};
 
 		int astr = static_cast<int>(acinfo->GetActorStrength());
 		int str = static_cast<int>(acinfo->GetItemStrength());
