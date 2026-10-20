@@ -5,6 +5,7 @@
 #include <functional>
 
 #include "Compatibility.h"
+#include "ActorRegistry.h"
 #include "Data.h"
 #include "Utility.h"
 
@@ -59,12 +60,7 @@ namespace Events
 		/// <summary>
 		/// holds all active actors
 		/// </summary>
-		static inline std::set<std::weak_ptr<ActorInfo>, std::owner_less<std::weak_ptr<ActorInfo>>> acset{};
-		/// <summary>
-		/// semaphore used to sync access to actor handling, to prevent list changes while operations are done
-		/// </summary>
-		static inline std::mutex sem;
-		//static inline std::binary_semaphore sem{1};
+		static inline ActorRegistry<ActorInfo> acset{};
 		/// <summary>
 		/// since the TESDeathEvent seems to be able to fire more than once for an actor we need to track the deaths
 		/// </summary>
