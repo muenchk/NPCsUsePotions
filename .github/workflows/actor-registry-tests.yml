@@ -1,0 +1,31 @@
+name: Actor registry tests
+
+on:
+  push:
+    paths:
+      - include/ActorRegistry.h
+      - tests/**
+      - .github/workflows/actor-registry-tests.yml
+  pull_request:
+    paths:
+      - include/ActorRegistry.h
+      - include/Events.h
+      - src/Events_Main_Support.cpp
+      - tests/**
+      - .github/workflows/actor-registry-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S tests -B build-tests -DCMAKE_BUILD_TYPE=Debug
+      - run: cmake --build build-tests --config Debug
+      - run: ctest --test-dir build-tests -C Debug --output-on-failure

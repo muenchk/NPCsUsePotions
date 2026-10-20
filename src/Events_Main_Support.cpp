@@ -33,37 +33,15 @@ namespace Events
 
 	void Main::ValidateActorSets(std::set<ActorInfoPtr, std::owner_less<ActorInfoPtr>>& actors)
 	{
-		std::lock_guard<std::mutex> lock(sem);
-		auto itr = acset.begin();
-		while (itr != acset.end()) {
-			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
-				if (!data->UpdateActorInfo(acinfo)) {
-					LOG_1("Removed invalid actor");
-					itr = acset.erase(itr);
-					continue;
-				} else if (acinfo->Is3DLoaded() == false) {
-				} else {
-					actors.insert(*itr);
-				}
-			} else {
-				LOG_1("Removed expired actor");
-				itr = acset.erase(itr);
-				continue;
-			}
-			itr++;
-		}
+		actors = acset.validate(
+			[](const auto& actor) { return data->UpdateActorInfo(actor); },
+			[](const auto& actor) { return actor->Is3DLoaded(); });
 	}
 
 	void Main::GetActors(std::set<std::shared_ptr<ActorInfo>>& actors)
 	{
-		std::lock_guard<std::mutex> lock(sem);
-		auto itr = acset.begin();
-		while (itr != acset.end()) {
-			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
-				actors.insert(acinfo);
-			}
-			itr++;
-		}
+		for (const auto& actor : acset.copy())
+			actors.insert(actor);
 	}
 
 	std::chrono::steady_clock::time_point Main::GetLastActorsUpdateTime()
@@ -73,56 +51,33 @@ namespace Events
 
 	void Main::ACSetRegisterAndReset(std::shared_ptr<ActorInfo> acinfo, RE::Actor* actor)
 	{
-		{
-			std::lock_guard<std::mutex> lock(sem);
-			if (acset.contains(acinfo)) {
-				LOG_1("Actor already registered");
-				return;
-			}
+		if (acset.contains(acinfo)) {
+			LOG_1("Actor already registered");
+			return;
 		}
 		acinfo->Reset(actor);
 		if (acinfo->IsValid() == false) {
 			LOG_1("Actor reset failed");
 			return;
 		}
-		std::lock_guard<std::mutex> lock(sem);
-		if (!acset.contains(acinfo)) {
-			acset.insert(acinfo);
-		} else {
+		if (!acset.insert(acinfo, acinfo->GetFormIDBlank())) {
 			LOG_1("Actor already registered");
 		}
 	}
 
 	void Main::ACSetRegister(std::shared_ptr<ActorInfo> acinfo)
 	{
-		std::lock_guard<std::mutex> lock(sem);
-		acset.insert(acinfo);
+		acset.insert(acinfo, acinfo->GetFormIDBlank());
 	}
 
 	void Main::ACSetUnregister(std::shared_ptr<ActorInfo> acinfo)
 	{
-		std::lock_guard<std::mutex> lock(sem);
 		acset.erase(acinfo);
 	}
 
 	void Main::ACSetUnregister(RE::FormID formid)
 	{
-		std::lock_guard<std::mutex> lock(sem);
-		auto itr = acset.begin();
-		while (itr != acset.end()) {
-			if (std::shared_ptr<ActorInfo> acinfo = itr->lock()) {
-				if (acinfo->GetFormIDBlank() == formid) {
-					itr = acset.erase(itr);
-					continue;
-					break;
-				}
-			} else {
-				// weak pointer is expired, so remove it while we are on it
-				itr = acset.erase(itr);
-				continue;
-			}
-			itr++;
-		}
+		acset.erase(formid);
 	}
 
 
