@@ -1135,3 +1135,31 @@ bool Utility::VerifyActorInfo(std::shared_ptr<ActorInfo> const& acinfo)
 	}
 	return true;
 }
+
+/// Stolen from LeoneKingzz
+/// https://github.com/LeoneKingzz/LeoneSKSETemplate/blob/main/src/hook.cpp
+/// Permissions were given in the comments of the nexusmods page of this mod 06. Sep 2026 10:39 PM. They asked whether I wanted to use it.
+bool Utility::IsInSpecialCombatState(RE::Actor* a_actor)
+{
+	if (const auto base = a_actor->GetActorBase(); base) {
+		for (const auto& factionInfo : base->factions) {
+			if (factionInfo.faction && factionInfo.rank >= 0) {
+				if (factionInfo.faction->HasSpecialCombatState()) {
+					return true;
+				}
+			}
+		}
+	}
+
+	if (const auto factionChanges = a_actor->extraList.GetByType<RE::ExtraFactionChanges>(); factionChanges) {
+		for (const auto& change : factionChanges->factionChanges) {
+			if (change.faction && change.rank >= 0) {
+				if (change.faction->HasSpecialCombatState()) {
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}

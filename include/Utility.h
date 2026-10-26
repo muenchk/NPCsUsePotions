@@ -276,6 +276,16 @@ public:
 		return eff;
 	}
 
+	/// <summary>
+	/// checks whether the actor is in a special faction for combat state
+	/// Stolen from LeoneKingzz
+	/// https://github.com/LeoneKingzz/LeoneSKSETemplate/blob/main/src/hook.cpp
+	/// </summary>
+	/// <param name="a_actor"></param>
+	/// <returns></returns>
+	static bool IsInSpecialCombatState(RE::Actor* a_actor);
+
+
 	#pragma endregion
 
 };

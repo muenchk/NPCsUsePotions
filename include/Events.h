@@ -73,10 +73,6 @@ namespace Events
 		/// list of npcs that are currently in combat
 		/// </summary>
 		static inline std::deque<std::shared_ptr<ActorInfo>> combatants;
-		/// <summary>
-		/// set of actors temporarily forbidden from processing
-		/// </summary>
-		static inline std::set<RE::FormID> forbidden;
 
 		/// <summary>
 		/// list of npcs that should be registered after fast travel has ended

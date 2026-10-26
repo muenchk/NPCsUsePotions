@@ -310,7 +310,6 @@ namespace Events
 		// check for paralyzed
 		if (comp->DisableItemUsageWhileParalyzed()) {
 			if (acinfo->IsParalyzed() ||
-				acinfo->IsInKillMove() ||
 				acinfo->IsInRagdollState() ||
 				acinfo->IsUnconscious() ||
 				acinfo->IsStaggered()) {
@@ -318,6 +317,11 @@ namespace Events
 				acinfo->SetHandleActor(false);
 				return;
 			}
+		}
+		if (acinfo->IsInKillMove()) {
+			LOG_1("Actor is in kill move and unable to use items");
+			acinfo->SetHandleActor(false);
+			return;
 		}
 		if (comp->DisableItemUsageWhileFlying()) {
 			if (acinfo->IsFlying() ||
@@ -420,33 +424,6 @@ namespace Events
 		PROF_2(TimeProfiling, "exec time for full actor runtime handling");
 	}
 
-	/// <summary>
-	/// Finds actors that are temporarily banned from processing
-	/// </summary>
-	void Main::PullForbiddenActors()
-	{
-		// delete old forbiddens
-		forbidden.clear();
-		if (DGIntimidate != nullptr && DGIntimidate->IsRunning())
-		{
-			// find all npcs participating in a brawl and add them to the exceptions
-			for (auto& [id, objectrefhandle] : DGIntimidate->refAliasMap) {
-				LOG_4("Alias with id: {}", id);
-				if (id == 0 || id == 352 || id == 351)
-				{
-					if (objectrefhandle && objectrefhandle.get() && objectrefhandle.get().get()) {
-						if (objectrefhandle.get().get()->formType == RE::FormType::ActorCharacter) {
-							if (RE::Actor* ac = objectrefhandle.get().get()->As<RE::Actor>(); ac != nullptr) {
-								forbidden.insert(ac->GetFormID());
-								LOG_4("Found Brawling actor: {}", Utility::GetHex(ac->GetFormID()));
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
 	void Main::CheckActorsIntern()
 	{
 		playerweak = data->FindActor(RE::PlayerCharacter::GetSingleton());
@@ -455,8 +432,6 @@ namespace Events
 		tolerance = Settings::system._cycletime / 5;
 
 		StartProfiling;
-		// find all actors that are forbidden from handling in this round
-		PullForbiddenActors();
 
 		if (std::shared_ptr<ActorInfo> playerinfo = playerweak.lock()) {
 			if (playerinfo->GetActor()) {
@@ -559,7 +534,7 @@ namespace Events
 					auto taskInterface = SKSE::GetTaskInterface();
 					if (std::shared_ptr<ActorInfo> acinfo = acweak.lock()) {
 						// catch forbidden actors
-						if (forbidden.contains(acinfo->GetFormID()))
+						if (acinfo->IsInSpecialCombatState())
 							return;
 						taskInterface->AddTask([acinfo]() {
 							// emergency catch -- check again, we don't know when this function is called exactly

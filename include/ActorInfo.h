@@ -1153,6 +1153,8 @@ public:
 
 	void EvaluatePackage();
 
+	bool IsInSpecialCombatState();
+
 #pragma endregion
 #pragma region ACM
 

@@ -2301,6 +2301,18 @@ void ActorInfo::EvaluatePackage()
 	}
 }
 
+bool ActorInfo::IsInSpecialCombatState()
+{
+	aclock;
+	if (!valid || dead)
+		return false;
+
+	if (actor.get() && actor.get().get()) {
+		return Utility::IsInSpecialCombatState(actor.get().get());
+	}
+	return false;
+}
+
 #pragma endregion
 
 
