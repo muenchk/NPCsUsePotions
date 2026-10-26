@@ -568,11 +568,11 @@ TESDeathEventEnd:
 		}
 		//scriptEventSourceHolder->GetEventSource<RE::TESActivateEvent>()->AddEventSink(EventHandler::GetSingleton());
 		//LOG1_1("Registered {}", typeid(RE::TESActivateEvent).name())
-		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF000001, Main::LoadGameCallback);
+		Game::SaveLoad::GetSingleton()->RegisterForLoadCallback(0xFF100001, Main::LoadGameCallback);
 		LOG_1("Registered {}", typeid(Main::LoadGameCallback).name());
-		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF000002, Main::RevertGameCallback);
+		Game::SaveLoad::GetSingleton()->RegisterForRevertCallback(0xFF100002, Main::RevertGameCallback);
 		LOG_1("Registered {}", typeid(Main::RevertGameCallback).name());
-		Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF000003, Main::SaveGameCallback);
+		Game::SaveLoad::GetSingleton()->RegisterForSaveCallback(0xFF100003, Main::SaveGameCallback);
 		LOG_1("Registered {}", typeid(Main::SaveGameCallback).name());
 		Main::data = Data::GetSingleton();
 		Main::comp = Compatibility::GetSingleton();
