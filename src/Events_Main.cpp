@@ -659,7 +659,7 @@ namespace Events
 
 	void Main::OnFrame()
 	{
-		StartProfiling;
+		StartProfilingHighRes;
 
 		// static values
 		static RE::UI* ui = RE::UI::GetSingleton();
@@ -710,7 +710,8 @@ namespace Events
 					combatants.clear();
 					actorhandlerworking = false;
 				});
-				PROF_1(TimeProfiling, "OnFrame Time");
+				//PROF_1(TimeProfiling, "OnFrame Time");
+				profileNL(__func__, TimeProfiling, "OnFrame Time");
 			} else {
 				LOG_1("Skip round.");
 			}
