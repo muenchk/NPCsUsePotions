@@ -521,10 +521,6 @@ public:
 		/// [Settings] Distributes the Skill Boost perks to all valid NPCs
 		/// </summary>
 		bool _ApplySkillBoostPerks = true;  // Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts to npcs which are needed for fortify etc. potions to apply
-		/// <summary>
-		/// [Settings] Forciblx fixes all potion, poison and food sounds for third person usage
-		/// </summary>
-		bool _ForceFixPotionSounds = true;
 	};
 	static inline Fixes fixes;
 

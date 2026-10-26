@@ -9,82 +9,79 @@ using Comp = Compatibility;
 /// </summary>
 void Settings::FixConsumables()
 {
-	// get ITMPoisonUse as sound for applying poisons
-	// ITMPoisonUse
-	PoisonUse = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0x106614);
-	// get ITMPotionUse for sound fixes
-	// ITMPotionUse
-	PotionUse = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0xB6435);
-	// ITMFoodEat
-	FoodEat = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0xCAF94);
+	// fix potion sounds 
+	{
+		// get ITMPoisonUse as sound for applying poisons
+		// ITMPoisonUse
+		PoisonUse = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0x106614);
+		// get ITMPotionUse for sound fixes
+		// ITMPotionUse
+		PotionUse = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0xB6435);
+		// ITMFoodEat
+		FoodEat = RE::TESForm::LookupByID<RE::BGSSoundDescriptorForm>(0xCAF94);
 
-	if (!Settings::fixes._ForceFixPotionSounds)
-		return;
+		RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
+		RE::TESForm* SOM_verb = RE::TESForm::LookupByID(0xd78b4);
 
-	RE::TESForm* SOM_player1st = RE::TESForm::LookupByID(0xb4058);
-	RE::TESForm* SOM_verb = RE::TESForm::LookupByID(0xd78b4);
+		static std::unordered_set<RE::FormID> exlsounds{
+			0x3EDC0 /*ITMPotionDownSD*/,
+			0x3EDBD /*ITMPotionUpSD*/,
+			0x3C7B9 /*ITMGenericDownSD*/,
+			0x3C7BA /*ITMGenericUpSD*/,
+			0xC8C6f /*UIAlchemyCreatePoison*/,
+			0xC8C74 /*UIAlchemyCreatePotion*/,
+			0xC8C72 /*UIAlchemyFail*/,
+			0xC8C77 /*UIAlchemyLearnEffect*/,
+			0x3C7B4 /*UIItemGenericDownSD*/,
+			0x3C7B0 /*UIItemGenericUpSD*/
+		};
 
-	static std::unordered_set<RE::FormID> exlsounds{ 
-		0x3EDC0 /*ITMPotionDownSD*/ ,
-		0x3EDBD /*ITMPotionUpSD*/,
-		0x3C7B9 /*ITMGenericDownSD*/,
-		0x3C7BA /*ITMGenericUpSD*/,
-		0xC8C6f /*UIAlchemyCreatePoison*/,
-		0xC8C74 /*UIAlchemyCreatePotion*/,
-		0xC8C72 /*UIAlchemyFail*/,
-		0xC8C77 /*UIAlchemyLearnEffect*/,
-		0x3C7B4 /*UIItemGenericDownSD*/,
-		0x3C7B0 /*UIItemGenericUpSD*/
-	};
+		auto datahandler = RE::TESDataHandler::GetSingleton();
 
-	auto datahandler = RE::TESDataHandler::GetSingleton();
-
-	if (SOM_player1st && SOM_verb) {
-		RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
-		bool soundscomp = false;
-		RE::TESForm* NUP_SOM_verb = nullptr;
-		RE::BGSSoundOutput* NUP_SOMMono01400_verb = nullptr;
-		if (Mods::GetPluginIndex("NPCsUsePotions.esp") != MAXUINT32) {
-			NUP_SOM_verb = Data::GetSingleton()->FindForm(0xD63, "NPCsUsePotions.esp");
-			if (NUP_SOM_verb) {
-				NUP_SOMMono01400_verb = NUP_SOM_verb->As<RE::BGSSoundOutput>();
-				if (NUP_SOMMono01400_verb)
-				{
-					soundscomp = true;
+		if (SOM_player1st && SOM_verb) {
+			RE::BGSSoundOutput* SOMMono01400_verb = SOM_verb->As<RE::BGSSoundOutput>();
+			bool soundscomp = false;
+			RE::TESForm* NUP_SOM_verb = nullptr;
+			RE::BGSSoundOutput* NUP_SOMMono01400_verb = nullptr;
+			if (Mods::GetPluginIndex("NPCsUsePotions.esp") != MAXUINT32) {
+				NUP_SOM_verb = Data::GetSingleton()->FindForm(0xD63, "NPCsUsePotions.esp");
+				if (NUP_SOM_verb) {
+					NUP_SOMMono01400_verb = NUP_SOM_verb->As<RE::BGSSoundOutput>();
+					if (NUP_SOMMono01400_verb) {
+						soundscomp = true;
+					}
 				}
 			}
-		}
-		RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
+			RE::BGSSoundOutput* SOMMono01400Player1st = SOM_player1st->As<RE::BGSSoundOutput>();
 
-		RE::BGSSoundDescriptor* sounddesc = nullptr;
-		RE::BGSStandardSoundDef* soundOM = nullptr;
+			RE::BGSSoundDescriptor* sounddesc = nullptr;
+			RE::BGSStandardSoundDef* soundOM = nullptr;
 
-		// get all alchemyitems and then fix their consumption sounds
-		auto alchs = datahandler->GetFormArray<RE::AlchemyItem>();
-		for (auto& alch : alchs) {
-			if (alch && alch->GetFormID() != 0x7) {
-				if (alch->data.consumptionSound) {
-					if (alch->IsPoison() && exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
-						alch->data.consumptionSound = PoisonUse;
-						LOGL_4("changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
-					} else if (alch->IsFood() && exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
-						alch->data.consumptionSound = FoodEat;
-						LOGL_4("changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
-					} else if (exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
-						alch->data.consumptionSound = PotionUse;
-						LOGL_4("changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
-					} else {
-						// consumption sound is non-empty
-						sounddesc = alch->data.consumptionSound->soundDescriptor;
-						soundOM = (RE::BGSStandardSoundDef*)sounddesc;
-						if (soundscomp && (soundOM->outputModel == SOMMono01400Player1st || soundOM->outputModel == SOMMono01400_verb))
-						{
-							soundOM->outputModel = NUP_SOMMono01400_verb;
-							LOGL_4("changed output model for sound {} used by item {} to custom ouput model", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
-						}
-						else if (soundOM->outputModel == SOMMono01400Player1st) {
-							soundOM->outputModel = SOMMono01400_verb;
-							LOGL_4("changed output model for sound {} used by item {}", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
+			// get all alchemyitems and then fix their consumption sounds
+			auto alchs = datahandler->GetFormArray<RE::AlchemyItem>();
+			for (auto& alch : alchs) {
+				if (alch && alch->GetFormID() != 0x7) {
+					if (alch->data.consumptionSound) {
+						if (alch->IsPoison() && exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
+							alch->data.consumptionSound = PoisonUse;
+							LOGL_4("changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
+						} else if (alch->IsFood() && exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
+							alch->data.consumptionSound = FoodEat;
+							LOGL_4("changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
+						} else if (exlsounds.contains(alch->data.consumptionSound->GetFormID())) {
+							alch->data.consumptionSound = PotionUse;
+							LOGL_4("changed consumption sound for {} to ITMPotionUse", Utility::PrintForm(alch));
+						} else {
+							// consumption sound is non-empty
+							sounddesc = alch->data.consumptionSound->soundDescriptor;
+							soundOM = (RE::BGSStandardSoundDef*)sounddesc;
+							if (soundscomp && (soundOM->outputModel == SOMMono01400Player1st || soundOM->outputModel == SOMMono01400_verb)) {
+								soundOM->outputModel = NUP_SOMMono01400_verb;
+								LOGL_4("changed output model for sound {} used by item {} to custom ouput model", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
+							} else if (soundOM->outputModel == SOMMono01400Player1st) {
+								soundOM->outputModel = SOMMono01400_verb;
+								LOGL_4("changed output model for sound {} used by item {}", Utility::PrintForm(alch->data.consumptionSound), Utility::PrintForm(alch));
+							}
 						}
 					}
 				}
@@ -354,8 +351,6 @@ void Settings::Load()
 			// fixes
 			Settings::fixes._ApplySkillBoostPerks = ini.GetBoolValue("Fixes", "ApplySkillBoostPerks", Settings::fixes._ApplySkillBoostPerks);
 			loginfo("Setting: {} {}", "Fixes:             ApplySkillBoostPerks", std::to_string(Settings::fixes._ApplySkillBoostPerks));
-			Settings::fixes._ForceFixPotionSounds = ini.GetBoolValue("Fixes", "ForceFixPotionSounds", Settings::fixes._ForceFixPotionSounds);
-			loginfo("Setting: {} {}", "Fixes:             ForceFixPotionSounds", std::to_string(Settings::fixes._ForceFixPotionSounds));
 
 			// widgets
 			Settings::widgets._widgetCooldownStyle = (ICooldownWidget::CooldownStyle)ini.GetLongValue("Widgets", "widgetCooldownStyle", (long)Settings::widgets._widgetCooldownStyle);
@@ -628,9 +623,6 @@ void Settings::Save()
 	// fixes
 	ini.SetBoolValue("Fixes", "ApplySkillBoostPerks", Settings::fixes._ApplySkillBoostPerks, "// Distributes the two Perks AlchemySkillBoosts and PerkSkillBoosts \n"
 																					"// to npcs which are needed for fortify etc. potions to apply.");
-	ini.SetBoolValue("Fixes", "ForceFixPotionSounds", Settings::fixes._ForceFixPotionSounds, "// Forcefully fixes all sounds used by consumables in the game \n"
-																					"// without regard for other mods changes. If deactivate the changes \n"
-																					"// of other mods that should have the same effect are respected.");
 
 	// widgets
 	ini.SetLongValue("Widgets", "widgetCooldownStyle", (long)Settings::widgets._widgetCooldownStyle,
